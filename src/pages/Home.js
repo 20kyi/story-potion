@@ -117,7 +117,7 @@ const NovelCover = styled.img`
   aspect-ratio: 2/3;
   height: auto;
   object-fit: cover;
-  border-radius: 15px;
+  // border-radius: 15px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   background: #fdd2d2;
   display: block;
@@ -165,26 +165,22 @@ function Home() {
         {recentNovels.length > 0 ? (
           recentNovels.map((novel) => (
             <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.id}`)}>
-              {novel.imageUrl ? (
-                <NovelCover src={novel.imageUrl} alt={novel.title} />
-              ) : (
-                <div style={{
-                  width: '100%',
-                  maxWidth: 180,
-                  aspectRatio: '2/3',
-                  background: '#fdd2d2',
-                  borderRadius: 15,
-                  display: 'block',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                }} />
-              )}
+              <NovelCover src={novel.imageUrl} alt={novel.title} />
               <MyNovelTitle>{novel.title}</MyNovelTitle>
             </MyNovelBox>
           ))
         ) : (
           Array(3).fill(null).map((_, idx) => (
-            <MyNovelBox key={idx} style={{ background: '#fdd2d2', borderRadius: 15, height: 180 }} />
+            <MyNovelBox key={idx}>
+              <div style={{
+                width: '100%',
+                maxWidth: 180,
+                aspectRatio: '2/3',
+                background: '#fdd2d2',
+                borderRadius: 15,
+              }} />
+              <MyNovelTitle style={{ color: '#ddd' }}>소설 쓰기</MyNovelTitle>
+            </MyNovelBox>
           ))
         )}
       </MyNovelRow>

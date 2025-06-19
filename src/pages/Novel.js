@@ -183,26 +183,23 @@ const SectionTitle = styled.h2`
 `;
 
 const WeeklyGrid = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 15px;
-  overflow-x: auto;
   padding: 10px 0;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  width: 100%;
 `;
 
 const WeeklyCard = styled.div`
   background-color: #fff2f2;
   border-radius: 15px;
   padding: 20px;
-  min-width: 200px;
-  flex-shrink: 0;
+  flex: 0 0 240px;
+  min-width: 70px;
+  // max-width: 200px;
+  box-sizing: border-box;
 `;
+
 
 const WeekTitle = styled.h3`
   color: #cb6565;
@@ -219,7 +216,7 @@ const DateRange = styled.p`
 const ProgressBar = styled.div`
   width: 100%;
   height: 8px;
-  background-color: #fdd2d2;
+  background-color:rgb(233, 219, 219);
   border-radius: 4px;
   margin-bottom: 15px;
   overflow: hidden;
@@ -252,11 +249,11 @@ const CreateButton = styled.button`
 `;
 
 const bannerImages = [
-  process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+  process.env.PUBLIC_URL + '/novel_banner/romance.png',
   process.env.PUBLIC_URL + '/novel_banner/mystery.png',
   process.env.PUBLIC_URL + '/novel_banner/historical.png',
   process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
-  process.env.PUBLIC_URL + '/novel_banner/romance.png',
+  process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
 ];
 
 const Novel = () => {
@@ -391,7 +388,10 @@ const Novel = () => {
   };
 
   const formatDate = (date) => {
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handlePrevMonth = () => {
@@ -438,6 +438,22 @@ const Novel = () => {
       ];
       const genreIdx = (weekNum - 1) % genreImages.length;
       const { imageUrl, title } = genreImages[genreIdx];
+
+      // 완성된 소설 정보를 localStorage에 저장
+      const novels = JSON.parse(localStorage.getItem('novels') || '[]');
+      const newNovel = {
+        id: Date.now().toString(),
+        title,
+        imageUrl,
+        week: monthlyProgress[weekNum].weekTitle,
+        dateRange: monthlyProgress[weekNum].dateRange,
+        date: new Date().toISOString(),
+        year: currentYear,
+        month: currentMonth
+      };
+      novels.push(newNovel);
+      localStorage.setItem('novels', JSON.stringify(novels));
+
       navigate('/novel/create', {
         state: {
           week: monthlyProgress[weekNum].weekTitle,
@@ -476,13 +492,14 @@ const Novel = () => {
                 alt={`배너${idx + 1}`}
                 style={{
                   width: '80vw',
-                  maxWidth: '300px',
+                  maxWidth: '280px',
                   minWidth: '120px',
                   height: 'auto',
                   objectFit: 'cover',
                   borderRadius: '16px',
                   display: 'block',
-                  margin: '0 auto'
+                  margin: '0 auto',
+                  marginTop: '10px',
                 }}
               />
             </CarouselSlide>
