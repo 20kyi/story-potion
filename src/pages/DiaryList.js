@@ -8,7 +8,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
+//   background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
   padding: 20px;
   padding-top: 70px;
 `;
@@ -19,27 +19,26 @@ function DiaryList() {
     const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
 
     const styles = {
-        container: {
-            display: 'flex',
-            flexDirection: 'column',
-            height: '80vh',
-            // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
-            // padding: '20px'
-        },
+        // container: {
+        //     display: 'flex',
+        //     flexDirection: 'column',
+        //     height: '80vh',
+        // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
+        // padding: '20px'
+        // },
         content: {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
             paddingBottom: '80px',
-            // marginTop: '20px'
         },
-        mainContent: {
-            backgroundColor: '#fffbfb',
-            borderRadius: '30px',
-            padding: '20px',
-            flex: 1,
-            overflowY: 'auto'
-        },
+        // mainContent: {
+        //     backgroundColor: '#fffbfb',
+        //     borderRadius: '30px',
+        //     padding: '20px',
+        //     flex: 1,
+        //     overflowY: 'auto'
+        // },
         calendarHeader: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -72,16 +71,17 @@ function DiaryList() {
         },
         dayHeader: {
             padding: '10px',
+            paddingBottom: '20px',
             textAlign: 'center',
             color: '#888',
-            fontSize: '14px',
+            fontSize: '16px',
             fontWeight: '500'
         },
         dateCell: {
             padding: '0',
             textAlign: 'center',
             position: 'relative',
-            height: '45px',
+            height: '60px',
             width: '45px'
         },
         dateButton: {
@@ -181,6 +181,20 @@ function DiaryList() {
         return date > today;
     };
 
+    // 날씨/감정 이모티콘 매핑 추가
+    const weatherIcons = {
+        sunny: "☀️",
+        cloudy: "☁️",
+        rainy: "🌧️",
+        snowy: "❄️"
+    };
+    const emotionIcons = {
+        happy: "😊",
+        sad: "😢",
+        angry: "😠",
+        calm: "😌"
+    };
+
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -215,6 +229,10 @@ function DiaryList() {
                 today.getMonth() === month &&
                 today.getFullYear() === year;
             const future = isFutureDate(date);
+            const dateString = formatDateToString(date);
+            const diary = diaries.find(diary => diary.date.startsWith(dateString));
+            // 감정 이모티콘만 표시
+            const emotionIcon = diary && diary.emotion ? emotionIcons[diary.emotion] : null;
 
             days.push(
                 <td key={`current-${day}`} style={styles.dateCell}>
@@ -229,7 +247,10 @@ function DiaryList() {
                     >
                         {day}
                         {isToday && <div style={styles.todayCircle} />}
-                        {hasDiaryOnDate(date) && <div style={styles.hasDiary} />}
+                        {/* 감정 이모티콘만, 없으면 빈 공간 */}
+                        <div style={{ fontSize: '16px', marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px' }}>
+                            {emotionIcon || '\u00A0'}
+                        </div>
                     </button>
                 </td>
             );

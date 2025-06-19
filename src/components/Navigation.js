@@ -8,7 +8,7 @@ const NavBar = styled.nav`
   background: #fff;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  // box-shadow: 0 -2px 16px rgba(228,98,98,0.08);
+  box-shadow: 0 -2px 16px rgba(228,98,98,0.08);
   padding: 12px 0 8px 0;
   display: flex;
   justify-content: space-around;
@@ -26,16 +26,6 @@ const NavButton = styled.button`
   cursor: pointer;
   flex: 1;
 `;
-
-// const IconCircle = styled.div`
-//   width: 48px; height: 48px;
-//   border-radius: 50%;
-//   background: #f8e6e6;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   margin-bottom: 2px;
-// `;
 
 const NavText = styled.span`
   font-size: 14px;

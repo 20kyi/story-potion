@@ -13,6 +13,7 @@ const HeaderContainer = styled.header`
   z-index: 200;
   background: transparent;
   box-shadow: 0 2px 12px rgba(228,98,98,0.06);
+  background-color: #fff;
   padding: 16px 20px 12px 20px;
 `;
 
@@ -46,7 +47,14 @@ const Nickname = styled.span`
   font-weight: 600;
 `;
 
-const Header = ({ nickname = '닉네임' }) => {
+const RightSection = styled.div`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const Header = ({ nickname = '닉네임', rightActions }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
@@ -82,6 +90,7 @@ const Header = ({ nickname = '닉네임' }) => {
           </>
         )}
       </LeftSection>
+      {rightActions && <RightSection>{rightActions}</RightSection>}
     </HeaderContainer>
   );
 };

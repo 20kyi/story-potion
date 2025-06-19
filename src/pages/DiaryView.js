@@ -8,7 +8,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
+//   background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
   padding: 20px;
   padding-top: 70px;
 `;
@@ -32,8 +32,8 @@ function DiaryView() {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
-            background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
-            padding: '20px',
+            // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
+            // padding: '20px',
         },
         content: {
             flex: 1,
@@ -42,17 +42,10 @@ function DiaryView() {
             paddingBottom: '80px',
             // marginTop: '20px'
         },
-
-        headerTitle: {
-            fontFamily: 'Instrument Sans',
-            fontSize: '10px',
-            color: '#de2a2a',
-            margin: 0
-        },
         mainContent: {
-            backgroundColor: '#fffbfb',
-            borderRadius: '30px',
-            padding: '20px',
+            // backgroundColor: '#fffbfb',
+            // borderRadius: '30px',
+            // padding: '20px',
             flex: 1,
             overflowY: 'auto',
             position: 'relative',
@@ -81,7 +74,7 @@ function DiaryView() {
             backgroundColor: 'rgba(190, 71, 71, 0.4)'
         },
         diaryDate: {
-            fontSize: '24px',
+            fontSize: '18px',
             color: '#e46262',
             marginBottom: '20px',
             fontWeight: '500',
@@ -125,27 +118,34 @@ function DiaryView() {
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     };
 
+    // 날씨/감정 이모티콘 매핑 추가
+    const weatherIcons = {
+        sunny: "☀️",
+        cloudy: "☁️",
+        rainy: "🌧️",
+        snowy: "❄️"
+    };
+    const emotionIcons = {
+        happy: "😊",
+        sad: "😢",
+        angry: "😠",
+        calm: "😌"
+    };
+
     return (
         <Container>
-            <Header />
+            <Header
+                rightActions={
+                    <>
+                        <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>수정</button>
+                        <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
+                    </>
+                }
+            />
             <div style={styles.content}>
                 <main style={styles.mainContent}>
                     {diary ? (
                         <>
-                            <div style={styles.actionButtons}>
-                                <button
-                                    style={styles.actionButton}
-                                    onClick={() => navigate(`/write?date=${date}`)}
-                                >
-                                    수정
-                                </button>
-                                <button
-                                    style={{ ...styles.actionButton, ...styles.deleteButton }}
-                                    onClick={handleDelete}
-                                >
-                                    삭제
-                                </button>
-                            </div>
                             <div style={styles.diaryDate}>{formatDate(diary.date)}</div>
                             {diary.images && diary.images.length > 0 && (
                                 <div style={styles.imageGrid}>
@@ -159,9 +159,12 @@ function DiaryView() {
                                     ))}
                                 </div>
                             )}
+                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', margin: '12px 0 8px 0', minHeight: '28px', fontSize: '17px', color: '#cb6565', fontWeight: 500 }}>
+                                <span>오늘의 날씨: <span style={{ fontSize: '22px', verticalAlign: 'middle' }}>{weatherIcons[diary.weather] || ''}</span></span>
+                                <span>나의 기분: <span style={{ fontSize: '22px', verticalAlign: 'middle' }}>{emotionIcons[diary.emotion] || ''}</span></span>
+                            </div>
                             <h2 style={styles.diaryTitle}>{diary.title}</h2>
                             <p style={styles.diaryContent}>{diary.content}</p>
-
                         </>
                     ) : (
                         <div style={styles.noDiary}>

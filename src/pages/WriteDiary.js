@@ -13,6 +13,14 @@ const getTodayString = () => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
+// TopRow styled-component 추가
+const TopRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+`;
+
 function WriteDiary() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -20,13 +28,28 @@ function WriteDiary() {
         title: '',
         content: '',
         mood: '행복',
-        images: []
+        images: [],
+        weather: 'sunny',
+        emotion: 'happy'
     });
     const [imagePreview, setImagePreview] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDiaryId, setExistingDiaryId] = useState(null);
+
+    const weatherOptions = [
+        { value: 'sunny', label: '☀️ 맑음' },
+        { value: 'cloudy', label: '☁️ 흐림' },
+        { value: 'rainy', label: '🌧️ 비' },
+        { value: 'snowy', label: '❄️ 눈' }
+    ];
+    const emotionOptions = [
+        { value: 'happy', label: '😊 행복' },
+        { value: 'sad', label: '😢 슬픔' },
+        { value: 'angry', label: '😠 화남' },
+        { value: 'calm', label: '😌 평온' }
+    ];
 
     useEffect(() => {
         // URL에서 날짜 파라미터 가져오기
@@ -45,7 +68,9 @@ function WriteDiary() {
                     title: existingDiary.title,
                     content: existingDiary.content,
                     mood: existingDiary.mood || '행복',
-                    images: existingDiary.images || []
+                    images: existingDiary.images || [],
+                    weather: existingDiary.weather || 'sunny',
+                    emotion: existingDiary.emotion || 'happy'
                 });
                 setImagePreview(existingDiary.images || []);
                 setIsEditMode(true);
@@ -79,7 +104,9 @@ function WriteDiary() {
                     title: existingDiary.title,
                     content: existingDiary.content,
                     mood: existingDiary.mood || '행복',
-                    images: existingDiary.images || []
+                    images: existingDiary.images || [],
+                    weather: existingDiary.weather || 'sunny',
+                    emotion: existingDiary.emotion || 'happy'
                 });
                 setImagePreview(existingDiary.images || []);
                 setIsEditMode(true);
@@ -166,7 +193,9 @@ function WriteDiary() {
         const diaryData = {
             ...diary,
             date: selectedDate.toISOString(),
-            id: isEditMode ? existingDiaryId : Date.now()
+            id: isEditMode ? existingDiaryId : Date.now(),
+            weather: diary.weather,
+            emotion: diary.emotion
         };
 
         if (isEditMode) {
@@ -191,7 +220,7 @@ function WriteDiary() {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
-            background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
+            // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
             position: 'relative',
             maxWidth: '100%',
             margin: '0 auto',
@@ -200,18 +229,18 @@ function WriteDiary() {
             paddingTop: '70px',
         },
         mainContent: {
-            backgroundColor: '#fffbfb',
-            borderRadius: '30px',
-            padding: '20px',
+            // backgroundColor: '#fffbfb',
+            // borderRadius: '30px',
+            // padding: '20px',
             flex: 1,
             position: 'relative'
         },
-        header: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px',
-            marginBottom: '25px'
-        },
+        // header: {
+        //     display: 'flex',
+        //     alignItems: 'center',
+        //     gap: '15px',
+        //     marginBottom: '25px'
+        // },
         actionButtons: {
             display: 'flex',
             gap: '10px',
@@ -234,30 +263,29 @@ function WriteDiary() {
         deleteButton: {
             backgroundColor: 'rgba(190, 71, 71, 0.4)'
         },
-        profileImage: {
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            border: '1px solid #df9696',
-            cursor: 'pointer',
-            transition: 'transform 0.2s ease',
-            '&:hover': {
-                transform: 'scale(1.05)'
-            }
-        },
-        headerText: {
-            display: 'flex',
-            flexDirection: 'column'
-        },
-        headerTitle: {
-            fontFamily: 'Instrument Sans',
-            fontSize: '10px',
-            color: '#de2a2a',
-            margin: 0
-        },
+        // profileImage: {
+        //     width: '36px',
+        //     height: '36px',
+        //     borderRadius: '50%',
+        //     border: '1px solid #df9696',
+        //     cursor: 'pointer',
+        //     transition: 'transform 0.2s ease',
+        //     '&:hover': {
+        //         transform: 'scale(1.05)'
+        //     }
+        // },
+        // headerText: {
+        //     display: 'flex',
+        //     flexDirection: 'column'
+        // },
+        // headerTitle: {
+        //     fontFamily: 'Instrument Sans',
+        //     fontSize: '10px',
+        //     color: '#de2a2a',
+        //     margin: 0
+        // },
         dateSection: {
-            fontFamily: 'Inter',
-            fontWeight: 600,
+            fontWeight: 500,
             fontSize: '18px',
             color: '#cb6565',
             lineHeight: '24px',
@@ -282,7 +310,7 @@ function WriteDiary() {
             marginTop: '8px'
         },
         dateUnit: {
-            fontSize: '14px',
+            fontSize: '18px',
             color: '#cb6565',
             opacity: 0.8,
             marginLeft: '2px'
@@ -379,45 +407,67 @@ function WriteDiary() {
 
     return (
         <div style={styles.container}>
-            <Header />
+            <Header
+                rightActions={
+                    <>
+                        <button style={styles.actionButton} onClick={handleSubmit}>{isEditMode ? '수정' : '저장'}</button>
+                        {isEditMode && (
+                            <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
+                        )}
+                    </>
+                }
+            />
             <div style={styles.mainContent}>
-                <div style={styles.actionButtons}>
-                    <button
-                        style={styles.actionButton}
-                        onClick={handleSubmit}
+                <TopRow>
+                    <div
+                        style={{ ...styles.dateSection, marginTop: '0', cursor: 'pointer' }}
+                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
                     >
-                        {isEditMode ? '수정' : '저장'}
-                    </button>
-                    {isEditMode && (
-                        <button
-                            style={{ ...styles.actionButton, ...styles.deleteButton }}
-                            onClick={handleDelete}
+                        <span>{formattedDate.year}</span>
+                        <span style={styles.dateUnit}>년</span>
+                        <span>{formattedDate.month}</span>
+                        <span style={styles.dateUnit}>월</span>
+                        <span>{formattedDate.day}</span>
+                        <span style={styles.dateUnit}>일</span>
+                        <div style={styles.datePicker}>
+                            <input
+                                type="date"
+                                value={selectedDate.toISOString().split('T')[0]}
+                                max={getTodayString()}
+                                onChange={(e) => handleDateChange(e.target.value)}
+                                style={styles.datePickerInput}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+                </TopRow>
+
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                    <div>
+                        <label style={{ color: '#cb6565', fontWeight: 600, marginRight: 8 }}>날씨</label>
+                        <select
+                            name="weather"
+                            value={diary.weather}
+                            onChange={handleChange}
+                            style={{ fontSize: '16px', borderRadius: '8px', padding: '4px 8px', border: '1px solid #fdd2d2', color: '#cb6565', background: '#fff9f9' }}
                         >
-                            삭제
-                        </button>
-                    )}
-                </div>
-
-                <div
-                    style={{ ...styles.dateSection, marginTop: '40px' }}
-                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                >
-                    <span>{formattedDate.year}</span>
-                    <span style={styles.dateUnit}>년</span>
-                    <span>{formattedDate.month}</span>
-                    <span style={styles.dateUnit}>월</span>
-                    <span>{formattedDate.day}</span>
-                    <span style={styles.dateUnit}>일</span>
-
-                    <div style={styles.datePicker}>
-                        <input
-                            type="date"
-                            value={selectedDate.toISOString().split('T')[0]}
-                            max={getTodayString()}
-                            onChange={(e) => handleDateChange(e.target.value)}
-                            style={styles.datePickerInput}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                            {weatherOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ color: '#cb6565', fontWeight: 600, marginRight: 8 }}>감정</label>
+                        <select
+                            name="emotion"
+                            value={diary.emotion}
+                            onChange={handleChange}
+                            style={{ fontSize: '16px', borderRadius: '8px', padding: '4px 8px', border: '1px solid #fdd2d2', color: '#cb6565', background: '#fff9f9' }}
+                        >
+                            {emotionOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
