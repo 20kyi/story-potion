@@ -10,7 +10,7 @@ const Container = styled.div`
   min-height: 100vh;
   background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
   padding: 20px;
-  padding-top: 20px;
+  padding-top: 70px;
 `;
 
 function DiaryView() {

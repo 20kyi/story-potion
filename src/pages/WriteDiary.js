@@ -197,6 +197,7 @@ function WriteDiary() {
             margin: '0 auto',
             overflowX: 'hidden',
             padding: '20px',
+            paddingTop: '70px',
         },
         mainContent: {
             backgroundColor: '#fffbfb',
