@@ -3,6 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
 import { RiKakaoTalkFill } from 'react-icons/ri';
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Container = styled.div`
   display: flex;
@@ -250,26 +256,33 @@ function Login() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!formData.email || !formData.password) {
-      setError('이메일과 비밀번호를 모두 입력해주세요.');
-      return;
-    }
-
-    if (formData.email && formData.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userEmail', formData.email);
-      navigate('/home');
-    } else {
-      setError('로그인에 실패했습니다. 다시 시도해주세요.');
+    try {
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      navigate('/');
+    } catch (error) {
+      setError('이메일 또는 비밀번호가 잘못되었습니다.');
+      console.error("Firebase login error: ", error);
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    alert(`${provider} 로그인은 현재 준비 중입니다.`);
+  const handleSocialLogin = async (provider) => {
+    if (provider === 'Google') {
+      const googleProvider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, googleProvider);
+        navigate('/');
+      } catch (error) {
+        setError('Google 로그인에 실패했습니다. 다시 시도해주세요.');
+        console.error("Social login error: ", error);
+      }
+    } else if (provider === 'Facebook') {
+      alert(`${provider} 로그인은 현재 준비 중입니다.`);
+    } else {
+      alert(`${provider} 로그인은 현재 준비 중입니다.`);
+    }
   };
 
   return (
