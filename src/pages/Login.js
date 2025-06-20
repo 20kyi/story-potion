@@ -1,9 +1,244 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
+import { RiKakaoTalkFill } from 'react-icons/ri';
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fff;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 1000px;
+    gap: 0px;
+  }
+`;
+
+const FormSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+
+  @media (min-width: 1024px) {
+    align-items: center;
+    max-width: none;
+    flex: 1;
+  }
+`;
+
+const LogoSection = styled.div`
+  margin-bottom: 40px;
+
+  @media (min-width: 1024px) {
+    margin-bottom: 0;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+`;
+
+const Logo = styled.img`
+  width: 150px;
+  @media (min-width: 1024px) {
+    width: 250px;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 28px;
+  color: #e46262;
+  margin-bottom: 30px;
+  font-weight: 700;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 400px;
+`;
+
+const PasswordContainer = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+`;
+
+const PasswordInput = styled.input`
+  padding: 14px 20px;
+  padding-right: 45px;
+  border-radius: 15px;
+  border: 1px solid #fdd2d2;
+  font-size: 16px;
+  color: #40392b;
+  background-color: #f9f9f9;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  width: 100%;
+
+  &:focus {
+    border-color: #e46262;
+    background-color: #fff;
+  }
+`;
+
+const EyeIcon = styled.div`
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+`;
+
+const Input = styled.input`
+  padding: 14px 20px;
+  border-radius: 15px;
+  border: 1px solid #fdd2d2;
+  font-size: 16px;
+  color: #40392b;
+  background-color: #f9f9f9;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+
+  &:focus {
+    border-color: #e46262;
+    background-color: #fff;
+  }
+`;
+
+const Button = styled.button`
+  background: linear-gradient(135deg, #ff8a8a 0%, #e46262 100%);
+  color: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 4px 15px rgba(228, 98, 98, 0.4);
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: #d9534f;
+  font-size: 14px;
+  text-align: center;
+`;
+
+const SignupLink = styled.div`
+  margin-top: 25px;
+  font-size: 14px;
+  color: #555;
+
+  a {
+    color: #e46262;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 5px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #ccc;
+  font-size: 14px;
+  margin: 30px 0;
+  width: 100%;
+  max-width: 400px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #eee;
+  }
+
+  &:not(:empty)::before {
+    margin-right: 1em;
+  }
+  
+  &:not(:empty)::after {
+    margin-left: 1em;
+  }
+`;
+
+const SocialLoginContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 30px;
+`;
+
+const SocialButton = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid #eee;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 24px;
+  color: ${props => props.color};
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+  }
+`;
+
+const NaverIcon = styled.div`
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #03c75a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+`;
 
 function Login() {
-  const isMobile = window.innerWidth <= 768;
   const navigate = useNavigate();
+  const [passwordShown, setPasswordShown] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -12,246 +247,84 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    // 입력값 검증
     if (!formData.email || !formData.password) {
       setError('이메일과 비밀번호를 모두 입력해주세요.');
       return;
     }
 
-    try {
-      // 여기에 실제 로그인 API 호출이 들어갈 예정
-      // 임시로 이메일/비밀번호가 모두 입력되면 로그인 성공으로 처리
-      if (formData.email && formData.password) {
-        // 로그인 성공 시 localStorage에 임시 토큰 저장
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userEmail', formData.email);
-
-        // 홈 화면으로 이동
-        navigate('/home');
-      }
-    } catch (err) {
+    if (formData.email && formData.password) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userEmail', formData.email);
+      navigate('/home');
+    } else {
       setError('로그인에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      backgroundColor: '#df9696',
-      position: 'relative',
-      maxWidth: '100%',
-      margin: '0 auto',
-      overflowX: 'hidden'
-    },
-    mainContent: {
-      backgroundColor: '#ffffff',
-      borderRadius: '30px 30px 0 0',
-      flex: 1,
-      marginTop: '120px',
-      padding: isMobile ? '40px 20px' : '60px 40px',
-      position: 'relative',
-      overflowY: 'auto',
-      WebkitOverflowScrolling: 'touch'
-    },
-    title: {
-      fontFamily: 'Island Moments',
-      fontSize: isMobile ? '36px' : '48px',
-      color: '#df9696',
-      textAlign: 'center',
-      marginBottom: '40px',
-      letterSpacing: '2px'
-    },
-    form: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '20px',
-      maxWidth: '400px',
-      margin: '0 auto'
-    },
-    inputGroup: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px'
-    },
-    label: {
-      fontFamily: 'Instrument Sans',
-      fontSize: '14px',
-      color: '#df9696',
-      marginLeft: '4px'
-    },
-    input: {
-      padding: '12px 16px',
-      borderRadius: '12px',
-      border: '1px solid #fdd2d2',
-      fontSize: '16px',
-      fontFamily: 'Plus Jakarta Sans',
-      color: '#40392b',
-      backgroundColor: '#fff',
-      outline: 'none',
-      transition: 'border-color 0.2s ease',
-      '&:focus': {
-        borderColor: '#df9696'
-      }
-    },
-    loginButton: {
-      backgroundColor: '#e46262',
-      color: '#ffffff',
-      padding: '14px',
-      borderRadius: '12px',
-      border: 'none',
-      fontSize: '16px',
-      fontFamily: 'Roboto Serif',
-      fontWeight: '600',
-      cursor: 'pointer',
-      marginTop: '20px',
-      transition: 'background-color 0.2s ease',
-      '&:hover': {
-        backgroundColor: '#d45252'
-      }
-    },
-    errorMessage: {
-      color: '#e46262',
-      fontSize: '14px',
-      fontFamily: 'Plus Jakarta Sans',
-      textAlign: 'center',
-      marginTop: '10px'
-    },
-    socialLogin: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      marginTop: '30px'
-    },
-    divider: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '15px',
-      margin: '20px 0',
-      color: '#df9696',
-      fontFamily: 'Instrument Sans',
-      fontSize: '14px'
-    },
-    dividerLine: {
-      flex: 1,
-      height: '1px',
-      backgroundColor: '#fdd2d2'
-    },
-    socialButton: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      padding: '12px',
-      borderRadius: '12px',
-      border: '1px solid #fdd2d2',
-      backgroundColor: '#ffffff',
-      color: '#40392b',
-      fontSize: '14px',
-      fontFamily: 'Plus Jakarta Sans',
-      cursor: 'pointer',
-      transition: 'background-color 0.2s ease'
-    },
-    signupLink: {
-      textAlign: 'center',
-      marginTop: '30px',
-      fontFamily: 'Plus Jakarta Sans',
-      fontSize: '14px',
-      color: '#40392b'
-    },
-    link: {
-      color: '#e46262',
-      textDecoration: 'none',
-      fontWeight: '600',
-      marginLeft: '5px'
-    }
+  const handleSocialLogin = (provider) => {
+    alert(`${provider} 로그인은 현재 준비 중입니다.`);
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.mainContent}>
-        <h1 style={styles.title}>Welcome Back</h1>
-
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>이메일</label>
-            <input
+    <Container>
+      <ContentWrapper>
+        <LogoSection>
+          <Logo src="/logo3.jpg" alt="Story Potion Logo" />
+        </LogoSection>
+        <FormSection>
+          {/* <Title>로그인</Title> */}
+          <Form onSubmit={handleSubmit}>
+            <Input
               type="email"
               name="email"
-              placeholder="이메일을 입력하세요"
-              style={styles.input}
+              placeholder="이메일"
               value={formData.email}
               onChange={handleChange}
             />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>비밀번호</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="비밀번호를 입력하세요"
-              style={styles.input}
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
-
-          {error && <div style={styles.errorMessage}>{error}</div>}
-
-          <button type="submit" style={styles.loginButton}>
-            로그인
-          </button>
-
-          <div style={styles.divider}>
-            <div style={styles.dividerLine} />
-            <span>또는</span>
-            <div style={styles.dividerLine} />
-          </div>
-
-          <div style={styles.socialLogin}>
-            <button
-              type="button"
-              style={{
-                ...styles.socialButton,
-                backgroundColor: '#4285f4',
-                color: '#ffffff',
-                border: 'none'
-              }}
-            >
-              Google로 계속하기
-            </button>
-            <button
-              type="button"
-              style={{
-                ...styles.socialButton,
-                backgroundColor: '#1877f2',
-                color: '#ffffff',
-                border: 'none'
-              }}
-            >
-              Facebook으로 계속하기
-            </button>
-          </div>
-
-          <div style={styles.signupLink}>
-            아직 계정이 없으신가요?
-            <Link to="/signup" style={styles.link}>회원가입</Link>
-          </div>
-        </form>
-      </div>
-    </div>
+            <PasswordContainer>
+              <PasswordInput
+                type={passwordShown ? "text" : "password"}
+                name="password"
+                placeholder="비밀번호"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <EyeIcon onClick={() => setPasswordShown(!passwordShown)}>
+                {passwordShown ? <FaEyeSlash /> : <FaEye />}
+              </EyeIcon>
+            </PasswordContainer>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+            <Button type="submit">로그인</Button>
+          </Form>
+          <Divider>또는</Divider>
+          <SocialLoginContainer>
+            <SocialButton color="#4285F4" onClick={() => handleSocialLogin('Google')}>
+              <FaGoogle />
+            </SocialButton>
+            <SocialButton color="#1877F2" onClick={() => handleSocialLogin('Facebook')}>
+              <FaFacebook />
+            </SocialButton>
+            <SocialButton color="#FEE500" onClick={() => handleSocialLogin('Kakao')}>
+              <RiKakaoTalkFill style={{ color: '#3c1e1e' }} />
+            </SocialButton>
+            <SocialButton onClick={() => handleSocialLogin('Naver')}>
+              <NaverIcon>N</NaverIcon>
+            </SocialButton>
+          </SocialLoginContainer>
+          <SignupLink>
+            계정이 없으신가요?
+            <Link to="/signup">회원가입</Link>
+          </SignupLink>
+        </FormSection>
+      </ContentWrapper>
+    </Container>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 
@@ -66,14 +67,16 @@ const LogoutButton = styled.button`
 `;
 
 function MyPage() {
+  const navigate = useNavigate();
   // 임시 닉네임, 정보
   const nickname = '홍길동';
   const info = '오늘도 즐거운 하루!';
 
   const handleLogout = () => {
     // 로그아웃 로직 (예: localStorage.clear(), 페이지 이동 등)
+    // localStorage.clear(); // 필요하다면 주석 해제하여 사용
     alert('로그아웃 되었습니다.');
-    // window.location.href = '/';
+    navigate('/login');
   };
 
   return (
