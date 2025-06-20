@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -118,6 +120,30 @@ const Button = styled.button`
   }
 `;
 
+const GenreSelection = styled.div`
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+`;
+
+const GenreButton = styled.button`
+  background: ${({ selected }) => (selected ? '#e46262' : '#f0f0f0')};
+  color: ${({ selected }) => (selected ? 'white' : '#333')};
+  border: 1px solid ${({ selected }) => (selected ? '#e46262' : '#ddd')};
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #d45252;
+    color: white;
+  }
+`;
+
 function NovelCreate({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -126,80 +152,107 @@ function NovelCreate({ user }) {
   const [weekDiaries, setWeekDiaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNovelGenerated, setIsNovelGenerated] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState('');
+
+  const genres = ['로맨스', '시대극', '추리', '공포', '동화', '판타지'];
 
   useEffect(() => {
-    // 해당 주의 일기들을 가져오기
-    const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+    if (!user || !dateRange) {
+      setIsLoading(false);
+      return;
+    };
 
-    console.log('Date Range:', dateRange);
-    // dateRange 형식: "2024-03-01 ~ 2024-03-07"
-    const [startStr, endStr] = dateRange.split(' ~ ');
-    const startDate = new Date(startStr);
-    const endDate = new Date(endStr);
-    endDate.setHours(23, 59, 59, 999); // 종료일의 끝시간으로 설정
+    const fetchDiaries = async () => {
+      const [startStr, endStr] = dateRange.split(' ~ ');
 
-    console.log('Start Date:', startDate);
-    console.log('End Date:', endDate);
-    console.log('All Diaries:', diaries);
+      const diariesRef = collection(db, 'diaries');
+      const q = query(diariesRef,
+        where('userId', '==', user.uid),
+        where('date', '>=', startStr),
+        where('date', '<=', endStr)
+      );
 
-    const filteredDiaries = diaries.filter(diary => {
-      const diaryDate = new Date(diary.date);
-      console.log('Diary Date:', diary.date, 'Parsed:', diaryDate);
-      const isWithinRange = diaryDate >= startDate && diaryDate <= endDate;
-      console.log('Is within range:', isWithinRange);
-      return isWithinRange;
-    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+      try {
+        const querySnapshot = await getDocs(q);
+        const diaries = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const sortedDiaries = diaries.sort((a, b) => new Date(a.date) - new Date(b.date));
+        setWeekDiaries(sortedDiaries);
+      } catch (error) {
+        console.error("Error fetching diaries: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    console.log('Filtered Diaries:', filteredDiaries);
-    setWeekDiaries(filteredDiaries);
-    setIsLoading(false);
-  }, [dateRange]);
+    fetchDiaries();
+  }, [user, dateRange]);
 
   const formatDisplayDate = (dateStr) => {
     const date = new Date(dateStr);
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
 
-  const handleGenerateNovel = () => {
-    if (weekDiaries.length > 0) {
-      // 일기들의 내용을 하나로 합치고 소설 형식으로 변환
-      const storyContent = weekDiaries
-        .map(diary => diary.content)
-        .join('\n\n')
-        .replace(/나는/g, '주인공은')
-        .replace(/내가/g, '그가')
-        .replace(/나의/g, '그의')
-        .replace(/나를/g, '그를')
-        .replace(/내/g, '그의');
-
-      const novelContent = `${title}\n\n${storyContent}`;
-      setContent(novelContent);
-      setIsNovelGenerated(true);
+  const handleGenerateNovel = async () => {
+    if (weekDiaries.length === 0) {
+      alert('소설을 생성할 일기가 없습니다.');
+      return;
     }
+    if (!selectedGenre) {
+      alert('장르를 선택해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    const diaryContents = weekDiaries
+      .map(diary => `날짜: ${diary.date}\n제목: ${diary.title}\n내용: ${diary.content}`)
+      .join('\n\n---\n\n');
+
+    const prompt = `
+      다음은 한 주간의 일기 내용입니다. 이 내용을 바탕으로 '${selectedGenre}' 장르의 단편 소설을 작성해주세요.
+      소설의 주인공은 일기 작성자입니다. 자연스러운 이야기 흐름을 만들어주세요.
+
+      [일기 내용]
+      ${diaryContents}
+    `;
+
+    // TODO: 아래는 예시 코드입니다. 실제로는 여기에 LLM API를 호출하는 코드를 작성해야 합니다.
+    // 예: const generatedContent = await callLlmApi(prompt);
+    const generatedContent = `[${selectedGenre}] 장르 소설이 생성되었습니다.\n\n${prompt}`; // 임시 생성 내용
+
+    setContent(generatedContent);
+    setIsNovelGenerated(true);
+    setIsLoading(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isNovelGenerated) {
       alert('먼저 소설을 생성해주세요.');
       return;
     }
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
 
-    // 소설 저장
-    const novels = JSON.parse(localStorage.getItem('novels') || '[]');
-    const newNovel = {
-      id: Date.now().toString(),
-      title,
-      imageUrl,
-      week,
-      dateRange,
-      content,
-      date: new Date().toISOString()
-    };
-    novels.push(newNovel);
-    localStorage.setItem('novels', JSON.stringify(novels));
-
-    // 소설 상세 페이지로 이동
-    navigate('/novel/' + newNovel.id);
+    try {
+      const newNovel = {
+        userId: user.uid,
+        title,
+        imageUrl,
+        week,
+        dateRange,
+        genre: selectedGenre,
+        content,
+        createdAt: new Date(),
+      };
+      const docRef = await addDoc(collection(db, 'novels'), newNovel);
+      alert('소설이 저장되었습니다.');
+      navigate('/novel/' + docRef.id);
+    } catch (error) {
+      console.error("Error saving novel: ", error);
+      alert('소설 저장에 실패했습니다.');
+    }
   };
 
   if (isLoading) {
@@ -240,8 +293,27 @@ function NovelCreate({ user }) {
         )}
       </DiariesSection>
 
+      {!isNovelGenerated && (
+        <>
+          <SectionTitle>어떤 장르의 소설을 만들어볼까요?</SectionTitle>
+          <GenreSelection>
+            {genres.map(genre => (
+              <GenreButton
+                key={genre}
+                selected={selectedGenre === genre}
+                onClick={() => setSelectedGenre(genre)}
+              >
+                {genre}
+              </GenreButton>
+            ))}
+          </GenreSelection>
+        </>
+      )}
+
       {!isNovelGenerated ? (
-        <Button onClick={handleGenerateNovel}>일기로 소설 만들기</Button>
+        <Button onClick={handleGenerateNovel} disabled={!selectedGenre || isLoading}>
+          {isLoading ? '소설 생성 중...' : (selectedGenre ? `'${selectedGenre}' 장르로 소설 만들기` : '장르를 선택해주세요')}
+        </Button>
       ) : (
         <>
           <NovelContent>

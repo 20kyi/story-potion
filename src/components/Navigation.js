@@ -50,7 +50,7 @@ function Navigation() {
           alt="Home"
           style={{ width: 32, height: 32, filter: isActive('/') ? 'none' : 'grayscale(1) opacity(0.5)' }}
         />
-        <NavText active={isActive('/')}>Home</NavText>
+        <NavText active={isActive('/') ? 'true' : undefined}>Home</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/diaries')}>
         <img
@@ -58,7 +58,7 @@ function Navigation() {
           alt="Diary"
           style={{ width: 32, height: 32, filter: isActive('/diaries') ? 'none' : 'grayscale(1) opacity(0.5)' }}
         />
-        <NavText active={isActive('/diaries')}>Diary</NavText>
+        <NavText active={isActive('/diaries') ? 'true' : undefined}>Diary</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/novel')}>
         <img
@@ -66,7 +66,7 @@ function Navigation() {
           alt="Novel"
           style={{ width: 32, height: 32, filter: isActive('/novel') ? 'none' : 'grayscale(1) opacity(0.5)' }}
         />
-        <NavText active={isActive('/novel')}>Novel</NavText>
+        <NavText active={isActive('/novel') ? 'true' : undefined}>Novel</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/my')}>
         <img
@@ -74,7 +74,7 @@ function Navigation() {
           alt="My"
           style={{ width: 32, height: 32, filter: isActive('/my') ? 'none' : 'grayscale(1) opacity(0.5)' }}
         />
-        <NavText active={isActive('/my')}>My</NavText>
+        <NavText active={isActive('/my') ? 'true' : undefined}>My</NavText>
       </NavButton>
     </NavBar>
   );

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import styled from 'styled-components';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -16,14 +18,50 @@ const Container = styled.div`
 function DiaryView({ user }) {
     const navigate = useNavigate();
     const { date } = useParams();
-    const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-    const diary = diaries.find(d => d.date.startsWith(date));
+    const [diary, setDiary] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleDelete = () => {
-        if (window.confirm('일기를 삭제하시겠습니까?')) {
-            const updatedDiaries = diaries.filter(d => !d.date.startsWith(date));
-            localStorage.setItem('diaries', JSON.stringify(updatedDiaries));
-            navigate('/diaries');
+    useEffect(() => {
+        if (!user || !date) return;
+        // URL의 date 파라미터는 'YYYY-MM-DD' 형식이므로,
+        // new Date()가 로컬 시간대 자정으로 해석하도록 '-'를 '/'로 변경합니다.
+        const targetDate = new Date(date.replace(/-/g, '/'));
+
+        const fetchDiary = async () => {
+            setIsLoading(true);
+            const diariesRef = collection(db, 'diaries');
+            const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', date));
+
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const diaryData = querySnapshot.docs[0].data();
+                    const diaryId = querySnapshot.docs[0].id;
+                    setDiary({ ...diaryData, id: diaryId });
+                } else {
+                    setDiary(null);
+                }
+            } catch (error) {
+                console.error("Error fetching diary: ", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDiary();
+    }, [user, date]);
+
+    const handleDelete = async () => {
+        if (diary && window.confirm('일기를 삭제하시겠습니까?')) {
+            try {
+                const diaryRef = doc(db, 'diaries', diary.id);
+                await deleteDoc(diaryRef);
+                alert('일기가 삭제되었습니다.');
+                navigate('/diaries');
+            } catch (error) {
+                console.error("Error deleting diary: ", error);
+                alert('일기 삭제에 실패했습니다.');
+            }
         }
     };
 
@@ -137,20 +175,24 @@ function DiaryView({ user }) {
             <Header
                 user={user}
                 rightActions={
-                    <>
-                        <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>수정</button>
-                        <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
-                    </>
+                    diary && (
+                        <>
+                            <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>수정</button>
+                            <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
+                        </>
+                    )
                 }
             />
             <div style={styles.content}>
                 <main style={styles.mainContent}>
-                    {diary ? (
+                    {isLoading ? (
+                        <div>로딩 중...</div>
+                    ) : diary ? (
                         <>
                             <div style={styles.diaryDate}>{formatDate(diary.date)}</div>
-                            {diary.images && diary.images.length > 0 && (
+                            {diary.imageUrls && diary.imageUrls.length > 0 && (
                                 <div style={styles.imageGrid}>
-                                    {diary.images.map((image, index) => (
+                                    {diary.imageUrls.map((image, index) => (
                                         <img
                                             key={index}
                                             src={image}

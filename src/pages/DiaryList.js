@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import styled from 'styled-components';
 import Header from '../components/Header';
 import { Line } from 'react-chartjs-2';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -12,7 +14,8 @@ import {
     LineElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    Filler
 } from 'chart.js';
 
 ChartJS.register(
@@ -22,7 +25,8 @@ ChartJS.register(
     LineElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    Filler
 );
 
 const Container = styled.div`
@@ -50,7 +54,40 @@ const GraphTitle = styled.h3`
 function DiaryList({ user }) {
     const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+    const [diaries, setDiaries] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchDiaries = async () => {
+            setIsLoading(true);
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            const diariesRef = collection(db, 'diaries');
+            const q = query(diariesRef,
+                where('userId', '==', user.uid),
+                where('date', '>=', formatDateToString(firstDay)),
+                where('date', '<=', formatDateToString(lastDay)),
+                orderBy('date')
+            );
+
+            try {
+                const querySnapshot = await getDocs(q);
+                const fetchedDiaries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                setDiaries(fetchedDiaries);
+            } catch (error) {
+                console.error("Error fetching diaries: ", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDiaries();
+    }, [user, currentDate]);
 
     const styles = {
         content: {
@@ -256,11 +293,22 @@ function DiaryList({ user }) {
         labels,
         datasets: [
             {
+                fill: true,
                 label: '월별 감정 변화',
                 data: emotionData,
                 borderColor: '#e46262',
-                backgroundColor: '#fdd2d2',
-                tension: 0.3
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                    gradient.addColorStop(0, 'rgba(228, 98, 98, 0.4)');
+                    gradient.addColorStop(1, 'rgba(228, 98, 98, 0)');
+                    return gradient;
+                },
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#e46262',
+                pointRadius: 5,
+                pointHoverRadius: 8,
             },
         ],
     };
@@ -272,6 +320,9 @@ function DiaryList({ user }) {
             y: {
                 min: 0,
                 max: 5,
+                grid: {
+                    color: '#f0f0f0'
+                },
                 ticks: {
                     stepSize: 1,
                     callback: function (value) {
@@ -283,6 +334,11 @@ function DiaryList({ user }) {
                             default: return '';
                         }
                     }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
                 }
             }
         },
@@ -342,9 +398,8 @@ function DiaryList({ user }) {
                 today.getMonth() === month &&
                 today.getFullYear() === year;
             const future = isFutureDate(date);
-            const dateString = formatDateToString(date);
-            const diary = diaries.find(diary => diary.date.startsWith(dateString));
-            // 감정 이모티콘만 표시
+
+            const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
             const emotionIcon = diary && diary.emotion ? emotionIcons[diary.emotion] : null;
 
             days.push(

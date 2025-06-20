@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import { auth } from '../firebase';
@@ -69,8 +68,6 @@ const LogoutButton = styled.button`
 `;
 
 function MyPage({ user }) {
-  const navigate = useNavigate();
-
   const handleLogout = async () => {
     try {
       await signOut(auth);

@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import PencilIcon from '../components/icons/PencilIcon';
+import { db } from '../firebase';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -90,11 +92,14 @@ const MainButtonText = styled.div`
   font-size: 16px;
   font-weight: 600;
   text-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
 `;
 /* 일기 최근 미리보기 */
 const DiaryPreviewContainer = styled.div`
   width: 100%;
-  padding: 0 20px;
+  padding: 10px 20px;
   box-sizing: border-box;
   text-align: left;
 `;
@@ -104,6 +109,9 @@ const DiaryPreviewDate = styled.div`
   opacity: 0.8;
   color: #fff;
   margin-bottom: 4px;
+  @media (min-width: 768px) {
+    font-size: 14px;
+  }
 `;
 
 const DiaryPreviewTitle = styled.div`
@@ -115,6 +123,9 @@ const DiaryPreviewTitle = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  @media (min-width: 768px) {
+    font-size: 22px;
+  }
 `;
 
 const DiaryPreviewContent = styled.div`
@@ -128,6 +139,9 @@ const DiaryPreviewContent = styled.div`
   -webkit-box-orient: vertical;
   line-height: 1.4;
   width: 100%;
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const WriteButtonContent = styled.div`
@@ -147,10 +161,10 @@ const ContentGrid = styled.div`
     gap: 20px;
   }
 `;
-
+/* 최근일기 영역 */
 const LeftSection = styled.div`
   @media (min-width: 768px) {
-    flex: 0 0 300px;
+    flex: 0 0 480px;
     display: flex;
     flex-direction: column;
   }
@@ -165,6 +179,9 @@ const SectionLabel = styled.div`
   font-weight: 500;
   color: #222;
   margin-bottom: 18px;
+  @media (min-width: 768px) {
+    font-size: 24px;
+  }
 `;
 
 const MyNovelRow = styled.div`
@@ -189,6 +206,9 @@ const MyNovelTitle = styled.div`
   font-weight: 600;
   text-align: center;
   word-break: keep-all;
+  @media (min-width: 768px) {
+    font-size: 18px;
+  }
 `;
 
 const NovelCover = styled.img`
@@ -211,13 +231,31 @@ function Home({ user }) {
   const [recentNovels, setRecentNovels] = useState([]);
 
   useEffect(() => {
-    const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-    const sortedDiaries = diaries.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 1);
-    setRecentDiaries(sortedDiaries);
-    const novels = JSON.parse(localStorage.getItem('novels') || '[]');
-    const sortedNovels = novels.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
-    setRecentNovels(sortedNovels);
-  }, []);
+    if (!user) return;
+
+    const fetchRecentData = async () => {
+      // Fetch recent diaries
+      const diariesRef = collection(db, 'diaries');
+      const diariesQuery = query(diariesRef, where('userId', '==', user.uid), orderBy('date', 'desc'), limit(1));
+      const diarySnapshot = await getDocs(diariesQuery);
+      setRecentDiaries(diarySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+
+      // Fetch recent novels
+      const novelsRef = collection(db, 'novels');
+      const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3));
+      const novelSnapshot = await getDocs(novelsQuery);
+      setRecentNovels(novelSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+    };
+
+    fetchRecentData();
+  }, [user]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    // 'YYYY-MM-DD' 형식을 로컬 시간대로 안전하게 파싱
+    const date = new Date(dateString.replace(/-/g, '/'));
+    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   return (
     <Container>
@@ -234,10 +272,10 @@ function Home({ user }) {
         <LeftSection>
           <SectionLabel>최근일기</SectionLabel>
           <MainButtonRow>
-            <MainButton color="blue" style={{ flex: 2 }} onClick={() => recentDiaries[0] ? navigate(`/diary/date/${recentDiaries[0].date.split('T')[0]}`) : navigate('/write')}>
+            <MainButton color="blue" style={{ flex: 2 }} onClick={() => recentDiaries[0] ? navigate(`/diary/date/${recentDiaries[0].date}`) : navigate('/write')}>
               {recentDiaries.length > 0 && recentDiaries[0] ? (
                 <DiaryPreviewContainer>
-                  <DiaryPreviewDate>{new Date(recentDiaries[0].date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</DiaryPreviewDate>
+                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
                   <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
                   <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
                 </DiaryPreviewContainer>
@@ -256,27 +294,31 @@ function Home({ user }) {
         <RightSection>
           <SectionLabel>내 소설</SectionLabel>
           <MyNovelRow>
-            {recentNovels.length > 0 ? (
-              recentNovels.map((novel) => (
+            {recentNovels.length > 0 ?
+              recentNovels.map(novel => (
                 <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.id}`)}>
-                  <NovelCover src={novel.imageUrl} alt={novel.title} />
+                  <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                   <MyNovelTitle>{novel.title}</MyNovelTitle>
                 </MyNovelBox>
               ))
-            ) : (
+              :
               Array(3).fill(null).map((_, idx) => (
-                <MyNovelBox key={idx}>
+                <MyNovelBox key={`placeholder-${idx}`}>
                   <div style={{
                     width: '100%',
-                    maxWidth: 180,
+                    maxWidth: '180px',
                     aspectRatio: '2/3',
                     background: '#fdd2d2',
-                    borderRadius: 15,
+                    borderRadius: '15px',
+                    display: 'block',
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                   }} />
-                  <MyNovelTitle style={{ color: '#ddd' }}>소설 쓰기</MyNovelTitle>
+                  <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
                 </MyNovelBox>
               ))
-            )}
+            }
           </MyNovelRow>
         </RightSection>
       </ContentGrid>

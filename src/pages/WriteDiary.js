@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import { db, storage } from '../firebase';
+import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -10,6 +13,14 @@ const getTodayString = () => {
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+// Timezone-safe 날짜 포맷팅 함수
+const formatDateToString = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 };
 
@@ -28,10 +39,11 @@ function WriteDiary({ user }) {
         title: '',
         content: '',
         mood: '행복',
-        images: [],
+        imageUrls: [],
         weather: 'sunny',
         emotion: 'happy'
     });
+    const [imageFiles, setImageFiles] = useState([]);
     const [imagePreview, setImagePreview] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -52,32 +64,51 @@ function WriteDiary({ user }) {
     ];
 
     useEffect(() => {
-        // URL에서 날짜 파라미터 가져오기
         const params = new URLSearchParams(location.search);
         const dateParam = params.get('date');
-        if (dateParam) {
-            const date = new Date(dateParam);
+        if (dateParam && user) {
+            // new Date()는 T00:00:00Z가 아닌 로컬 시간대를 사용하도록 합니다.
+            const date = new Date(dateParam.replace(/-/g, '/'));
             setSelectedDate(date);
-
-            // 해당 날짜의 일기가 있는지 확인
-            const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-            const existingDiary = diaries.find(d => d.date.startsWith(dateParam));
-
-            if (existingDiary) {
-                setDiary({
-                    title: existingDiary.title,
-                    content: existingDiary.content,
-                    mood: existingDiary.mood || '행복',
-                    images: existingDiary.images || [],
-                    weather: existingDiary.weather || 'sunny',
-                    emotion: existingDiary.emotion || 'happy'
-                });
-                setImagePreview(existingDiary.images || []);
-                setIsEditMode(true);
-                setExistingDiaryId(existingDiary.id);
-            }
+            fetchDiaryForDate(date);
         }
-    }, [location]);
+    }, [location, user]);
+
+    const fetchDiaryForDate = async (date) => {
+        const dateStr = formatDateToString(date);
+        const diariesRef = collection(db, 'diaries');
+        const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', dateStr));
+
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const existingDiary = querySnapshot.docs[0].data();
+            const diaryId = querySnapshot.docs[0].id;
+            setDiary({
+                title: existingDiary.title,
+                content: existingDiary.content,
+                mood: existingDiary.mood || '행복',
+                imageUrls: existingDiary.imageUrls || [],
+                weather: existingDiary.weather || 'sunny',
+                emotion: existingDiary.emotion || 'happy'
+            });
+            setImagePreview(existingDiary.imageUrls || []);
+            setIsEditMode(true);
+            setExistingDiaryId(diaryId);
+        } else {
+            // Reset form if no diary exists for the new date
+            setDiary({
+                title: '',
+                content: '',
+                mood: '행복',
+                imageUrls: [],
+                weather: 'sunny',
+                emotion: 'happy'
+            });
+            setImagePreview([]);
+            setIsEditMode(false);
+            setExistingDiaryId(null);
+        }
+    };
 
     // 날짜 포맷팅
     const formattedDate = {
@@ -94,29 +125,8 @@ function WriteDiary({ user }) {
             alert('미래의 일기는 작성할 수 없습니다.');
             return;
         }
-        // 날짜 변경 시 해당 날짜의 일기가 있는지 확인
-        const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-        const existingDiary = diaries.find(d => d.date.startsWith(date));
-
-        if (existingDiary && !isEditMode) {
-            if (window.confirm('이미 해당 날짜의 일기가 있습니다. 수정하시겠습니까?')) {
-                setDiary({
-                    title: existingDiary.title,
-                    content: existingDiary.content,
-                    mood: existingDiary.mood || '행복',
-                    images: existingDiary.images || [],
-                    weather: existingDiary.weather || 'sunny',
-                    emotion: existingDiary.emotion || 'happy'
-                });
-                setImagePreview(existingDiary.images || []);
-                setIsEditMode(true);
-                setExistingDiaryId(existingDiary.id);
-            } else {
-                return;
-            }
-        }
-
         setSelectedDate(newDate);
+        fetchDiaryForDate(newDate);
         setIsDatePickerOpen(false);
     };
 
@@ -139,8 +149,9 @@ function WriteDiary({ user }) {
                 if (newPreviews.length === files.length) {
                     setDiary(prev => ({
                         ...prev,
-                        images: [...prev.images, ...newPreviews]
+                        imageUrls: [...prev.imageUrls, ...newPreviews]
                     }));
+                    setImageFiles(prev => [...prev, ...files]);
                     setImagePreview(prev => [...prev, ...newPreviews]);
                 }
             };
@@ -151,23 +162,36 @@ function WriteDiary({ user }) {
     const removeImage = (index) => {
         setDiary(prev => ({
             ...prev,
-            images: prev.images.filter((_, i) => i !== index)
+            imageUrls: prev.imageUrls.filter((_, i) => i !== index)
         }));
+        setImageFiles(prev => prev.filter((_, i) => i !== index));
         setImagePreview(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (window.confirm('정말 일기를 삭제하시겠습니까?\n삭제된 일기는 복구할 수 없습니다.')) {
-            const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-            const updatedDiaries = diaries.filter(d => d.id !== existingDiaryId);
-            localStorage.setItem('diaries', JSON.stringify(updatedDiaries));
-            alert('일기가 삭제되었습니다.');
-            navigate('/diaries');
+            if (existingDiaryId) {
+                try {
+                    const diaryRef = doc(db, 'diaries', existingDiaryId);
+                    await deleteDoc(diaryRef);
+                    alert('일기가 삭제되었습니다.');
+                    navigate('/diaries');
+                } catch (error) {
+                    console.error("Error deleting diary: ", error);
+                    alert('일기 삭제에 실패했습니다.');
+                }
+            }
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user) {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+            return;
+        }
 
         if (!diary.title.trim()) {
             alert('제목을 입력해주세요.');
@@ -179,40 +203,41 @@ function WriteDiary({ user }) {
             return;
         }
 
-        const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        try {
+            const dateStr = formatDateToString(selectedDate);
+            let imageUrls = diary.imageUrls || [];
 
-        // 같은 날짜의 일기가 있는지 확인
-        const existingIndex = diaries.findIndex(d => d.date.startsWith(dateStr));
+            if (imageFiles.length > 0) {
+                const uploadPromises = imageFiles.map(file => {
+                    const imageRef = ref(storage, `diaries/${user.uid}/${dateStr}/${file.name}`);
+                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                });
+                const newImageUrls = await Promise.all(uploadPromises);
+                imageUrls = [...imageUrls, ...newImageUrls];
+            }
 
-        if (existingIndex !== -1 && !isEditMode) {
-            alert('이미 해당 날짜의 일기가 있습니다.');
-            return;
+            const diaryData = {
+                ...diary,
+                userId: user.uid,
+                date: dateStr,
+                imageUrls,
+                createdAt: new Date(),
+            };
+
+            if (isEditMode && existingDiaryId) {
+                const diaryRef = doc(db, 'diaries', existingDiaryId);
+                await setDoc(diaryRef, diaryData, { merge: true });
+                alert('일기가 수정되었습니다.');
+            } else {
+                await addDoc(collection(db, 'diaries'), diaryData);
+                alert('일기가 저장되었습니다.');
+            }
+
+            navigate('/diaries');
+        } catch (error) {
+            console.error("Error saving diary: ", error);
+            alert('일기 저장에 실패했습니다.');
         }
-
-        const diaryData = {
-            ...diary,
-            date: selectedDate.toISOString(),
-            id: isEditMode ? existingDiaryId : Date.now(),
-            weather: diary.weather,
-            emotion: diary.emotion
-        };
-
-        if (isEditMode) {
-            // 수정 모드일 경우 기존 일기 업데이트
-            const updatedDiaries = diaries.map(d =>
-                d.id === existingDiaryId ? diaryData : d
-            );
-            localStorage.setItem('diaries', JSON.stringify(updatedDiaries));
-            alert('일기가 수정되었습니다.');
-        } else {
-            // 새 일기 추가
-            diaries.push(diaryData);
-            localStorage.setItem('diaries', JSON.stringify(diaries));
-            alert('일기가 저장되었습니다.');
-        }
-
-        navigate('/diaries');
     };
 
     const styles = {

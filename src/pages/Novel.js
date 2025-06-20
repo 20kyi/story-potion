@@ -6,6 +6,8 @@ import 'slick-carousel/slick/slick-theme.css';
 import styled from 'styled-components';
 import Navigation from '../components/Navigation';
 import Header from '../components/Header';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -258,11 +260,14 @@ const bannerImages = [
 
 const Novel = ({ user }) => {
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [monthlyProgress, setMonthlyProgress] = useState({});
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [weeks, setWeeks] = useState([]);
+  const [weeklyProgress, setWeeklyProgress] = useState({});
+  const [monthProgress, setMonthProgress] = useState(0);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+  const [diaries, setDiaries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const settings = {
     dots: true,
@@ -274,54 +279,126 @@ const Novel = ({ user }) => {
     autoplaySpeed: 4000,
     pauseOnHover: false,
     arrows: false,
-    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
     cssEase: "linear"
   };
 
   useEffect(() => {
-    calculateMonthProgress(currentYear, currentMonth);
-  }, [currentMonth, currentYear]);
+    if (!user) {
+      setIsLoading(false);
+      return;
+    };
+
+    const fetchDiariesAndCalculateProgress = async () => {
+      setIsLoading(true);
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const firstDayOfMonth = new Date(year, month, 1);
+      const lastDayOfMonth = new Date(year, month + 1, 0);
+
+      const diariesRef = collection(db, 'diaries');
+      const q = query(diariesRef,
+        where('userId', '==', user.uid),
+        where('date', '>=', formatDate(firstDayOfMonth)),
+        where('date', '<=', formatDate(lastDayOfMonth)),
+        orderBy('date')
+      );
+
+      let fetchedDiaries = [];
+      try {
+        const querySnapshot = await getDocs(q);
+        fetchedDiaries = querySnapshot.docs.map(doc => doc.data());
+        setDiaries(fetchedDiaries);
+      } catch (error) {
+        console.error("Error fetching diaries: ", error);
+        alert('일기 데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요. 문제가 계속되면 콘솔(F12)의 오류 메시지를 확인해주세요.');
+      }
+
+      // 데이터 패치 성공 여부와 관계 없이 항상 주(week) 계산 및 렌더링
+      calculateAllProgress(year, month, fetchedDiaries);
+      setIsLoading(false);
+    };
+
+    fetchDiariesAndCalculateProgress();
+  }, [user, currentDate]);
+
 
   const getWeeksInMonth = (year, month) => {
-    const firstDay = new Date(year, month - 1, 1);
-    const lastDay = new Date(year, month, 0);
+    // month는 0-11 사이의 값입니다.
     const weeks = [];
-    let firstWeekStart = new Date(firstDay);
-    const firstDayOfWeek = firstDay.getDay();
-    const diff = firstDayOfWeek === 0 ? -6 : 1 - firstDayOfWeek;
-    firstWeekStart.setDate(firstWeekStart.getDate() + diff);
-    let firstWeekEnd = new Date(firstWeekStart);
-    firstWeekEnd.setDate(firstWeekStart.getDate() + 6);
-    if (firstWeekEnd.getMonth() === month - 1) {
-      weeks.push({
-        weekNum: 1,
-        start: new Date(firstWeekStart),
-        end: new Date(firstWeekEnd)
-      });
-    }
-    let currentDate = new Date(firstWeekStart);
-    currentDate.setDate(currentDate.getDate() + 7);
-    let weekIdx = 2;
-    while (currentDate <= lastDay) {
-      const weekStart = new Date(currentDate);
-      const weekEnd = new Date(currentDate);
-      weekEnd.setDate(currentDate.getDate() + 6);
-      if (weekStart.getMonth() !== month - 1) {
-        currentDate.setDate(currentDate.getDate() + 7);
-        continue;
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    // 해당 월의 첫 날이 속한 주의 월요일을 찾습니다.
+    let currentMonday = new Date(year, month, 1);
+    currentMonday.setDate(currentMonday.getDate() - (currentMonday.getDay() === 0 ? 6 : currentMonday.getDay() - 1));
+
+    let weekNum = 1;
+
+    while (currentMonday <= lastDayOfMonth) {
+      const weekEnd = new Date(currentMonday);
+      weekEnd.setDate(currentMonday.getDate() + 6);
+
+      // 주의 마지막 날(weekEnd)이 다음 달로 넘어가지 않는 주만 포함시킵니다.
+      // 단, 첫 주가 이전 달에서 시작하는 경우는 포함해야 합니다.
+      if (weekEnd.getMonth() === month || weekEnd < lastDayOfMonth) {
+        weeks.push({
+          weekNum: weekNum++,
+          start: new Date(currentMonday),
+          end: new Date(weekEnd),
+        });
       }
-      if (weekEnd.getMonth() !== month - 1) {
-        break;
-      }
-      weeks.push({
-        weekNum: weekIdx++,
-        start: new Date(weekStart),
-        end: new Date(weekEnd)
-      });
-      currentDate.setDate(currentDate.getDate() + 7);
+
+      currentMonday.setDate(currentMonday.getDate() + 7);
     }
     return weeks;
   };
+
+  const calculateAllProgress = (year, month, fetchedDiaries) => {
+    const monthWeeks = getWeeksInMonth(year, month);
+    setWeeks(monthWeeks);
+
+    let totalDaysInMonth = 0;
+    let writtenDaysInMonth = 0;
+    const newWeeklyProgress = {};
+
+    monthWeeks.forEach(week => {
+      let writtenDays = 0;
+      const daysInWeek = 7; // 한 주는 항상 7일입니다.
+
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(week.start);
+        day.setDate(day.getDate() + i);
+
+        const dateString = formatDate(day);
+        if (fetchedDiaries.some(d => d.date === dateString)) {
+          writtenDays++;
+        }
+      }
+
+      newWeeklyProgress[week.weekNum] = (writtenDays / daysInWeek) * 100;
+
+      // 월 전체 진행률 계산 로직은 현재 달에 속한 날만 대상으로 유지합니다.
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(week.start);
+        day.setDate(day.getDate() + i);
+        if (day.getMonth() === month) {
+          totalDaysInMonth++;
+          const dateString = formatDate(day);
+          if (fetchedDiaries.some(d => d.date === dateString)) {
+            writtenDaysInMonth++;
+          }
+        }
+      }
+    });
+
+    setWeeklyProgress(newWeeklyProgress);
+    if (totalDaysInMonth > 0) {
+      setMonthProgress((writtenDaysInMonth / totalDaysInMonth) * 100);
+    } else {
+      setMonthProgress(0);
+    }
+  };
+
 
   const getFirstWeekOfMonth = (year, month) => {
     const firstDay = new Date(year, month - 1, 1);
@@ -332,137 +409,42 @@ const Novel = ({ user }) => {
     return firstMonday;
   };
 
-  const calculateMonthProgress = (year, month) => {
-    const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-    const weeksInMonth = getWeeksInMonth(year, month);
-    const progress = {};
-    const lastDay = new Date(year, month, 0);
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const nextYear = month === 12 ? year + 1 : year;
-    const firstMondayNextMonth = getFirstWeekOfMonth(nextYear, nextMonth);
-    const firstWeekNextMonthEnd = new Date(firstMondayNextMonth);
-    firstWeekNextMonthEnd.setDate(firstMondayNextMonth.getDate() + 6);
-    weeksInMonth.forEach((week, idx) => {
-      let weekEnd = week.end;
-      if (week.end.getTime() === lastDay.getTime() && week.end.getDay() !== 0) {
-        weekEnd = new Date(lastDay);
-        weekEnd.setDate(lastDay.getDate() - (lastDay.getDay() === 0 ? 6 : lastDay.getDay()));
-      }
-      const weekDates = [];
-      let d = new Date(week.start);
-      while (d <= week.end && d <= lastDay) {
-        if (week.end.getTime() === lastDay.getTime() && week.end.getDay() !== 0 && d.getTime() === lastDay.getTime()) {
-          break;
-        }
-        weekDates.push(new Date(d));
-        d.setDate(d.getDate() + 1);
-      }
-      const weekDiaries = diaries.filter(diary => {
-        const diaryDate = new Date(diary.date);
-        return weekDates.some(date => diaryDate.toDateString() === date.toDateString());
-      });
-      const progressPercentage = (weekDiaries.length / weekDates.length) * 100;
-      progress[idx + 1] = {
-        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
-        progress: Math.min(progressPercentage, 100),
-        completed: progressPercentage >= 100,
-        weekTitle: `${month}월 ${idx + 1}주차`
-      };
-    });
-    if (lastDay >= firstMondayNextMonth && lastDay <= firstWeekNextMonthEnd) {
-      const weekDates = [];
-      let d = new Date(firstMondayNextMonth);
-      while (d <= firstWeekNextMonthEnd) {
-        if (d.getMonth() === lastDay.getMonth() && d.getDate() === lastDay.getDate()) {
-          weekDates.push(new Date(d));
-        }
-        d.setDate(d.getDate() + 1);
-      }
-      const weekDiaries = diaries.filter(diary => {
-        const diaryDate = new Date(diary.date);
-        return weekDates.some(date => diaryDate.toDateString() === date.toDateString());
-      });
-      const progressPercentage = (weekDiaries.length / weekDates.length) * 100;
-    }
-    setMonthlyProgress(progress);
-  };
-
   const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
-  const handlePrevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear(prev => prev - 1);
-    } else {
-      setCurrentMonth(prev => prev - 1);
+  const handleCreateNovel = (week) => {
+    const weekProgress = weeklyProgress[week.weekNum] || 0;
+    if (weekProgress < 100) {
+      alert('일기를 모두 작성해야 소설을 만들 수 있어요!');
+      return;
     }
-  };
 
-  const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear(prev => prev + 1);
-    } else {
-      setCurrentMonth(prev => prev + 1);
-    }
-  };
+    const novelTitle = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차 소설`;
 
-  const handleCreateNovel = (weekNum) => {
-    if (monthlyProgress[weekNum].completed) {
-      const genreImages = [
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=facearea&w=400&h=540',
-          title: '바람의 나라',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=400&h=540',
-          title: '사랑의 계절',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=facearea&w=400&h=540',
-          title: '미스터리의 밤',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=facearea&w=400&h=540',
-          title: '성장의 시간',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=facearea&w=400&h=540',
-          title: '일상의 기록',
-        },
-      ];
-      const genreIdx = (weekNum - 1) % genreImages.length;
-      const { imageUrl, title } = genreImages[genreIdx];
+    const weekStartDate = new Date(week.start);
+    const weekEndDate = new Date(week.end);
 
-      // 완성된 소설 정보를 localStorage에 저장
-      const novels = JSON.parse(localStorage.getItem('novels') || '[]');
-      const newNovel = {
-        id: Date.now().toString(),
-        title,
-        imageUrl,
-        week: monthlyProgress[weekNum].weekTitle,
-        dateRange: monthlyProgress[weekNum].dateRange,
-        date: new Date().toISOString(),
-        year: currentYear,
-        month: currentMonth
-      };
-      novels.push(newNovel);
-      localStorage.setItem('novels', JSON.stringify(novels));
+    // 이 주의 일기 중 첫 번째 이미지 URL을 대표 이미지로 사용 (없으면 기본값)
+    const firstDiaryWithImage = diaries.find(diary => {
+      const diaryDate = new Date(diary.date);
+      return diaryDate >= weekStartDate &&
+        diaryDate <= weekEndDate &&
+        diary.imageUrls && diary.imageUrls.length > 0;
+    });
+    const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
 
-      navigate('/novel/create', {
-        state: {
-          week: monthlyProgress[weekNum].weekTitle,
-          dateRange: monthlyProgress[weekNum].dateRange,
-          imageUrl,
-          title,
-        },
-      });
-    }
+    navigate('/novel/create', {
+      state: {
+        week: `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`,
+        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
+        imageUrl: imageUrl,
+        title: novelTitle
+      }
+    });
   };
 
   const handleWriteDiary = () => {
@@ -470,12 +452,12 @@ const Novel = ({ user }) => {
   };
 
   const handleYearChange = (year) => {
-    setCurrentYear(year);
+    setCurrentDate(new Date(year, currentDate.getMonth()));
   };
 
   const handleMonthChange = (month) => {
-    setCurrentMonth(month);
-    setIsDatePickerOpen(false);
+    setCurrentDate(new Date(currentDate.getFullYear(), month - 1));
+    setIsPickerOpen(false);
   };
 
   return (
@@ -508,25 +490,25 @@ const Novel = ({ user }) => {
       </CarouselContainer>
       <WeeklySection>
         <MonthSelector>
-          <MonthButton onClick={handlePrevMonth}>‹</MonthButton>
-          <CurrentMonth onClick={() => setIsDatePickerOpen(true)}>
-            {currentYear}년 {currentMonth}월
+          <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
+          <CurrentMonth onClick={() => setIsPickerOpen(true)}>
+            {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
           </CurrentMonth>
-          <MonthButton onClick={handleNextMonth}>›</MonthButton>
+          <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
         </MonthSelector>
-        {isDatePickerOpen && (
-          <DatePickerModal onClick={() => setIsDatePickerOpen(false)}>
+        {isPickerOpen && (
+          <DatePickerModal onClick={() => setIsPickerOpen(false)}>
             <DatePickerContent onClick={(e) => e.stopPropagation()}>
               <DatePickerHeader>
                 <DatePickerTitle>날짜 선택</DatePickerTitle>
-                <DatePickerClose onClick={() => setIsDatePickerOpen(false)}>×</DatePickerClose>
+                <DatePickerClose onClick={() => setIsPickerOpen(false)}>×</DatePickerClose>
               </DatePickerHeader>
               <DatePickerTitle>년도</DatePickerTitle>
               <DatePickerGrid>
-                {[currentYear - 1, currentYear, currentYear + 1].map((year) => (
+                {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map((year) => (
                   <DatePickerButton
                     key={year}
-                    selected={year === currentYear}
+                    selected={year === currentDate.getFullYear()}
                     onClick={() => handleYearChange(year)}
                   >
                     {year}
@@ -538,7 +520,7 @@ const Novel = ({ user }) => {
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
                   <DatePickerButton
                     key={month}
-                    selected={month === currentMonth}
+                    selected={month === currentDate.getMonth() + 1}
                     onClick={() => handleMonthChange(month)}
                   >
                     {month}월
@@ -549,20 +531,27 @@ const Novel = ({ user }) => {
           </DatePickerModal>
         )}
         <WeeklyGrid>
-          {Object.entries(monthlyProgress).map(([weekNum, week]) => (
-            <WeeklyCard key={weekNum}>
+          {weeks.map(week => (
+            <WeeklyCard key={week.weekNum}>
               <WeekTitle>
-                {week.weekTitle}
+                {currentDate.getMonth() + 1}월 {week.weekNum}주차
               </WeekTitle>
-              <DateRange>{week.dateRange}</DateRange>
-              <ProgressBar progress={week.progress}>
+              <DateRange>{formatDate(week.start)} ~ {formatDate(week.end)}</DateRange>
+              <ProgressBar progress={weeklyProgress[week.weekNum] || 0}>
                 <div />
               </ProgressBar>
               <CreateButton
-                completed={week.completed}
-                onClick={() => week.completed ? handleCreateNovel(weekNum) : handleWriteDiary()}
+                completed={(weeklyProgress[week.weekNum] || 0) === 100}
+                onClick={() => {
+                  const progress = weeklyProgress[week.weekNum] || 0;
+                  if (progress === 100) {
+                    handleCreateNovel(week);
+                  } else {
+                    handleWriteDiary();
+                  }
+                }}
               >
-                {week.completed ? '소설 만들기' : '일기 쓰러가기'}
+                {(weeklyProgress[week.weekNum] || 0) === 100 ? '소설 만들기' : '일기 작성하기'}
               </CreateButton>
             </WeeklyCard>
           ))}
