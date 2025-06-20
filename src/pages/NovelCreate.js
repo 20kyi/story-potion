@@ -5,6 +5,7 @@ import Navigation from '../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const Container = styled.div`
   display: flex;
@@ -153,8 +154,10 @@ function NovelCreate({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isNovelGenerated, setIsNovelGenerated] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState('');
+  const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
+  const [isCoverLoading, setIsCoverLoading] = useState(false);
 
-  const genres = ['로맨스', '시대극', '추리', '공포', '동화', '판타지'];
+  const genres = ['로맨스', '조선시대 사극', '추리', '공포', '동화', '판타지'];
 
   useEffect(() => {
     if (!user || !dateRange) {
@@ -208,21 +211,45 @@ function NovelCreate({ user }) {
       .map(diary => `날짜: ${diary.date}\n제목: ${diary.title}\n내용: ${diary.content}`)
       .join('\n\n---\n\n');
 
-    const prompt = `
-      다음은 한 주간의 일기 내용입니다. 이 내용을 바탕으로 '${selectedGenre}' 장르의 단편 소설을 작성해주세요.
-      소설의 주인공은 일기 작성자입니다. 자연스러운 이야기 흐름을 만들어주세요.
+    try {
+      const functions = getFunctions();
+      const generateNovel = httpsCallable(functions, 'generateNovel');
+      const result = await generateNovel({
+        diaryContents,
+        genre: selectedGenre,
+        userName: user.displayName || '나'
+      });
 
-      [일기 내용]
-      ${diaryContents}
-    `;
+      const novelContent = result.data.content;
+      setContent(novelContent);
+      setIsNovelGenerated(true);
+    } catch (error) {
+      console.error("Error generating novel: ", error);
+      alert('소설 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // TODO: 아래는 예시 코드입니다. 실제로는 여기에 LLM API를 호출하는 코드를 작성해야 합니다.
-    // 예: const generatedContent = await callLlmApi(prompt);
-    const generatedContent = `[${selectedGenre}] 장르 소설이 생성되었습니다.\n\n${prompt}`; // 임시 생성 내용
+  const handleGenerateCover = async () => {
+    setIsCoverLoading(true);
+    try {
+      const functions = getFunctions();
+      const generateNovelCover = httpsCallable(functions, 'generateNovelCover');
+      const result = await generateNovelCover({ novelContent: content, title, genre: selectedGenre });
 
-    setContent(generatedContent);
-    setIsNovelGenerated(true);
-    setIsLoading(false);
+      const newImageUrl = result.data.imageUrl;
+      if (newImageUrl) {
+        setGeneratedImageUrl(newImageUrl);
+      } else {
+        throw new Error("이미지 URL을 받아오지 못했습니다.");
+      }
+    } catch (error) {
+      console.error("Error generating cover: ", error);
+      alert('표지 이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsCoverLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -243,7 +270,7 @@ function NovelCreate({ user }) {
       const newNovel = {
         userId: user.uid,
         title,
-        imageUrl,
+        imageUrl: generatedImageUrl,
         week,
         dateRange,
         genre: selectedGenre,
@@ -273,7 +300,7 @@ function NovelCreate({ user }) {
     <Container>
       <Header user={user} />
       <NovelHeader>
-        <NovelCover src={imageUrl} alt={title} />
+        <NovelCover src={generatedImageUrl} alt={title} />
         <NovelInfo>
           <NovelTitle>{title}</NovelTitle>
           <NovelDate>{week} ({dateRange})</NovelDate>
@@ -323,6 +350,13 @@ function NovelCreate({ user }) {
           <NovelContent>
             {content}
           </NovelContent>
+          {isCoverLoading ? (
+            <Button disabled>표지 생성 중...</Button>
+          ) : (
+            generatedImageUrl === imageUrl && (
+              <Button onClick={handleGenerateCover}>AI로 표지 생성하기</Button>
+            )
+          )}
           <Button onClick={handleSave}>소설 저장하기</Button>
         </>
       )}

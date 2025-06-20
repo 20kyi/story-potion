@@ -1,0 +1,19 @@
+[debug] [2025-06-20T15:58:34.556Z] ----------------------------------------------------------------------
+[debug] [2025-06-20T15:58:34.577Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\20kyi\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2025-06-20T15:58:34.579Z] CLI Version:   14.8.0
+[debug] [2025-06-20T15:58:34.580Z] Platform:      win32
+[debug] [2025-06-20T15:58:34.585Z] Node Version:  v22.16.0
+[debug] [2025-06-20T15:58:34.588Z] Time:          Sat Jun 21 2025 00:58:34 GMT+0900 (대한민국 표준시)
+[debug] [2025-06-20T15:58:34.589Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-20T15:58:35.692Z] Field "/functions/runtime" in "firebase.json" is possibly invalid: must be equal to one of the allowed values
+[debug] [2025-06-20T15:58:35.693Z] Field "/functions" in "firebase.json" is possibly invalid: must be array
+[debug] [2025-06-20T15:58:35.694Z] Field "/functions" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[debug] [2025-06-20T15:58:35.716Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-20T15:58:35.717Z] > authorizing via signed-in user (0521kimyi@gmail.com)
+[debug] [2025-06-20T15:58:35.718Z] [iam] checking project story-potion for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-06-20T15:58:35.728Z] Checked if tokens are valid: true, expires at: 1750437634607
+[debug] [2025-06-20T15:58:35.729Z] Checked if tokens are valid: true, expires at: 1750437634607
+[debug] [2025-06-20T15:58:35.732Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/story-potion:testIamPermissions [none]
+[debug] [2025-06-20T15:58:35.732Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/story-potion:testIamPermissions x-goog-quota-user=projects/story-potion
+[debug] [2025-06-20T15:58:35.733Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/story-potion:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
