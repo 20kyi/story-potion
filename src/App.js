@@ -38,7 +38,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novel" element={user ? <Novel user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my" element={user ? <MyPage user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novel/create" element={user ? <NovelCreate user={user} /> : <Navigate to="/login" />} />
-                <Route path="/novel/view" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
+                <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>

@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -147,7 +147,7 @@ const GenreButton = styled.button`
 function NovelCreate({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { week, dateRange, imageUrl, title } = location.state || {};
+  const { year, month, weekNum, week, dateRange, imageUrl, title } = location.state || {};
   const [content, setContent] = useState('');
   const [weekDiaries, setWeekDiaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -235,6 +235,10 @@ function NovelCreate({ user }) {
       return;
     }
 
+    // 예: 2023-10-4
+    const novelId = `${year}-${month}-${weekNum}`;
+    const novelRef = doc(db, 'novels', novelId);
+
     try {
       const newNovel = {
         userId: user.uid,
@@ -246,11 +250,11 @@ function NovelCreate({ user }) {
         content,
         createdAt: new Date(),
       };
-      const docRef = await addDoc(collection(db, 'novels'), newNovel);
+      await setDoc(novelRef, newNovel);
       alert('소설이 저장되었습니다.');
-      navigate('/novel/' + docRef.id);
+      navigate(`/novel/${novelId}`);
     } catch (error) {
-      console.error("Error saving novel: ", error);
+      console.error("소설 저장 중 오류 발생: ", error);
       alert('소설 저장에 실패했습니다.');
     }
   };

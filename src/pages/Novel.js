@@ -268,6 +268,7 @@ const Novel = ({ user }) => {
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
   const [diaries, setDiaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [novelsMap, setNovelsMap] = useState({});
 
   const settings = {
     dots: true,
@@ -288,7 +289,7 @@ const Novel = ({ user }) => {
       return;
     };
 
-    const fetchDiariesAndCalculateProgress = async () => {
+    const fetchAllData = async () => {
       setIsLoading(true);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -296,8 +297,9 @@ const Novel = ({ user }) => {
       const firstDayOfMonth = new Date(year, month, 1);
       const lastDayOfMonth = new Date(year, month + 1, 0);
 
+      // 1. Fetch Diaries for the month
       const diariesRef = collection(db, 'diaries');
-      const q = query(diariesRef,
+      const diariesQuery = query(diariesRef,
         where('userId', '==', user.uid),
         where('date', '>=', formatDate(firstDayOfMonth)),
         where('date', '<=', formatDate(lastDayOfMonth)),
@@ -306,20 +308,37 @@ const Novel = ({ user }) => {
 
       let fetchedDiaries = [];
       try {
-        const querySnapshot = await getDocs(q);
-        fetchedDiaries = querySnapshot.docs.map(doc => doc.data());
+        const diarySnapshot = await getDocs(diariesQuery);
+        fetchedDiaries = diarySnapshot.docs.map(doc => doc.data());
         setDiaries(fetchedDiaries);
       } catch (error) {
         console.error("Error fetching diaries: ", error);
-        alert('일기 데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요. 문제가 계속되면 콘솔(F12)의 오류 메시지를 확인해주세요.');
+        // 오류가 나도 UI는 계속 진행되도록 함
       }
 
-      // 데이터 패치 성공 여부와 관계 없이 항상 주(week) 계산 및 렌더링
+      // 2. Fetch all Novels for the user to create a map
+      const novelsRef = collection(db, 'novels');
+      const novelsQuery = query(novelsRef, where('userId', '==', user.uid));
+      try {
+        const novelSnapshot = await getDocs(novelsQuery);
+        const newNovelsMap = {};
+        novelSnapshot.forEach(doc => {
+          const novel = doc.data();
+          if (novel.week) { // week 정보가 있는 소설만 맵에 추가
+            newNovelsMap[novel.week] = doc.id;
+          }
+        });
+        setNovelsMap(newNovelsMap);
+      } catch (error) {
+        console.error("Error fetching novels: ", error);
+      }
+
+      // 3. Calculate progress
       calculateAllProgress(year, month, fetchedDiaries);
       setIsLoading(false);
     };
 
-    fetchDiariesAndCalculateProgress();
+    fetchAllData();
   }, [user, currentDate]);
 
 
@@ -423,7 +442,9 @@ const Novel = ({ user }) => {
       return;
     }
 
-    const novelTitle = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차 소설`;
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const novelTitle = `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
     const weekStartDate = new Date(week.start);
     const weekEndDate = new Date(week.end);
@@ -439,7 +460,10 @@ const Novel = ({ user }) => {
 
     navigate('/novel/create', {
       state: {
-        week: `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`,
+        year: year,
+        month: month,
+        weekNum: week.weekNum,
+        week: `${month}월 ${week.weekNum}주차`,
         dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
         imageUrl: imageUrl,
         title: novelTitle
@@ -531,30 +555,41 @@ const Novel = ({ user }) => {
           </DatePickerModal>
         )}
         <WeeklyGrid>
-          {weeks.map(week => (
-            <WeeklyCard key={week.weekNum}>
-              <WeekTitle>
-                {currentDate.getMonth() + 1}월 {week.weekNum}주차
-              </WeekTitle>
-              <DateRange>{formatDate(week.start)} ~ {formatDate(week.end)}</DateRange>
-              <ProgressBar progress={weeklyProgress[week.weekNum] || 0}>
-                <div />
-              </ProgressBar>
-              <CreateButton
-                completed={(weeklyProgress[week.weekNum] || 0) === 100}
-                onClick={() => {
-                  const progress = weeklyProgress[week.weekNum] || 0;
-                  if (progress === 100) {
-                    handleCreateNovel(week);
-                  } else {
-                    handleWriteDiary();
-                  }
-                }}
-              >
-                {(weeklyProgress[week.weekNum] || 0) === 100 ? '소설 만들기' : '일기 작성하기'}
-              </CreateButton>
-            </WeeklyCard>
-          ))}
+          {weeks.map(week => {
+            const weekIdentifier = `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
+            const existingNovelId = novelsMap[weekIdentifier];
+            const progress = weeklyProgress[week.weekNum] || 0;
+            const isCompleted = progress === 100;
+
+            return (
+              <WeeklyCard key={week.weekNum}>
+                <WeekTitle>{weekIdentifier}</WeekTitle>
+                <DateRange>{formatDate(week.start)} ~ {formatDate(week.end)}</DateRange>
+                <ProgressBar progress={progress}>
+                  <div />
+                </ProgressBar>
+
+                {existingNovelId ? (
+                  <CreateButton completed onClick={() => navigate(`/novel/${existingNovelId}`)}>
+                    소설 읽기
+                  </CreateButton>
+                ) : (
+                  <CreateButton
+                    completed={isCompleted}
+                    onClick={() => {
+                      if (isCompleted) {
+                        handleCreateNovel(week);
+                      } else {
+                        handleWriteDiary();
+                      }
+                    }}
+                  >
+                    {isCompleted ? '소설 만들기' : '일기 작성하기'}
+                  </CreateButton>
+                )}
+              </WeeklyCard>
+            );
+          })}
         </WeeklyGrid>
       </WeeklySection>
       <Navigation />

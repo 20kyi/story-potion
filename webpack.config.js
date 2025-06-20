@@ -29,10 +29,13 @@ module.exports = {
         extensions: ['.js', '.jsx']
     },
     devServer: {
-        historyApiFallback: true,
         static: {
-            directory: path.join(__dirname, 'public')
+            directory: path.join(__dirname, 'public'),
         },
-        port: 3000
+        historyApiFallback: true,
+        port: 3000,
+        devMiddleware: {
+            publicPath: '/'
+        }
     }
 }; 
