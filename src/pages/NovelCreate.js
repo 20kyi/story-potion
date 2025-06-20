@@ -107,7 +107,7 @@ const Button = styled.button`
   background: #e46262;
   color: white;
   border: none;
-  padding: 15px 30px;
+  padding: 12px 30px;
   border-radius: 25px;
   font-size: 16px;
   font-weight: 600;
@@ -115,6 +115,7 @@ const Button = styled.button`
   width: 100%;
   max-width: 300px;
   margin: 0 auto;
+  margin-bottom: 10px;
   
   &:hover {
     background: #d45252;
@@ -157,7 +158,7 @@ function NovelCreate({ user }) {
   const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
   const [isCoverLoading, setIsCoverLoading] = useState(false);
 
-  const genres = ['로맨스', '조선시대 사극', '추리', '공포', '동화', '판타지'];
+  const genres = ['로맨스', '사극', '추리', '공포', '동화', '판타지'];
 
   useEffect(() => {
     if (!user || !dateRange) {

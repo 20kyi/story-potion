@@ -49,7 +49,7 @@ const Dot = styled.div`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: ${props => props.active ? '#e46262' : 'rgba(255, 255, 255, 0.5)'};
+  background-color: ${props => props.$active ? '#e46262' : 'rgba(255, 255, 255, 0.5)'};
 `;
 
 const MainButtonRow = styled.div`
@@ -262,9 +262,9 @@ function Home({ user }) {
       <Header user={user} />
       <Carousel>
         <CarouselDots>
-          {[0, 1, 2].map((index) => (
-            <Dot key={index} active={index === 0} />
-          ))}
+          <Dot $active={true} />
+          <Dot $active={false} />
+          <Dot $active={false} />
         </CarouselDots>
       </Carousel>
 
