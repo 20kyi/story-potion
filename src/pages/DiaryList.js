@@ -3,14 +3,48 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import styled from 'styled-components';
 import Header from '../components/Header';
+import { Line } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-//   background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
   padding: 20px;
   padding-top: 70px;
+`;
+
+const EmotionGraphContainer = styled.div`
+  margin-top: 30px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const GraphTitle = styled.h3`
+  color: #e46262;
+  margin-bottom: 20px;
+  text-align: center;
 `;
 
 function DiaryList() {
@@ -19,30 +53,17 @@ function DiaryList() {
     const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
 
     const styles = {
-        // container: {
-        //     display: 'flex',
-        //     flexDirection: 'column',
-        //     height: '80vh',
-        // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
-        // padding: '20px'
-        // },
         content: {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
             paddingBottom: '80px',
         },
-        // mainContent: {
-        //     backgroundColor: '#fffbfb',
-        //     borderRadius: '30px',
-        //     padding: '20px',
-        //     flex: 1,
-        //     overflowY: 'auto'
-        // },
         calendarHeader: {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            marginTop: '20px',
             marginBottom: '20px'
         },
         monthText: {
@@ -195,6 +216,101 @@ function DiaryList() {
         calm: "😌"
     };
 
+    // 감정 값 매핑
+    const emotionValues = {
+        happy: 4,
+        calm: 3,
+        sad: 2,
+        angry: 1
+    };
+
+    // 현재 월의 감정 데이터 가져오기
+    const getCurrentMonthEmotionData = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        // 현재 월의 일수 구하기
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // 날짜별 감정 데이터 생성
+        const emotionData = [];
+        const labels = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateString = formatDateToString(date);
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+
+            if (diary && diary.emotion) {
+                emotionData.push(emotionValues[diary.emotion]);
+                labels.push(day);
+            }
+        }
+
+        return { labels, emotionData };
+    };
+
+    // 차트 데이터 설정
+    const { labels, emotionData } = getCurrentMonthEmotionData();
+    const chartData = {
+        labels,
+        datasets: [
+            {
+                label: '감정 변화',
+                data: emotionData,
+                borderColor: '#e46262',
+                backgroundColor: 'rgba(228, 98, 98, 0.5)',
+                tension: 0.1,
+                pointBackgroundColor: '#e46262',
+                pointRadius: 2,
+                pointHoverRadius: 7,
+            },
+        ],
+    };
+
+    // 차트 옵션 설정
+    const chartOptions = {
+        responsive: true,
+        scales: {
+            y: {
+                min: 0,
+                max: 5,
+                ticks: {
+                    stepSize: 1,
+                    callback: function (value) {
+                        switch (value) {
+                            case 4: return '행복';
+                            case 3: return '평온';
+                            case 2: return '슬픔';
+                            case 1: return '화남';
+                            default: return '';
+                        }
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        const value = context.raw;
+                        let emotion = '';
+                        switch (value) {
+                            case 4: emotion = '행복 😊'; break;
+                            case 3: emotion = '평온 😌'; break;
+                            case 2: emotion = '슬픔 😢'; break;
+                            case 1: emotion = '화남 😠'; break;
+                        }
+                        return emotion;
+                    }
+                }
+            }
+        }
+    };
+
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -291,7 +407,6 @@ function DiaryList() {
             <div style={styles.container}>
                 <div style={styles.content}>
                     <header style={styles.header}>
-                        {/* <BackButton onClick={() => navigate('/')}>←</BackButton> */}
                     </header>
                     <div style={styles.mainContent}>
                         <div style={styles.calendarHeader}>
@@ -311,6 +426,11 @@ function DiaryList() {
                                 {renderCalendar()}
                             </tbody>
                         </table>
+
+                        <EmotionGraphContainer>
+                            <GraphTitle>{formatMonth(currentDate)} 감정 그래프</GraphTitle>
+                            <Line data={chartData} options={chartOptions} />
+                        </EmotionGraphContainer>
                     </div>
                 </div>
             </div>
