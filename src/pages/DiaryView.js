@@ -13,7 +13,7 @@ const Container = styled.div`
   padding-top: 70px;
 `;
 
-function DiaryView() {
+function DiaryView({ user }) {
     const navigate = useNavigate();
     const { date } = useParams();
     const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
@@ -135,6 +135,7 @@ function DiaryView() {
     return (
         <Container>
             <Header
+                user={user}
                 rightActions={
                     <>
                         <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>수정</button>

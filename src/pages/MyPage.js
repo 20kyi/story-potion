@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
 
 const MainContainer = styled.div`
   display: flex;
@@ -66,26 +68,30 @@ const LogoutButton = styled.button`
   }
 `;
 
-function MyPage() {
+function MyPage({ user }) {
   const navigate = useNavigate();
-  // 임시 닉네임, 정보
-  const nickname = '홍길동';
-  const info = '오늘도 즐거운 하루!';
 
-  const handleLogout = () => {
-    // 로그아웃 로직 (예: localStorage.clear(), 페이지 이동 등)
-    // localStorage.clear(); // 필요하다면 주석 해제하여 사용
-    alert('로그아웃 되었습니다.');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // 로그아웃 성공 시 App.js의 onAuthStateChanged가 감지하여
+      // 자동으로 로그인 페이지로 리디렉션합니다.
+      alert('로그아웃 되었습니다.');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      alert('로그아웃에 실패했습니다.');
+    }
   };
+
+  const displayName = user?.displayName || user?.email;
 
   return (
     <>
-      <Header />
+      <Header user={user} />
       <MainContainer className="my-page-container">
         <ProfileImage>😊</ProfileImage>
-        <Nickname>{nickname}</Nickname>
-        <Info>{info}</Info>
+        <Nickname>{displayName}</Nickname>
+        <Info>오늘도 즐거운 하루!</Info>
         <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
         <Navigation />
       </MainContainer>

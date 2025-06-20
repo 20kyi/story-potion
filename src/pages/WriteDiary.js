@@ -21,7 +21,7 @@ const TopRow = styled.div`
   margin-bottom: 8px;
 `;
 
-function WriteDiary() {
+function WriteDiary({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [diary, setDiary] = useState({
@@ -402,27 +402,28 @@ function WriteDiary() {
             resize: 'none',
             outline: 'none',
             lineHeight: '1.5'
+        },
+        dateDisplay: {
+            fontSize: '18px',
+            color: '#e46262',
+            marginBottom: '20px',
+            fontWeight: '500',
+            marginTop: '40px',
+            cursor: 'pointer'
         }
     };
 
     return (
         <div style={styles.container}>
             <Header
+                user={user}
                 rightActions={
-                    <>
-                        <button style={styles.actionButton} onClick={handleSubmit}>{isEditMode ? '수정' : '저장'}</button>
-                        {isEditMode && (
-                            <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
-                        )}
-                    </>
+                    <button style={styles.actionButton} onClick={handleSubmit}>저장</button>
                 }
             />
-            <div style={styles.mainContent}>
+            <main style={styles.mainContent}>
                 <TopRow>
-                    <div
-                        style={{ ...styles.dateSection, marginTop: '0', cursor: 'pointer' }}
-                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                    >
+                    <div style={styles.dateDisplay} onClick={() => setIsDatePickerOpen(true)}>
                         <span>{formattedDate.year}</span>
                         <span style={styles.dateUnit}>년</span>
                         <span>{formattedDate.month}</span>
@@ -517,7 +518,7 @@ function WriteDiary() {
                     style={styles.contentInput}
                     required
                 />
-            </div>
+            </main>
             <Navigation />
         </div>
     );

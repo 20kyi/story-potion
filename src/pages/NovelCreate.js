@@ -118,7 +118,7 @@ const Button = styled.button`
   }
 `;
 
-function NovelCreate() {
+function NovelCreate({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { week, dateRange, imageUrl, title } = location.state || {};
@@ -205,7 +205,7 @@ function NovelCreate() {
   if (isLoading) {
     return (
       <Container>
-        <Header />
+        <Header user={user} />
         <div>일기를 불러오는 중입니다...</div>
         <Navigation />
       </Container>
@@ -214,7 +214,7 @@ function NovelCreate() {
 
   return (
     <Container>
-      <Header />
+      <Header user={user} />
       <NovelHeader>
         <NovelCover src={imageUrl} alt={title} />
         <NovelInfo>

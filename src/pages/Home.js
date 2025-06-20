@@ -205,7 +205,7 @@ const NovelCover = styled.img`
   margin-right: auto;
 `;
 
-function Home() {
+function Home({ user }) {
   const navigate = useNavigate();
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
@@ -221,7 +221,7 @@ function Home() {
 
   return (
     <Container>
-      <Header />
+      <Header user={user} />
       <Carousel>
         <CarouselDots>
           {[0, 1, 2].map((index) => (

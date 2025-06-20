@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Container = styled.div`
   display: flex;
@@ -183,7 +185,7 @@ function Signup() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -192,11 +194,30 @@ function Signup() {
       return;
     }
 
-    if (formData.email && formData.password) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      console.log(userCredential);
       alert('회원가입이 완료되었습니다!');
       navigate('/login');
-    } else {
-      setError('모든 필드를 입력해주세요.');
+    } catch (error) {
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          setError('이미 사용 중인 이메일입니다.');
+          break;
+        case 'auth/weak-password':
+          setError('비밀번호는 6자 이상이어야 합니다.');
+          break;
+        case 'auth/invalid-email':
+          setError('유효하지 않은 이메일 주소입니다.');
+          break;
+        default:
+          setError('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      console.error("Firebase signup error: ", error);
     }
   };
 

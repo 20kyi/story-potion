@@ -63,7 +63,7 @@ const NovelContent = styled.div`
   border-radius: 15px;
 `;
 
-function NovelView() {
+function NovelView({ user }) {
   const { id } = useParams();
   const [novel, setNovel] = useState(null);
 
@@ -78,7 +78,7 @@ function NovelView() {
   if (!novel) {
     return (
       <Container>
-        <Header />
+        <Header user={user} />
         <div>소설을 찾을 수 없습니다.</div>
         <Navigation />
       </Container>
@@ -87,7 +87,7 @@ function NovelView() {
 
   return (
     <Container>
-      <Header />
+      <Header user={user} />
       <NovelHeader>
         <NovelCover src={novel.imageUrl} alt={novel.title} />
         <NovelInfo>

@@ -256,7 +256,7 @@ const bannerImages = [
   process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
 ];
 
-const Novel = () => {
+const Novel = ({ user }) => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -480,7 +480,7 @@ const Novel = () => {
 
   return (
     <Container>
-      <Header />
+      <Header user={user} />
       {/* <Title>Novel</Title> */}
 
       <CarouselContainer>

@@ -54,10 +54,12 @@ const RightSection = styled.div`
   gap: 8px;
 `;
 
-const Header = ({ nickname = '닉네임', rightActions }) => {
+const Header = ({ user, rightActions }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
+
+  const displayName = user?.displayName || user?.email?.split('@')[0];
 
   const handleBack = () => {
     if (location.pathname === '/diaries') {
@@ -86,7 +88,7 @@ const Header = ({ nickname = '닉네임', rightActions }) => {
         {isHome && (
           <>
             <ProfileImage />
-            <Nickname>{nickname}</Nickname>
+            <Nickname>{displayName}</Nickname>
           </>
         )}
       </LeftSection>

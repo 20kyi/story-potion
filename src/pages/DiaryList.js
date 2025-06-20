@@ -47,7 +47,7 @@ const GraphTitle = styled.h3`
   text-align: center;
 `;
 
-function DiaryList() {
+function DiaryList({ user }) {
     const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(new Date());
     const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
@@ -256,14 +256,11 @@ function DiaryList() {
         labels,
         datasets: [
             {
-                label: '감정 변화',
+                label: '월별 감정 변화',
                 data: emotionData,
                 borderColor: '#e46262',
-                backgroundColor: 'rgba(228, 98, 98, 0.5)',
-                tension: 0.1,
-                pointBackgroundColor: '#e46262',
-                pointRadius: 2,
-                pointHoverRadius: 7,
+                backgroundColor: '#fdd2d2',
+                tension: 0.3
             },
         ],
     };
@@ -403,36 +400,30 @@ function DiaryList() {
 
     return (
         <Container>
-            <Header />
-            <div style={styles.container}>
-                <div style={styles.content}>
-                    <header style={styles.header}>
-                    </header>
-                    <div style={styles.mainContent}>
-                        <div style={styles.calendarHeader}>
-                            <button style={styles.monthButton} onClick={handlePrevMonth}>‹</button>
-                            <span style={styles.monthText}>{formatMonth(currentDate)}</span>
-                            <button style={styles.monthButton} onClick={handleNextMonth}>›</button>
-                        </div>
-                        <table style={styles.calendar}>
-                            <thead>
-                                <tr>
-                                    {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                                        <th key={day} style={styles.dayHeader}>{day}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {renderCalendar()}
-                            </tbody>
-                        </table>
-
-                        <EmotionGraphContainer>
-                            <GraphTitle>{formatMonth(currentDate)} 감정 그래프</GraphTitle>
-                            <Line data={chartData} options={chartOptions} />
-                        </EmotionGraphContainer>
-                    </div>
+            <Header user={user} />
+            <div style={styles.content}>
+                <div style={styles.calendarHeader}>
+                    <button style={styles.monthButton} onClick={handlePrevMonth}>&lt;</button>
+                    <span style={styles.monthText}>{formatMonth(currentDate)}</span>
+                    <button style={styles.monthButton} onClick={handleNextMonth}>&gt;</button>
                 </div>
+                <table style={styles.calendar}>
+                    <thead>
+                        <tr>
+                            {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                                <th key={day} style={styles.dayHeader}>{day}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {renderCalendar()}
+                    </tbody>
+                </table>
+
+                <EmotionGraphContainer>
+                    <GraphTitle>{formatMonth(currentDate)} 감정 그래프</GraphTitle>
+                    <Line data={chartData} options={chartOptions} />
+                </EmotionGraphContainer>
             </div>
             <Navigation />
         </Container>

@@ -22,13 +22,13 @@ const NavButton = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 1px;
   cursor: pointer;
   flex: 1;
 `;
 
 const NavText = styled.span`
-  font-size: 14px;
+  font-size: 12px;
   color: ${props => props.active ? '#e46262' : '#bdbdbd'};
   font-weight: ${props => props.active ? 700 : 400};
 `;
