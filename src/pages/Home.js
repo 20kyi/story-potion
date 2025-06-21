@@ -99,9 +99,26 @@ const MainButtonText = styled.div`
 /* 일기 최근 미리보기 */
 const DiaryPreviewContainer = styled.div`
   width: 100%;
-  padding: 10px 20px;
+  padding: 20px;
   box-sizing: border-box;
-  text-align: left;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+`;
+
+const DiaryPreviewImage = styled.img`
+  width: 80px;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+`;
+
+const DiaryPreviewTextContainer = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const DiaryPreviewDate = styled.div`
@@ -275,9 +292,14 @@ function Home({ user }) {
             <MainButton color="blue" style={{ flex: 2 }} onClick={() => recentDiaries[0] ? navigate(`/diary/date/${recentDiaries[0].date}`) : navigate('/write')}>
               {recentDiaries.length > 0 && recentDiaries[0] ? (
                 <DiaryPreviewContainer>
-                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
-                  <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
+                  {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 && (
+                    <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
+                  )}
+                  <DiaryPreviewTextContainer>
+                    <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
+                    <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
+                    <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
+                  </DiaryPreviewTextContainer>
                 </DiaryPreviewContainer>
               ) : (
                 <MainButtonText>최근 작성한 일기가 없어요</MainButtonText>
