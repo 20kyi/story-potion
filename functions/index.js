@@ -59,7 +59,7 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
     }
 });
 
-exports.generateNovelCover = functions.https.onCall(async (data, context) => {
+exports.generateNovelCover = functions.region("asia-northeast3").https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
             "unauthenticated",
@@ -79,21 +79,41 @@ exports.generateNovelCover = functions.https.onCall(async (data, context) => {
         const imagePrompt = `A digital painting book cover of a '${genre}' novel, titled '${title}'. The main theme is about: ${novelContent.substring(0, 300)}. Do not include any text in the image.`;
 
         const response = await openai.images.generate({
-            model: "dall-e-2", // dall-e-3 is also available
+            model: "dall-e-2",
             prompt: imagePrompt,
             n: 1,
             size: "512x512",
-            response_format: "url",
+            response_format: "b64_json",
         });
 
-        const imageUrl = response.data[0].url;
+        const b64_json = response.data[0].b64_json;
+        if (!b64_json) {
+            throw new Error("b64_json is missing from the OpenAI response.");
+        }
+        const imageBuffer = Buffer.from(b64_json, "base64");
+
+        const bucket = admin.storage().bucket();
+        // novelId가 필요하므로, 클라이언트에서 받도록 수정해야 할 수 있습니다.
+        // 우선은 title과 timestamp로 유니크한 파일명을 만듭니다.
+        const fileName = `novel-covers/${title.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
+        const file = bucket.file(fileName);
+
+        await file.save(imageBuffer, {
+            metadata: {
+                contentType: "image/png",
+            },
+            public: true, // 공개적으로 접근 가능하도록 설정
+        });
+
+        // 공개 URL을 직접 구성합니다. 버킷 이름을 확인해야 합니다.
+        const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
         return { imageUrl };
     } catch (error) {
-        console.error("OpenAI 이미지 생성 중 오류 발생:", error);
+        console.error("OpenAI 이미지 생성 또는 Storage 업로드 중 오류 발생:", error);
         throw new functions.https.HttpsError(
             "internal",
-            "AI 표지 이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요。",
+            "AI 표지 이미지 생성 또는 저장에 실패했습니다. 잠시 후 다시 시도해주세요。",
             error,
         );
     }
