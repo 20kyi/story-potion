@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Diaries: Users can only read/write their own diaries.
+    match /diaries/{diaryId} {
+      allow read, update, delete: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
+    }
+
+    // Novels: Users can only read/write their own novels.
+    // The novelId is structured as {userId}_{year}_{month}_{weekNum}
+    match /novels/{novelId} {
+      allow read, write: if request.auth.uid == split(novelId, '_')[0];
+    }
+  }
+} 
