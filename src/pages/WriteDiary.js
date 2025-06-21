@@ -49,6 +49,7 @@ function WriteDiary({ user }) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDiaryId, setExistingDiaryId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const weatherOptions = [
         { value: 'sunny', label: '☀️ 맑음' },
@@ -203,6 +204,8 @@ function WriteDiary({ user }) {
             return;
         }
 
+        setIsSubmitting(true);
+
         try {
             const dateStr = formatDateToString(selectedDate);
             let imageUrls = diary.imageUrls || [];
@@ -237,6 +240,8 @@ function WriteDiary({ user }) {
         } catch (error) {
             console.error("Error saving diary: ", error);
             alert('일기 저장에 실패했습니다.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -443,7 +448,13 @@ function WriteDiary({ user }) {
             <Header
                 user={user}
                 rightActions={
-                    <button style={styles.actionButton} onClick={handleSubmit}>저장</button>
+                    <button
+                        style={styles.actionButton}
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? '저장 중...' : (isEditMode ? '수정' : '저장')}
+                    </button>
                 }
             />
             <main style={styles.mainContent}>

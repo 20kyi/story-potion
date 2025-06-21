@@ -1,0 +1,22 @@
+[
+    {
+        "origin": [
+            "http://localhost:3000",
+            "https://story-potion.web.app"
+        ],
+        "method": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS"
+        ],
+        "responseHeader": [
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "X-Goog-Upload-Protocol"
+        ],
+        "maxAgeSeconds": 3600
+    }
+]
