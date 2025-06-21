@@ -294,15 +294,28 @@ const Novel = ({ user }) => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
 
-      const firstDayOfMonth = new Date(year, month, 1);
-      const lastDayOfMonth = new Date(year, month + 1, 0);
+      // 표시되는 월의 주차 정보를 먼저 가져옴
+      const monthWeeks = getWeeksInMonth(year, month);
 
-      // 1. Fetch Diaries for the month
+      // 주차 정보가 없으면 데이터를 불러오지 않음
+      if (monthWeeks.length === 0) {
+        setDiaries([]);
+        setNovelsMap({});
+        calculateAllProgress(year, month, []);
+        setIsLoading(false);
+        return;
+      }
+
+      // 표시되는 모든 주차를 포함하는 날짜 범위 설정
+      const startDate = monthWeeks[0].start;
+      const endDate = monthWeeks[monthWeeks.length - 1].end;
+
+      // 1. 확장된 날짜 범위로 일기 가져오기
       const diariesRef = collection(db, 'diaries');
       const diariesQuery = query(diariesRef,
         where('userId', '==', user.uid),
-        where('date', '>=', formatDate(firstDayOfMonth)),
-        where('date', '<=', formatDate(lastDayOfMonth)),
+        where('date', '>=', formatDate(startDate)),
+        where('date', '<=', formatDate(endDate)),
         orderBy('date')
       );
 
@@ -343,97 +356,108 @@ const Novel = ({ user }) => {
 
 
   const getWeeksInMonth = (year, month) => {
-    // month는 0-11 사이의 값입니다.
     const weeks = [];
-    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const firstDayOfMonth = new Date(year, month, 1);
 
-    // 해당 월의 첫 날이 속한 주의 월요일을 찾습니다.
-    let currentMonday = new Date(year, month, 1);
-    currentMonday.setDate(currentMonday.getDate() - (currentMonday.getDay() === 0 ? 6 : currentMonday.getDay() - 1));
+    // 주의 시작인 월요일을 찾기 위해, 해당 월의 첫 날이 속한 주의 월요일부터 시작
+    let currentMonday = new Date(firstDayOfMonth);
+    const dayOfWeek = currentMonday.getDay(); // 0=일, 1=월, ..., 6=토
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    currentMonday.setDate(currentMonday.getDate() - diff);
 
     let weekNum = 1;
 
-    while (currentMonday <= lastDayOfMonth) {
+    // 주의 마지막 날(일요일)이 현재 달에 속하는 주차들을 계산
+    while (true) {
+      const weekStart = new Date(currentMonday);
       const weekEnd = new Date(currentMonday);
-      weekEnd.setDate(currentMonday.getDate() + 6);
+      weekEnd.setDate(weekEnd.getDate() + 6); // 주의 마지막 날 (일요일)
 
-      // 주의 마지막 날(weekEnd)이 다음 달로 넘어가지 않는 주만 포함시킵니다.
-      // 단, 첫 주가 이전 달에서 시작하는 경우는 포함해야 합니다.
-      if (weekEnd.getMonth() === month || weekEnd < lastDayOfMonth) {
+      // 주의 마지막 날이 현재 달에 속하면 해당 월의 주차로 포함
+      if (weekEnd.getMonth() === month && weekEnd.getFullYear() === year) {
         weeks.push({
           weekNum: weekNum++,
-          start: new Date(currentMonday),
-          end: new Date(weekEnd),
+          start: weekStart,
+          end: weekEnd,
         });
+      } else if (weeks.length > 0) {
+        // 이미 해당 월의 주차 계산이 끝났고, 다음 달로 넘어갔으므로 중단
+        break;
       }
 
+      // 다음 주 월요일로 이동
       currentMonday.setDate(currentMonday.getDate() + 7);
+
+      // 무한 루프 방지를 위한 안전 장치
+      if (currentMonday.getFullYear() > year || (currentMonday.getFullYear() === year && currentMonday.getMonth() > month + 1)) {
+        break;
+      }
     }
+
+    setWeeks(weeks);
     return weeks;
   };
 
   const calculateAllProgress = (year, month, fetchedDiaries) => {
-    const monthWeeks = getWeeksInMonth(year, month);
-    setWeeks(monthWeeks);
-
-    let totalDaysInMonth = 0;
-    let writtenDaysInMonth = 0;
+    const currentWeeks = getWeeksInMonth(year, month);
+    let totalWrittenDaysInMonth = 0;
     const newWeeklyProgress = {};
 
-    monthWeeks.forEach(week => {
-      let writtenDays = 0;
-      const daysInWeek = 7; // 한 주는 항상 7일입니다.
+    currentWeeks.forEach(week => {
+      const weekStartStr = formatDate(week.start);
+      const weekEndStr = formatDate(week.end);
 
-      for (let i = 0; i < 7; i++) {
-        const day = new Date(week.start);
-        day.setDate(day.getDate() + i);
+      const weekDiaries = fetchedDiaries.filter(diary => {
+        return diary.date >= weekStartStr && diary.date <= weekEndStr;
+      });
 
-        const dateString = formatDate(day);
-        if (fetchedDiaries.some(d => d.date === dateString)) {
-          writtenDays++;
-        }
-      }
+      // 한 주는 7일이므로, 7일 기준으로 진행률 계산
+      const weekDateCount = 7;
+      const progress = Math.min(100, (weekDiaries.length / weekDateCount) * 100);
 
-      newWeeklyProgress[week.weekNum] = (writtenDays / daysInWeek) * 100;
+      newWeeklyProgress[week.weekNum] = progress;
+    });
 
-      // 월 전체 진행률 계산 로직은 현재 달에 속한 날만 대상으로 유지합니다.
-      for (let i = 0; i < 7; i++) {
-        const day = new Date(week.start);
-        day.setDate(day.getDate() + i);
-        if (day.getMonth() === month) {
-          totalDaysInMonth++;
-          const dateString = formatDate(day);
-          if (fetchedDiaries.some(d => d.date === dateString)) {
-            writtenDaysInMonth++;
-          }
-        }
+    // 월간 진행률은 현재 '월'에 해당하는 일기만 카운트
+    fetchedDiaries.forEach(diary => {
+      const diaryDate = new Date(diary.date);
+      if (diaryDate.getFullYear() === year && diaryDate.getMonth() === month) {
+        totalWrittenDaysInMonth++;
       }
     });
 
     setWeeklyProgress(newWeeklyProgress);
-    if (totalDaysInMonth > 0) {
-      setMonthProgress((writtenDaysInMonth / totalDaysInMonth) * 100);
-    } else {
-      setMonthProgress(0);
-    }
+
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    setMonthProgress(totalDaysInMonth > 0 ? (totalWrittenDaysInMonth / totalDaysInMonth) * 100 : 0);
   };
 
 
   const getFirstWeekOfMonth = (year, month) => {
-    const firstDay = new Date(year, month - 1, 1);
-    const firstDayOfWeek = firstDay.getDay();
-    const diff = firstDayOfWeek === 0 ? -6 : 1 - firstDayOfWeek;
-    const firstMonday = new Date(firstDay);
-    firstMonday.setDate(firstMonday.getDate() + diff);
-    return firstMonday;
+    const firstDay = new Date(year, month, 1);
+    const lastDayOfWeek = new Date(firstDay);
+    lastDayOfWeek.setDate(firstDay.getDate() + (6 - firstDay.getDay()));
+
+    return {
+      start: firstDay,
+      end: lastDayOfWeek
+    };
   };
 
   const formatDate = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
+
+  const formatDisplayDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
 
   const handleCreateNovel = (week) => {
     const weekProgress = weeklyProgress[week.weekNum] || 0;
@@ -555,36 +579,25 @@ const Novel = ({ user }) => {
           </DatePickerModal>
         )}
         <WeeklyGrid>
-          {weeks.map(week => {
-            const weekIdentifier = `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
-            const existingNovelId = novelsMap[weekIdentifier];
+          {weeks.map((week) => {
             const progress = weeklyProgress[week.weekNum] || 0;
-            const isCompleted = progress === 100;
+            const isCompleted = progress >= 100;
+            const novelId = novelsMap[`${currentDate.getMonth() + 1}월 ${week.weekNum}주차`];
 
             return (
               <WeeklyCard key={week.weekNum}>
-                <WeekTitle>{weekIdentifier}</WeekTitle>
-                <DateRange>{formatDate(week.start)} ~ {formatDate(week.end)}</DateRange>
+                <WeekTitle>{week.weekNum}주차</WeekTitle>
+                <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
                 <ProgressBar progress={progress}>
                   <div />
                 </ProgressBar>
-
-                {existingNovelId ? (
-                  <CreateButton completed onClick={() => navigate(`/novel/${existingNovelId}`)}>
-                    소설 읽기
+                {novelId ? (
+                  <CreateButton completed onClick={() => navigate(`/novel/${novelId}`)}>
+                    소설 보기
                   </CreateButton>
                 ) : (
-                  <CreateButton
-                    completed={isCompleted}
-                    onClick={() => {
-                      if (isCompleted) {
-                        handleCreateNovel(week);
-                      } else {
-                        handleWriteDiary();
-                      }
-                    }}
-                  >
-                    {isCompleted ? '소설 만들기' : '일기 작성하기'}
+                  <CreateButton completed={isCompleted} onClick={() => handleCreateNovel(week)}>
+                    {isCompleted ? '소설 만들기' : '일기 채우기'}
                   </CreateButton>
                 )}
               </WeeklyCard>
