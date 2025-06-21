@@ -15,7 +15,6 @@ const Container = styled.div`
   padding-top: 70px;
   padding-bottom: 100px;
 `;
-
 const Title = styled.h1`
   color: #333;
   font-size: 18px;
@@ -23,6 +22,15 @@ const Title = styled.h1`
   text-align: center;
   margin: 24px 0 24px 0;
 `;
+const BannerImage = styled.img`
+  width: 100%;
+  max-width: 240px;
+  border-radius: 16px;
+  margin: 0 auto 24px auto;
+  display: block;
+`;
+
+
 
 const Content = styled.div`
   flex-grow: 1;
@@ -96,6 +104,14 @@ const NoNovelsMessage = styled.div`
     color: #888;
 `;
 
+const genreBanners = {
+    '로맨스': process.env.PUBLIC_URL + '/novel_banner/romance.png',
+    '추리': process.env.PUBLIC_URL + '/novel_banner/mystery.png',
+    '역사': process.env.PUBLIC_URL + '/novel_banner/historical.png',
+    '동화': process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
+    '판타지': process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+};
+
 const NovelListByGenre = ({ user }) => {
     const { genre } = useParams();
     const navigate = useNavigate();
@@ -138,10 +154,14 @@ const NovelListByGenre = ({ user }) => {
         navigate(`/novel/${novelId}`);
     };
 
+    const bannerImage = genreBanners[genre];
+
     return (
         <Container>
             <Header user={user} />
             <Title>{genre} 소설 목록</Title>
+
+            {bannerImage && <BannerImage src={bannerImage} alt={`${genre} 배너`} />}
 
             <Content>
                 {isLoading ? (
