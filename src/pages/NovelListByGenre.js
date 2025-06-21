@@ -22,13 +22,13 @@ const Title = styled.h1`
   text-align: center;
   margin: 24px 0 24px 0;
 `;
-const BannerImage = styled.img`
-  width: 100%;
-  max-width: 240px;
-  border-radius: 16px;
-  margin: 0 auto 24px auto;
-  display: block;
-`;
+// const BannerImage = styled.img`
+//   width: 100%;
+//   max-width: 240px;
+//   border-radius: 16px;
+//   margin: 0 auto 24px auto;
+//   display: block;
+// `;
 
 
 
@@ -105,85 +105,85 @@ const NoNovelsMessage = styled.div`
 `;
 
 const genreBanners = {
-    '로맨스': process.env.PUBLIC_URL + '/novel_banner/romance.png',
-    '추리': process.env.PUBLIC_URL + '/novel_banner/mystery.png',
-    '역사': process.env.PUBLIC_URL + '/novel_banner/historical.png',
-    '동화': process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
-    '판타지': process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+  '로맨스': process.env.PUBLIC_URL + '/novel_banner/romance.png',
+  '추리': process.env.PUBLIC_URL + '/novel_banner/mystery.png',
+  '역사': process.env.PUBLIC_URL + '/novel_banner/historical.png',
+  '동화': process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
+  '판타지': process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
 };
 
 const NovelListByGenre = ({ user }) => {
-    const { genre } = useParams();
-    const navigate = useNavigate();
-    const [novels, setNovels] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const { genre } = useParams();
+  const navigate = useNavigate();
+  const [novels, setNovels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (!user || !genre) {
-            setIsLoading(false);
-            return;
-        }
+  useEffect(() => {
+    if (!user || !genre) {
+      setIsLoading(false);
+      return;
+    }
 
-        const fetchNovels = async () => {
-            setIsLoading(true);
-            try {
-                const novelsRef = collection(db, 'novels');
-                const q = query(novelsRef,
-                    where('userId', '==', user.uid),
-                    where('genre', '==', genre),
-                    orderBy('createdAt', 'desc') // Reverted to desc to use existing index
-                );
+    const fetchNovels = async () => {
+      setIsLoading(true);
+      try {
+        const novelsRef = collection(db, 'novels');
+        const q = query(novelsRef,
+          where('userId', '==', user.uid),
+          where('genre', '==', genre),
+          orderBy('createdAt', 'desc') // Reverted to desc to use existing index
+        );
 
-                const querySnapshot = await getDocs(q);
-                const fetchedNovels = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setNovels(fetchedNovels);
-            } catch (error) {
-                console.error("Error fetching novels by genre: ", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchNovels();
-    }, [user, genre]);
-
-    const handleNovelClick = (novelId) => {
-        navigate(`/novel/${novelId}`);
+        const querySnapshot = await getDocs(q);
+        const fetchedNovels = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setNovels(fetchedNovels);
+      } catch (error) {
+        console.error("Error fetching novels by genre: ", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    const bannerImage = genreBanners[genre];
+    fetchNovels();
+  }, [user, genre]);
 
-    return (
-        <Container>
-            <Header user={user} />
-            <Title>{genre} 소설 목록</Title>
+  const handleNovelClick = (novelId) => {
+    navigate(`/novel/${novelId}`);
+  };
 
-            {bannerImage && <BannerImage src={bannerImage} alt={`${genre} 배너`} />}
+  const bannerImage = genreBanners[genre];
 
-            <Content>
-                {isLoading ? (
-                    <LoadingContainer>로딩 중...</LoadingContainer>
-                ) : novels.length > 0 ? (
-                    <NovelGrid>
-                        {novels.map(novel => (
-                            <NovelItem key={novel.id} onClick={() => handleNovelClick(novel.id)}>
-                                <WeekTitle>{novel.week}</WeekTitle>
-                                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                                <NovelTitle>{novel.title}</NovelTitle>
-                            </NovelItem>
-                        ))}
-                    </NovelGrid>
-                ) : (
-                    <NoNovelsMessage>이 장르의 소설이 아직 없습니다.</NoNovelsMessage>
-                )}
-            </Content>
+  return (
+    <Container>
+      <Header user={user} />
+      <Title>{genre} 소설 목록</Title>
 
-            <Navigation />
-        </Container>
-    );
+      {/* {bannerImage && <BannerImage src={bannerImage} alt={`${genre} 배너`} />} */}
+
+      <Content>
+        {isLoading ? (
+          <LoadingContainer>로딩 중...</LoadingContainer>
+        ) : novels.length > 0 ? (
+          <NovelGrid>
+            {novels.map(novel => (
+              <NovelItem key={novel.id} onClick={() => handleNovelClick(novel.id)}>
+                <WeekTitle>{novel.week}</WeekTitle>
+                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                <NovelTitle>{novel.title}</NovelTitle>
+              </NovelItem>
+            ))}
+          </NovelGrid>
+        ) : (
+          <NoNovelsMessage>이 장르의 소설이 아직 없습니다.</NoNovelsMessage>
+        )}
+      </Content>
+
+      <Navigation />
+    </Container>
+  );
 };
 
 export default NovelListByGenre; 
