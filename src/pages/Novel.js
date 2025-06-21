@@ -250,12 +250,12 @@ const CreateButton = styled.button`
   }
 `;
 
-const bannerImages = [
-  process.env.PUBLIC_URL + '/novel_banner/romance.png',
-  process.env.PUBLIC_URL + '/novel_banner/mystery.png',
-  process.env.PUBLIC_URL + '/novel_banner/historical.png',
-  process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
-  process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+const bannerData = [
+  { genre: '로맨스', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
+  { genre: '추리', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
+  { genre: '역사', src: process.env.PUBLIC_URL + '/novel_banner/historical.png' },
+  { genre: '동화', src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png' },
+  { genre: '판타지', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
 ];
 
 const Novel = ({ user }) => {
@@ -491,11 +491,11 @@ const Novel = ({ user }) => {
 
       <CarouselContainer>
         <Slider {...settings}>
-          {bannerImages.map((img, idx) => (
-            <CarouselSlide key={idx}>
+          {bannerData.map((banner, idx) => (
+            <CarouselSlide key={idx} onClick={() => navigate(`/novels/genre/${banner.genre}`)}>
               <img
-                src={img}
-                alt={`배너${idx + 1}`}
+                src={banner.src}
+                alt={`배너 ${banner.genre}`}
                 style={{
                   width: '80vw',
                   maxWidth: '280px',

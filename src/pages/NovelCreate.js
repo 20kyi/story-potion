@@ -158,7 +158,7 @@ function NovelCreate({ user }) {
   const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
   const [isCoverLoading, setIsCoverLoading] = useState(false);
 
-  const genres = ['로맨스', '사극', '추리', '공포', '동화', '판타지'];
+  const genres = ['로맨스', '역사', '추리', '공포', '동화', '판타지'];
 
   useEffect(() => {
     if (!user || !dateRange) {

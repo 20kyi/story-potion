@@ -14,6 +14,7 @@ import NovelCreate from './pages/NovelCreate';
 import NovelView from './pages/NovelView';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import NovelListByGenre from './pages/NovelListByGenre';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -39,6 +40,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my" element={user ? <MyPage user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novel/create" element={user ? <NovelCreate user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
+                <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>
