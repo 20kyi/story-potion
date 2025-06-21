@@ -140,33 +140,30 @@ function WriteDiary({ user }) {
     };
 
     const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        const newPreviews = [];
+        const newFiles = Array.from(e.target.files);
+        setImageFiles(prev => [...prev, ...newFiles]);
 
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                newPreviews.push(reader.result);
-                if (newPreviews.length === files.length) {
-                    setDiary(prev => ({
-                        ...prev,
-                        imageUrls: [...prev.imageUrls, ...newPreviews]
-                    }));
-                    setImageFiles(prev => [...prev, ...files]);
-                    setImagePreview(prev => [...prev, ...newPreviews]);
-                }
-            };
-            reader.readAsDataURL(file);
-        });
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        setImagePreview(prev => [...prev, ...newPreviews]);
     };
 
-    const removeImage = (index) => {
-        setDiary(prev => ({
-            ...prev,
-            imageUrls: prev.imageUrls.filter((_, i) => i !== index)
-        }));
-        setImageFiles(prev => prev.filter((_, i) => i !== index));
-        setImagePreview(prev => prev.filter((_, i) => i !== index));
+    const removeImage = (indexToRemove) => {
+        const existingUrlCount = (diary.imageUrls || []).length;
+
+        setImagePreview(prev => prev.filter((_, i) => i !== indexToRemove));
+
+        if (indexToRemove < existingUrlCount) {
+            // 기존에 업로드되었던 이미지 제거 (diary.imageUrls에서 제거)
+            const urlToRemove = diary.imageUrls[indexToRemove];
+            setDiary(prev => ({
+                ...prev,
+                imageUrls: prev.imageUrls.filter(url => url !== urlToRemove)
+            }));
+        } else {
+            // 이번에 새로 첨부한 파일 제거 (imageFiles에서 제거)
+            const fileIndexToRemove = indexToRemove - existingUrlCount;
+            setImageFiles(prev => prev.filter((_, i) => i !== fileIndexToRemove));
+        }
     };
 
     const handleDelete = async () => {
@@ -207,32 +204,38 @@ function WriteDiary({ user }) {
         setIsSubmitting(true);
 
         try {
-            const dateStr = formatDateToString(selectedDate);
-            let imageUrls = diary.imageUrls || [];
-
+            // 1. 새로 추가된 파일(imageFiles)만 스토리지에 업로드
+            const newImageUrls = [];
             if (imageFiles.length > 0) {
                 const uploadPromises = imageFiles.map(file => {
-                    const imageRef = ref(storage, `diaries/${user.uid}/${dateStr}/${file.name}`);
+                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
                     return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
                 });
-                const newImageUrls = await Promise.all(uploadPromises);
-                imageUrls = [...imageUrls, ...newImageUrls];
+                const uploadedUrls = await Promise.all(uploadPromises);
+                newImageUrls.push(...uploadedUrls);
             }
 
+            // 2. 최종 이미지 URL 목록 생성 (기존 URL + 새로 업로드된 URL)
+            const finalImageUrls = [...(diary.imageUrls || []), ...newImageUrls];
+
+            // 3. Firestore에 저장할 데이터 준비 (임시 데이터가 없는 깨끗한 데이터만 사용)
             const diaryData = {
-                ...diary,
                 userId: user.uid,
-                date: dateStr,
-                imageUrls,
-                createdAt: new Date(),
+                date: formatDateToString(selectedDate),
+                title: diary.title,
+                content: diary.content,
+                weather: diary.weather,
+                emotion: diary.emotion,
+                mood: diary.mood,
+                imageUrls: finalImageUrls, // 최종 URL 목록만 저장
             };
 
             if (isEditMode && existingDiaryId) {
                 const diaryRef = doc(db, 'diaries', existingDiaryId);
-                await setDoc(diaryRef, diaryData, { merge: true });
+                await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
                 alert('일기가 수정되었습니다.');
             } else {
-                await addDoc(collection(db, 'diaries'), diaryData);
+                await addDoc(collection(db, 'diaries'), { ...diaryData, createdAt: new Date() });
                 alert('일기가 저장되었습니다.');
             }
 
