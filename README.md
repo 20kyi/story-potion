@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Story Potion Logo](public/logo.png)
+![Story Potion Logo](public/logo3.jpg)
 
 **당신의 이야기를 담는 마법의 포션** ✨
 
