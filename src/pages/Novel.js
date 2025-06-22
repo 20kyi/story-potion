@@ -174,7 +174,6 @@ const SectionTitle = styled.h2`
   color: #cb6565;
   font-size: 24px;
   margin-bottom: 20px;
-  font-family: 'Inter', sans-serif;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -211,7 +210,7 @@ const WeekTitle = styled.h3`
 
 const DateRange = styled.p`
   color: #666;
-  font-size: 14px;
+  font-size: 12px;
   margin-bottom: 15px;
 `;
 
