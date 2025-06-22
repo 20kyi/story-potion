@@ -255,6 +255,8 @@ const bannerData = [
   { genre: '역사', src: process.env.PUBLIC_URL + '/novel_banner/historical.png' },
   { genre: '동화', src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png' },
   { genre: '판타지', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
+  { genre: '공포', src: process.env.PUBLIC_URL + '/novel_banner/horror.png' },
+
 ];
 
 const Novel = ({ user }) => {

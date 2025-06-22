@@ -51,6 +51,22 @@ const NovelTitle = styled.h1`
   font-weight: 600;
 `;
 
+const TitleInput = styled.input`
+  font-size: 24px;
+  color: #e46262;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  width: 100%;
+  border-bottom: 2px solid #f0f0f0;
+  padding: 5px;
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid #e46262;
+  }
+`;
+
 const NovelDate = styled.div`
   font-size: 14px;
   color: #999;
@@ -146,10 +162,22 @@ const GenreButton = styled.button`
   }
 `;
 
+const AiButton = styled(Button)`
+  background: #6c81e7;
+  width: auto;
+  padding: 8px 15px;
+  font-size: 14px;
+  margin: 0 0 0 10px;
+
+  &:hover {
+    background: #5a6dbf;
+  }
+`;
+
 function NovelCreate({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { year, month, weekNum, week, dateRange, imageUrl, title } = location.state || {};
+  const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle } = location.state || {};
   const [content, setContent] = useState('');
   const [weekDiaries, setWeekDiaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,6 +185,8 @@ function NovelCreate({ user }) {
   const [selectedGenre, setSelectedGenre] = useState('');
   const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
   const [isCoverLoading, setIsCoverLoading] = useState(false);
+  const [title, setTitle] = useState(initialTitle || '나의 소설');
+  const [isTitleLoading, setIsTitleLoading] = useState(false);
 
   const genres = ['로맨스', '역사', '추리', '공포', '동화', '판타지'];
 
@@ -198,68 +228,43 @@ function NovelCreate({ user }) {
 
   const handleGenerateNovel = async () => {
     if (weekDiaries.length === 0) {
-      alert('소설을 생성할 일기가 없습니다.');
+      alert("소설을 생성할 일기가 없습니다.");
       return;
     }
     if (!selectedGenre) {
-      alert('장르를 선택해주세요.');
+      alert("소설의 장르를 선택해주세요.");
       return;
     }
 
     setIsLoading(true);
-
-    const diaryContents = weekDiaries
-      .map(diary => `날짜: ${diary.date}\n제목: ${diary.title}\n내용: ${diary.content}`)
-      .join('\n\n---\n\n');
+    const functions = getFunctions();
+    const generateNovel = httpsCallable(functions, 'generateNovel');
+    const diaryContents = weekDiaries.map(d => `${d.date}:\n${d.content}`).join('\n\n');
 
     try {
-      const functions = getFunctions();
-      const generateNovel = httpsCallable(functions, 'generateNovel');
       const result = await generateNovel({
         diaryContents,
         genre: selectedGenre,
-        userName: user.displayName || '나'
+        userName: user.displayName || '주인공'
       });
 
-      const novelContent = result.data.content;
-      setContent(novelContent);
+      setContent(result.data.content);
+      setTitle(result.data.title);
+      setGeneratedImageUrl(result.data.imageUrl);
       setIsNovelGenerated(true);
+
     } catch (error) {
-      console.error("Error generating novel: ", error);
-      alert('소설 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      console.error("Error generating novel:", error);
+      alert("소설 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGenerateCover = async () => {
-    setIsCoverLoading(true);
-    try {
-      const functions = getFunctions();
-      const generateNovelCover = httpsCallable(functions, 'generateNovelCover');
-      const result = await generateNovelCover({ novelContent: content, title, genre: selectedGenre });
-
-      const newImageUrl = result.data.imageUrl;
-      if (newImageUrl) {
-        setGeneratedImageUrl(newImageUrl);
-      } else {
-        throw new Error("이미지 URL을 받아오지 못했습니다.");
-      }
-    } catch (error) {
-      console.error("Error generating cover: ", error);
-      alert('표지 이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setIsCoverLoading(false);
-    }
-  };
-
   const handleSave = async () => {
+    if (!user) return;
     if (!isNovelGenerated) {
       alert('먼저 소설을 생성해주세요.');
-      return;
-    }
-    if (!user) {
-      alert('로그인이 필요합니다.');
       return;
     }
 
@@ -301,10 +306,18 @@ function NovelCreate({ user }) {
     <Container>
       <Header user={user} />
       <NovelHeader>
-        <NovelCover src={generatedImageUrl} alt={title} />
+        <NovelCover src={generatedImageUrl || '/logo2.png'} alt="Novel Cover" />
         <NovelInfo>
-          <NovelTitle>{title}</NovelTitle>
-          <NovelDate>{week} ({dateRange})</NovelDate>
+          {isNovelGenerated ? (
+            <TitleInput
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="소설 제목을 입력하세요"
+            />
+          ) : (
+            <NovelTitle>{title}</NovelTitle>
+          )}
+          <NovelDate>{dateRange}</NovelDate>
         </NovelInfo>
       </NovelHeader>
 
@@ -348,16 +361,7 @@ function NovelCreate({ user }) {
         </Button>
       ) : (
         <>
-          <NovelContent>
-            {content}
-          </NovelContent>
-          {isCoverLoading ? (
-            <Button disabled>표지 생성 중...</Button>
-          ) : (
-            generatedImageUrl === imageUrl && (
-              <Button onClick={handleGenerateCover}>AI로 표지 생성하기</Button>
-            )
-          )}
+          <NovelContent>{content}</NovelContent>
           <Button onClick={handleSave}>소설 저장하기</Button>
         </>
       )}
