@@ -32,12 +32,13 @@ const BackButton = styled.div`
   justify-content: center;
 `;
 
-const ProfileImage = styled.div`
+const ProfileImage = styled.img`
   width: 36px;
   height: 36px;
   border-radius: 50%;
   border: 1px solid #df9696;
   background-color: #fdd2d2;
+  object-fit: cover;
 `;
 
 const Nickname = styled.span`
@@ -60,6 +61,7 @@ const Header = ({ user, rightActions }) => {
   const isHome = location.pathname === '/' || location.pathname === '/home';
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
+  const photoURL = user?.photoURL || '/profile-placeholder.jpg';
 
   const handleBack = () => {
     if (location.pathname === '/diaries') {
@@ -87,7 +89,7 @@ const Header = ({ user, rightActions }) => {
         )}
         {isHome && (
           <>
-            <ProfileImage />
+            <ProfileImage src={photoURL} alt="Profile" />
             <Nickname>{displayName}</Nickname>
           </>
         )}
