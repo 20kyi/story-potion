@@ -25,7 +25,8 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        const prompt = `
+        // 1. 소설 내용 생성
+        const contentPrompt = `
         당신은 '${genre}'소설 작가입니다.
       다음은 한 주간의 일기 내용입니다.
       이 일기 내용을 바탕으로 '${genre}' 스타일의 소설로 각색해줘.
@@ -41,44 +42,37 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
       ${diaryContents}
     `;
 
-        const response = await openai.chat.completions.create({
+        const contentResponse = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: prompt }],
+            messages: [{ role: "user", content: contentPrompt }],
             temperature: 0.7,
             max_tokens: 1500,
         });
+        const novelContent = contentResponse.choices[0].message.content;
 
-        return { content: response.choices[0].message.content };
-    } catch (error) {
-        console.error("OpenAI API 호출 중 오류 발생:", error);
-        throw new functions.https.HttpsError(
-            "internal",
-            "AI 소설 생성에 실패했습니다. 잠시 후 다시 시도해주세요。",
-            error,
-        );
-    }
-});
+        // 2. 소설 제목 생성
+        const titlePrompt = `
+          방금 생성된 '${genre}' 장르의 소설 내용이야.
+          이 소설 내용에 가장 잘 어울리는 제목을 딱 하나만 추천해줘.
+          제목만 말하고 다른 어떤 설명도 붙이지마.
+          따옴표도 붙이지마.
 
-exports.generateNovelCover = functions.region("asia-northeast3").https.onCall(async (data, context) => {
-    if (!context.auth) {
-        throw new functions.https.HttpsError(
-            "unauthenticated",
-            "이미지를 생성하려면 로그인이 필요합니다。",
-        );
-    }
+          [소설 내용]
+          ${novelContent.substring(0, 1000)}
+        `;
 
-    const { novelContent, title, genre } = data;
-    if (!novelContent || !title || !genre) {
-        throw new functions.https.HttpsError(
-            "invalid-argument",
-            "소설 내용, 제목, 장르 정보가 필요합니다。",
-        );
-    }
+        const titleResponse = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: titlePrompt }],
+            temperature: 0.8,
+            max_tokens: 60,
+        });
+        const novelTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
 
-    try {
-        const imagePrompt = `A digital painting book cover of a '${genre}' novel, titled '${title}'. The main theme is about: ${novelContent.substring(0, 300)}. Do not include any text in the image.`;
+        // 3. 소설 표지 이미지 생성
+        const imagePrompt = `An expressive and atmospheric illustration that captures the main scene of the following '${genre}' story. The image should visually represent the emotions and key events from the text. Do not include any text, titles, or words in the image. Here is the story summary: ${novelContent.substring(0, 700)}`;
 
-        const response = await openai.images.generate({
+        const imageResponse = await openai.images.generate({
             model: "dall-e-2",
             prompt: imagePrompt,
             n: 1,
@@ -86,34 +80,32 @@ exports.generateNovelCover = functions.region("asia-northeast3").https.onCall(as
             response_format: "b64_json",
         });
 
-        const b64_json = response.data[0].b64_json;
+        const b64_json = imageResponse.data[0].b64_json;
         if (!b64_json) {
             throw new Error("b64_json is missing from the OpenAI response.");
         }
         const imageBuffer = Buffer.from(b64_json, "base64");
 
         const bucket = admin.storage().bucket();
-        // novelId가 필요하므로, 클라이언트에서 받도록 수정해야 할 수 있습니다.
-        // 우선은 title과 timestamp로 유니크한 파일명을 만듭니다.
-        const fileName = `novel-covers/${title.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
+        const fileName = `novel-covers/${novelTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
         const file = bucket.file(fileName);
 
         await file.save(imageBuffer, {
             metadata: {
                 contentType: "image/png",
             },
-            public: true, // 공개적으로 접근 가능하도록 설정
+            public: true,
         });
 
-        // 공개 URL을 직접 구성합니다. 버킷 이름을 확인해야 합니다.
         const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-        return { imageUrl };
+        // 4. 모든 결과 반환
+        return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
     } catch (error) {
-        console.error("OpenAI 이미지 생성 또는 Storage 업로드 중 오류 발생:", error);
+        console.error("OpenAI API 호출 중 오류 발생:", error);
         throw new functions.https.HttpsError(
             "internal",
-            "AI 표지 이미지 생성 또는 저장에 실패했습니다. 잠시 후 다시 시도해주세요。",
+            "AI 소설 생성에 실패했습니다. 잠시 후 다시 시도해주세요。",
             error,
         );
     }
