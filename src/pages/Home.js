@@ -314,6 +314,38 @@ function Home({ user }) {
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
 
+  // 오늘의 글감 선택 로직
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+  const topicIndex = dayOfYear % dailyTopics.length;
+  const todayTopic = dailyTopics[topicIndex];
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleWriteDiaryClick = async () => {
+    if (!user) return;
+    const todayDate = getTodayDate();
+    const diariesRef = collection(db, 'diaries');
+    const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', todayDate));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        alert('오늘의 일기를 이미 작성했습니다.');
+      } else {
+        navigate('/write');
+      }
+    } catch (error) {
+      console.error("Error checking for today's diary:", error);
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
@@ -340,11 +372,6 @@ function Home({ user }) {
     const date = new Date(dateString.replace(/-/g, '/'));
     return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   };
-
-  // 오늘의 글감 선택 로직
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-  const topicIndex = dayOfYear % dailyTopics.length;
-  const todayTopic = dailyTopics[topicIndex];
 
   return (
     <Container>
@@ -374,10 +401,10 @@ function Home({ user }) {
                   </DiaryPreviewTextContainer>
                 </DiaryPreviewContainer>
               ) : (
-                <WriteButtonContent>
-                  <PencilIcon />
-                  <MainButtonText>최근 일기가 없습니다.</MainButtonText>
-                </WriteButtonContent>
+                <DiaryPreviewContainer>
+                  <DiaryPreviewTitle>아직 작성된 일기가 없어요</DiaryPreviewTitle>
+                  <DiaryPreviewContent>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
+                </DiaryPreviewContainer>
               )}
             </RecentDiaryCard>
 
@@ -387,9 +414,11 @@ function Home({ user }) {
                 <RecommendationIntro>이런 주제는 <br /> 어떠세요?💡</RecommendationIntro>
                 <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
               </TopicCard>
-              <WriteDiaryButton onClick={() => navigate('/write')}>
-                <PencilIcon color="#fff" />
-                <MainButtonText>일기 쓰기</MainButtonText>
+              <WriteDiaryButton onClick={handleWriteDiaryClick}>
+                <WriteButtonContent>
+                  <PencilIcon width="32" height="32" />
+                  <MainButtonText>일기 쓰기</MainButtonText>
+                </WriteButtonContent>
               </WriteDiaryButton>
             </RightColumn>
           </MainButtonRow>
