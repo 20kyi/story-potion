@@ -51,7 +51,7 @@ const GraphTitle = styled.h3`
   text-align: center;
 `;
 
-function DiaryList({ user }) {
+function Diary({ user }) {
     const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [diaries, setDiaries] = useState([]);
@@ -485,4 +485,4 @@ function DiaryList({ user }) {
     );
 }
 
-export default DiaryList; 
+export default Diary; 
