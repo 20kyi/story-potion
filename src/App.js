@@ -4,7 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import Home from './pages/Home';
 import WriteDiary from './pages/WriteDiary';
-import DiaryList from './pages/DiaryList';
+import Diary from './pages/Diary';
 import NovelList from './pages/NovelList';
 import DiaryView from './pages/DiaryView';
 import Novel from './pages/Novel';
@@ -34,7 +34,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/home" element={user ? <Home user={user} /> : <Navigate to="/login" />} />
                 <Route path="/write" element={user ? <WriteDiary user={user} /> : <Navigate to="/login" />} />
                 <Route path="/write/:date" element={user ? <WriteDiary user={user} /> : <Navigate to="/login" />} />
-                <Route path="/diaries" element={user ? <DiaryList user={user} /> : <Navigate to="/login" />} />
+                <Route path="/diaries" element={user ? <Diary user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novels" element={user ? <NovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/diary/date/:date" element={user ? <DiaryView user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novel" element={user ? <Novel user={user} /> : <Navigate to="/login" />} />
