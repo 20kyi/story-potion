@@ -355,7 +355,7 @@ function Diary({ user }) {
         }
     };
 
-    // 그래프 포인트 클릭 핸들러
+    // 그래프 포인트 클릭 핸들러 (마우스)
     const handleChartClick = (event) => {
         if (!chartRef.current) return;
         const points = getElementAtEvent(chartRef.current, event);
@@ -369,6 +369,33 @@ function Diary({ user }) {
             if (diary) {
                 setPreviewDiary(diary);
                 setPreviewPosition({ x: event.clientX, y: event.clientY });
+            }
+        }
+    };
+
+    // 그래프 포인트 터치 핸들러 (모바일)
+    const handleChartTouch = (event) => {
+        if (!chartRef.current) return;
+        const touch = event.touches && event.touches[0];
+        if (!touch) return;
+        // Chart.js는 getElementAtEvent에 nativeEvent를 넘겨야 하므로, 좌표를 맞춰서 전달
+        const fakeEvent = {
+            ...event,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            native: true
+        };
+        const points = getElementAtEvent(chartRef.current, fakeEvent);
+        if (points && points.length > 0) {
+            const idx = points[0].index;
+            const day = labels[idx];
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const dateString = formatDateToString(new Date(year, month, day));
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+            if (diary) {
+                setPreviewDiary(diary);
+                setPreviewPosition({ x: touch.clientX, y: touch.clientY });
             }
         }
     };
@@ -486,7 +513,7 @@ function Diary({ user }) {
 
                 <EmotionGraphContainer>
                     <GraphTitle>이달의 감정</GraphTitle>
-                    <Line ref={chartRef} data={chartData} options={chartOptions} onClick={handleChartClick} />
+                    <Line ref={chartRef} data={chartData} options={chartOptions} onClick={handleChartClick} onTouchStart={handleChartTouch} />
                     {previewDiary && (
                         <div
                             style={{
