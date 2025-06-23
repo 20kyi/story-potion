@@ -225,7 +225,7 @@ function Signup() {
     <Container>
       <ContentWrapper>
         <LogoSection>
-          <Logo src="/logo3.jpg" alt="Story Potion Logo" />
+          <Logo src="/app_logo/logo3.jpg" alt="Story Potion Logo" />
         </LogoSection>
         <FormSection>
           {/* <Title>회원가입</Title> */}

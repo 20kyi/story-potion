@@ -1,0 +1,93 @@
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.confirm-modal-container {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+    padding: 28px 22px 18px 22px;
+    min-width: 270px;
+    max-width: 90vw;
+    text-align: center;
+    animation: modalPop 0.22s cubic-bezier(.4, 1.6, .6, 1);
+}
+
+@keyframes modalPop {
+    from {
+        transform: translateY(40px) scale(0.96);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.confirm-modal-title {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.confirm-modal-desc {
+    margin: 0 0 22px 0;
+    font-size: 13px;
+    color: #444;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-modal-btn {
+    flex: 1 1 0;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.confirm-modal-btn.cancel {
+    background: #f2f2f2;
+    color: #555;
+}
+
+.confirm-modal-btn.cancel:hover {
+    background: #e0e0e0;
+}
+
+.confirm-modal-btn.delete {
+    background: #db5355;
+    color: #fff;
+}
+
+.confirm-modal-btn.delete:hover {
+    background: #c52f32;
+}

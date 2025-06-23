@@ -1,0 +1,71 @@
+.toast-container {
+    position: fixed;
+    left: 50%;
+    bottom: 120px;
+    transform: translateX(-50%) translateY(40px);
+    min-width: 180px;
+    max-width: 480px;
+    width: auto;
+    background: #222;
+    color: #fff;
+    border-radius: 32px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+    padding: 16px 36px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 2000;
+    opacity: 1;
+    animation: toastIn 0.22s cubic-bezier(.4, 1.6, .6, 1);
+    justify-content: center;
+}
+
+@media (max-width: 600px) {
+    .toast-container {
+        /* min-width: 120px; */
+        max-width: 200px;
+        padding: 10px 12px;
+        font-size: 12px;
+        border-radius: 18px;
+    }
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(80px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(40px) scale(1);
+    }
+}
+
+.toast-success {
+    background: rgba(156, 187, 169, 0.92);
+    /* 0.92는 투명도(1=불투명, 0=완전투명) */
+}
+
+.toast-error {
+    background: rgba(212, 142, 135, 0.92);
+}
+
+.toast-info {
+    background: rgba(34, 34, 34, 0.92);
+}
+
+.toast-icon {
+    font-size: 1.2em;
+    margin-right: 4px;
+}
+
+.toast-message {
+    flex: 1;
+    word-break: break-word;
+    text-align: center;
+    line-height: 1.4;
+    max-height: 2.8em;
+}

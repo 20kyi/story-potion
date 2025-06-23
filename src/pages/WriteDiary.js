@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../components/Header';
@@ -8,6 +8,8 @@ import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteD
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
 import Button from '../components/ui/Button';
+import { useToast } from '../components/ui/ToastProvider';
+import { usePrompt } from '../hooks/usePrompt';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -54,6 +56,8 @@ function WriteDiary({ user }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false);
     const [isWeatherSheetOpen, setIsWeatherSheetOpen] = useState(false);
+    const toast = useToast();
+    const prevLocation = useRef(location);
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -217,31 +221,11 @@ function WriteDiary({ user }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!user) {
-            alert('로그인이 필요합니다.');
-            navigate('/login');
+        if (!diary.content || diary.content.trim().length < 50) {
+            toast.showToast('더 풍부한 소설 내용을 위해 50자 이상 작성해 주세요!', 'info');
             return;
         }
-
-        if (!diary.title.trim()) {
-            alert('제목을 입력해주세요.');
-            return;
-        }
-
-        if (!diary.content.trim()) {
-            alert('내용을 입력해주세요.');
-            return;
-        }
-
-        // 일기 내용이 너무 짧으면 안내 메시지
-        if (diary.content.trim().length < 50) {
-            alert('더 풍성한 소설 내용을 위해 50자 이상 작성해보세요!');
-            return;
-        }
-
         setIsSubmitting(true);
-
         try {
             // 1. Firestore에 일기 텍스트만 먼저 저장 (imageUrls는 저장하지 않음)
             const diaryData = {
@@ -259,8 +243,10 @@ function WriteDiary({ user }) {
             if (isEditMode && existingDiaryId) {
                 diaryRef = doc(db, 'diaries', existingDiaryId);
                 await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
+                toast.showToast('일기가 수정되었습니다.', 'success');
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
+                toast.showToast('일기가 저장되었습니다.', 'success');
             }
 
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
@@ -279,11 +265,10 @@ function WriteDiary({ user }) {
                 updatedAt: new Date(),
             });
 
-            alert('일기가 저장되었습니다.');
-            navigate('/diaries');
+            navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
             console.error("Error saving diary: ", error);
-            alert('일기 저장에 실패했습니다.');
+            toast.showToast('저장에 실패했습니다.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -294,6 +279,9 @@ function WriteDiary({ user }) {
         setIsEmotionSheetOpen(false);
         setIsWeatherSheetOpen(false);
     };
+
+    // 작성 중 여부 판별
+    const isDirty = diary.title || diary.content || diary.mood || diary.weather || diary.emotion || imagePreview.length > 0;
 
     const styles = {
         container: {
@@ -517,7 +505,7 @@ function WriteDiary({ user }) {
                     <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
                         {!diary.weather ? (
                             <Button
-                                onClick={() => {
+                                onClick={(e) => {
                                     setIsWeatherSheetOpen(true);
                                     setIsEmotionSheetOpen(false);
                                 }}
@@ -542,7 +530,7 @@ function WriteDiary({ user }) {
                                     src={weatherImageMap[diary.weather]}
                                     alt={diary.weather}
                                     style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
-                                    onClick={() => {
+                                    onClick={(e) => {
                                         setIsWeatherSheetOpen(true);
                                         setIsEmotionSheetOpen(false);
                                     }}
@@ -553,7 +541,7 @@ function WriteDiary({ user }) {
                     <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
                         {!diary.emotion ? (
                             <Button
-                                onClick={() => {
+                                onClick={(e) => {
                                     setIsEmotionSheetOpen(true);
                                     setIsWeatherSheetOpen(false);
                                 }}
@@ -578,7 +566,7 @@ function WriteDiary({ user }) {
                                     src={emotionImageMap[diary.emotion]}
                                     alt={diary.emotion}
                                     style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
-                                    onClick={() => {
+                                    onClick={(e) => {
                                         setIsEmotionSheetOpen(true);
                                         setIsWeatherSheetOpen(false);
                                     }}
@@ -621,7 +609,7 @@ function WriteDiary({ user }) {
                                 <button
                                     key={opt.value}
                                     type="button"
-                                    onClick={() => {
+                                    onClick={(e) => {
                                         setDiary(prev => ({ ...prev, weather: opt.value }));
                                         setIsWeatherSheetOpen(false);
                                     }}
@@ -667,7 +655,7 @@ function WriteDiary({ user }) {
                                 <button
                                     key={opt.value}
                                     type="button"
-                                    onClick={() => {
+                                    onClick={(e) => {
                                         setDiary(prev => ({ ...prev, emotion: opt.value }));
                                         setIsEmotionSheetOpen(false);
                                     }}
@@ -709,7 +697,7 @@ function WriteDiary({ user }) {
                                 <img src={src} alt={`업로드 이미지 ${index + 1}`} style={styles.image} />
                                 <button
                                     type="button"
-                                    onClick={() => removeImage(index)}
+                                    onClick={(e) => removeImage(index)}
                                     style={styles.removeButton}
                                 >
                                     ×
