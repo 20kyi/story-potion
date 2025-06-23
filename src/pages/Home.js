@@ -388,7 +388,7 @@ function Home({ user }) {
         <LeftSection>
           <SectionLabel>최근일기</SectionLabel>
           <MainButtonRow>
-            <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diaries/${recentDiaries[0].date}`)}>
+            <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
               {recentDiaries.length > 0 && recentDiaries[0] ? (
                 <DiaryPreviewContainer>
                   {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 && (
