@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import styled from 'styled-components';
 import Header from '../components/Header';
-import { Line, getElementAtEvent } from 'react-chartjs-2';
+import { Line, getElementAtEvent, Bar } from 'react-chartjs-2';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import {
@@ -12,6 +12,7 @@ import {
     LinearScale,
     PointElement,
     LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend,
@@ -23,6 +24,7 @@ ChartJS.register(
     LinearScale,
     PointElement,
     LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend,
@@ -271,6 +273,59 @@ function Diary({ user }) {
         cry: 1
     };
 
+    // 감정별 색상 매핑
+    const emotionBarColors = {
+        love: '#ffb3de',      // 연분홍
+        good: '#ffe156',      // 노랑
+        normal: '#b2f2bb',    // 연녹
+        surprised: '#a5d8ff', // 하늘
+        angry: '#ff8787',     // 연빨강
+        cry: '#b5b5c3',       // 연보라
+        empty: '#e0e0e0'      // 회색(미작성)
+    };
+
+    // 감정별 한글명 및 이모티콘 경로 매핑
+    const emotionBarLabels = {
+        love: '사랑',
+        good: '기쁨',
+        normal: '평온',
+        surprised: '놀람',
+        angry: '화남',
+        cry: '슬픔',
+        empty: '미작성'
+    };
+    const emotionBarIcons = {
+        love: '/emotions/love.png',
+        good: '/emotions/good.png',
+        normal: '/emotions/normal.png',
+        surprised: '/emotions/surprised.png',
+        angry: '/emotions/angry.png',
+        cry: '/emotions/cry.png',
+        empty: null
+    };
+
+    // 감정별 맞춤형 상단 문구 매핑
+    const emotionTopMessages = {
+        love: (month) => `${month}월, 사랑이 가득한 한 달이었어요`,
+        good: (month) => `${month}월, 기쁨이 많았네요! 앞으로도 좋은 일만 가득하길`,
+        normal: (month) => `${month}월, 평온한 하루하루가 이어졌어요`,
+        surprised: (month) => `${month}월, 놀람이 많았던 한 달이었네요!`,
+        angry: (month) => `${month}월, 화남이 많았어요. 내 마음을 토닥여주세요`,
+        cry: (month) => `${month}월, 슬픔이 많았군요. 힘든 순간도 곧 지나갈 거예요`,
+        empty: (month) => `${month}월의 마음은 비어있어요`
+    };
+
+    // 상단 문구 자동 생성 (감정별 맞춤)
+    const getTopMessage = () => {
+        const { percent } = getEmotionBarData();
+        const mainEmotion = Object.entries(percent)
+            .filter(([k]) => k !== 'empty')
+            .sort((a, b) => b[1] - a[1])[0]?.[0];
+        const month = currentDate.getMonth() + 1;
+        if (!mainEmotion || percent[mainEmotion] === 0) return emotionTopMessages.empty(month);
+        return emotionTopMessages[mainEmotion](month);
+    };
+
     // 현재 월의 감정 데이터 가져오기
     const getCurrentMonthEmotionData = () => {
         const year = currentDate.getFullYear();
@@ -426,6 +481,28 @@ function Diary({ user }) {
         setPreviewDiary(null); // 손을 떼면 미리보기 닫기
     };
 
+    // 이번 달 감정 비율 데이터 계산
+    const getEmotionBarData = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const counts = { love: 0, good: 0, normal: 0, surprised: 0, angry: 0, cry: 0, empty: 0 };
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateString = formatDateToString(date);
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+            if (diary && diary.emotion) {
+                counts[diary.emotion]++;
+            } else {
+                counts.empty++;
+            }
+        }
+        const total = daysInMonth;
+        const percent = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, Math.round((v / total) * 100)]));
+        return { counts, percent, total };
+    };
+    const emotionBarData = getEmotionBarData();
+
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -539,64 +616,103 @@ function Diary({ user }) {
                         {renderCalendar()}
                     </tbody>
                 </table>
-
-                <EmotionGraphContainer>
-                    <GraphTitle>이달의 감정</GraphTitle>
-                    <Line ref={chartRef} data={chartData} options={chartOptions} onClick={handleChartClick} onTouchStart={handleChartTouch} />
-                    {previewDiary && (
-                        (() => {
-                            // 팝업 크기 예측값
-                            const popupWidth = 260, popupHeight = 220;
-                            let left = previewPosition.x, top = previewPosition.y;
-                            // 화면 가장자리 보정
-                            if (left + popupWidth > window.innerWidth) left = window.innerWidth - popupWidth - 8;
-                            if (left < 8) left = 8;
-                            if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - 8;
-                            if (top < 8) top = 8;
+                {/* 감정 비율 막대(커스텀) */}
+                <div style={{ margin: '32px 0 0 0', width: '100%', maxWidth: 540, minHeight: 40, position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
+                    {/* 상단 문구 */}
+                    <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 500, marginBottom: 18, color: '#7c6f6f', letterSpacing: '-1px' }}>
+                        {getTopMessage()}
+                    </div>
+                    {/* 막대 */}
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: 38, borderRadius: 22, overflow: 'hidden', background: '#f6f6f6', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                        {Object.entries(emotionBarData.percent).map(([emotion, value], idx, arr) => {
+                            if (value === 0) return null;
                             return (
-                                <div
-                                    style={{
-                                        position: 'fixed',
-                                        left,
-                                        top,
-                                        zIndex: 2000,
-                                        background: '#fff',
-                                        border: '1px solid #eee',
-                                        borderRadius: 10,
-                                        boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-                                        padding: 16,
-                                        minWidth: 180,
-                                        maxWidth: 260,
-                                        fontSize: 13,
-                                        width: popupWidth,
-                                        maxHeight: popupHeight,
-                                        overflow: 'auto',
-                                        transform: 'none'
-                                    }}
-                                    onClick={e => e.stopPropagation()}
-                                >
-                                    {/* 감정/날씨 이모티콘 */}
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                        {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
-                                            <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
-                                        )}
-                                        {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
-                                            <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
-                                        )}
-                                    </div>
-                                    {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                        <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                                <div key={emotion} style={{
+                                    flex: value + ' 0 0',
+                                    background: emotionBarColors[emotion],
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    position: 'relative',
+                                    borderTopLeftRadius: emotion === Object.keys(emotionBarData.percent)[0] ? 22 : 0,
+                                    borderBottomLeftRadius: emotion === Object.keys(emotionBarData.percent)[0] ? 22 : 0,
+                                    borderTopRightRadius: emotion === Object.keys(emotionBarData.percent).slice(-1)[0] ? 22 : 0,
+                                    borderBottomRightRadius: emotion === Object.keys(emotionBarData.percent).slice(-1)[0] ? 22 : 0
+                                }}>
+                                    {emotion !== 'empty' && value >= 10 && (
+                                        <img src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} style={{ width: 28, height: 28, opacity: 0.85 }} />
                                     )}
-                                    <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
-                                    <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
-                                        {previewDiary.date}
-                                    </div>
-                                    <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
                                 </div>
                             );
-                        })()
-                    )}
-                </EmotionGraphContainer>
+                        })}
+                    </div>
+                    {/* 퍼센트/개수 */}
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%', marginTop: 8 }}>
+                        {Object.entries(emotionBarData.percent).map(([emotion, value]) => {
+                            if (value === 0 || emotion === 'empty') return <div key={emotion} style={{ flex: value + ' 0 0' }} />;
+                            return (
+                                <div key={emotion} style={{
+                                    flex: value + ' 0 0',
+                                    textAlign: 'center',
+                                    color: emotionBarColors[emotion],
+                                    fontWeight: 600,
+                                    fontSize: 17,
+                                    opacity: 0.6
+                                }}>
+                                    {value}%
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+                {/* 미리보기 팝업은 달력 아래에 그대로 유지 */}
+                {previewDiary && (() => {
+                    const popupWidth = 260, popupHeight = 220;
+                    let left = previewPosition.x, top = previewPosition.y;
+                    if (left + popupWidth > window.innerWidth) left = window.innerWidth - popupWidth - 8;
+                    if (left < 8) left = 8;
+                    if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - 8;
+                    if (top < 8) top = 8;
+                    return (
+                        <div
+                            style={{
+                                position: 'fixed',
+                                left,
+                                top,
+                                zIndex: 2000,
+                                background: '#fff',
+                                border: '1px solid #eee',
+                                borderRadius: 10,
+                                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+                                padding: 16,
+                                minWidth: 180,
+                                maxWidth: 260,
+                                fontSize: 13,
+                                width: popupWidth,
+                                maxHeight: popupHeight,
+                                overflow: 'auto',
+                                transform: 'none'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* 감정/날씨 이모티콘 */}
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
+                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
+                                )}
+                                {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
+                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
+                                )}
+                            </div>
+                            {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
+                                <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                            )}
+                            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
+                            <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
+                                {previewDiary.date}
+                            </div>
+                            <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
+                        </div>
+                    );
+                })()}
             </div>
             <Navigation />
         </Container>
