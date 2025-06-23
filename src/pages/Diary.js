@@ -519,7 +519,9 @@ function Diary({ user }) {
                                 <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
                             )}
                             <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
-                            <div style={{ color: '#666', marginBottom: 4, fontSize: 13, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis', maxHeight: 40 }}>{previewDiary.content}</div>
+                            <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
+                                {previewDiary.date}
+                            </div>
                             <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
                         </div>
                     )}
