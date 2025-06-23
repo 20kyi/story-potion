@@ -59,6 +59,7 @@ function Diary({ user }) {
     const [previewDiary, setPreviewDiary] = useState(null);
     const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
     const chartRef = useRef();
+    const [longPressTimer, setLongPressTimer] = useState(null);
 
     useEffect(() => {
         if (!user) return;
@@ -316,8 +317,9 @@ function Diary({ user }) {
                 tension: 0.4,
                 pointBackgroundColor: '#fff',
                 pointBorderColor: '#e46262',
-                pointRadius: 2,
-                pointHoverRadius: 4,
+                pointRadius: 6,
+                pointHoverRadius: 10,
+                pointBorderWidth: 2,
             },
         ],
     };
@@ -400,6 +402,30 @@ function Diary({ user }) {
         }
     };
 
+    // 달력 날짜 롱프레스 핸들러
+    const handleDateLongPressStart = (date, event) => {
+        if (isFutureDate(date)) return;
+        const touch = event.touches && event.touches[0];
+        const x = touch ? touch.clientX : 0;
+        const y = touch ? touch.clientY : 0;
+        const timer = setTimeout(() => {
+            const dateString = formatDateToString(date);
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+            if (diary) {
+                setPreviewDiary(diary);
+                setPreviewPosition({ x, y });
+            }
+        }, 500); // 500ms 이상 누르면 미리보기
+        setLongPressTimer(timer);
+    };
+    const handleDateLongPressEnd = () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            setLongPressTimer(null);
+        }
+        setPreviewDiary(null); // 손을 떼면 미리보기 닫기
+    };
+
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -448,6 +474,9 @@ function Diary({ user }) {
                         }}
                         onClick={() => !future && handleDateClick(date)}
                         disabled={future}
+                        onTouchStart={e => handleDateLongPressStart(date, e)}
+                        onTouchEnd={handleDateLongPressEnd}
+                        onTouchCancel={handleDateLongPressEnd}
                     >
                         <span style={{ color: !isToday && !future ? '#000' : undefined }}>{day}</span>
                         {isToday && <div style={styles.todayCircle} />}
@@ -515,42 +544,57 @@ function Diary({ user }) {
                     <GraphTitle>이달의 감정</GraphTitle>
                     <Line ref={chartRef} data={chartData} options={chartOptions} onClick={handleChartClick} onTouchStart={handleChartTouch} />
                     {previewDiary && (
-                        <div
-                            style={{
-                                position: 'fixed',
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 2000,
-                                background: '#fff',
-                                border: '1px solid #eee',
-                                borderRadius: 10,
-                                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-                                padding: 16,
-                                minWidth: 180,
-                                maxWidth: 260,
-                                fontSize: 13
-                            }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {/* 감정/날씨 이모티콘 */}
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
-                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
-                                )}
-                                {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
-                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
-                                )}
-                            </div>
-                            {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
-                            )}
-                            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
-                            <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
-                                {previewDiary.date}
-                            </div>
-                            <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
-                        </div>
+                        (() => {
+                            // 팝업 크기 예측값
+                            const popupWidth = 260, popupHeight = 220;
+                            let left = previewPosition.x, top = previewPosition.y;
+                            // 화면 가장자리 보정
+                            if (left + popupWidth > window.innerWidth) left = window.innerWidth - popupWidth - 8;
+                            if (left < 8) left = 8;
+                            if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - 8;
+                            if (top < 8) top = 8;
+                            return (
+                                <div
+                                    style={{
+                                        position: 'fixed',
+                                        left,
+                                        top,
+                                        zIndex: 2000,
+                                        background: '#fff',
+                                        border: '1px solid #eee',
+                                        borderRadius: 10,
+                                        boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+                                        padding: 16,
+                                        minWidth: 180,
+                                        maxWidth: 260,
+                                        fontSize: 13,
+                                        width: popupWidth,
+                                        maxHeight: popupHeight,
+                                        overflow: 'auto',
+                                        transform: 'none'
+                                    }}
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    {/* 감정/날씨 이모티콘 */}
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                        {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
+                                            <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
+                                        )}
+                                        {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
+                                            <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
+                                        )}
+                                    </div>
+                                    {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
+                                        <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                                    )}
+                                    <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
+                                    <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
+                                        {previewDiary.date}
+                                    </div>
+                                    <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
+                                </div>
+                            );
+                        })()
                     )}
                 </EmotionGraphContainer>
             </div>
