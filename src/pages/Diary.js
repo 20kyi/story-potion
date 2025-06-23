@@ -327,7 +327,7 @@ function Diary({ user }) {
         responsive: true,
         scales: {
             y: {
-                min: 1,
+                min: 0,
                 max: 7,
                 grid: {
                     display: false
@@ -491,8 +491,9 @@ function Diary({ user }) {
                         <div
                             style={{
                                 position: 'fixed',
-                                left: previewPosition.x + 10,
-                                top: previewPosition.y - 10,
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translate(-50%, -50%)',
                                 zIndex: 2000,
                                 background: '#fff',
                                 border: '1px solid #eee',
@@ -505,6 +506,15 @@ function Diary({ user }) {
                             }}
                             onClick={e => e.stopPropagation()}
                         >
+                            {/* 감정/날씨 이모티콘 */}
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
+                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
+                                )}
+                                {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
+                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
+                                )}
+                            </div>
                             {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
                                 <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
                             )}
