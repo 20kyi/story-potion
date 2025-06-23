@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import styled from 'styled-components';
 import Header from '../components/Header';
-import { Line } from 'react-chartjs-2';
+import { Line, getElementAtEvent } from 'react-chartjs-2';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import {
@@ -56,6 +56,9 @@ function Diary({ user }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [diaries, setDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [previewDiary, setPreviewDiary] = useState(null);
+    const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
+    const chartRef = useRef();
 
     useEffect(() => {
         if (!user) return;
@@ -313,8 +316,8 @@ function Diary({ user }) {
                 tension: 0.4,
                 pointBackgroundColor: '#fff',
                 pointBorderColor: '#e46262',
-                pointRadius: 5,
-                pointHoverRadius: 8,
+                pointRadius: 2,
+                pointHoverRadius: 4,
             },
         ],
     };
@@ -325,27 +328,19 @@ function Diary({ user }) {
         scales: {
             y: {
                 min: 1,
-                max: 6,
+                max: 7,
                 grid: {
-                    color: '#f0f0f0'
+                    display: false
                 },
                 ticks: {
-                    stepSize: 1,
-                    callback: function (value) {
-                        switch (value) {
-                            case 6: return '완전행복';
-                            case 5: return '기분좋음';
-                            case 4: return '평범함';
-                            case 3: return '놀람';
-                            case 2: return '화남';
-                            case 1: return '슬픔';
-                            default: return '';
-                        }
-                    }
+                    display: false
                 }
             },
             x: {
                 grid: {
+                    display: false
+                },
+                ticks: {
                     display: false
                 }
             }
@@ -355,21 +350,25 @@ function Diary({ user }) {
                 display: false
             },
             tooltip: {
-                callbacks: {
-                    label: function (context) {
-                        const value = context.raw;
-                        let emotion = '';
-                        switch (value) {
-                            case 6: emotion = '완전행복 😍'; break;
-                            case 5: emotion = '기분좋음 🙂'; break;
-                            case 4: emotion = '평범함 😐'; break;
-                            case 3: emotion = '놀람 😲'; break;
-                            case 2: emotion = '화남 😠'; break;
-                            case 1: emotion = '슬픔 😭'; break;
-                        }
-                        return emotion;
-                    }
-                }
+                enabled: false
+            }
+        }
+    };
+
+    // 그래프 포인트 클릭 핸들러
+    const handleChartClick = (event) => {
+        if (!chartRef.current) return;
+        const points = getElementAtEvent(chartRef.current, event);
+        if (points && points.length > 0) {
+            const idx = points[0].index;
+            const day = labels[idx];
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const dateString = formatDateToString(new Date(year, month, day));
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+            if (diary) {
+                setPreviewDiary(diary);
+                setPreviewPosition({ x: event.clientX, y: event.clientY });
             }
         }
     };
@@ -486,8 +485,34 @@ function Diary({ user }) {
                 </table>
 
                 <EmotionGraphContainer>
-                    <GraphTitle>{formatMonth(currentDate)} 감정 그래프</GraphTitle>
-                    <Line data={chartData} options={chartOptions} />
+                    <GraphTitle>이달의 감정</GraphTitle>
+                    <Line ref={chartRef} data={chartData} options={chartOptions} onClick={handleChartClick} />
+                    {previewDiary && (
+                        <div
+                            style={{
+                                position: 'fixed',
+                                left: previewPosition.x + 10,
+                                top: previewPosition.y - 10,
+                                zIndex: 2000,
+                                background: '#fff',
+                                border: '1px solid #eee',
+                                borderRadius: 10,
+                                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+                                padding: 16,
+                                minWidth: 180,
+                                maxWidth: 260,
+                                fontSize: 13
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
+                                <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                            )}
+                            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
+                            <div style={{ color: '#666', marginBottom: 4, fontSize: 13, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis', maxHeight: 40 }}>{previewDiary.content}</div>
+                            <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
+                        </div>
+                    )}
                 </EmotionGraphContainer>
             </div>
             <Navigation />
