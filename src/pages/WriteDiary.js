@@ -222,7 +222,7 @@ function WriteDiary({ user }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!diary.content || diary.content.trim().length < 50) {
-            toast.showToast('더 풍부한 소설 내용을 위해 50자 이상 작성해 주세요!', 'info');
+            toast.showToast('더 풍부한 소설 내용을 위해\n50자 이상 작성해 주세요!', 'info');
             return;
         }
         setIsSubmitting(true);

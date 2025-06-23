@@ -21,7 +21,14 @@ const Toast = ({ open, message, type = 'info', onClose, duration = 2000 }) => {
     return (
         <div className={`toast-container toast-${type}`}>
             <span className="toast-icon">{icons[type]}</span>
-            <span className="toast-message">{message}</span>
+            <span className="toast-message">
+                {String(message).split('\n').map((line, idx) => (
+                    <React.Fragment key={idx}>
+                        {line}
+                        {idx !== String(message).split('\n').length - 1 && <br />}
+                    </React.Fragment>
+                ))}
+            </span>
         </div>
     );
 };
