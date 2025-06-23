@@ -195,18 +195,22 @@ function DiaryView({ user }) {
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     };
 
-    // 날씨/감정 이모티콘 매핑 추가
-    const weatherIcons = {
-        sunny: "☀️",
-        cloudy: "☁️",
-        rainy: "🌧️",
-        snowy: "❄️"
+    // 감정/날씨 이미지 매핑 추가
+    const weatherImageMap = {
+        sunny: '/weather/sunny.png',
+        cloudy: '/weather/cloudy.png',
+        rainy: '/weather/rainy.png',
+        snowy: '/weather/snowy.png',
+        windy: '/weather/windy.png',
+        thunder: '/weather/thunder.png',
     };
-    const emotionIcons = {
-        happy: "😊",
-        sad: "😢",
-        angry: "😠",
-        calm: "😌"
+    const emotionImageMap = {
+        love: '/emotions/love.png',
+        good: '/emotions/good.png',
+        normal: '/emotions/normal.png',
+        surprised: '/emotions/surprised.png',
+        angry: '/emotions/angry.png',
+        cry: '/emotions/cry.png',
     };
 
     return (
@@ -247,8 +251,8 @@ function DiaryView({ user }) {
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: '24px', alignItems: 'center', margin: '12px 0 8px 0', minHeight: '28px', fontSize: '17px', color: '#cb6565', fontWeight: 500 }}>
-                                <span>오늘의 날씨: <span style={{ fontSize: '22px', verticalAlign: 'middle' }}>{weatherIcons[diary.weather] || ''}</span></span>
-                                <span>나의 기분: <span style={{ fontSize: '22px', verticalAlign: 'middle' }}>{emotionIcons[diary.emotion] || ''}</span></span>
+                                <span>오늘의 날씨: {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
+                                <span>나의 기분: {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
                             </div>
                             <h2 style={styles.diaryTitle}>{diary.title}</h2>
                             <p style={styles.diaryContent}>{diary.content}</p>

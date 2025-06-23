@@ -149,7 +149,7 @@ function Diary({ user }) {
             background: 'none',
             cursor: 'pointer',
             position: 'relative',
-            color: '#666',
+            color: '#000',
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
@@ -239,20 +239,22 @@ function Diary({ user }) {
         return date > today;
     };
 
-    // 날씨/감정 이모티콘 매핑 추가
-    const weatherIcons = {
-        sunny: "☀️",
-        cloudy: "☁️",
-        rainy: "🌧️",
-        snowy: "❄️"
+    // 감정/날씨 이미지 매핑 추가
+    const weatherImageMap = {
+        sunny: '/weather/sunny.png',
+        cloudy: '/weather/cloudy.png',
+        rainy: '/weather/rainy.png',
+        snowy: '/weather/snowy.png',
+        windy: '/weather/windy.png',
+        thunder: '/weather/thunder.png',
     };
-    const emotionIcons = {
-        love: "😍", // 완전행복(눈하트)
-        good: "🙂", // 기분좋음
-        normal: "😐", // 평범함
-        surprised: "😲", // 놀람
-        angry: "😠", // 화남
-        cry: "😭" // 슬픔(눈물)
+    const emotionImageMap = {
+        love: '/emotions/love.png',
+        good: '/emotions/good.png',
+        normal: '/emotions/normal.png',
+        surprised: '/emotions/surprised.png',
+        angry: '/emotions/angry.png',
+        cry: '/emotions/cry.png',
     };
 
     // 감정 값 매핑 (그래프용, 값이 클수록 긍정)
@@ -408,7 +410,7 @@ function Diary({ user }) {
             const future = isFutureDate(date);
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
-            const emotionIcon = diary && diary.emotion ? emotionIcons[diary.emotion] : null;
+            const emotionImg = diary && diary.emotion ? emotionImageMap[diary.emotion] : null;
 
             days.push(
                 <td key={`current-${day}`} style={styles.dateCell}>
@@ -421,11 +423,11 @@ function Diary({ user }) {
                         onClick={() => !future && handleDateClick(date)}
                         disabled={future}
                     >
-                        {day}
+                        <span style={{ color: !isToday && !future ? '#000' : undefined }}>{day}</span>
                         {isToday && <div style={styles.todayCircle} />}
-                        {/* 감정 이모티콘만, 없으면 빈 공간 */}
-                        <div style={{ fontSize: '16px', marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px' }}>
-                            {emotionIcon || '\u00A0'}
+                        {/* 감정 이미지만, 없으면 빈 공간 */}
+                        <div style={{ marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            {emotionImg && <img src={emotionImg} alt="감정" style={{ width: 24, height: 24, marginBottom: 2 }} />}
                         </div>
                     </button>
                 </td>
