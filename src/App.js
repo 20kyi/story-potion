@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import NovelListByGenre from './pages/NovelListByGenre';
 import HomeTest from './pages/HomeTest';
+import { ToastProvider } from './components/ui/ToastProvider';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -65,7 +66,9 @@ function App() {
 
     return (
         <Router>
-            <AppLayout user={user} isLoading={isLoading} />
+            <ToastProvider>
+                <AppLayout user={user} isLoading={isLoading} />
+            </ToastProvider>
         </Router>
     );
 }

@@ -4,8 +4,10 @@ import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import styled from 'styled-components';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { useSwipeable } from 'react-swipeable';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { useToast } from '../components/ui/ToastProvider';
 
 const Container = styled.div`
   display: flex;
@@ -22,6 +24,8 @@ function DiaryView({ user }) {
     const [diary, setDiary] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [noMoreFuture, setNoMoreFuture] = useState(false); // 미래 안내 상태
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const toast = useToast();
 
     // 날짜 계산 함수
     const getAdjacentDate = (baseDate, diff) => {
@@ -91,17 +95,42 @@ function DiaryView({ user }) {
     }, [user, date]);
 
     const handleDelete = async () => {
-        if (diary && window.confirm('일기를 삭제하시겠습니까?')) {
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        console.log('삭제 시도 diary:', diary);
+        let snap = null;
+        if (diary && diary.id) {
             try {
                 const diaryRef = doc(db, 'diaries', diary.id);
+                snap = await getDoc(diaryRef);
+                if (snap.exists()) {
+                    console.log('실제 Firestore 문서:', snap.data());
+                } else {
+                    console.log('Firestore 문서가 존재하지 않습니다.');
+                }
                 await deleteDoc(diaryRef);
-                alert('일기가 삭제되었습니다.');
+                toast.showToast('일기가 삭제되었습니다.', 'success');
+                setShowDeleteModal(false);
                 navigate('/diaries');
             } catch (error) {
                 console.error("Error deleting diary: ", error);
-                alert('일기 삭제에 실패했습니다.');
+                console.log('catch 블록 diary:', diary);
+                if (snap) {
+                    console.log('catch 블록 Firestore 문서:', snap.data());
+                }
+                toast.showToast('일기 삭제에 실패했습니다.', 'error');
+                setShowDeleteModal(false);
             }
+        } else {
+            toast.showToast('일기 정보가 올바르지 않습니다.', 'error');
+            setShowDeleteModal(false);
         }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
     };
 
     const styles = {
@@ -265,6 +294,13 @@ function DiaryView({ user }) {
                 </main>
             </div>
             <Navigation />
+            <ConfirmModal
+                open={showDeleteModal}
+                title="일기 삭제"
+                description="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+                onCancel={cancelDelete}
+                onConfirm={confirmDelete}
+            />
         </Container>
     );
 }
