@@ -21,6 +21,7 @@ function DiaryView({ user }) {
     const { date } = useParams();
     const [diary, setDiary] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [noMoreFuture, setNoMoreFuture] = useState(false); // 미래 안내 상태
 
     // 날짜 계산 함수
     const getAdjacentDate = (baseDate, diff) => {
@@ -44,11 +45,19 @@ function DiaryView({ user }) {
     // 스와이프 핸들러
     const handlers = useSwipeable({
         onSwipedLeft: () => {
+            if (noMoreFuture) return; // 미래 안내 상태면 더 이상 오른쪽 이동 불가
             const nextDate = getAdjacentDate(date, 1);
-            if (nextDate > getTodayString()) return; // 미래로 이동 방지
+            if (nextDate > getTodayString()) {
+                setNoMoreFuture(true);
+                return;
+            }
             navigate(`/diary/date/${nextDate}`);
         },
         onSwipedRight: () => {
+            if (noMoreFuture) {
+                setNoMoreFuture(false); // 미래 안내 상태에서 왼쪽 이동 시 원래 일기로 복귀
+                return;
+            }
             const prevDate = getAdjacentDate(date, -1);
             navigate(`/diary/date/${prevDate}`);
         },
@@ -57,18 +66,12 @@ function DiaryView({ user }) {
     });
 
     useEffect(() => {
-        // date만 바뀌어도 fetchDiary가 실행되도록 수정
+        if (!user || !date) return;
+        setIsLoading(true);
+        setNoMoreFuture(false); // 날짜 바뀌면 미래 안내 상태 해제
         const fetchDiary = async () => {
-            if (!user || !date) return;
-            console.log('fetchDiary 실행:', date, user?.uid);
-            // URL의 date 파라미터는 'YYYY-MM-DD' 형식이므로,
-            // new Date()가 로컬 시간대 자정으로 해석하도록 '-'를 '/'로 변경합니다.
-            const targetDate = new Date(date.replace(/-/g, '/'));
-
-            setIsLoading(true);
             const diariesRef = collection(db, 'diaries');
             const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', date));
-
             try {
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
@@ -223,6 +226,11 @@ function DiaryView({ user }) {
                 <main style={styles.mainContent}>
                     {isLoading ? (
                         <div>로딩 중...</div>
+                    ) : noMoreFuture ? (
+                        <div style={{ textAlign: 'center', color: '#888', fontSize: '14px', marginTop: '80px' }}>
+                            더이상 일기가 없습니다.<br />
+                            (왼쪽으로 스와이프하면 이전 일기로 돌아갑니다)
+                        </div>
                     ) : diary ? (
                         <>
                             <div style={styles.diaryDate}>{formatDate(diary.date)}</div>
