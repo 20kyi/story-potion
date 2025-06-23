@@ -211,6 +211,12 @@ function WriteDiary({ user }) {
             return;
         }
 
+        // 일기 내용이 너무 짧으면 안내 메시지
+        if (diary.content.trim().length < 50) {
+            alert('더 풍성한 소설 내용을 위해 50자 이상 작성해보세요!');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -277,7 +283,8 @@ function WriteDiary({ user }) {
             // borderRadius: '30px',
             // padding: '20px',
             flex: 1,
-            position: 'relative'
+            position: 'relative',
+            paddingBottom: '100px',
         },
         // header: {
         //     display: 'flex',
