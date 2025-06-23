@@ -220,7 +220,7 @@ function WriteDiary({ user }) {
         setIsSubmitting(true);
 
         try {
-            // 1. Firestore에 일기 텍스트만 먼저 저장
+            // 1. Firestore에 일기 텍스트만 먼저 저장 (imageUrls는 저장하지 않음)
             const diaryData = {
                 userId: user.uid,
                 date: formatDateToString(selectedDate),
@@ -229,7 +229,6 @@ function WriteDiary({ user }) {
                 weather: diary.weather,
                 emotion: diary.emotion,
                 mood: diary.mood,
-                imageUrls: [], // 일단 빈 배열
                 createdAt: new Date(),
             };
 
@@ -242,18 +241,20 @@ function WriteDiary({ user }) {
             }
 
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
+            let finalImageUrls = diary.imageUrls || [];
             if (imageFiles.length > 0) {
                 const uploadPromises = imageFiles.map(file => {
                     const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
                     return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
                 });
                 const uploadedUrls = await Promise.all(uploadPromises);
-                // 3. 업로드가 끝나면 imageUrls만 update
-                await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
-                    imageUrls: uploadedUrls,
-                    updatedAt: new Date(),
-                });
+                finalImageUrls = [...finalImageUrls, ...uploadedUrls];
             }
+            // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
+            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
+                imageUrls: finalImageUrls,
+                updatedAt: new Date(),
+            });
 
             alert('일기가 저장되었습니다.');
             navigate('/diaries');
