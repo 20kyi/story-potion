@@ -7,6 +7,7 @@ import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
+import Button from '../components/ui/Button';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -42,7 +43,7 @@ function WriteDiary({ user }) {
         mood: '행복',
         imageUrls: [],
         weather: 'sunny',
-        emotion: 'happy'
+        emotion: ''
     });
     const [imageFiles, setImageFiles] = useState([]);
     const [imagePreview, setImagePreview] = useState([]);
@@ -51,6 +52,7 @@ function WriteDiary({ user }) {
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDiaryId, setExistingDiaryId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false);
 
     const weatherOptions = [
         { value: 'sunny', label: '☀️ 맑음' },
@@ -58,11 +60,21 @@ function WriteDiary({ user }) {
         { value: 'rainy', label: '🌧️ 비' },
         { value: 'snowy', label: '❄️ 눈' }
     ];
+    const emotionImageMap = {
+        love: '/emotions/love.png',
+        good: '/emotions/good.png',
+        normal: '/emotions/normal.png',
+        surprised: '/emotions/surprised.png',
+        angry: '/emotions/angry.png',
+        cry: '/emotions/cry.png',
+    };
     const emotionOptions = [
-        { value: 'happy', label: '😊 행복' },
-        { value: 'sad', label: '😢 슬픔' },
-        { value: 'angry', label: '😠 화남' },
-        { value: 'calm', label: '😌 평온' }
+        { value: 'love', label: '완전행복' },
+        { value: 'good', label: '기분좋음' },
+        { value: 'normal', label: '평범함' },
+        { value: 'surprised', label: '놀람' },
+        { value: 'angry', label: '화남' },
+        { value: 'cry', label: '슬픔' }
     ];
 
     useEffect(() => {
@@ -91,7 +103,7 @@ function WriteDiary({ user }) {
                 mood: existingDiary.mood || '행복',
                 imageUrls: existingDiary.imageUrls || [],
                 weather: existingDiary.weather || 'sunny',
-                emotion: existingDiary.emotion || 'happy'
+                emotion: existingDiary.emotion || ''
             });
             setImagePreview(existingDiary.imageUrls || []);
             setIsEditMode(true);
@@ -104,7 +116,7 @@ function WriteDiary({ user }) {
                 mood: '행복',
                 imageUrls: [],
                 weather: 'sunny',
-                emotion: 'happy'
+                emotion: ''
             });
             setImagePreview([]);
             setIsEditMode(false);
@@ -515,20 +527,80 @@ function WriteDiary({ user }) {
                             ))}
                         </select>
                     </div>
-                    <div>
-                        <label style={{ color: '#cb6565', fontWeight: 600, marginRight: 8 }}>감정</label>
-                        <select
-                            name="emotion"
-                            value={diary.emotion}
-                            onChange={handleChange}
-                            style={{ fontSize: '16px', borderRadius: '8px', padding: '4px 8px', border: '1px solid #fdd2d2', color: '#cb6565', background: '#fff9f9' }}
-                        >
-                            {emotionOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
+                    <div style={{ marginBottom: '20px' }}>
+                        {!diary.emotion ? (
+                            <Button
+                                onClick={() => setIsEmotionSheetOpen(true)}
+                                style={{
+                                    background: '#fff9f9',
+                                    border: '1px solid #fdd2d2',
+                                    minWidth: 120,
+                                    minHeight: 44,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '0 20px',
+                                }}
+                            >
+                                <span style={{ fontSize: 16, color: '#cb6565', fontWeight: 600 }}>오늘의 기분</span>
+                            </Button>
+                        ) : (
+                            <img
+                                src={emotionImageMap[diary.emotion]}
+                                alt={diary.emotion}
+                                style={{ width: 44, height: 44, cursor: 'pointer' }}
+                                onClick={() => setIsEmotionSheetOpen(true)}
+                            />
+                        )}
                     </div>
                 </div>
+
+                {isEmotionSheetOpen && (
+                    <div style={{
+                        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+                        background: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+                        boxShadow: '0 -2px 16px rgba(0,0,0,0.12)', padding: 24, minHeight: 220,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        animation: 'slideUp 0.2s ease'
+                    }}>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16 }}>오늘의 기분을 선택하세요</div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateRows: 'repeat(2, 1fr)',
+                            gap: 24,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            width: 240,
+                            margin: '0 auto',
+                        }}>
+                            {emotionOptions.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                        setDiary(prev => ({ ...prev, emotion: opt.value }));
+                                        setIsEmotionSheetOpen(false);
+                                    }}
+                                    style={{
+                                        border: 'none', background: 'none', cursor: 'pointer',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        outline: 'none',
+                                        filter: diary.emotion === opt.value ? 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))' : 'none'
+                                    }}
+                                >
+                                    <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
+                                    <span style={{ fontSize: 14, color: '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsEmotionSheetOpen(false)}
+                            style={{ marginTop: 24, color: '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                        >닫기</button>
+                    </div>
+                )}
 
                 <div style={styles.imageContainer}>
                     <label htmlFor="image-upload" style={styles.uploadLabel}>
