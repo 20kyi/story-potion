@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { useSwipeable } from 'react-swipeable';
 
 const Container = styled.div`
   display: flex;
@@ -21,13 +22,49 @@ function DiaryView({ user }) {
     const [diary, setDiary] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (!user || !date) return;
-        // URL의 date 파라미터는 'YYYY-MM-DD' 형식이므로,
-        // new Date()가 로컬 시간대 자정으로 해석하도록 '-'를 '/'로 변경합니다.
-        const targetDate = new Date(date.replace(/-/g, '/'));
+    // 날짜 계산 함수
+    const getAdjacentDate = (baseDate, diff) => {
+        const d = new Date(baseDate.replace(/-/g, '/'));
+        d.setDate(d.getDate() + diff);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
 
+    // 오늘 날짜를 yyyy-mm-dd로 반환하는 함수
+    const getTodayString = () => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
+    // 스와이프 핸들러
+    const handlers = useSwipeable({
+        onSwipedLeft: () => {
+            const nextDate = getAdjacentDate(date, 1);
+            if (nextDate > getTodayString()) return; // 미래로 이동 방지
+            navigate(`/diary/date/${nextDate}`);
+        },
+        onSwipedRight: () => {
+            const prevDate = getAdjacentDate(date, -1);
+            navigate(`/diary/date/${prevDate}`);
+        },
+        preventDefaultTouchmoveEvent: true,
+        trackMouse: true
+    });
+
+    useEffect(() => {
+        // date만 바뀌어도 fetchDiary가 실행되도록 수정
         const fetchDiary = async () => {
+            if (!user || !date) return;
+            console.log('fetchDiary 실행:', date, user?.uid);
+            // URL의 date 파라미터는 'YYYY-MM-DD' 형식이므로,
+            // new Date()가 로컬 시간대 자정으로 해석하도록 '-'를 '/'로 변경합니다.
+            const targetDate = new Date(date.replace(/-/g, '/'));
+
             setIsLoading(true);
             const diariesRef = collection(db, 'diaries');
             const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', date));
@@ -47,7 +84,6 @@ function DiaryView({ user }) {
                 setIsLoading(false);
             }
         };
-
         fetchDiary();
     }, [user, date]);
 
@@ -171,7 +207,7 @@ function DiaryView({ user }) {
     };
 
     return (
-        <Container>
+        <Container {...handlers}>
             <Header
                 user={user}
                 rightActions={
