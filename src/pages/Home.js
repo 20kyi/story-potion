@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Navigation from '../components/Navigation';
@@ -7,6 +7,9 @@ import PencilIcon from '../components/icons/PencilIcon';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import dailyTopics from '../data/topics.json';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 const Container = styled.div`
   display: flex;
@@ -24,34 +27,6 @@ const Container = styled.div`
   }
 `;
 
-const Carousel = styled.div`
-  background-color: #df9696;
-  border-radius: 25px;
-  height: 220px;
-  margin-bottom: 30px;
-  margin-top: 20px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const CarouselDots = styled.div`
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-`;
-/* 캐러셀 점 */
-const Dot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: ${props => props.$active ? '#e46262' : 'rgba(255, 255, 255, 0.5)'};
-`;
 /* 일기 최근 미리보기 영역 */
 const MainButtonRow = styled.div`
   display: flex;
@@ -309,6 +284,65 @@ const RecommendationTopic = styled.p`
   margin-top: 4px;
 `;
 
+const CarouselContainer = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  // padding: 0;
+  margin-bottom: 20px;
+  .slick-dots {
+    bottom: -35px;
+    li {
+      margin: 0 4px;
+      button:before {
+        color: #fdd2d2;
+        opacity: 0.5;
+        font-size: 8px;
+      }
+      &.slick-active button:before {
+        color: #cb6565;
+        opacity: 1;
+      }
+    }
+  }
+  .slick-slide {
+    padding: 0 5px;
+  }
+  .slick-list {
+    margin: 0 -5px;
+  }
+`;
+const CarouselSlide = styled.div`
+  width: 100%;
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+`;
+
+// home_banner용 데이터
+const bannerData = [
+  { src: process.env.PUBLIC_URL + '/home_banner/home1.png' },
+  { src: process.env.PUBLIC_URL + '/home_banner/home2.png' },
+  // 앞으로 이미지가 추가될 경우 여기에 파일명만 추가하면 됨
+];
+
+const sliderSettings = {
+  dots: true,
+  infinite: true,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 5000,
+  pauseOnHover: false,
+  arrows: false,
+  cssEase: 'linear',
+};
+
 function Home({ user }) {
   const navigate = useNavigate();
   const [recentDiaries, setRecentDiaries] = useState([]);
@@ -376,13 +410,28 @@ function Home({ user }) {
   return (
     <Container>
       <Header user={user} />
-      <Carousel>
-        <CarouselDots>
-          <Dot $active={true} />
-          <Dot $active={false} />
-          <Dot $active={false} />
-        </CarouselDots>
-      </Carousel>
+      <CarouselContainer>
+        <Slider {...sliderSettings}>
+          {bannerData.map((banner, idx) => (
+            <CarouselSlide key={idx}>
+              <img
+                src={banner.src}
+                alt={`배너${idx + 1}`}
+                style={{
+                  width: '100%',
+                  maxWidth: '600px',
+                  height: 'auto',
+                  objectFit: 'cover',
+                  borderRadius: '16px',
+                  display: 'block',
+                  margin: '0 auto',
+                  // marginTop: '10px',
+                }}
+              />
+            </CarouselSlide>
+          ))}
+        </Slider>
+      </CarouselContainer>
 
       <ContentGrid>
         <LeftSection>
