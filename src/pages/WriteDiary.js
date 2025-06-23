@@ -40,7 +40,7 @@ function WriteDiary({ user }) {
     const [diary, setDiary] = useState({
         title: '',
         content: '',
-        mood: '행복',
+        mood: '',
         imageUrls: [],
         weather: '',
         emotion: ''
@@ -111,7 +111,7 @@ function WriteDiary({ user }) {
             setDiary({
                 title: existingDiary.title,
                 content: existingDiary.content,
-                mood: existingDiary.mood || '행복',
+                mood: existingDiary.mood || '',
                 imageUrls: existingDiary.imageUrls || [],
                 weather: existingDiary.weather || '',
                 emotion: existingDiary.emotion || ''
@@ -124,7 +124,7 @@ function WriteDiary({ user }) {
             setDiary({
                 title: '',
                 content: '',
-                mood: '행복',
+                mood: '',
                 imageUrls: [],
                 weather: '',
                 emotion: ''
@@ -289,6 +289,12 @@ function WriteDiary({ user }) {
         }
     };
 
+    // 감정/날씨 바텀시트 오버레이 닫기 핸들러
+    const closeSheets = () => {
+        setIsEmotionSheetOpen(false);
+        setIsWeatherSheetOpen(false);
+    };
+
     const styles = {
         container: {
             display: 'flex',
@@ -316,6 +322,7 @@ function WriteDiary({ user }) {
         //     gap: '15px',
         //     marginBottom: '25px'
         // },
+        // 저장 버튼 컨테이너
         actionButtons: {
             display: 'flex',
             gap: '10px',
@@ -323,6 +330,7 @@ function WriteDiary({ user }) {
             top: '20px',
             right: '20px'
         },
+        // 저장 버튼
         actionButton: {
             backgroundColor: 'rgba(190, 71, 71, 0.62)',
             color: '#ffffff',
@@ -335,30 +343,11 @@ function WriteDiary({ user }) {
             cursor: 'pointer',
             transition: 'background-color 0.2s ease'
         },
+        // 삭제 버튼
         deleteButton: {
             backgroundColor: 'rgba(190, 71, 71, 0.4)'
         },
-        // profileImage: {
-        //     width: '36px',
-        //     height: '36px',
-        //     borderRadius: '50%',
-        //     border: '1px solid #df9696',
-        //     cursor: 'pointer',
-        //     transition: 'transform 0.2s ease',
-        //     '&:hover': {
-        //         transform: 'scale(1.05)'
-        //     }
-        // },
-        // headerText: {
-        //     display: 'flex',
-        //     flexDirection: 'column'
-        // },
-        // headerTitle: {
-        //     fontFamily: 'Instrument Sans',
-        //     fontSize: '10px',
-        //     color: '#de2a2a',
-        //     margin: 0
-        // },
+        // 날짜 선택 컨테이너
         dateSection: {
             fontWeight: 500,
             fontSize: '18px',
@@ -525,60 +514,90 @@ function WriteDiary({ user }) {
                 </TopRow>
 
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
                         {!diary.weather ? (
                             <Button
-                                onClick={() => setIsWeatherSheetOpen(true)}
+                                onClick={() => {
+                                    setIsWeatherSheetOpen(true);
+                                    setIsEmotionSheetOpen(false);
+                                }}
                                 style={{
-                                    background: '#fff9f9',
-                                    border: '1px solid #fdd2d2',
-                                    minWidth: 120,
-                                    minHeight: 44,
-                                    display: 'inline-flex',
+                                    width: '100%',
+                                    height: 44,
+                                    display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '0 20px',
+                                    justifyContent: 'flex-start',
+                                    fontSize: 16,
+                                    color: '#cb6565',
+                                    fontWeight: 600,
+                                    padding: '0 0'
                                 }}
                             >
-                                <span style={{ fontSize: 16, color: '#cb6565', fontWeight: 600 }}>오늘의 날씨</span>
+                                오늘의 날씨
                             </Button>
                         ) : (
-                            <img
-                                src={weatherImageMap[diary.weather]}
-                                alt={diary.weather}
-                                style={{ width: 44, height: 44, cursor: 'pointer' }}
-                                onClick={() => setIsWeatherSheetOpen(true)}
-                            />
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: '#cb6565', fontWeight: 600, padding: 0 }}>
+                                오늘의 날씨
+                                <img
+                                    src={weatherImageMap[diary.weather]}
+                                    alt={diary.weather}
+                                    style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                    onClick={() => {
+                                        setIsWeatherSheetOpen(true);
+                                        setIsEmotionSheetOpen(false);
+                                    }}
+                                />
+                            </span>
                         )}
                     </div>
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
                         {!diary.emotion ? (
                             <Button
-                                onClick={() => setIsEmotionSheetOpen(true)}
+                                onClick={() => {
+                                    setIsEmotionSheetOpen(true);
+                                    setIsWeatherSheetOpen(false);
+                                }}
                                 style={{
-                                    background: '#fff9f9',
-                                    border: '1px solid #fdd2d2',
-                                    minWidth: 120,
-                                    minHeight: 44,
-                                    display: 'inline-flex',
+                                    width: '100%',
+                                    height: 44,
+                                    display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '0 20px',
+                                    justifyContent: 'flex-start',
+                                    fontSize: 16,
+                                    color: '#cb6565',
+                                    fontWeight: 600,
+                                    padding: '0 0'
                                 }}
                             >
-                                <span style={{ fontSize: 16, color: '#cb6565', fontWeight: 600 }}>오늘의 기분</span>
+                                내 기분
                             </Button>
                         ) : (
-                            <img
-                                src={emotionImageMap[diary.emotion]}
-                                alt={diary.emotion}
-                                style={{ width: 44, height: 44, cursor: 'pointer' }}
-                                onClick={() => setIsEmotionSheetOpen(true)}
-                            />
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: '#cb6565', fontWeight: 600, padding: 0 }}>
+                                내 기분
+                                <img
+                                    src={emotionImageMap[diary.emotion]}
+                                    alt={diary.emotion}
+                                    style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                    onClick={() => {
+                                        setIsEmotionSheetOpen(true);
+                                        setIsWeatherSheetOpen(false);
+                                    }}
+                                />
+                            </span>
                         )}
                     </div>
                 </div>
 
+                {/* 바텀시트 오버레이 */}
+                {(isWeatherSheetOpen || isEmotionSheetOpen) && (
+                    <div
+                        onClick={closeSheets}
+                        style={{
+                            position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+                            background: 'rgba(0,0,0,0.15)'
+                        }}
+                    />
+                )}
                 {isWeatherSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
@@ -625,7 +644,6 @@ function WriteDiary({ user }) {
                         >닫기</button>
                     </div>
                 )}
-
                 {isEmotionSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,

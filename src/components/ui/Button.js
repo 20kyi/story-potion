@@ -8,15 +8,21 @@ const Button = ({ children, onClick, style, type = 'button', ...rest }) => (
             padding: '10px 20px',
             borderRadius: '12px',
             border: 'none',
-            background: '#fbeaea',
+            background: 'transparent',
             color: '#cb6565',
             fontWeight: 600,
             fontSize: 16,
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(203,101,101,0.08)',
+            boxShadow: 'none',
+            transition: 'background 0.15s',
             ...style
         }}
         {...rest}
+        onMouseDown={e => e.currentTarget.style.background = '#fff9f9'}
+        onMouseUp={e => e.currentTarget.style.background = 'transparent'}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        onFocus={e => e.currentTarget.style.background = '#fff9f9'}
+        onBlur={e => e.currentTarget.style.background = 'transparent'}
     >
         {children}
     </button>
