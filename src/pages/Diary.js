@@ -139,7 +139,7 @@ function Diary({ user }) {
             padding: '0',
             textAlign: 'center',
             position: 'relative',
-            height: '60px',
+            height: '90px',
             width: '45px'
         },
         dateButton: {
@@ -247,18 +247,22 @@ function Diary({ user }) {
         snowy: "❄️"
     };
     const emotionIcons = {
-        happy: "😊",
-        sad: "😢",
-        angry: "😠",
-        calm: "😌"
+        love: "😍", // 완전행복(눈하트)
+        good: "🙂", // 기분좋음
+        normal: "😐", // 평범함
+        surprised: "😲", // 놀람
+        angry: "😠", // 화남
+        cry: "😭" // 슬픔(눈물)
     };
 
-    // 감정 값 매핑
+    // 감정 값 매핑 (그래프용, 값이 클수록 긍정)
     const emotionValues = {
-        happy: 4,
-        calm: 3,
-        sad: 2,
-        angry: 1
+        love: 6,
+        good: 5,
+        normal: 4,
+        surprised: 3,
+        angry: 2,
+        cry: 1
     };
 
     // 현재 월의 감정 데이터 가져오기
@@ -318,8 +322,8 @@ function Diary({ user }) {
         responsive: true,
         scales: {
             y: {
-                min: 0,
-                max: 5,
+                min: 1,
+                max: 6,
                 grid: {
                     color: '#f0f0f0'
                 },
@@ -327,10 +331,12 @@ function Diary({ user }) {
                     stepSize: 1,
                     callback: function (value) {
                         switch (value) {
-                            case 4: return '행복';
-                            case 3: return '평온';
-                            case 2: return '슬픔';
-                            case 1: return '화남';
+                            case 6: return '완전행복';
+                            case 5: return '기분좋음';
+                            case 4: return '평범함';
+                            case 3: return '놀람';
+                            case 2: return '화남';
+                            case 1: return '슬픔';
                             default: return '';
                         }
                     }
@@ -352,10 +358,12 @@ function Diary({ user }) {
                         const value = context.raw;
                         let emotion = '';
                         switch (value) {
-                            case 4: emotion = '행복 😊'; break;
-                            case 3: emotion = '평온 😌'; break;
-                            case 2: emotion = '슬픔 😢'; break;
-                            case 1: emotion = '화남 😠'; break;
+                            case 6: emotion = '완전행복 😍'; break;
+                            case 5: emotion = '기분좋음 🙂'; break;
+                            case 4: emotion = '평범함 😐'; break;
+                            case 3: emotion = '놀람 😲'; break;
+                            case 2: emotion = '화남 😠'; break;
+                            case 1: emotion = '슬픔 😭'; break;
                         }
                         return emotion;
                     }
