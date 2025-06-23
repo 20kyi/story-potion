@@ -4,8 +4,9 @@ import styled from 'styled-components';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import { db, storage } from '../firebase';
-import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -139,11 +140,20 @@ function WriteDiary({ user }) {
         }));
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const newFiles = Array.from(e.target.files);
-        setImageFiles(prev => [...prev, ...newFiles]);
-
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        // 이미지 압축 및 리사이즈
+        const compressedFiles = await Promise.all(
+            newFiles.map(file =>
+                imageCompression(file, {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1024,
+                    useWebWorker: true,
+                })
+            )
+        );
+        setImageFiles(prev => [...prev, ...compressedFiles]);
+        const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
         setImagePreview(prev => [...prev, ...newPreviews]);
     };
 
@@ -204,21 +214,7 @@ function WriteDiary({ user }) {
         setIsSubmitting(true);
 
         try {
-            // 1. 새로 추가된 파일(imageFiles)만 스토리지에 업로드
-            const newImageUrls = [];
-            if (imageFiles.length > 0) {
-                const uploadPromises = imageFiles.map(file => {
-                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
-                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-                });
-                const uploadedUrls = await Promise.all(uploadPromises);
-                newImageUrls.push(...uploadedUrls);
-            }
-
-            // 2. 최종 이미지 URL 목록 생성 (기존 URL + 새로 업로드된 URL)
-            const finalImageUrls = [...(diary.imageUrls || []), ...newImageUrls];
-
-            // 3. Firestore에 저장할 데이터 준비 (임시 데이터가 없는 깨끗한 데이터만 사용)
+            // 1. Firestore에 일기 텍스트만 먼저 저장
             const diaryData = {
                 userId: user.uid,
                 date: formatDateToString(selectedDate),
@@ -227,18 +223,33 @@ function WriteDiary({ user }) {
                 weather: diary.weather,
                 emotion: diary.emotion,
                 mood: diary.mood,
-                imageUrls: finalImageUrls, // 최종 URL 목록만 저장
+                imageUrls: [], // 일단 빈 배열
+                createdAt: new Date(),
             };
 
+            let diaryRef;
             if (isEditMode && existingDiaryId) {
-                const diaryRef = doc(db, 'diaries', existingDiaryId);
+                diaryRef = doc(db, 'diaries', existingDiaryId);
                 await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
-                alert('일기가 수정되었습니다.');
             } else {
-                await addDoc(collection(db, 'diaries'), { ...diaryData, createdAt: new Date() });
-                alert('일기가 저장되었습니다.');
+                diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
             }
 
+            // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
+            if (imageFiles.length > 0) {
+                const uploadPromises = imageFiles.map(file => {
+                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
+                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                });
+                const uploadedUrls = await Promise.all(uploadPromises);
+                // 3. 업로드가 끝나면 imageUrls만 update
+                await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
+                    imageUrls: uploadedUrls,
+                    updatedAt: new Date(),
+                });
+            }
+
+            alert('일기가 저장되었습니다.');
             navigate('/diaries');
         } catch (error) {
             console.error("Error saving diary: ", error);
