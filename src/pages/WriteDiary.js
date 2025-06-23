@@ -42,7 +42,7 @@ function WriteDiary({ user }) {
         content: '',
         mood: '행복',
         imageUrls: [],
-        weather: 'sunny',
+        weather: '',
         emotion: ''
     });
     const [imageFiles, setImageFiles] = useState([]);
@@ -53,12 +53,23 @@ function WriteDiary({ user }) {
     const [existingDiaryId, setExistingDiaryId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState(false);
+    const [isWeatherSheetOpen, setIsWeatherSheetOpen] = useState(false);
 
+    const weatherImageMap = {
+        sunny: '/weather/sunny.png',
+        cloudy: '/weather/cloudy.png',
+        rainy: '/weather/rainy.png',
+        snowy: '/weather/snowy.png',
+        windy: '/weather/windy.png',
+        thunder: '/weather/thunder.png',
+    };
     const weatherOptions = [
-        { value: 'sunny', label: '☀️ 맑음' },
-        { value: 'cloudy', label: '☁️ 흐림' },
-        { value: 'rainy', label: '🌧️ 비' },
-        { value: 'snowy', label: '❄️ 눈' }
+        { value: 'sunny', label: '맑음' },
+        { value: 'cloudy', label: '흐림' },
+        { value: 'rainy', label: '비' },
+        { value: 'snowy', label: '눈' },
+        { value: 'windy', label: '바람' },
+        { value: 'thunder', label: '천둥' },
     ];
     const emotionImageMap = {
         love: '/emotions/love.png',
@@ -102,7 +113,7 @@ function WriteDiary({ user }) {
                 content: existingDiary.content,
                 mood: existingDiary.mood || '행복',
                 imageUrls: existingDiary.imageUrls || [],
-                weather: existingDiary.weather || 'sunny',
+                weather: existingDiary.weather || '',
                 emotion: existingDiary.emotion || ''
             });
             setImagePreview(existingDiary.imageUrls || []);
@@ -115,7 +126,7 @@ function WriteDiary({ user }) {
                 content: '',
                 mood: '행복',
                 imageUrls: [],
-                weather: 'sunny',
+                weather: '',
                 emotion: ''
             });
             setImagePreview([]);
@@ -514,18 +525,31 @@ function WriteDiary({ user }) {
                 </TopRow>
 
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                    <div>
-                        <label style={{ color: '#cb6565', fontWeight: 600, marginRight: 8 }}>날씨</label>
-                        <select
-                            name="weather"
-                            value={diary.weather}
-                            onChange={handleChange}
-                            style={{ fontSize: '16px', borderRadius: '8px', padding: '4px 8px', border: '1px solid #fdd2d2', color: '#cb6565', background: '#fff9f9' }}
-                        >
-                            {weatherOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
+                    <div style={{ marginBottom: '20px' }}>
+                        {!diary.weather ? (
+                            <Button
+                                onClick={() => setIsWeatherSheetOpen(true)}
+                                style={{
+                                    background: '#fff9f9',
+                                    border: '1px solid #fdd2d2',
+                                    minWidth: 120,
+                                    minHeight: 44,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '0 20px',
+                                }}
+                            >
+                                <span style={{ fontSize: 16, color: '#cb6565', fontWeight: 600 }}>오늘의 날씨</span>
+                            </Button>
+                        ) : (
+                            <img
+                                src={weatherImageMap[diary.weather]}
+                                alt={diary.weather}
+                                style={{ width: 44, height: 44, cursor: 'pointer' }}
+                                onClick={() => setIsWeatherSheetOpen(true)}
+                            />
+                        )}
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                         {!diary.emotion ? (
@@ -554,6 +578,53 @@ function WriteDiary({ user }) {
                         )}
                     </div>
                 </div>
+
+                {isWeatherSheetOpen && (
+                    <div style={{
+                        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+                        background: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+                        boxShadow: '0 -2px 16px rgba(0,0,0,0.12)', padding: 24, minHeight: 220,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        animation: 'slideUp 0.2s ease'
+                    }}>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16 }}>오늘의 날씨를 선택하세요</div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateRows: 'repeat(2, 1fr)',
+                            gap: 24,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            width: 240,
+                            margin: '0 auto',
+                        }}>
+                            {weatherOptions.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                        setDiary(prev => ({ ...prev, weather: opt.value }));
+                                        setIsWeatherSheetOpen(false);
+                                    }}
+                                    style={{
+                                        border: 'none', background: 'none', cursor: 'pointer',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        outline: 'none',
+                                        filter: diary.weather === opt.value ? 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))' : 'none'
+                                    }}
+                                >
+                                    <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
+                                    <span style={{ fontSize: 14, color: '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsWeatherSheetOpen(false)}
+                            style={{ marginTop: 24, color: '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                        >닫기</button>
+                    </div>
+                )}
 
                 {isEmotionSheetOpen && (
                     <div style={{
