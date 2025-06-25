@@ -25,42 +25,58 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        // 1. 소설 내용 생성
-        const contentPrompt = `
-        당신은 '${genre}'소설 작가입니다.
-      다음은 한 주간의 일기 내용입니다.
-      이 일기 내용을 바탕으로 '${genre}' 스타일의 소설로 각색해줘.
-      등장인물, 사건, 분위기를 해당 장르에 맞게 재구성해줘
-      핵심 내용은 유지하되, 배경·말투·서사 구조는 완전히 [장르]에 맞게 바꿔줘
-      서술 톤, 문체, 대사도 [장르] 스타일로 바꿔줘
-      소설은 서론, 본론, 결말로 구성해줘. 단, 서론 / 본론 / 결론" 같은 단어는 사용하지 말고, 소설처럼 매끄럽게 서술해줘
-      스토리는 도입 → 전개 → 결말 구조로 자연스럽게 흘러가게 해줘
-      독자가 몰입할 수 있도록 묘사와 감정선을 충분히 넣어줘
-      큰따옴표와 작은따옴표를 사용한 대사, 생각 등을 꼭 포함시켜줘.
+        // 1. 장르별 프롬프트 분기 함수 정의
+        function getPrompts(genre, diaryContents, novelContent) {
+            let contentPrompt, titlePrompt, imagePrompt;
+            switch (genre) {
+                case '로맨스':
+                    contentPrompt = `당신은 실제 출판되는 장편 로맨스 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 로맨스 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 로맨스 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`;
+                    break;
+                case '추리':
+                    contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 추리 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 추리 소설처럼 치밀하고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 단서, 반전, 미스터리, 탐정의 추리 과정, 인물 간의 심리전과 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 미스터리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`;
+                    break;
+                case '역사':
+                    contentPrompt = `당신은 실제 출판되는 장편 역사 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 역사 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 역사 소설처럼 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`;
+                    break;
+                case '동화':
+                    contentPrompt = `당신은 실제 출판되는 장편 동화 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 동화로 각색해 주세요. 소설은 실제 서점에서 판매되는 동화처럼 밝고 환상적이며 교훈적이고, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 이야기로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`;
+                    break;
+                case '판타지':
+                    contentPrompt = `당신은 실제 출판되는 장편 판타지 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 판타지 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 판타지 소설처럼 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`;
+                    break;
+                case '공포':
+                    contentPrompt = `당신은 실제 출판되는 장편 공포 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 공포 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 공포 소설처럼 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 직접적인 폭력, 피, 유령, 시체 등은 피하고, 심리적 공포와 분위기, 내면 묘사에 집중해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. 정체불명의 존재, 이상한 기억의 공백, 반복되는 꿈, 사진 속 괴이한 형체, 이상한 말투 등 공포 요소를 자유롭게 활용해 주세요. 배경은 일상적일수록 좋지만, 점점 이상한 기운이나 초자연적 사건이 드러나도록 구성해 주세요.   [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    imagePrompt = `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`;
+                    break;
+                default:
+                    contentPrompt = `당신은 실제 출판되는 장편 '${genre}' 소설 작가입니다. 아래는 한 주간의 일기입니다. 이 내용을 바탕으로, 일기나 날짜의 흔적이 전혀 남지 않게 한 편의 완성도 높은 '${genre}' 소설로 각색해 주세요. 소설은 실제 서점에서 판매되는 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+            }
+            return { contentPrompt, titlePrompt, imagePrompt };
+        }
 
-      [일기 내용]
-      ${diaryContents}
-    `;
-
+        // 2. 소설 내용 생성
+        const { contentPrompt } = getPrompts(genre, diaryContents);
         const contentResponse = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: contentPrompt }],
             temperature: 0.7,
-            max_tokens: 1500,
+            max_tokens: 2500,
         });
         const novelContent = contentResponse.choices[0].message.content;
 
-        // 2. 소설 제목 생성
-        const titlePrompt = `
-          방금 생성된 '${genre}' 장르의 소설 내용이야.
-          이 소설 내용에 가장 잘 어울리는 제목을 딱 하나만 추천해줘.
-          제목만 말하고 다른 어떤 설명도 붙이지마.
-          따옴표도 붙이지마.
-
-          [소설 내용]
-          ${novelContent.substring(0, 1000)}
-        `;
-
+        // 3. 소설 제목 생성
+        const { titlePrompt } = getPrompts(genre, diaryContents, novelContent);
         const titleResponse = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: titlePrompt }],
@@ -69,12 +85,11 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
         });
         const novelTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
 
-        // 3. 소설 표지 이미지 생성
-        const imagePrompt = `An expressive and atmospheric illustration that captures the main scene of the following '${genre}' story. The image should visually represent the emotions and key events from the text. Do not include any text, titles, or words in the image. Here is the story summary: ${novelContent.substring(0, 700)}`;
-
+        // 4. 소설 표지 이미지 생성
+        const { imagePrompt } = getPrompts(genre, diaryContents, novelContent);
         const imageResponse = await openai.images.generate({
             model: "dall-e-2",
-            prompt: imagePrompt,
+            prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
             n: 1,
             size: "512x512",
             response_format: "b64_json",
@@ -99,7 +114,7 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
 
         const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-        // 4. 모든 결과 반환
+        // 5. 모든 결과 반환
         return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
     } catch (error) {
         console.error("OpenAI API 호출 중 오류 발생:", error);
