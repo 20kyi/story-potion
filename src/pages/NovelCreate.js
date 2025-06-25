@@ -174,6 +174,17 @@ const AiButton = styled(Button)`
   }
 `;
 
+const loadingMessages = [
+  "당신의 일기가 한 편의 소설로 변신하는 중이에요…",
+  "마법사가 당신의 이야기를 엮고 있어요. 잠시만 기다려주세요!",
+  "소설의 세계를 상상하는 중… 조금만 기다려주세요!",
+  "주인공이 모험을 시작할 준비를 하고 있어요!",
+  "감동적인 한 주의 이야기를 소설로 빚는 중입니다…",
+  "AI 작가가 열심히 집필 중입니다. 잠시만 기다려주세요!",
+  "여러분의 일기가 소설로 태어나는 중이에요!",
+  "스토리 포션이 마법을 부리는 중입니다…"
+];
+
 function NovelCreate({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -187,6 +198,7 @@ function NovelCreate({ user }) {
   const [isCoverLoading, setIsCoverLoading] = useState(false);
   const [title, setTitle] = useState(initialTitle || '나의 소설');
   const [isTitleLoading, setIsTitleLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
 
   const genres = ['로맨스', '역사', '추리', '공포', '동화', '판타지'];
 
@@ -236,6 +248,7 @@ function NovelCreate({ user }) {
       return;
     }
 
+    setLoadingMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
     setIsLoading(true);
     const functions = getFunctions();
     const generateNovel = httpsCallable(functions, 'generateNovel');
@@ -296,7 +309,7 @@ function NovelCreate({ user }) {
     return (
       <Container>
         <Header user={user} />
-        <div>일기를 불러오는 중입니다...</div>
+        <div>{loadingMessage}</div>
         <Navigation />
       </Container>
     );
