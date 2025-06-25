@@ -477,7 +477,7 @@ function Home({ user }) {
           <MyNovelRow>
             {recentNovels.length > 0 ?
               recentNovels.map(novel => (
-                <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.id}`)}>
+                <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
                   <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                   <MyNovelTitle>{novel.title}</MyNovelTitle>
                 </MyNovelBox>
