@@ -4,7 +4,7 @@ import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -67,6 +67,9 @@ const NovelContent = styled.div`
 
 function NovelView({ user }) {
   const { id } = useParams();
+  // id가 연-월-주차(예: 2025-6-3) 형식인지 확인
+  const idParts = id ? id.split('-') : [];
+  const isDateKey = idParts.length === 3 && idParts.every(part => !isNaN(Number(part)));
   const [novel, setNovel] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,28 +88,36 @@ function NovelView({ user }) {
       setLoading(true);
       console.log('fetchNovel 함수 실행 시작.');
       try {
-        const novelRef = doc(db, 'novels', id);
-        const novelSnap = await getDoc(novelRef);
-        console.log('Firestore에서 문서 가져오기 시도 완료.');
-
-        if (novelSnap.exists()) {
-          console.log('문서가 존재합니다. 데이터:', novelSnap.data());
-          if (novelSnap.data().userId === user.uid) {
-            console.log('사용자 ID 일치. novel 상태를 설정합니다.');
-            setNovel({ ...novelSnap.data(), id: novelSnap.id });
+        if (isDateKey) {
+          // 연-월-주차로 쿼리
+          const [year, month, weekNum] = idParts.map(Number);
+          const novelsRef = collection(db, 'novels');
+          const q = query(
+            novelsRef,
+            where('year', '==', year),
+            where('month', '==', month),
+            where('weekNum', '==', weekNum),
+            where('userId', '==', user.uid)
+          );
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            setNovel({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
           } else {
-            console.error('접근 거부: 소설의 userId와 현재 사용자의 uid가 다릅니다.');
             setNovel(null);
           }
         } else {
-          console.error('Firestore에 해당 id의 문서가 존재하지 않습니다.');
-          setNovel(null);
+          // 기존: 랜덤 문서 ID로 접근
+          const novelRef = doc(db, 'novels', id);
+          const novelSnap = await getDoc(novelRef);
+          if (novelSnap.exists() && novelSnap.data().userId === user.uid) {
+            setNovel({ ...novelSnap.data(), id: novelSnap.id });
+          } else {
+            setNovel(null);
+          }
         }
       } catch (error) {
-        console.error("fetchNovel 함수에서 오류 발생:", error);
         setNovel(null);
       } finally {
-        console.log('fetchNovel 함수 실행 종료.');
         setLoading(false);
       }
     };

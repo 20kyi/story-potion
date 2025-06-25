@@ -131,7 +131,7 @@ function NovelList() {
                                 <div
                                     key={novel.id}
                                     style={styles.novelItem}
-                                    onClick={() => navigate(`/novel/${novel.id}`)}
+                                    onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}
                                 >
                                     <div style={styles.novelTitle}>{novel.title}</div>
                                     <div style={styles.novelDate}>{formatDate(novel.date)}</div>

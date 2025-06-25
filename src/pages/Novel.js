@@ -583,6 +583,7 @@ const Novel = ({ user }) => {
           {weeks.map((week) => {
             const progress = weeklyProgress[week.weekNum] || 0;
             const isCompleted = progress >= 100;
+            const novelKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${week.weekNum}`;
             const novelId = novelsMap[`${currentDate.getMonth() + 1}월 ${week.weekNum}주차`];
 
             return (
@@ -593,7 +594,7 @@ const Novel = ({ user }) => {
                   <div />
                 </ProgressBar>
                 {novelId ? (
-                  <CreateButton completed onClick={() => navigate(`/novel/${novelId}`)}>
+                  <CreateButton completed onClick={() => navigate(`/novel/${novelKey}`)}>
                     소설 보기
                   </CreateButton>
                 ) : (

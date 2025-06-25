@@ -150,8 +150,8 @@ const NovelListByGenre = ({ user }) => {
     fetchNovels();
   }, [user, genre]);
 
-  const handleNovelClick = (novelId) => {
-    navigate(`/novel/${novelId}`);
+  const handleNovelClick = (novel) => {
+    navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`);
   };
 
   const bannerImage = genreBanners[genre];
@@ -169,7 +169,7 @@ const NovelListByGenre = ({ user }) => {
         ) : novels.length > 0 ? (
           <NovelGrid>
             {novels.map(novel => (
-              <NovelItem key={novel.id} onClick={() => handleNovelClick(novel.id)}>
+              <NovelItem key={novel.id} onClick={() => handleNovelClick(novel)}>
                 <WeekTitle>{novel.week}</WeekTitle>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelTitle>{novel.title}</NovelTitle>
