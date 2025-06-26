@@ -36,16 +36,16 @@ const ProfileImage = styled.img`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid #df9696;
-  background-color: #fdd2d2;
+  border: 0.5px solidrgb(0, 0, 0);
+  background-color:rgba(212, 212, 212, 0.77);
   object-fit: cover;
 `;
 
 const Nickname = styled.span`
-  font-size: 16px;
-  color: #cb6565;
+  font-size: 18px;
+  color:rgb(65, 55, 55);
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
+  font-weight: 500;
 `;
 
 const RightSection = styled.div`
@@ -53,6 +53,12 @@ const RightSection = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+`;
+
+const HomeLogoTextImg = styled.img`
+  height: 26px;
+  object-fit: contain;
+  margin: 0;
 `;
 
 const Header = ({ user, rightActions }) => {
@@ -88,10 +94,7 @@ const Header = ({ user, rightActions }) => {
           <BackButton onClick={handleBack}>←</BackButton>
         )}
         {isHome && (
-          <>
-            <ProfileImage src={photoURL} alt="Profile" />
-            <Nickname>{displayName}</Nickname>
-          </>
+          <HomeLogoTextImg src={process.env.PUBLIC_URL + '/app_logo/logo3_text.png'} alt="StoryPotion 로고 텍스트" />
         )}
       </LeftSection>
       {rightActions && <RightSection>{rightActions}</RightSection>}
