@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import styled from 'styled-components';
 import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
@@ -6,6 +7,52 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  height: 480px;
+`;
+const StatCard = styled.div`
+  background: #faf7f2;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+const StatLabel = styled.div`
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: clamp(13px, 2vw, 20px);
+`;
+const StatNumber = styled.div`
+  font-size: clamp(16px, 3vw, 32px);
+  font-weight: 700;
+`;
+const Rank1 = styled.div`
+  font-size: clamp(14px, 2.5vw, 20px);
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #e462a0;
+`;
+const Rank2 = styled.div`
+  font-size: clamp(12px, 2vw, 16px);
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #e462a0;
+`;
+const Rank3 = styled.div`
+  font-size: clamp(10px, 1.7vw, 12px);
+  font-weight: 500;
+  color: #e462a0;
+`;
 
 function Statistics({ user }) {
     const navigate = useNavigate();
@@ -100,43 +147,35 @@ function Statistics({ user }) {
                 {loading ? (
                     <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>로딩 중...</div>
                 ) : (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gridTemplateRows: 'repeat(6, 1fr)',
-                        gap: 20,
-                        maxWidth: 400,
-                        margin: '0 auto',
-                        height: 480
-                    }}>
+                    <StatsGrid>
                         {/* 작성한 일기 */}
-                        <div style={{ gridColumn: 1, gridRow: '1 / 4', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#ff8800', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>작성한 일기</div>
-                            <div style={{ fontSize: 32, fontWeight: 700, color: '#e46262' }}>{diaryCount}</div>
-                        </div>
+                        <StatCard style={{ gridColumn: 1, gridRow: '1 / 4' }}>
+                            <StatLabel style={{ color: '#ff8800' }}>작성한 일기</StatLabel>
+                            <StatNumber style={{ color: '#e46262' }}>{diaryCount}</StatNumber>
+                        </StatCard>
                         {/* 완성된 소설 */}
-                        <div style={{ gridColumn: 1, gridRow: '4 / 7', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#1abc3b', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>완성된 소설</div>
-                            <div style={{ fontSize: 32, fontWeight: 700, color: '#1abc3b' }}>{novelCount}</div>
-                        </div>
+                        <StatCard style={{ gridColumn: 1, gridRow: '4 / 7' }}>
+                            <StatLabel style={{ color: '#1abc3b' }}>완성된 소설</StatLabel>
+                            <StatNumber style={{ color: '#1abc3b' }}>{novelCount}</StatNumber>
+                        </StatCard>
                         {/* 연속일수 */}
-                        <div style={{ gridColumn: 2, gridRow: '1 / 3', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#a259d9', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>연속일수</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, color: '#a259d9' }}>{maxStreak}</div>
-                        </div>
-                        {/* 가장 많이 쓴 단어 */}
-                        <div style={{ gridColumn: 2, gridRow: '3 / 5', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#e462a0', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>가장 많이 쓴 단어</div>
-                            <div style={{ fontSize: 20, fontWeight: 700, color: '#e462a0', marginBottom: 4 }}>1위: {topWords[0]}</div>
-                            <div style={{ fontSize: 18, fontWeight: 600, color: '#e462a0', marginBottom: 2 }}>2위: {topWords[1]}</div>
-                            <div style={{ fontSize: 16, fontWeight: 500, color: '#e462a0' }}>3위: {topWords[2]}</div>
-                        </div>
+                        <StatCard style={{ gridColumn: 2, gridRow: '1 / 3' }}>
+                            <StatLabel style={{ color: '#a259d9' }}>연속일수</StatLabel>
+                            <StatNumber style={{ color: '#a259d9' }}>{maxStreak}</StatNumber>
+                        </StatCard>
+                        {/* 내 관심사 */}
+                        <StatCard style={{ gridColumn: 2, gridRow: '3 / 5' }}>
+                            <StatLabel style={{ color: '#e462a0' }}>내 관심사</StatLabel>
+                            <Rank1>1위: {topWords[0]}</Rank1>
+                            <Rank2>2위: {topWords[1]}</Rank2>
+                            <Rank3>3위: {topWords[2]}</Rank3>
+                        </StatCard>
                         {/* Total Potion */}
-                        <div style={{ gridColumn: 2, gridRow: '5 / 7', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#3498f3', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>Total Potion</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, color: '#3498f3' }}>-</div>
-                        </div>
-                    </div>
+                        <StatCard style={{ gridColumn: 2, gridRow: '5 / 7' }}>
+                            <StatLabel style={{ color: '#3498f3' }}>Total Potion</StatLabel>
+                            <StatNumber style={{ color: '#3498f3' }}>-</StatNumber>
+                        </StatCard>
+                    </StatsGrid>
                 )}
             </div>
         </>
