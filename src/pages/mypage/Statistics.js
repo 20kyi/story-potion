@@ -3,12 +3,16 @@ import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
 
 function Statistics({ user }) {
     const navigate = useNavigate();
     const [diaryCount, setDiaryCount] = useState(0);
     const [novelCount, setNovelCount] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
+    const [topWords, setTopWords] = useState(['-', '-', '-']);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -46,6 +50,43 @@ function Statistics({ user }) {
                 prevDate = date;
             }
             setMaxStreak(maxStreak);
+
+            // 4. 전체 일기에서 가장 많이 쓴 단어 집계 (상위 3개)
+            const allDiaries = diariesSnap.docs.map(doc => doc.data());
+            const allText = allDiaries.map(d => d.content || '').join(' ');
+            const stopwords = ['그리고', '하지만', '그래서', '나는', '너는', '우리는',
+                '이', '그', '저', '것', '수', '등', '때', '더', '또', '좀', '잘', '만', '의', '가',
+                '을', '를', '은', '는', '이', '가', '도', '에', '와', '과', '로', '다',
+                '에서', '까지', '부터', '처럼', '보다', '하고', '거나', '라도', '마저', '조차',
+                '밖에', '만큼', '이나', '이며', '든지', '오늘', '오늘은', '했다', '너무', '갔다', '왔다', '왔어', '왔어요', '왔어요',
+                '하루', '하루는', '하루도', '그래', '진짜',
+                '나', '내', '나의', '내가', '내게', '내게는', '내게서', '내가서', '내가도', '내가만', '내가뿐', '내가처럼', '내가보다', '내가하고', '내가라도', '내가마저', '내가조차', '내가밖에', '내가만큼', '내가이나', '내가이며', '내가든지',
+                '저', '저의', '제가', '저는', '저도', '저만', '저뿐', '저처럼', '저보다', '저하고', '저라도', '저마저', '저조차', '저밖에', '저만큼', '저이나', '저이며', '저든지'];
+            const postpositions = [
+                '가', '은', '는', '을', '를', '도', '에', '와', '과', '로', '에서', '까지', '부터', '처럼', '보다',
+                '하고', '거나', '라도', '마저', '조차', '밖에', '만큼', '이나', '이며', '든지', '다', '요', '서', '죠', '네', '야'
+            ];
+            let words = allText
+                .replace(/[^가-힣a-zA-Z0-9\s]/g, ' ')
+                .split(/\s+/)
+                .filter(w => w.length >= 2)
+                .map(w => {
+                    for (const p of postpositions) {
+                        if (w.endsWith(p) && w.length > p.length) {
+                            return w.slice(0, -p.length);
+                        }
+                    }
+                    return w;
+                })
+                // 조사/어미 제거 후 불용어 필터링 한 번 더!
+                .filter(w => w.length >= 2 && !stopwords.includes(w))
+                .filter(w => !(w.endsWith('다') && w.length > 2));
+            const freq = {};
+            words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+            const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+            const top3 = sorted.slice(0, 3).map(([word, count]) => word ? `${word} (${count})` : '-');
+            while (top3.length < 3) top3.push('-');
+            setTopWords(top3);
             setLoading(false);
         };
         fetchData();
@@ -59,17 +100,43 @@ function Statistics({ user }) {
                 {loading ? (
                     <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>로딩 중...</div>
                 ) : (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', fontWeight: 400, fontSize: 16 }}>
-                            지금까지 당신이 남긴 소중한 하루의 기록은 <br /> {diaryCount}개예요.
-                        </li>
-                        <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', fontWeight: 400, fontSize: 16 }}>
-                            당신의 상상으로 완성된 이야기는 <br /> {novelCount}개예요.
-                        </li>
-                        <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', fontWeight: 400, fontSize: 16 }}>
-                            가장 오래 연속으로 마음을 기록한 날은 <br /> {maxStreak}일이에요.
-                        </li>
-                    </ul>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gridTemplateRows: 'repeat(6, 1fr)',
+                        gap: 20,
+                        maxWidth: 400,
+                        margin: '0 auto',
+                        height: 480
+                    }}>
+                        {/* 작성한 일기 */}
+                        <div style={{ gridColumn: 1, gridRow: '1 / 4', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ color: '#ff8800', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>작성한 일기</div>
+                            <div style={{ fontSize: 32, fontWeight: 700, color: '#e46262' }}>{diaryCount}</div>
+                        </div>
+                        {/* 완성된 소설 */}
+                        <div style={{ gridColumn: 1, gridRow: '4 / 7', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ color: '#1abc3b', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>완성된 소설</div>
+                            <div style={{ fontSize: 32, fontWeight: 700, color: '#1abc3b' }}>{novelCount}</div>
+                        </div>
+                        {/* 연속일수 */}
+                        <div style={{ gridColumn: 2, gridRow: '1 / 3', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ color: '#a259d9', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>연속일수</div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#a259d9' }}>{maxStreak}</div>
+                        </div>
+                        {/* 가장 많이 쓴 단어 */}
+                        <div style={{ gridColumn: 2, gridRow: '3 / 5', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ color: '#e462a0', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>가장 많이 쓴 단어</div>
+                            <div style={{ fontSize: 20, fontWeight: 700, color: '#e462a0', marginBottom: 4 }}>1위: {topWords[0]}</div>
+                            <div style={{ fontSize: 18, fontWeight: 600, color: '#e462a0', marginBottom: 2 }}>2위: {topWords[1]}</div>
+                            <div style={{ fontSize: 16, fontWeight: 500, color: '#e462a0' }}>3위: {topWords[2]}</div>
+                        </div>
+                        {/* Total Potion */}
+                        <div style={{ gridColumn: 2, gridRow: '5 / 7', background: '#faf7f2', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ color: '#3498f3', fontWeight: 700, fontSize: 17, marginBottom: 10 }}>Total Potion</div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#3498f3' }}>-</div>
+                        </div>
+                    </div>
                 )}
             </div>
         </>
