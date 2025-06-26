@@ -217,7 +217,6 @@ function MyPage({ user }) {
       // 자동으로 로그인 페이지로 리디렉션합니다.
       alert('로그아웃 되었습니다.');
     } catch (error) {
-      console.error('로그아웃 실패:', error);
       alert('로그아웃에 실패했습니다.');
     }
   };
@@ -249,7 +248,6 @@ function MyPage({ user }) {
       alert('프로필이 성공적으로 업데이트되었습니다.');
       setIsEditing(false);
     } catch (error) {
-      console.error('프로필 업데이트 실패:', error);
       alert('프로필 업데이트에 실패했습니다.');
     }
   };

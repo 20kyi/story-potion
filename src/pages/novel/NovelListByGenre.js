@@ -143,7 +143,7 @@ const NovelListByGenre = ({ user }) => {
         }));
         setNovels(fetchedNovels);
       } catch (error) {
-        console.error("Error fetching novels by genre: ", error);
+        // console.error("Error fetching novels by genre: ", error);
       } finally {
         setIsLoading(false);
       }

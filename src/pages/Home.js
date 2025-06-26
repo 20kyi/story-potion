@@ -377,7 +377,6 @@ function Home({ user }) {
         navigate('/write');
       }
     } catch (error) {
-      console.error("Error checking for today's diary:", error);
       alert('오류가 발생했습니다. 다시 시도해주세요.');
     }
   };

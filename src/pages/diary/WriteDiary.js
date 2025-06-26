@@ -220,7 +220,6 @@ function WriteDiary({ user }) {
                     alert('일기가 삭제되었습니다.');
                     navigate('/diaries');
                 } catch (error) {
-                    console.error("Error deleting diary: ", error);
                     alert('일기 삭제에 실패했습니다.');
                 }
             }
@@ -275,7 +274,6 @@ function WriteDiary({ user }) {
 
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
-            console.error("Error saving diary: ", error);
             toast.showToast('저장에 실패했습니다.', 'error');
         } finally {
             setIsSubmitting(false);
