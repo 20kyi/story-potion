@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Header from '../components/Header';
-import Navigation from '../components/Navigation';
-import { auth, storage } from '../firebase';
+import Header from '../../components/Header';
+import Navigation from '../../components/Navigation';
+import { auth, storage } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import EditIcon from '../components/icons/EditIcon';
-import RecentActivityIcon from '../components/icons/RecentActivityIcon';
-import NotificationIcon from '../components/icons/NotificationIcon';
-import InviteFriendIcon from '../components/icons/InviteFriendIcon';
-import ShopIcon from '../components/icons/ShopIcon';
-import CustomerServiceIcon from '../components/icons/CustomerServiceIcon';
-import NoticeIcon from '../components/icons/NoticeIcon';
+import EditIcon from '../../components/icons/EditIcon';
+import RecentActivityIcon from '../../components/icons/RecentActivityIcon';
+import NotificationIcon from '../../components/icons/NotificationIcon';
+import InviteFriendIcon from '../../components/icons/InviteFriendIcon';
+import ShopIcon from '../../components/icons/ShopIcon';
+import CustomerServiceIcon from '../../components/icons/CustomerServiceIcon';
+import NoticeIcon from '../../components/icons/NoticeIcon';
 import { useNavigate } from 'react-router-dom';
 
 const MainContainer = styled.div`
