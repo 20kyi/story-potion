@@ -17,6 +17,12 @@ import Signup from './pages/Signup';
 import NovelListByGenre from './pages/NovelListByGenre';
 import HomeTest from './pages/HomeTest';
 import { ToastProvider } from './components/ui/ToastProvider';
+import Statistics from './pages/mypage/Statistics';
+import Settings from './pages/mypage/Settings';
+import Notice from './pages/mypage/Notice';
+import Support from './pages/mypage/Support';
+import Social from './pages/mypage/Social';
+import Premium from './pages/mypage/Premium';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -44,6 +50,12 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
                 <Route path="/home-test" element={user ? <HomeTest user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>
