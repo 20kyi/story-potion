@@ -58,6 +58,7 @@ function WriteDiary({ user }) {
     const [isWeatherSheetOpen, setIsWeatherSheetOpen] = useState(false);
     const toast = useToast();
     const prevLocation = useRef(location);
+    const textareaRef = useRef(null);
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -102,6 +103,13 @@ function WriteDiary({ user }) {
             fetchDiaryForDate(date);
         }
     }, [location, user]);
+
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+        }
+    }, [diary.content]);
 
     const fetchDiaryForDate = async (date) => {
         const dateStr = formatDateToString(date);
@@ -287,22 +295,21 @@ function WriteDiary({ user }) {
         container: {
             display: 'flex',
             flexDirection: 'column',
-            height: '100vh',
-            // background: 'radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%)',
+            minHeight: '100vh',
             position: 'relative',
-            maxWidth: '100%',
-            margin: '0 auto',
-            overflowX: 'hidden',
+            maxWidth: '600px',
+            margin: '40px auto',
             padding: '20px',
-            paddingTop: '70px',
+            paddingTop: '40px',
+            // paddingBottom: '100px',
         },
         mainContent: {
-            // backgroundColor: '#fffbfb',
-            // borderRadius: '30px',
-            // padding: '20px',
             flex: 1,
             position: 'relative',
             paddingBottom: '100px',
+            overflowY: 'auto',
+            minHeight: 0,
+            width: '100%',
         },
         // header: {
         //     display: 'flex',
@@ -450,8 +457,6 @@ function WriteDiary({ user }) {
             border: 'none',
             background: 'transparent',
             width: '100%',
-            height: '60%',
-            resize: 'none',
             outline: 'none',
             lineHeight: '1.5'
         },
@@ -462,6 +467,18 @@ function WriteDiary({ user }) {
             fontWeight: '500',
             marginTop: '40px',
             cursor: 'pointer'
+        },
+        navigationFixed: {
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            maxWidth: 500,
+            margin: '0 auto',
+            zIndex: 100,
+            background: '#fff',
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.06)'
         }
     };
 
@@ -718,15 +735,22 @@ function WriteDiary({ user }) {
                 />
 
                 <textarea
+                    ref={textareaRef}
                     name="content"
                     placeholder="일기 내용"
                     value={diary.content}
                     onChange={handleChange}
+                    onInput={e => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
                     style={styles.contentInput}
                     required
                 />
             </main>
-            <Navigation />
+            <div style={styles.navigationFixed}>
+                <Navigation />
+            </div>
         </div>
     );
 }

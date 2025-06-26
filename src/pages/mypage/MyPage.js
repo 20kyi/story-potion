@@ -21,9 +21,11 @@ const MainContainer = styled.div`
   min-height: 100vh;
   background: #fff;
   padding: 20px;
-  padding-top: 70px;
+  padding-top: 40px;
   padding-bottom: 100px;
-  margin-top: 10px;
+  // margin-top: 10px;
+  margin: 40px auto;
+  max-width: 600px;
 `;
 
 const ProfileContainer = styled.div`

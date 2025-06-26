@@ -36,7 +36,9 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  padding-top: 70px;
+  padding-top: 40px;
+  margin: 40px auto;
+  max-width: 600px;
 `;
 
 const EmotionGraphContainer = styled.div`
