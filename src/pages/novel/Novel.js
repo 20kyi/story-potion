@@ -15,8 +15,10 @@ const Container = styled.div`
   min-height: 100vh;
   background: #fff;
   padding: 20px;
-  padding-top: 70px;
+  padding-top: 40px;
   padding-bottom: 100px;
+  margin: 40px auto;
+  max-width: 600px;
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;

@@ -17,8 +17,10 @@ const Container = styled.div`
   min-height: 100vh;
   background-color: #fff;
   padding: 20px;
-  padding-top: 70px;
+  padding-top: 40px;
   padding-bottom: 100px;
+  margin: 40px auto;
+  max-width: 600px;
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
@@ -34,13 +36,13 @@ const MainButtonRow = styled.div`
   margin-bottom: 36px;
   align-items: stretch;
 
-  @media (min-width: 768px) {
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 0;
-    flex-grow: 1;
-    min-height: 280px;
-  }
+  // @media (min-width: 768px) {
+  //   flex-direction: column;
+  //   gap: 16px;
+  //   margin-bottom: 0;
+  //   flex-grow: 1;
+  //   min-height: 280px;
+  // }
 `;
 /* 일기 최근 미리보기 영역 */
 const RecentDiaryCard = styled.div`
@@ -58,9 +60,9 @@ const RecentDiaryCard = styled.div`
   &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.13); }
   padding: 16px;
 
-  @media (min-width: 768px) {
-    height: auto;
-  }
+  // @media (min-width: 768px) {
+  //   height: auto;
+  // }
 `;
 /* 일기 쓰기 버튼 */
 const WriteDiaryButton = styled.div`
@@ -85,9 +87,9 @@ const MainButtonText = styled.div`
   font-size: 16px;
   font-weight: 600;
   text-shadow: 0 1px 6px rgba(0,0,0,0.08);
-  @media (min-width: 768px) {
-    font-size: 20px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 20px;
+  // }
 `;
 /* 일기 최근 미리보기 */
 const DiaryPreviewContainer = styled.div`
@@ -117,9 +119,9 @@ const DiaryPreviewDate = styled.div`
   opacity: 0.8;
   color: #fff;
   margin-bottom: 4px;
-  @media (min-width: 768px) {
-    font-size: 14px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 14px;
+  // }
 `;
 /* 일기 최근 미리보기 제목 */
 const DiaryPreviewTitle = styled.div`
@@ -131,9 +133,9 @@ const DiaryPreviewTitle = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  @media (min-width: 768px) {
-    font-size: 22px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 22px;
+  // }
 `;
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
@@ -147,9 +149,9 @@ const DiaryPreviewContent = styled.div`
   -webkit-box-orient: vertical;
   line-height: 1.4;
   width: 100%;
-  @media (min-width: 768px) {
-    font-size: 16px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 16px;
+  // }
 `;
 /* 일기 쓰기 버튼 텍스트 */
 const WriteButtonContent = styled.div`
@@ -164,33 +166,33 @@ const ContentGrid = styled.div`
   display: flex;
   flex-direction: column;
 
-  @media (min-width: 768px) {
-    flex-direction: row;
-    gap: 20px;
-  }
+  // @media (min-width: 768px) {
+  //   flex-direction: row;
+  //   gap: 20px;
+  // }
 `;
 /* 일기 최근 미리보기 영역 */
-const LeftSection = styled.div`
-  @media (min-width: 768px) {
-    flex: 2;
-    min-width: 400px;
-    display: flex;
-    flex-direction: column;
-  }
-`;
+// const LeftSection = styled.div`
+//   @media (min-width: 768px) {
+//     flex: 2;
+//     min-width: 400px;
+//     display: flex;
+//     flex-direction: column;
+//   }
+// `;
 /* 일기 최근 미리보기 영역 */
-const RightSection = styled.div`
-  flex: 1;
-`;
+// const RightSection = styled.div`
+//   flex: 1;
+// `;
 /* 일기 최근 미리보기 영역 */
 const SectionLabel = styled.div`
   font-size: 20px;
   font-weight: 500;
   color: #222;
   margin-bottom: 18px;
-  @media (min-width: 768px) {
-    font-size: 24px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 24px;
+  // }
 `;
 
 const MyNovelRow = styled.div`
@@ -215,9 +217,9 @@ const MyNovelTitle = styled.div`
   font-weight: 600;
   text-align: center;
   word-break: keep-all;
-  @media (min-width: 768px) {
-    font-size: 18px;
-  }
+  // @media (min-width: 768px) {
+  //   font-size: 18px;
+  // }
 `;
 
 const NovelCover = styled.img`
@@ -240,11 +242,11 @@ const RightColumn = styled.div`
   width: 120px;
   flex-shrink: 0;
 
-  @media (min-width: 768px) {
-    flex-direction: row;
-    width: 100%;
-    align-items: stretch;
-  }
+  // @media (min-width: 768px) {
+  //   flex-direction: row;
+  //   width: 100%;
+  //   align-items: stretch;
+  // }
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicCard = styled.div`
@@ -258,9 +260,9 @@ const TopicCard = styled.div`
   flex-direction: column;
   justify-content: center;
 
-  @media (min-width: 768px) {
-    flex-grow: 1;
-  }
+  // @media (min-width: 768px) {
+  //   flex-grow: 1;
+  // }
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicTitle = styled.p`
@@ -434,74 +436,70 @@ function Home({ user }) {
       </CarouselContainer>
 
       <ContentGrid>
-        <LeftSection>
-          <SectionLabel>최근일기</SectionLabel>
-          <MainButtonRow>
-            <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
-              {recentDiaries.length > 0 && recentDiaries[0] ? (
-                <DiaryPreviewContainer>
-                  {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 && (
-                    <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
-                  )}
-                  <DiaryPreviewTextContainer>
-                    <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
-                    <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                    <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
-                  </DiaryPreviewTextContainer>
-                </DiaryPreviewContainer>
-              ) : (
-                <DiaryPreviewContainer>
-                  <DiaryPreviewTitle>아직 작성된 일기가 없어요</DiaryPreviewTitle>
-                  <DiaryPreviewContent>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
-                </DiaryPreviewContainer>
-              )}
-            </RecentDiaryCard>
+        <SectionLabel>최근일기</SectionLabel>
+        <MainButtonRow>
+          <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
+            {recentDiaries.length > 0 && recentDiaries[0] ? (
+              <DiaryPreviewContainer>
+                {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 && (
+                  <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
+                )}
+                <DiaryPreviewTextContainer>
+                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
+                  <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
+                  <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
+                </DiaryPreviewTextContainer>
+              </DiaryPreviewContainer>
+            ) : (
+              <DiaryPreviewContainer>
+                <DiaryPreviewTitle>아직 작성된 일기가 없어요</DiaryPreviewTitle>
+                <DiaryPreviewContent>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
+              </DiaryPreviewContainer>
+            )}
+          </RecentDiaryCard>
 
-            <RightColumn>
-              <TopicCard>
-                {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
-                <RecommendationIntro>이런 주제는 <br /> 어떠세요?💡</RecommendationIntro>
-                <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
-              </TopicCard>
-              <WriteDiaryButton onClick={handleWriteDiaryClick}>
-                <WriteButtonContent>
-                  <PencilIcon width="32" height="32" />
-                  <MainButtonText>일기 쓰기</MainButtonText>
-                </WriteButtonContent>
-              </WriteDiaryButton>
-            </RightColumn>
-          </MainButtonRow>
-        </LeftSection>
-        <RightSection>
-          <SectionLabel>내 소설</SectionLabel>
-          <MyNovelRow>
-            {recentNovels.length > 0 ?
-              recentNovels.map(novel => (
-                <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
-                  <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                  <MyNovelTitle>{novel.title}</MyNovelTitle>
-                </MyNovelBox>
-              ))
-              :
-              Array(3).fill(null).map((_, idx) => (
-                <MyNovelBox key={`placeholder-${idx}`}>
-                  <div style={{
-                    width: '100%',
-                    maxWidth: '180px',
-                    aspectRatio: '2/3',
-                    background: '#fdd2d2',
-                    borderRadius: '15px',
-                    display: 'block',
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                  }} />
-                  <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
-                </MyNovelBox>
-              ))
-            }
-          </MyNovelRow>
-        </RightSection>
+          <RightColumn>
+            <TopicCard>
+              {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
+              <RecommendationIntro>이런 주제는 <br /> 어떠세요?💡</RecommendationIntro>
+              <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
+            </TopicCard>
+            <WriteDiaryButton onClick={handleWriteDiaryClick}>
+              <WriteButtonContent>
+                <PencilIcon width="32" height="32" />
+                <MainButtonText>일기 쓰기</MainButtonText>
+              </WriteButtonContent>
+            </WriteDiaryButton>
+          </RightColumn>
+        </MainButtonRow>
+        <SectionLabel>내 소설</SectionLabel>
+        <MyNovelRow>
+          {recentNovels.length > 0 ?
+            recentNovels.map(novel => (
+              <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
+                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                <MyNovelTitle>{novel.title}</MyNovelTitle>
+              </MyNovelBox>
+            ))
+            :
+            Array(3).fill(null).map((_, idx) => (
+              <MyNovelBox key={`placeholder-${idx}`}>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '180px',
+                  aspectRatio: '2/3',
+                  background: '#fdd2d2',
+                  borderRadius: '15px',
+                  display: 'block',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                }} />
+                <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
+              </MyNovelBox>
+            ))
+          }
+        </MyNovelRow>
       </ContentGrid>
 
       <Navigation />

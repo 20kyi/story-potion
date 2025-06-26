@@ -15,7 +15,6 @@ import NovelView from './pages/novel/NovelView';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import NovelListByGenre from './pages/novel/NovelListByGenre';
-import HomeTest from './pages/HomeTest';
 import { ToastProvider } from './components/ui/ToastProvider';
 import Statistics from './pages/mypage/Statistics';
 import Settings from './pages/mypage/Settings';
@@ -49,7 +48,6 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novel/create" element={user ? <NovelCreate user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
-                <Route path="/home-test" element={user ? <HomeTest user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />
