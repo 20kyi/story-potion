@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Header from '../components/Header';
+import Navigation from '../../components/Navigation';
+import Header from '../../components/Header';
 import styled from 'styled-components';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { useSwipeable } from 'react-swipeable';
-import ConfirmModal from '../components/ui/ConfirmModal';
-import { useToast } from '../components/ui/ToastProvider';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const Container = styled.div`
   display: flex;

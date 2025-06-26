@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
-import Header from '../components/Header';
+import Header from '../../components/Header';
 import { Line, getElementAtEvent, Bar } from 'react-chartjs-2';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import {
     Chart as ChartJS,

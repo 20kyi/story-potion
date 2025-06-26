@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Header from '../components/Header';
+import Navigation from '../../components/Navigation';
+import Header from '../../components/Header';
 import styled from 'styled-components';
 
 const Container = styled.div`

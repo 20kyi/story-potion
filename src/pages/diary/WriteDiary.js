@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import Header from '../components/Header';
-import Navigation from '../components/Navigation';
-import { db, storage } from '../firebase';
+import Header from '../../components/Header';
+import Navigation from '../../components/Navigation';
+import { db, storage } from '../../firebase';
 import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
-import Button from '../components/ui/Button';
-import { useToast } from '../components/ui/ToastProvider';
-import { usePrompt } from '../hooks/usePrompt';
+import Button from '../../components/ui/Button';
+import { useToast } from '../../components/ui/ToastProvider';
+import { usePrompt } from '../../hooks/usePrompt';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
