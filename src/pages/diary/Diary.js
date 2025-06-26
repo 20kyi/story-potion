@@ -88,7 +88,7 @@ function Diary({ user }) {
                 const fetchedDiaries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setDiaries(fetchedDiaries);
             } catch (error) {
-                console.error("Error fetching diaries: ", error);
+                // 삭제된 코드: console.error("Error fetching diaries: ", error);
             } finally {
                 setIsLoading(false);
             }

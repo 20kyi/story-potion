@@ -264,7 +264,6 @@ function Login() {
       navigate('/');
     } catch (error) {
       setError('이메일 또는 비밀번호가 잘못되었습니다.');
-      console.error("Firebase login error: ", error);
     }
   };
 
@@ -276,7 +275,6 @@ function Login() {
         navigate('/');
       } catch (error) {
         setError('Google 로그인에 실패했습니다. 다시 시도해주세요.');
-        console.error("Social login error: ", error);
       }
     } else if (provider === 'Facebook') {
       alert(`${provider} 로그인은 현재 준비 중입니다.`);

@@ -328,7 +328,6 @@ const Novel = ({ user }) => {
                 fetchedDiaries = diarySnapshot.docs.map(doc => doc.data());
                 setDiaries(fetchedDiaries);
             } catch (error) {
-                console.error("Error fetching diaries: ", error);
                 // 오류가 나도 UI는 계속 진행되도록 함
             }
 
@@ -346,7 +345,7 @@ const Novel = ({ user }) => {
                 });
                 setNovelsMap(newNovelsMap);
             } catch (error) {
-                console.error("Error fetching novels: ", error);
+                // 오류가 나도 UI는 계속 진행되도록 함
             }
 
             // 3. Calculate progress

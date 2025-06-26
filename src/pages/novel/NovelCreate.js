@@ -269,7 +269,6 @@ function NovelCreate({ user }) {
             setIsNovelGenerated(true);
 
         } catch (error) {
-            console.error("Error generating novel:", error);
             alert("소설 생성에 실패했습니다. 다시 시도해주세요.");
         } finally {
             setIsLoading(false);
@@ -302,7 +301,6 @@ function NovelCreate({ user }) {
             const dateKey = `${year}-${month}-${weekNum}`;
             navigate(`/novel/${dateKey}`);
         } catch (error) {
-            console.error("소설 저장 중 오류 발생: ", error);
             alert('소설 저장에 실패했습니다.');
         }
     };

@@ -75,20 +75,14 @@ function NovelView({ user }) {
     const [novel, setNovel] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    console.log('NovelView 렌더링 시작. loading:', loading, 'user:', user, 'id:', id);
-
     useEffect(() => {
-        console.log('useEffect 실행. user:', user, 'id:', id);
-
         if (!user || !id) {
-            console.log('useEffect: user 또는 id가 없어서 종료합니다.');
             setLoading(false);
             return;
         }
 
         const fetchNovel = async () => {
             setLoading(true);
-            console.log('fetchNovel 함수 실행 시작.');
             try {
                 if (isDateKey) {
                     // 연-월-주차로 쿼리
@@ -137,7 +131,6 @@ function NovelView({ user }) {
     };
 
     if (loading) {
-        console.log('렌더링: "로딩 중" 화면');
         return (
             <Container>
                 <Header user={user} />
@@ -148,7 +141,6 @@ function NovelView({ user }) {
     }
 
     if (!novel) {
-        console.log('렌더링: "소설 없음" 화면');
         return (
             <Container>
                 <Header user={user} />
@@ -158,7 +150,6 @@ function NovelView({ user }) {
         );
     }
 
-    console.log('렌더링: "소설 정보 있음" 화면', novel);
     return (
         <Container>
             <Header user={user} />
