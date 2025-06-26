@@ -2,6 +2,8 @@ import React from 'react';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../../firebase';
+import { signOut } from 'firebase/auth';
 
 function Settings() {
     const navigate = useNavigate();
@@ -24,7 +26,18 @@ function Settings() {
                         <button style={{ background: '#fdd2d2', color: '#cb6565', border: 'none', borderRadius: 8, padding: '6px 18px', fontWeight: 400, fontSize: 14, cursor: 'pointer' }}>한국어</button>
                     </li>
                 </ul>
-                <button style={{ background: '#e46262', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 16, fontWeight: 400, width: '100%', marginTop: 40, cursor: 'pointer', boxShadow: '0 2px 8px rgba(228,98,98,0.08)' }}>
+                <button
+                    style={{ background: '#e46262', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 16, fontWeight: 400, width: '100%', marginTop: 40, cursor: 'pointer', boxShadow: '0 2px 8px rgba(228,98,98,0.08)' }}
+                    onClick={async () => {
+                        try {
+                            await signOut(auth);
+                            alert('로그아웃 되었습니다.');
+                        } catch (error) {
+                            console.error('로그아웃 실패:', error);
+                            alert('로그아웃에 실패했습니다.');
+                        }
+                    }}
+                >
                     로그아웃
                 </button>
                 <div style={{ textAlign: 'center', marginTop: 16 }}>
