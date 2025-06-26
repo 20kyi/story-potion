@@ -293,7 +293,6 @@ function MyPage({ user }) {
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
             <Info>오늘도 즐거운 하루!</Info>
-            <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
