@@ -13,6 +13,7 @@ import InviteFriendIcon from '../components/icons/InviteFriendIcon';
 import ShopIcon from '../components/icons/ShopIcon';
 import CustomerServiceIcon from '../components/icons/CustomerServiceIcon';
 import NoticeIcon from '../components/icons/NoticeIcon';
+import { useNavigate } from 'react-router-dom';
 
 const MainContainer = styled.div`
   display: flex;
@@ -198,6 +199,7 @@ function MyPage({ user }) {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newProfileImageFile, setNewProfileImageFile] = useState(null);
   const [newProfileImageUrl, setNewProfileImageUrl] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -291,41 +293,41 @@ function MyPage({ user }) {
             <Info>오늘도 즐거운 하루!</Info>
             <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
             <MenuGrid>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
                   <RecentActivityIcon />
                 </MenuIcon>
-                <MenuLabel>최근활동</MenuLabel>
+                <MenuLabel>내 통계</MenuLabel>
               </MenuButton>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
                   <NotificationIcon />
                 </MenuIcon>
-                <MenuLabel>알림</MenuLabel>
+                <MenuLabel>개인설정</MenuLabel>
               </MenuButton>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/notice')}>
                 <MenuIcon as="div">
                   <InviteFriendIcon />
                 </MenuIcon>
-                <MenuLabel>친구초대</MenuLabel>
+                <MenuLabel>공지사항</MenuLabel>
               </MenuButton>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
                   <ShopIcon />
                 </MenuIcon>
-                <MenuLabel>상점</MenuLabel>
+                <MenuLabel>고객지원</MenuLabel>
               </MenuButton>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/social')}>
                 <MenuIcon as="div">
                   <CustomerServiceIcon />
                 </MenuIcon>
-                <MenuLabel>고객센터</MenuLabel>
+                <MenuLabel>소셜</MenuLabel>
               </MenuButton>
-              <MenuButton>
+              <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
                   <NoticeIcon />
                 </MenuIcon>
-                <MenuLabel>공지사항</MenuLabel>
+                <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>
             </MenuGrid>
           </>
