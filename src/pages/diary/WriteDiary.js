@@ -29,6 +29,14 @@ const formatDateToString = (date) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
+// formatDate 함수 추가 (DiaryView와 동일하게)
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date)) return '';
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+};
+
 // TopRow styled-component 추가
 const TopRow = styled.div`
   display: flex;
@@ -57,13 +65,13 @@ const DiaryDate = styled.div`
     font-weight: 500;
   }
 `;
-
+/* 오늘의 날씨, 내 기분 */
 const DiaryMeta = styled.div`
   display: flex;
   gap: 16px;
   margin-bottom: 20px;
 `;
-
+/* 오늘의 날씨, 내 기분 라벨 */
 const MetaLabel = styled.span`
   display: flex;
   align-items: center;
@@ -143,6 +151,32 @@ const UploadLabel = styled.label`
   }
 `;
 
+// DiaryView와 동일한 스타일의 제목, 본문 인풋 스타일 적용
+const TitleInput = styled.input`
+  font-size: 25px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  margin-top: 30px;
+  color: ${({ theme }) => theme.diaryText};
+  border: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+`;
+const ContentTextarea = styled.textarea`
+  font-size: 16px;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.diaryContent};
+  border: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  white-space: pre-wrap;
+`;
+
 function WriteDiary({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -167,6 +201,7 @@ function WriteDiary({ user }) {
     const prevLocation = useRef(location);
     const textareaRef = useRef(null);
     const theme = useTheme();
+    const labelColor = theme.mode === 'dark' ? '#fff' : '#222';
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -219,6 +254,10 @@ function WriteDiary({ user }) {
         }
     }, [diary.content]);
 
+    useEffect(() => {
+        setDiary(prev => ({ ...prev, date: formatDateToString(selectedDate) }));
+    }, [selectedDate]);
+
     const fetchDiaryForDate = async (date) => {
         const dateStr = formatDateToString(date);
         const diariesRef = collection(db, 'diaries');
@@ -234,7 +273,8 @@ function WriteDiary({ user }) {
                 mood: existingDiary.mood || '',
                 imageUrls: existingDiary.imageUrls || [],
                 weather: existingDiary.weather || '',
-                emotion: existingDiary.emotion || ''
+                emotion: existingDiary.emotion || '',
+                date: dateStr,
             });
             setImagePreview(existingDiary.imageUrls || []);
             setIsEditMode(true);
@@ -247,7 +287,8 @@ function WriteDiary({ user }) {
                 mood: '',
                 imageUrls: [],
                 weather: '',
-                emotion: ''
+                emotion: '',
+                date: dateStr,
             });
             setImagePreview([]);
             setIsEditMode(false);
@@ -459,7 +500,7 @@ function WriteDiary({ user }) {
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             zIndex: 1000,
             display: isDatePickerOpen ? 'block' : 'none',
-            marginTop: '8px'
+            // marginTop: '8px'
         },
         dateUnit: {
             fontSize: '18px',
@@ -473,7 +514,7 @@ function WriteDiary({ user }) {
             fontFamily: 'Inter',
             fontSize: '16px',
             color: '#cb6565',
-            padding: '8px',
+            // padding: '8px',
             width: '100%',
             backgroundColor: '#fff9f9'
         },
@@ -555,16 +596,9 @@ function WriteDiary({ user }) {
                 }
             />
             <main style={styles.mainContent}>
-                <TopRow>
-                    <DiaryDate>
-                        <span className="date-number">{formattedDate.year}</span>
-                        <span className="date-unit">년</span>
-                        <span className="date-number">{formattedDate.month}</span>
-                        <span className="date-unit">월</span>
-                        <span className="date-number">{formattedDate.day}</span>
-                        <span className="date-unit">일</span>
-                    </DiaryDate>
-                </TopRow>
+                {/* <TopRow> */}
+                <DiaryDate>{formatDate(diary.date)}</DiaryDate>
+                {/* </TopRow> */}
 
                 <DiaryMeta>
                     <MetaLabel>
@@ -581,7 +615,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: theme.text,
+                                    color: labelColor,
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -589,7 +623,7 @@ function WriteDiary({ user }) {
                                 오늘의 날씨
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: theme.primary, fontWeight: 600, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: labelColor, fontWeight: 500, padding: 0 }}>
                                 오늘의 날씨
                                 <img
                                     src={weatherImageMap[diary.weather]}
@@ -617,7 +651,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: theme.text,
+                                    color: labelColor,
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -625,7 +659,7 @@ function WriteDiary({ user }) {
                                 내 기분
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: theme.primary, fontWeight: 600, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: labelColor, fontWeight: 500, padding: 0 }}>
                                 내 기분
                                 <img
                                     src={emotionImageMap[diary.emotion]}
@@ -769,17 +803,16 @@ function WriteDiary({ user }) {
                     </ImagePreviewContainer>
                 </div>
 
-                <input
+                <TitleInput
                     type="text"
                     name="title"
                     placeholder="일기 제목"
                     value={diary.title}
                     onChange={handleChange}
-                    style={styles.titleInput}
                     required
                 />
 
-                <textarea
+                <ContentTextarea
                     ref={textareaRef}
                     name="content"
                     placeholder="일기 내용"
@@ -789,7 +822,6 @@ function WriteDiary({ user }) {
                         e.target.style.height = 'auto';
                         e.target.style.height = e.target.scrollHeight + 'px';
                     }}
-                    style={styles.contentInput}
                     required
                 />
             </main>
