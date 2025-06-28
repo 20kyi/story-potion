@@ -21,9 +21,10 @@ const Container = styled.div`
 `;
 
 const DiaryTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 25px;
+  font-weight: 500;
   margin-bottom: 16px;
+  margin-top: 30px;
   color: ${({ theme }) => theme.diaryText};
 `;
 
@@ -37,9 +38,9 @@ const DiaryContent = styled.p`
 const DiaryDate = styled.div`
   font-size: 18px;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 20px;
+//   margin-bottom: 10px;
   font-weight: 500;
-  margin-top: 40px;
+//   margin-top: 40px;
 `;
 
 const DiaryMeta = styled.div`
@@ -305,6 +306,13 @@ function DiaryView({ user }) {
                                 <span>오늘의 날씨: {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
                                 <span>나의 기분: {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
                             </DiaryMeta>
+                            {!isLoading && !noMoreFuture && diary && diary.imageUrls && diary.imageUrls.length > 0 && (
+                                <div style={styles.imageGrid}>
+                                    {diary.imageUrls.map((url, idx) => (
+                                        <img key={idx} src={url} alt={`일기 이미지 ${idx + 1}`} style={styles.image} />
+                                    ))}
+                                </div>
+                            )}
                             <DiaryTitle>{diary.title}</DiaryTitle>
                             <DiaryContent>{diary.content}</DiaryContent>
                         </>
