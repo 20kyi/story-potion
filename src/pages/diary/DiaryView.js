@@ -303,8 +303,8 @@ function DiaryView({ user }) {
                         <>
                             <DiaryDate>{formatDate(diary.date)}</DiaryDate>
                             <DiaryMeta>
-                                <span>오늘의 날씨: {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
-                                <span>나의 기분: {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
+                                <span>오늘의 날씨 {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
+                                <span>내 기분 {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
                             </DiaryMeta>
                             {!isLoading && !noMoreFuture && diary && diary.imageUrls && diary.imageUrls.length > 0 && (
                                 <div style={styles.imageGrid}>
