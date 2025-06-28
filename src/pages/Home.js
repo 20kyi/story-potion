@@ -15,7 +15,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #fff;
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
@@ -48,7 +49,7 @@ const MainButtonRow = styled.div`
 const RecentDiaryCard = styled.div`
   flex: 1;
   min-width: 0;
-  background: linear-gradient(135deg, #aee2ff 0%, #6db3f2 100%);
+  background: ${({ theme }) => theme.cardGradient || 'linear-gradient(135deg, #aee2ff 0%, #6db3f2 100%)'};
   border-radius: 28px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.07);
   min-height: 150px;
@@ -69,7 +70,7 @@ const WriteDiaryButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #ffe29f 0%, #ffc371 100%);
+  background: ${({ theme }) => theme.writeCardGradient || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'};
   border-radius: 28px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.07);
   display: flex;
@@ -188,7 +189,7 @@ const ContentGrid = styled.div`
 const SectionLabel = styled.div`
   font-size: 20px;
   font-weight: 500;
-  color: #222;
+  color: ${({ theme }) => theme.text};
   margin-bottom: 18px;
   // @media (min-width: 768px) {
   //   font-size: 24px;
@@ -250,7 +251,7 @@ const RightColumn = styled.div`
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicCard = styled.div`
-  background-color: #fff;
+  background-color: ${({ theme }) => theme.progressCard};
   border-radius: 20px;
   padding: 16px;
   border: 1px solid #f0f0f0;
@@ -268,20 +269,20 @@ const TopicCard = styled.div`
 const TopicTitle = styled.p`
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: ${({ theme }) => theme.cardText};
   margin-bottom: 8px;
 `;
 /* 일기 최근 미리보기 영역 */
 const RecommendationIntro = styled.p`
   font-size: 12px;
-  color: #777;
+  color: ${({ theme }) => theme.cardSubText};
   line-height: 1.4;
 `;
 
 const RecommendationTopic = styled.p`
   font-size: 13px;
   font-weight: 500;
-  color: #444;
+  color: ${({ theme }) => theme.cardSubText};
   line-height: 1.4;
   margin-top: 4px;
 `;

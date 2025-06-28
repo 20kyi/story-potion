@@ -5,14 +5,20 @@ const NavBar = styled.nav`
   position: fixed;
   left: 0; right: 0; bottom: 0;
   width: 100%;
-  background: #fff;
+  background: ${({ theme }) => theme.navCard};
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  box-shadow: 0 -2px 16px rgba(228,98,98,0.08);
+  box-shadow: ${({ theme }) => theme.cardShadow};
   padding: 12px 0 8px 0;
   display: flex;
   justify-content: space-around;
   z-index: 100;
+
+  /* 다크모드 대응 */
+  body.dark & {
+    background: #232323;
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.18);
+  }
 `;
 
 const NavButton = styled.button`
@@ -29,8 +35,13 @@ const NavButton = styled.button`
 
 const NavText = styled.span`
   font-size: 12px;
-  color: ${props => props.active ? '#e46262' : '#bdbdbd'};
-  font-weight: ${props => props.active ? 700 : 400};
+  color: ${({ active, theme }) => active ? theme.primary : '#bdbdbd'};
+  font-weight: ${({ active }) => active ? 700 : 400};
+
+  /* 다크모드 대응 */
+  body.dark & {
+    color: ${props => props.active ? '#ffb3b3' : '#888'};
+  }
 `;
 
 function Navigation() {

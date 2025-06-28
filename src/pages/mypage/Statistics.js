@@ -18,7 +18,7 @@ const StatsGrid = styled.div`
   height: 480px;
 `;
 const StatCard = styled.div`
-  background: #faf7f2;
+  background: ${({ theme }) => theme.progressCard};
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   padding: 24px;

@@ -10,6 +10,9 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background-color: #fff;
+  body.dark & {
+    background-color: #232323;
+  }
   align-items: center;
   justify-content: center;
   padding: 40px 20px;

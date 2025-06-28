@@ -10,7 +10,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #fff;
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
@@ -47,9 +48,14 @@ const NovelInfo = styled.div`
 
 const NovelTitle = styled.h1`
   font-size: 24px;
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   margin: 0 0 8px 0;
   font-weight: 600;
+
+  /* 다크모드 대응 */
+  body.dark & {
+    color: #ffb3b3;
+  }
 `;
 
 const NovelDate = styled.div`
@@ -60,11 +66,17 @@ const NovelDate = styled.div`
 const NovelContent = styled.div`
   font-size: 16px;
   line-height: 1.8;
-  color: #333;
+  color: ${({ theme }) => theme.cardText};
   white-space: pre-line;
   padding: 20px;
-  background: #fff8f8;
+  background: ${({ theme }) => theme.card};
   border-radius: 15px;
+
+  /* 다크모드 대응 */
+  body.dark & {
+    color: #f1f1f1;
+    background: #232323;
+  }
 `;
 
 function NovelView({ user }) {

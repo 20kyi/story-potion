@@ -12,8 +12,8 @@ const HeaderContainer = styled.header`
   right: 0;
   z-index: 200;
   background: transparent;
-  box-shadow: 0 2px 12px rgba(228,98,98,0.06);
-  background-color: #fff;
+  box-shadow: 0 2px 12px ${({ theme }) => theme.cardShadow};
+  background-color: ${({ theme }) => theme.card};
   padding: 16px 20px 12px 20px;
 `;
 
@@ -24,7 +24,7 @@ const LeftSection = styled.div`
 `;
 
 const BackButton = styled.div`
-  color:rgb(0, 0, 0);
+  color: ${({ theme }) => theme.text};
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -43,7 +43,7 @@ const ProfileImage = styled.img`
 
 const Nickname = styled.span`
   font-size: 18px;
-  color:rgb(65, 55, 55);
+  color: ${({ theme }) => theme.text};
   font-family: 'Inter', sans-serif;
   font-weight: 500;
 `;
@@ -55,10 +55,13 @@ const RightSection = styled.div`
   gap: 8px;
 `;
 
-const HomeLogoTextImg = styled.img`
-  height: 26px;
-  object-fit: contain;
-  margin: 0;
+const LogoText = styled.span`
+  font-family: 'Barlow Condensed', 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: ${({ theme }) => theme.mode === 'dark' ? '#fff' : '#111'};
+  user-select: none;
 `;
 
 const Header = ({ user, rightActions }) => {
@@ -94,7 +97,7 @@ const Header = ({ user, rightActions }) => {
           <BackButton onClick={handleBack}>←</BackButton>
         )}
         {isHome && (
-          <HomeLogoTextImg src={process.env.PUBLIC_URL + '/app_logo/logo3_text.png'} alt="StoryPotion 로고 텍스트" />
+          <LogoText>STORYPOTION</LogoText>
         )}
       </LeftSection>
       {rightActions && <RightSection>{rightActions}</RightSection>}

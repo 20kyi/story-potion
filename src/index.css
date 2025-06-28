@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body.light {
+    background: #fff;
+    color: #222;
+}
+
+body.dark {
+    background: #202020;
+    color: #f1f1f1;
+}
+
+/* 주요 컨테이너, 카드 등에 적용할 수 있는 예시 */
+.dark .card,
+.dark .container {
+    background: #202020 !important;
+    color: #f1f1f1 !important;
+}
+
+.light .card,
+.light .container {
+    background: #fff !important;
+    color: #222 !important;
+}

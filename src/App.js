@@ -23,6 +23,9 @@ import Support from './pages/mypage/Support';
 import Social from './pages/mypage/Social';
 import Premium from './pages/mypage/Premium';
 import NoticeDetail from './pages/mypage/NoticeDetail';
+import { ThemeProvider, useTheme } from './ThemeContext';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
+import { lightTheme, darkTheme } from './theme';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -78,10 +81,24 @@ function App() {
 
     return (
         <Router>
-            <ToastProvider>
-                <AppLayout user={user} isLoading={isLoading} />
-            </ToastProvider>
+            <ThemeProvider>
+                <ThemeConsumerWrapper>
+                    <ToastProvider>
+                        <AppLayout user={user} isLoading={isLoading} />
+                    </ToastProvider>
+                </ThemeConsumerWrapper>
+            </ThemeProvider>
         </Router>
+    );
+}
+
+// ThemeContext의 theme 값을 받아서 styled-components ThemeProvider로 전달하는 래퍼 컴포넌트
+function ThemeConsumerWrapper({ children }) {
+    const { theme } = useTheme();
+    return (
+        <StyledThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+            {children}
+        </StyledThemeProvider>
     );
 }
 

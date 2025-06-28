@@ -13,11 +13,44 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-//   background: radial-gradient(circle at 30% 20%, #f2b7b7 0%, #ffffff 100%);
   padding: 20px;
   padding-top: 40px;
   margin: 40px auto;
   max-width: 600px;
+  background: ${({ theme }) => theme.background};
+`;
+
+const DiaryTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: ${({ theme }) => theme.diaryText};
+`;
+
+const DiaryContent = styled.p`
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: ${({ theme }) => theme.diaryContent};
+`;
+
+const DiaryDate = styled.div`
+  font-size: 18px;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 20px;
+  font-weight: 500;
+  margin-top: 40px;
+`;
+
+const DiaryMeta = styled.div`
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin: 12px 0 8px 0;
+  min-height: 28px;
+  font-size: 17px;
+  color: ${({ theme }) => theme.text};
+  font-weight: 500;
 `;
 
 function DiaryView({ user }) {
@@ -189,13 +222,13 @@ function DiaryView({ user }) {
         },
         diaryTitle: {
             fontSize: '20px',
-            color: '#333',
+            color: theme => theme.mode === 'dark' ? theme.diaryText : '#e46262',
             marginBottom: '16px',
             fontWeight: '600'
         },
         diaryContent: {
             fontSize: '16px',
-            color: '#666',
+            color: theme => theme.mode === 'dark' ? theme.diaryContent : '#444',
             lineHeight: '1.6',
             whiteSpace: 'pre-wrap'
         },
@@ -267,25 +300,13 @@ function DiaryView({ user }) {
                         </div>
                     ) : diary ? (
                         <>
-                            <div style={styles.diaryDate}>{formatDate(diary.date)}</div>
-                            {diary.imageUrls && diary.imageUrls.length > 0 && (
-                                <div style={styles.imageGrid}>
-                                    {diary.imageUrls.map((image, index) => (
-                                        <img
-                                            key={index}
-                                            src={image}
-                                            alt={`일기 이미지 ${index + 1}`}
-                                            style={styles.image}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', margin: '12px 0 8px 0', minHeight: '28px', fontSize: '17px', color: '#cb6565', fontWeight: 500 }}>
+                            <DiaryDate>{formatDate(diary.date)}</DiaryDate>
+                            <DiaryMeta>
                                 <span>오늘의 날씨: {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
                                 <span>나의 기분: {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
-                            </div>
-                            <h2 style={styles.diaryTitle}>{diary.title}</h2>
-                            <p style={styles.diaryContent}>{diary.content}</p>
+                            </DiaryMeta>
+                            <DiaryTitle>{diary.title}</DiaryTitle>
+                            <DiaryContent>{diary.content}</DiaryContent>
                         </>
                     ) : (
                         <div style={styles.noDiary}>

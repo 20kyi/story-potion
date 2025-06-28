@@ -39,6 +39,7 @@ const Container = styled.div`
   padding-top: 40px;
   margin: 40px auto;
   max-width: 600px;
+  background: ${({ theme }) => theme.background};
 `;
 
 const EmotionGraphContainer = styled.div`
@@ -231,6 +232,7 @@ function Diary({ user }) {
     };
 
     const handleDateClick = (clickedDate) => {
+        if (isFutureDate(clickedDate)) return;
         const dateString = formatDateToString(clickedDate);
         const existingDiary = diaries.find(diary => diary.date.startsWith(dateString));
 
@@ -524,10 +526,11 @@ function Diary({ user }) {
             days.push(
                 <td key={`prev-${prevMonthDay}`} style={styles.dateCell}>
                     <button
-                        style={{ ...styles.dateButton, color: '#ccc' }}
+                        style={{ ...styles.dateButton, color: '#ccc', cursor: 'not-allowed', opacity: 0.5 }}
                         onClick={() => handleDateClick(date)}
+                        disabled
                     >
-                        {prevMonthDay}
+                        <span style={{ color: '#ccc' }}>{prevMonthDay}</span>
                     </button>
                 </td>
             );
@@ -557,7 +560,7 @@ function Diary({ user }) {
                         onTouchEnd={handleDateLongPressEnd}
                         onTouchCancel={handleDateLongPressEnd}
                     >
-                        <span style={{ color: !isToday && !future ? '#000' : undefined }}>{day}</span>
+                        <span style={{ color: document.body.classList.contains('dark') ? '#fff' : '#000' }}>{day}</span>
                         {isToday && <div style={styles.todayCircle} />}
                         {/* 감정 이미지만, 없으면 빈 공간 */}
                         <div style={{ marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
@@ -580,10 +583,11 @@ function Diary({ user }) {
             days.push(
                 <td key={`next-${nextMonthDay}`} style={styles.dateCell}>
                     <button
-                        style={{ ...styles.dateButton, color: '#ccc' }}
+                        style={{ ...styles.dateButton, color: '#ccc', cursor: 'not-allowed', opacity: 0.5 }}
                         onClick={() => handleDateClick(date)}
+                        disabled
                     >
-                        {nextMonthDay}
+                        <span style={{ color: '#ccc' }}>{nextMonthDay}</span>
                     </button>
                 </td>
             );

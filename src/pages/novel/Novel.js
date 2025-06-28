@@ -13,7 +13,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #fff;
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
@@ -194,10 +195,11 @@ const WeeklyGrid = styled.div`
 `;
 
 const WeeklyCard = styled.div`
-  background-color: #fff2f2;
+  background-color: ${({ theme }) => theme.progressCard};
   border-radius: 15px;
   padding: 20px;
   flex: 0 0 240px;
+  color: ${({ theme }) => theme.cardText};
   min-width: 70px;
   // max-width: 200px;
   box-sizing: border-box;
