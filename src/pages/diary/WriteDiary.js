@@ -201,7 +201,8 @@ function WriteDiary({ user }) {
     const prevLocation = useRef(location);
     const textareaRef = useRef(null);
     const theme = useTheme();
-    const labelColor = theme.mode === 'dark' ? '#fff' : '#222';
+    const isDark = theme.mode === 'dark';
+    const labelColor = isDark ? '#fff' : '#222';
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -688,12 +689,15 @@ function WriteDiary({ user }) {
                 {isWeatherSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-                        boxShadow: '0 -2px 16px rgba(0,0,0,0.12)', padding: 24, minHeight: 220,
+                        background: isDark ? '#232323' : '#fff',
+                        borderTopLeftRadius: 20, borderTopRightRadius: 20,
+                        boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
+                        padding: 24, minHeight: 220,
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        animation: 'slideUp 0.2s ease'
+                        animation: 'slideUp 0.2s ease',
+                        color: isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16 }}>오늘의 날씨를 선택하세요</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>오늘의 날씨를 선택하세요</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -716,30 +720,33 @@ function WriteDiary({ user }) {
                                         border: 'none', background: 'none', cursor: 'pointer',
                                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                                         outline: 'none',
-                                        filter: diary.weather === opt.value ? 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))' : 'none'
+                                        filter: diary.weather === opt.value ? (isDark ? 'brightness(1.2) drop-shadow(0 0 6px #ffe29f)' : 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))') : 'none'
                                     }}
                                 >
                                     <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffe29f' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsWeatherSheetOpen(false)}
-                            style={{ marginTop: 24, color: '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                            style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
                         >닫기</button>
                     </div>
                 )}
                 {isEmotionSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-                        boxShadow: '0 -2px 16px rgba(0,0,0,0.12)', padding: 24, minHeight: 220,
+                        background: isDark ? '#232323' : '#fff',
+                        borderTopLeftRadius: 20, borderTopRightRadius: 20,
+                        boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
+                        padding: 24, minHeight: 220,
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        animation: 'slideUp 0.2s ease'
+                        animation: 'slideUp 0.2s ease',
+                        color: isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16 }}>오늘의 기분을 선택하세요</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>오늘의 기분을 선택하세요</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -762,18 +769,18 @@ function WriteDiary({ user }) {
                                         border: 'none', background: 'none', cursor: 'pointer',
                                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                                         outline: 'none',
-                                        filter: diary.emotion === opt.value ? 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))' : 'none'
+                                        filter: diary.emotion === opt.value ? (isDark ? 'brightness(1.2) drop-shadow(0 0 6px #ffe29f)' : 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))') : 'none'
                                     }}
                                 >
                                     <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffe29f' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsEmotionSheetOpen(false)}
-                            style={{ marginTop: 24, color: '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                            style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
                         >닫기</button>
                     </div>
                 )}
