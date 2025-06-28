@@ -14,12 +14,14 @@ import ShopIcon from '../../components/icons/ShopIcon';
 import CustomerServiceIcon from '../../components/icons/CustomerServiceIcon';
 import NoticeIcon from '../../components/icons/NoticeIcon';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../ThemeContext';
 
 const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #fff;
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
@@ -106,7 +108,7 @@ const MenuButton = styled.button`
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: #f1f3f5;
+    background-color: ${({ theme }) => theme.menuHover};
   }
 `;
 
@@ -122,7 +124,7 @@ const MenuIcon = styled.div`
 const MenuLabel = styled.span`
   font-size: 13px;
   font-weight: 600;
-  color: #495057;
+  color: ${({ theme }) => theme.menuText};
 `;
 
 const Info = styled.div`
@@ -202,6 +204,7 @@ function MyPage({ user }) {
   const [newProfileImageFile, setNewProfileImageFile] = useState(null);
   const [newProfileImageUrl, setNewProfileImageUrl] = useState('');
   const navigate = useNavigate();
+  const theme = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -294,37 +297,37 @@ function MyPage({ user }) {
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
-                  <RecentActivityIcon />
+                  <RecentActivityIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>내 통계</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
-                  <NotificationIcon />
+                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>개인설정</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/notice')}>
                 <MenuIcon as="div">
-                  <InviteFriendIcon />
+                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>공지사항</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
-                  <ShopIcon />
+                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>고객지원</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/social')}>
                 <MenuIcon as="div">
-                  <CustomerServiceIcon />
+                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>소셜</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
-                  <NoticeIcon />
+                  <NoticeIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
                 </MenuIcon>
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>

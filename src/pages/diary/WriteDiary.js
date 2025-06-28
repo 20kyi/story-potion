@@ -10,6 +10,7 @@ import imageCompression from 'browser-image-compression';
 import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/ToastProvider';
 import { usePrompt } from '../../hooks/usePrompt';
+import { useTheme } from 'styled-components';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -36,6 +37,44 @@ const TopRow = styled.div`
   margin-bottom: 8px;
 `;
 
+// 다크모드 감지 함수
+const isDarkMode = () => typeof document !== 'undefined' && document.body.classList.contains('dark');
+
+const DiaryDate = styled.div`
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  margin-top: 40px;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', sans-serif;
+  .date-number, .date-unit {
+    color: ${({ theme }) => theme.text};
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+  }
+`;
+
+const DiaryMeta = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+`;
+
+const MetaLabel = styled.span`
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: ${({ theme }) => theme.text};
+  font-weight: 600;
+  min-width: 140px;
+  min-height: 44px;
+  padding: 0;
+`;
+
 function WriteDiary({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -59,6 +98,7 @@ function WriteDiary({ user }) {
     const toast = useToast();
     const prevLocation = useRef(location);
     const textareaRef = useRef(null);
+    const theme = useTheme();
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -152,19 +192,6 @@ function WriteDiary({ user }) {
         year: selectedDate.getFullYear(),
         month: selectedDate.getMonth() + 1,
         day: selectedDate.getDate()
-    };
-
-    const handleDateChange = (date) => {
-        const newDate = new Date(date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (newDate > today) {
-            alert('미래의 일기는 작성할 수 없습니다.');
-            return;
-        }
-        setSelectedDate(newDate);
-        fetchDiaryForDate(newDate);
-        setIsDatePickerOpen(false);
     };
 
     const handleChange = (e) => {
@@ -439,9 +466,9 @@ function WriteDiary({ user }) {
             fontFamily: 'Inter',
             fontWeight: 600,
             fontSize: '24px',
-            color: '#cb6565',
+            color: theme.primary,
             border: 'none',
-            borderBottom: '1px solid #cb6565',
+            borderBottom: `1px solid ${theme.primary}`,
             background: 'transparent',
             width: '100%',
             marginBottom: '24px',
@@ -451,7 +478,7 @@ function WriteDiary({ user }) {
         contentInput: {
             fontFamily: 'Inter',
             fontSize: '16px',
-            color: '#000000',
+            color: theme.text,
             border: 'none',
             background: 'transparent',
             width: '100%',
@@ -496,28 +523,18 @@ function WriteDiary({ user }) {
             />
             <main style={styles.mainContent}>
                 <TopRow>
-                    <div style={styles.dateDisplay} onClick={() => setIsDatePickerOpen(true)}>
-                        <span>{formattedDate.year}</span>
-                        <span style={styles.dateUnit}>년</span>
-                        <span>{formattedDate.month}</span>
-                        <span style={styles.dateUnit}>월</span>
-                        <span>{formattedDate.day}</span>
-                        <span style={styles.dateUnit}>일</span>
-                        <div style={styles.datePicker}>
-                            <input
-                                type="date"
-                                value={selectedDate.toISOString().split('T')[0]}
-                                max={getTodayString()}
-                                onChange={(e) => handleDateChange(e.target.value)}
-                                style={styles.datePickerInput}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </div>
-                    </div>
+                    <DiaryDate>
+                        <span className="date-number">{formattedDate.year}</span>
+                        <span className="date-unit">년</span>
+                        <span className="date-number">{formattedDate.month}</span>
+                        <span className="date-unit">월</span>
+                        <span className="date-number">{formattedDate.day}</span>
+                        <span className="date-unit">일</span>
+                    </DiaryDate>
                 </TopRow>
 
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                    <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                <DiaryMeta>
+                    <MetaLabel>
                         {!diary.weather ? (
                             <Button
                                 onClick={(e) => {
@@ -531,7 +548,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: '#cb6565',
+                                    color: theme.text,
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -539,7 +556,7 @@ function WriteDiary({ user }) {
                                 오늘의 날씨
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: '#cb6565', fontWeight: 600, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: theme.primary, fontWeight: 600, padding: 0 }}>
                                 오늘의 날씨
                                 <img
                                     src={weatherImageMap[diary.weather]}
@@ -552,8 +569,8 @@ function WriteDiary({ user }) {
                                 />
                             </span>
                         )}
-                    </div>
-                    <div style={{ marginBottom: '20px', minWidth: 140, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                    </MetaLabel>
+                    <MetaLabel>
                         {!diary.emotion ? (
                             <Button
                                 onClick={(e) => {
@@ -567,7 +584,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: '#cb6565',
+                                    color: theme.text,
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -575,7 +592,7 @@ function WriteDiary({ user }) {
                                 내 기분
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: '#cb6565', fontWeight: 600, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: theme.primary, fontWeight: 600, padding: 0 }}>
                                 내 기분
                                 <img
                                     src={emotionImageMap[diary.emotion]}
@@ -588,8 +605,8 @@ function WriteDiary({ user }) {
                                 />
                             </span>
                         )}
-                    </div>
-                </div>
+                    </MetaLabel>
+                </DiaryMeta>
 
                 {/* 바텀시트 오버레이 */}
                 {(isWeatherSheetOpen || isEmotionSheetOpen) && (

@@ -4,9 +4,11 @@ import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
+import { useTheme } from '../../ThemeContext';
 
 function Settings() {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" />
@@ -19,7 +21,12 @@ function Settings() {
                     </li>
                     <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 400, fontSize: 16 }}>
                         <span style={{ fontWeight: 400 }}>테마</span>
-                        <button style={{ background: '#fdd2d2', color: '#cb6565', border: 'none', borderRadius: 8, padding: '6px 18px', fontWeight: 400, fontSize: 14, cursor: 'pointer' }}>변경</button>
+                        <button
+                            style={{ background: '#fdd2d2', color: '#cb6565', border: 'none', borderRadius: 8, padding: '6px 18px', fontWeight: 400, fontSize: 14, cursor: 'pointer' }}
+                            onClick={toggleTheme}
+                        >
+                            {theme === 'light' ? '다크모드로 변경' : '라이트모드로 변경'}
+                        </button>
                     </li>
                     <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 400, fontSize: 16 }}>
                         <span style={{ fontWeight: 400 }}>언어</span>

@@ -11,7 +11,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #fff;
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
@@ -48,24 +49,24 @@ const NovelInfo = styled.div`
 
 const NovelTitle = styled.h1`
   font-size: 24px;
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   margin: 0 0 8px 0;
   font-weight: 600;
 `;
 
 const TitleInput = styled.input`
   font-size: 24px;
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   margin: 0 0 8px 0;
   font-weight: 600;
   border: none;
   background: transparent;
   width: 100%;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid ${({ theme }) => theme.border};
   padding: 5px;
   &:focus {
     outline: none;
-    border-bottom: 2px solid #e46262;
+    border-bottom: 2px solid ${({ theme }) => theme.primary};
   }
 `;
 
@@ -80,25 +81,25 @@ const DiariesSection = styled.div`
 
 const SectionTitle = styled.h2`
   font-size: 18px;
-  color: #666;
+  color: ${({ theme }) => theme.text};
   margin: 0 0 15px 0;
 `;
 
 const DiaryCard = styled.div`
-  background: #fff8f8;
+  background: ${({ theme }) => theme.card};
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 15px;
 
   h3 {
     font-size: 16px;
-    color: #e46262;
+    color: ${({ theme }) => theme.primary};
     margin: 0 0 10px 0;
   }
 
   p {
     font-size: 14px;
-    color: #666;
+    color: ${({ theme }) => theme.cardText};
     margin: 0;
     white-space: pre-line;
   }
@@ -113,16 +114,16 @@ const DiaryCard = styled.div`
 const NovelContent = styled.div`
   font-size: 16px;
   line-height: 1.8;
-  color: #333;
+  color: ${({ theme }) => theme.cardText};
   white-space: pre-line;
   padding: 20px;
-  background: #fff8f8;
+  background: ${({ theme }) => theme.card};
   border-radius: 15px;
   margin-bottom: 20px;
 `;
 
 const Button = styled.button`
-  background: #e46262;
+  background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
   padding: 12px 30px;
@@ -134,9 +135,8 @@ const Button = styled.button`
   max-width: 300px;
   margin: 0 auto;
   margin-bottom: 10px;
-  
   &:hover {
-    background: #d45252;
+    background: ${({ theme }) => theme.secondary};
   }
 `;
 
@@ -149,17 +149,16 @@ const GenreSelection = styled.div`
 `;
 
 const GenreButton = styled.button`
-  background: ${({ selected }) => (selected ? '#e46262' : '#f0f0f0')};
-  color: ${({ selected }) => (selected ? 'white' : '#333')};
-  border: 1px solid ${({ selected }) => (selected ? '#e46262' : '#ddd')};
+  background: ${({ selected, theme }) => (selected ? theme.primary : theme.card)};
+  color: ${({ selected, theme }) => (selected ? 'white' : theme.text)};
+  border: 1px solid ${({ selected, theme }) => (selected ? theme.primary : theme.border)};
   padding: 10px 20px;
   border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-
   &:hover {
-    background: #d45252;
+    background: ${({ theme }) => theme.secondary};
     color: white;
   }
 `;
