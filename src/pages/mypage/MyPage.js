@@ -297,37 +297,37 @@ function MyPage({ user }) {
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
-                  <RecentActivityIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <RecentActivityIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>내 통계</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
-                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>개인설정</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/notice')}>
                 <MenuIcon as="div">
-                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>공지사항</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
-                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>고객지원</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/social')}>
                 <MenuIcon as="div">
-                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>소셜</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
-                  <NoticeIcon color={theme.theme === 'dark' ? '#fff' : '#cb6565'} />
+                  <NoticeIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>
