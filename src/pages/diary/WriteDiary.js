@@ -42,9 +42,9 @@ const isDarkMode = () => typeof document !== 'undefined' && document.body.classL
 
 const DiaryDate = styled.div`
   font-size: 18px;
-  margin-bottom: 20px;
+//   margin-bottom: 20px;
   font-weight: 500;
-  margin-top: 40px;
+//   margin-top: 40px;
   cursor: default;
   display: flex;
   align-items: center;
@@ -69,10 +69,78 @@ const MetaLabel = styled.span`
   align-items: center;
   font-size: 16px;
   color: ${({ theme }) => theme.text};
-  font-weight: 600;
+  font-weight: 500;
   min-width: 140px;
   min-height: 44px;
   padding: 0;
+`;
+
+const ImagePreviewContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+`;
+const ImagePreviewBox = styled.div`
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #fdd2d2;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+const PreviewImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+const RemoveButton = styled.button`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: #cb6565;
+`;
+
+// 사진 추가하기 버튼 styled-component 추가
+const UploadLabel = styled.label`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+  color: #555;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: background 0.2s, box-shadow 0.2s;
+  &:hover {
+    background: linear-gradient(135deg, #cccccc 0%, #e0e0e0 100%);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  & > .icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
 `;
 
 function WriteDiary({ user }) {
@@ -413,12 +481,6 @@ function WriteDiary({ user }) {
             marginBottom: '24px',
             position: 'relative'
         },
-        imagePreviewContainer: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '10px',
-            marginTop: '10px'
-        },
         uploadLabel: {
             display: 'inline-flex',
             alignItems: 'center',
@@ -433,38 +495,9 @@ function WriteDiary({ user }) {
             cursor: 'pointer',
             transition: 'background-color 0.2s ease'
         },
-        imagePreview: {
-            position: 'relative',
-            width: '100px',
-            height: '100px',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '2px solid #fdd2d2'
-        },
-        image: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-        },
-        removeButton: {
-            position: 'absolute',
-            top: '5px',
-            right: '5px',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            border: 'none',
-            borderRadius: '50%',
-            width: '20px',
-            height: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            fontSize: '12px',
-            color: '#cb6565'
-        },
         titleInput: {
             fontFamily: 'Inter',
-            fontWeight: 600,
+            fontWeight: 500,
             fontSize: '24px',
             color: theme.primary,
             border: 'none',
@@ -712,9 +745,6 @@ function WriteDiary({ user }) {
                 )}
 
                 <div style={styles.imageContainer}>
-                    <label htmlFor="image-upload" style={styles.uploadLabel}>
-                        📸 사진 추가하기
-                    </label>
                     <input
                         type="file"
                         id="image-upload"
@@ -723,20 +753,20 @@ function WriteDiary({ user }) {
                         onChange={handleImageUpload}
                         style={{ display: 'none' }}
                     />
-                    <div style={styles.imagePreviewContainer}>
+                    <ImagePreviewContainer>
                         {imagePreview.map((src, index) => (
-                            <div key={index} style={styles.imagePreview}>
-                                <img src={src} alt={`업로드 이미지 ${index + 1}`} style={styles.image} />
-                                <button
-                                    type="button"
-                                    onClick={(e) => removeImage(index)}
-                                    style={styles.removeButton}
-                                >
+                            <ImagePreviewBox key={index}>
+                                <PreviewImg src={src} alt={`업로드 이미지 ${index + 1}`} />
+                                <RemoveButton type="button" onClick={(e) => removeImage(index)}>
                                     ×
-                                </button>
-                            </div>
+                                </RemoveButton>
+                            </ImagePreviewBox>
                         ))}
-                    </div>
+                        <UploadLabel htmlFor="image-upload">
+                            <span className="icon">📸</span>
+                            사진 추가
+                        </UploadLabel>
+                    </ImagePreviewContainer>
                 </div>
 
                 <input
