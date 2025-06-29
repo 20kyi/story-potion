@@ -141,9 +141,8 @@ function Statistics({ user }) {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title="내 통계" />
             <div style={{ maxWidth: 600, margin: '40px auto', padding: 24, paddingTop: 40, minHeight: '100vh', paddingBottom: 120 }}>
-                <h2 style={{ color: '#e46262', marginBottom: 32, textAlign: 'center', fontWeight: 600 }}>내 통계</h2>
                 {loading ? (
                     <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>로딩 중...</div>
                 ) : (

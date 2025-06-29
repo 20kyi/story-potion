@@ -506,7 +506,7 @@ function Diary({ user }) {
         // total이 0이거나 undefined일 때를 방지
         const percent = Object.fromEntries(
             Object.entries(counts).map(([k, v]) => [
-                k, 
+                k,
                 total > 0 ? Math.round((v / total) * 100) : 0
             ])
         );
@@ -610,7 +610,7 @@ function Diary({ user }) {
 
     return (
         <Container>
-            <Header user={user} />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title="일기" />
             <div style={styles.content}>
                 <div style={styles.calendarHeader}>
                     <button style={styles.monthButton} onClick={handlePrevMonth}>&lt;</button>

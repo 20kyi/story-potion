@@ -33,7 +33,7 @@
     justify-content: space-between;
     align-items: center;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* 확장된 설정 아이템 (테마 옵션용) */
@@ -41,13 +41,14 @@
     border-bottom: 1px solid #f1f1f1;
     padding: 18px 0;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* 확장된 설정 아이템 내의 제목 */
 .settings-item-title {
     margin-bottom: 16px;
     font-weight: 400;
+    font-size: 20px;
 }
 
 /* 설정 버튼들 (알림, 언어 등) */
@@ -58,7 +59,7 @@
     border-radius: 8px;
     padding: 6px 18px;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 20px;
     cursor: pointer;
 }
 
@@ -73,10 +74,12 @@
 .theme-option {
     display: flex;
     align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    padding-left: 16px;
+    justify-content: space-between;
+    width: 100%;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
+    margin-top: 16px;
 }
 
 /* 라디오 버튼 스타일링 */
@@ -98,7 +101,7 @@
     width: 100%;
     margin-top: 40px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(228,98,98,0.08);
+    box-shadow: 0 2px 8px rgba(228, 98, 98, 0.08);
 }
 
 /* 탈퇴 계정 링크 */
@@ -112,4 +115,8 @@
     font-size: 13px;
     font-weight: 400;
     cursor: pointer;
-} 
+}
+
+.theme-option span {
+    font-size: 20px;
+}

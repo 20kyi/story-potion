@@ -29,6 +29,7 @@ import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
+import ThemeSettings from './pages/mypage/ThemeSettings';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -41,9 +42,9 @@ const AppLayout = ({ user, isLoading }) => {
 
     return (
         <div className="App">
-            <NotificationToast 
-                notification={notification} 
-                onClose={hideNotification} 
+            <NotificationToast
+                notification={notification}
+                onClose={hideNotification}
             />
             <Routes>
                 <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -68,6 +69,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>
