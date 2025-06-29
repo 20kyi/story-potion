@@ -1,19 +1,14 @@
 /* ===== 알림 설정 페이지 스타일 ===== */
 
 .notification-settings-container {
-    padding: 20px;
     max-width: 600px;
-    margin: 0 auto;
-    min-height: calc(100vh - 120px);
+    margin: 40px auto;
+    padding: 24px;
+    padding-top: 40px;
+    min-height: 100vh;
+    padding-bottom: 120px;
 }
 
-.notification-settings-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 18px;
-    margin-top: 0;
-    text-align: left;
-}
 
 /* 푸시 알림 권한 상태 */
 .notification-permission-status {
@@ -24,6 +19,7 @@
     border: 1px solid var(--border-color);
 }
 
+/* 푸시 알림 권한 상태 */
 .permission-item {
     display: flex;
     align-items: center;
@@ -31,11 +27,13 @@
     margin-bottom: 8px;
 }
 
+/* 푸시 알림 권한 상태 */
 .permission-label {
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
+/* 푸시 알림 권한 상태 */
 .permission-status {
     font-size: 0.98rem;
     font-weight: 600;
@@ -106,8 +104,9 @@
     font-size: 1.05rem;
 }
 
+/* 알림 설정 페이지 타이틀 */
 .notification-description {
-    font-size: 0.92rem;
+    font-size: 0.8rem;
     color: #888;
 }
 

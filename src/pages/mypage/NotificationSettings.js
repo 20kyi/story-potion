@@ -165,7 +165,7 @@ function NotificationSettings({ user }) {
                 <div className="notification-card notification-section">
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label" style={{ fontSize: 20 }}>일기 작성 리마인더</span>
+                            <span className="notification-label">일기 작성 리마인더</span>
                             <span className="notification-description">
                                 매일 설정된 시간에 일기 작성을 알려드립니다
                             </span>
@@ -181,7 +181,7 @@ function NotificationSettings({ user }) {
                     </div>
                     {settings.enabled && (
                         <div className="notification-item notification-row">
-                            <span className="notification-label" style={{ fontSize: 20 }}>알림 시간</span>
+                            <span className="notification-label">알림 시간</span>
                             <input
                                 type="time"
                                 value={settings.time}
@@ -192,7 +192,7 @@ function NotificationSettings({ user }) {
                     )}
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label" style={{ fontSize: 20 }}>이벤트/공지 알림</span>
+                            <span className="notification-label">이벤트/공지 알림</span>
                             <span className="notification-description">
                                 중요 공지, 이벤트, 업데이트 소식을 받아보세요
                             </span>
@@ -208,7 +208,7 @@ function NotificationSettings({ user }) {
                     </div>
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label" style={{ fontSize: 20 }}>마케팅/프로모션 알림</span>
+                            <span className="notification-label">마케팅/프로모션 알림</span>
                             <span className="notification-description">
                                 광고성 정보, 프로모션, 할인 소식을 받아보세요
                             </span>
