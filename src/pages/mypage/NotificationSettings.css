@@ -87,6 +87,7 @@
     align-items: center;
     padding: 16px 0;
     border-bottom: 1px solid var(--border-color);
+    font-size: 1.1rem;
 }
 
 .notification-item:last-child {
@@ -100,8 +101,8 @@
 }
 
 .notification-label {
+    font-size: 1.1rem;
     font-weight: 600;
-    font-size: 1.05rem;
 }
 
 /* 알림 설정 페이지 타이틀 */

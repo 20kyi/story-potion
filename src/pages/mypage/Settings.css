@@ -10,14 +10,6 @@
     padding-bottom: 120px;
 }
 
-/* 페이지 제목 */
-.settings-title {
-    color: #e46262;
-    margin-bottom: 32px;
-    text-align: center;
-    font-weight: 600;
-}
-
 /* 설정 리스트 컨테이너 */
 .settings-list {
     list-style: none;
@@ -33,7 +25,7 @@
     justify-content: space-between;
     align-items: center;
     font-weight: 400;
-    font-size: 20px;
+    font-size: 1.1rem;
 }
 
 /* 확장된 설정 아이템 (테마 옵션용) */
@@ -118,5 +110,20 @@
 }
 
 .theme-option span {
-    font-size: 20px;
+    font-size: 1.1rem;
+}
+
+.settings-select {
+    color: #585858;
+    background: #fff;
+    border: 1px solid #747474;
+    border-radius: 8px;
+    font-size: 18px;
+    padding: 6px 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 18px 18px;
 }
