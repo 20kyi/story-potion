@@ -4,6 +4,7 @@ import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import storageManager from '../../utils/storage';
+import pushNotificationManager from '../../utils/pushNotification';
 import './NotificationSettings.css';
 
 function NotificationSettings({ user }) {
@@ -14,6 +15,8 @@ function NotificationSettings({ user }) {
         message: '오늘의 일기를 작성해보세요! 📝'
     });
     const [loading, setLoading] = useState(true);
+    const [pushPermission, setPushPermission] = useState('default');
+    const [isPushSupported, setIsPushSupported] = useState(false);
 
     // 사용자의 알림 설정 불러오기
     useEffect(() => {
@@ -34,6 +37,33 @@ function NotificationSettings({ user }) {
 
         loadSettings();
     }, [user]);
+
+    // 푸시 알림 지원 여부 및 권한 상태 확인
+    useEffect(() => {
+        const checkPushSupport = () => {
+            const supported = pushNotificationManager.isPushSupported();
+            setIsPushSupported(supported);
+            
+            if (supported) {
+                const permission = pushNotificationManager.getPermissionStatus();
+                setPushPermission(permission);
+            }
+        };
+
+        checkPushSupport();
+    }, []);
+
+    // 푸시 알림 권한 요청
+    const requestPushPermission = async () => {
+        const granted = await pushNotificationManager.requestPermission();
+        if (granted) {
+            setPushPermission('granted');
+            await pushNotificationManager.subscribeToPush();
+            alert('푸시 알림 권한이 허용되었습니다!');
+        } else {
+            alert('푸시 알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.');
+        }
+    };
 
     // 알림 설정 저장
     const saveSettings = async (newSettings) => {
@@ -56,8 +86,22 @@ function NotificationSettings({ user }) {
         }
     };
 
-    const handleToggle = () => {
+    const handleToggle = async () => {
         const newSettings = { ...settings, enabled: !settings.enabled };
+        
+        // 알림을 켤 때 푸시 권한 확인
+        if (newSettings.enabled && pushPermission !== 'granted') {
+            const shouldRequest = window.confirm(
+                '푸시 알림을 받으려면 브라우저 알림 권한이 필요합니다. 권한을 요청하시겠습니까?'
+            );
+            
+            if (shouldRequest) {
+                await requestPushPermission();
+            } else {
+                return; // 권한 요청을 거부하면 알림을 켜지 않음
+            }
+        }
+        
         saveSettings(newSettings);
     };
 
@@ -88,6 +132,39 @@ function NotificationSettings({ user }) {
             <Header leftAction={() => navigate(-1)} leftIconType="back" />
             <div className="notification-settings-container">
                 <h2 className="notification-settings-title">알림 설정</h2>
+                
+                {/* 푸시 알림 권한 상태 */}
+                {isPushSupported && (
+                    <div className="notification-permission-status">
+                        <div className="permission-item">
+                            <span className="permission-label">브라우저 알림 권한</span>
+                            <span className={`permission-status ${pushPermission}`}>
+                                {pushPermission === 'granted' ? '허용됨' : 
+                                 pushPermission === 'denied' ? '거부됨' : '요청 필요'}
+                            </span>
+                        </div>
+                        {pushPermission !== 'granted' && (
+                            <button 
+                                onClick={requestPushPermission}
+                                className="permission-request-btn"
+                            >
+                                알림 권한 요청
+                            </button>
+                        )}
+                        {pushPermission === 'granted' && (
+                            <button 
+                                onClick={() => pushNotificationManager.showLocalNotification(
+                                    'Story Potion',
+                                    '테스트 알림입니다! 🎉'
+                                )}
+                                className="permission-request-btn"
+                                style={{ marginTop: '8px' }}
+                            >
+                                테스트 알림 보내기
+                            </button>
+                        )}
+                    </div>
+                )}
                 
                 <div className="notification-section">
                     <div className="notification-item">
@@ -140,6 +217,7 @@ function NotificationSettings({ user }) {
                         <li>• 매일 설정된 시간에 알림이 표시됩니다</li>
                         <li>• 이미 일기를 작성한 날에는 알림이 표시되지 않습니다</li>
                         <li>• 알림을 끄면 더 이상 알림을 받지 않습니다</li>
+                        <li>• 브라우저 알림 권한이 필요합니다</li>
                     </ul>
                 </div>
             </div>

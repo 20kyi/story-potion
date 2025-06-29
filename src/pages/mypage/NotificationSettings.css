@@ -1,31 +1,86 @@
 /* ===== 알림 설정 페이지 스타일 ===== */
 
 .notification-settings-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
     padding: 20px;
-    padding-top: 40px;
-    padding-bottom: 100px;
-    margin: 40px auto;
     max-width: 600px;
-    background: #fff;
-    color: #222;
+    margin: 0 auto;
+    min-height: calc(100vh - 120px);
 }
 
 .notification-settings-title {
     font-size: 24px;
     font-weight: 600;
-    color: #e46262;
     margin-bottom: 30px;
+    color: var(--text-primary);
     text-align: center;
 }
 
-.notification-section {
-    background: #f9f9f9;
-    border-radius: 16px;
+/* 푸시 알림 권한 상태 */
+.notification-permission-status {
+    background: var(--bg-secondary);
+    border-radius: 12px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.permission-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.permission-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.permission-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.permission-status.granted {
+    background: #4CAF50;
+    color: white;
+}
+
+.permission-status.denied {
+    background: #f44336;
+    color: white;
+}
+
+.permission-status.default {
+    background: #ff9800;
+    color: white;
+}
+
+.permission-request-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.permission-request-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* 알림 섹션 */
+.notification-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
 }
 
 .notification-item {
@@ -33,7 +88,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .notification-item:last-child {
@@ -41,25 +96,25 @@
 }
 
 .notification-item-content {
-    display: flex;
-    flex-direction: column;
     flex: 1;
+    margin-right: 20px;
 }
 
 .notification-label {
-    font-size: 16px;
+    display: block;
     font-weight: 600;
-    color: #222;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .notification-description {
+    display: block;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     line-height: 1.4;
 }
 
-/* 토글 스위치 스타일 */
+/* 토글 스위치 */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -98,7 +153,7 @@
 }
 
 input:checked + .toggle-slider {
-    background-color: #e46262;
+    background-color: var(--primary-color);
 }
 
 input:checked + .toggle-slider:before {
@@ -107,48 +162,49 @@ input:checked + .toggle-slider:before {
 
 /* 알림 상세 설정 */
 .notification-details {
-    background: #f9f9f9;
-    border-radius: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
 }
 
-.time-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    background: #fff;
-    color: #222;
-}
-
+.time-input,
 .message-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    font-size: 16px;
-    background: #fff;
-    color: #222;
+    font-size: 14px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     width: 200px;
 }
 
-.message-input::placeholder {
-    color: #999;
+.time-input:focus,
+.message-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-/* 알림 정보 섹션 */
+.message-input {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* 알림 정보 */
 .notification-info {
-    background: #fff2f2;
-    border-radius: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
     padding: 20px;
-    border: 1px solid #fdd2d2;
+    border: 1px solid var(--border-color);
 }
 
 .notification-info h3 {
     font-size: 18px;
     font-weight: 600;
-    color: #e46262;
-    margin-bottom: 12px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
 }
 
 .notification-info ul {
@@ -158,64 +214,51 @@ input:checked + .toggle-slider:before {
 }
 
 .notification-info li {
+    color: var(--text-secondary);
     font-size: 14px;
-    color: #666;
     line-height: 1.6;
     margin-bottom: 8px;
     padding-left: 0;
 }
 
-.notification-info li:last-child {
-    margin-bottom: 0;
-}
-
 /* 다크모드 스타일 */
 body.dark .notification-settings-container {
-    background: #202020;
-    color: #f1f1f1;
+    background: var(--bg-primary);
 }
 
-body.dark .notification-settings-title {
-    color: #ffb3b3;
-}
-
+body.dark .notification-permission-status,
 body.dark .notification-section,
-body.dark .notification-details {
-    background: #232323;
-}
-
-body.dark .notification-label {
-    color: #f1f1f1;
-}
-
-body.dark .notification-description {
-    color: #bfc3c9;
-}
-
-body.dark .notification-item {
-    border-bottom-color: #333;
+body.dark .notification-details,
+body.dark .notification-info {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
 }
 
 body.dark .time-input,
 body.dark .message-input {
-    background: #333;
-    border-color: #555;
-    color: #f1f1f1;
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
 }
 
-body.dark .message-input::placeholder {
-    color: #888;
-}
-
-body.dark .notification-info {
-    background: #2a1f1f;
-    border-color: #4a2f2f;
-}
-
-body.dark .notification-info h3 {
-    color: #ffb3b3;
-}
-
-body.dark .notification-info li {
-    color: #bfc3c9;
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .notification-settings-container {
+        padding: 16px;
+    }
+    
+    .notification-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notification-item-content {
+        margin-right: 0;
+        margin-bottom: 12px;
+    }
+    
+    .time-input,
+    .message-input {
+        width: 100%;
+    }
 } 
