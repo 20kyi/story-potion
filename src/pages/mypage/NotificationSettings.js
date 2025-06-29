@@ -224,6 +224,7 @@ function NotificationSettings({ user }) {
                     </div>
                 </div>
 
+                <button className="notification-save-button" style={{ width: '100%', marginTop: 10, marginBottom: 60 }} onClick={handleSaveAll}>저장</button>
                 <div className="notification-card notification-info">
                     <h3>알림 정보</h3>
                     <ul>
@@ -232,10 +233,6 @@ function NotificationSettings({ user }) {
                         <li>알림을 끄면 더 이상 알림을 받지 않습니다</li>
                         <li>브라우저 알림 권한이 필요합니다</li>
                     </ul>
-                </div>
-
-                <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                    <button className="styled-btn" style={{ width: '100%', fontSize: 18, fontWeight: 600, padding: '14px 0' }} onClick={handleSaveAll}>저장</button>
                 </div>
             </div>
             <Navigation />
