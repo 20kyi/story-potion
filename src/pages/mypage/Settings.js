@@ -39,10 +39,17 @@ function Settings() {
                         </div>
                     </li>
                     {/* 언어 */}
-                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => setLanguage(language === '한국어' ? 'English' : '한국어')}>
-                            <span>언어</span>
-                        </div>
+                    <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
+                        <span>언어</span>
+                        <select
+                            className="settings-select"
+                            value={language}
+                            onChange={e => setLanguage(e.target.value)}
+                            style={{ marginLeft: 'auto', width: 160, fontSize: 18, padding: '6px 12px', borderRadius: 8 }}
+                        >
+                            <option value="한국어">한국어</option>
+                            <option value="English">English</option>
+                        </select>
                     </li>
                 </ul>
                 <button
