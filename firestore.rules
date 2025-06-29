@@ -3,6 +3,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Users: Users can only read/write their own user data
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
     // Diaries: Users can only read/write their own diaries.
     match /diaries/{diaryId} {
       allow read, update, delete: if request.auth.uid == resource.data.userId;
