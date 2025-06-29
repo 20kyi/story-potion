@@ -24,7 +24,7 @@ const MainContainer = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 40px;
+  padding-top: 20px;
   padding-bottom: 100px;
   // margin-top: 10px;
   margin: 40px auto;
