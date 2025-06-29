@@ -18,6 +18,7 @@ import NovelListByGenre from './pages/novel/NovelListByGenre';
 import { ToastProvider } from './components/ui/ToastProvider';
 import Statistics from './pages/mypage/Statistics';
 import Settings from './pages/mypage/Settings';
+import NotificationSettings from './pages/mypage/NotificationSettings';
 import Notice from './pages/mypage/Notice';
 import Support from './pages/mypage/Support';
 import Social from './pages/mypage/Social';
@@ -26,10 +27,13 @@ import NoticeDetail from './pages/mypage/NoticeDetail';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from './theme';
+import { useNotification } from './hooks/useNotification';
+import NotificationToast from './components/NotificationToast';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
     const showNavigation = !['/login', '/signup'].includes(location.pathname);
+    const { notification, hideNotification } = useNotification(user);
 
     if (isLoading) {
         return <div>로딩 중...</div>; // 간단한 로딩 인디케이터
@@ -37,6 +41,10 @@ const AppLayout = ({ user, isLoading }) => {
 
     return (
         <div className="App">
+            <NotificationToast 
+                notification={notification} 
+                onClose={hideNotification} 
+            />
             <Routes>
                 <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
                 <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
@@ -54,6 +62,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/notification-settings" element={user ? <NotificationSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice/:id" element={user ? <NoticeDetail user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />

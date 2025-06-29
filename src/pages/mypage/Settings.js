@@ -19,7 +19,7 @@ function Settings() {
                 <ul className="settings-list">
                     <li className="settings-item">
                         <span>알림 설정</span>
-                        <button className="settings-button">관리</button>
+                        <button className="settings-button" onClick={() => navigate('/my/notification-settings')}>관리</button>
                     </li>
                     <li className="settings-item-expanded">
                         <div className="settings-item-title">
