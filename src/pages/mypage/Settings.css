@@ -1,0 +1,115 @@
+/* ===== 설정 페이지 스타일 ===== */
+
+/* 메인 컨테이너 */
+.settings-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 24px;
+    padding-top: 40px;
+    min-height: 100vh;
+    padding-bottom: 120px;
+}
+
+/* 페이지 제목 */
+.settings-title {
+    color: #e46262;
+    margin-bottom: 32px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* 설정 리스트 컨테이너 */
+.settings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 일반 설정 아이템 (오른쪽에 버튼이 있는 경우) */
+.settings-item {
+    border-bottom: 1px solid #f1f1f1;
+    padding: 18px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 400;
+    font-size: 16px;
+}
+
+/* 확장된 설정 아이템 (테마 옵션용) */
+.settings-item-expanded {
+    border-bottom: 1px solid #f1f1f1;
+    padding: 18px 0;
+    font-weight: 400;
+    font-size: 16px;
+}
+
+/* 확장된 설정 아이템 내의 제목 */
+.settings-item-title {
+    margin-bottom: 16px;
+    font-weight: 400;
+}
+
+/* 설정 버튼들 (알림, 언어 등) */
+.settings-button {
+    background: #fdd2d2;
+    color: #cb6565;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 18px;
+    font-weight: 400;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 테마 옵션 컨테이너 */
+.theme-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 개별 테마 옵션 (라디오 버튼 + 라벨) */
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    padding-left: 16px;
+}
+
+/* 라디오 버튼 스타일링 */
+.theme-radio {
+    width: 16px;
+    height: 16px;
+    accent-color: #e46262;
+}
+
+/* 로그아웃 버튼 */
+.logout-button {
+    background: #e46262;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 400;
+    width: 100%;
+    margin-top: 40px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(228,98,98,0.08);
+}
+
+/* 탈퇴 계정 링크 */
+.withdraw-link {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.withdraw-link span {
+    color: #888;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+} 
