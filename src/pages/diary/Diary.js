@@ -322,9 +322,10 @@ function Diary({ user }) {
     // 상단 문구 자동 생성 (감정별 맞춤)
     const getTopMessage = () => {
         const { percent } = getEmotionBarData();
-        const mainEmotion = Object.entries(percent)
+        const emotionEntries = Object.entries(percent)
             .filter(([k]) => k !== 'empty')
-            .sort((a, b) => b[1] - a[1])[0]?.[0];
+            .sort((a, b) => b[1] - a[1]);
+        const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : null;
         const month = currentDate.getMonth() + 1;
         if (!mainEmotion || percent[mainEmotion] === 0) return emotionTopMessages.empty(month);
         return emotionTopMessages[mainEmotion](month);
@@ -502,7 +503,13 @@ function Diary({ user }) {
             }
         }
         const total = daysInMonth;
-        const percent = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, Math.round((v / total) * 100)]));
+        // total이 0이거나 undefined일 때를 방지
+        const percent = Object.fromEntries(
+            Object.entries(counts).map(([k, v]) => [
+                k, 
+                total > 0 ? Math.round((v / total) * 100) : 0
+            ])
+        );
         return { counts, percent, total };
     };
     const emotionBarData = getEmotionBarData();
@@ -631,17 +638,22 @@ function Diary({ user }) {
                     {/* 막대 */}
                     <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: 38, borderRadius: 22, overflow: 'hidden', background: '#f6f6f6', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                         {Object.entries(emotionBarData.percent).map(([emotion, value], idx, arr) => {
-                            if (value === 0) return null;
+                            if (isNaN(value) || value === 0) return null; // 0%는 렌더링하지 않음
+                            const emotionKeys = Object.keys(emotionBarData.percent).filter(
+                                key => !isNaN(emotionBarData.percent[key]) && emotionBarData.percent[key] > 0
+                            );
+                            const isFirst = emotion === emotionKeys[0];
+                            const isLast = emotion === emotionKeys[emotionKeys.length - 1];
                             return (
                                 <div key={emotion} style={{
                                     flex: value + ' 0 0',
                                     background: emotionBarColors[emotion],
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     position: 'relative',
-                                    borderTopLeftRadius: emotion === Object.keys(emotionBarData.percent)[0] ? 22 : 0,
-                                    borderBottomLeftRadius: emotion === Object.keys(emotionBarData.percent)[0] ? 22 : 0,
-                                    borderTopRightRadius: emotion === Object.keys(emotionBarData.percent).slice(-1)[0] ? 22 : 0,
-                                    borderBottomRightRadius: emotion === Object.keys(emotionBarData.percent).slice(-1)[0] ? 22 : 0
+                                    borderTopLeftRadius: isFirst ? 22 : 0,
+                                    borderBottomLeftRadius: isFirst ? 22 : 0,
+                                    borderTopRightRadius: isLast ? 22 : 0,
+                                    borderBottomRightRadius: isLast ? 22 : 0
                                 }}>
                                     {emotion !== 'empty' && value >= 10 && (
                                         <img src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} style={{ width: 28, height: 28, opacity: 0.85 }} />
@@ -653,7 +665,7 @@ function Diary({ user }) {
                     {/* 퍼센트/개수 */}
                     <div style={{ display: 'flex', flexDirection: 'row', width: '100%', marginTop: 8 }}>
                         {Object.entries(emotionBarData.percent).map(([emotion, value]) => {
-                            if (value === 0 || emotion === 'empty') return <div key={emotion} style={{ flex: value + ' 0 0' }} />;
+                            if (isNaN(value) || value === 0) return null;
                             return (
                                 <div key={emotion} style={{
                                     flex: value + ' 0 0',
