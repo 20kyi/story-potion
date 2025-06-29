@@ -38,7 +38,7 @@ const ProfileContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 40px auto 16px auto;
+  margin: 10px auto 16px auto;
 `;
 
 const ProfileImage = styled.img`
@@ -49,7 +49,7 @@ const ProfileImage = styled.img`
   // border: 2px solid #e46262;
   object-fit: cover;
 `;
-
+/* 프로필 이미지 빈 공간 */
 const ProfileImagePlaceholder = styled.div`
   width: 120px;
   height: 120px;
@@ -61,7 +61,7 @@ const ProfileImagePlaceholder = styled.div`
   justify-content: center;
   font-size: 64px;
   // color: #e46262;
-  margin-top: 40px;
+  margin-top: 10px;
   margin-bottom: 16px;
   margin-left: auto;
   margin-right: auto;
@@ -128,7 +128,7 @@ const MenuIcon = styled.div`
 `;
 
 const MenuLabel = styled.span`
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   color: ${({ theme }) => theme.menuText};
   margin-top: 2px;
