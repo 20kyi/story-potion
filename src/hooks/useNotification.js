@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import storageManager from '../utils/storage';
+import pushNotificationManager from '../utils/pushNotification';
 
 export const useNotification = (user) => {
     const [notification, setNotification] = useState(null);
@@ -23,7 +24,7 @@ export const useNotification = (user) => {
         loadSettings();
     }, [user]);
 
-    // 알림 표시 함수
+    // 알림 표시 함수 (인앱 토스트)
     const showNotification = (message, type = 'info') => {
         setNotification({
             id: Date.now(),
@@ -36,6 +37,25 @@ export const useNotification = (user) => {
         setTimeout(() => {
             setNotification(null);
         }, 5000);
+    };
+
+    // 푸시 알림 표시 함수
+    const showPushNotification = async (title, message, options = {}) => {
+        if (pushNotificationManager.isPushSupported() && 
+            pushNotificationManager.getPermissionStatus() === 'granted') {
+            
+            try {
+                await pushNotificationManager.showLocalNotification(title, {
+                    body: message,
+                    ...options
+                });
+                return true;
+            } catch (error) {
+                console.error('푸시 알림 표시 실패:', error);
+                return false;
+            }
+        }
+        return false;
     };
 
     // 알림 제거 함수
@@ -62,7 +82,20 @@ export const useNotification = (user) => {
         
         if (!todayDiary) {
             // 오늘 일기를 작성하지 않았으면 알림 표시
-            showNotification(settings.message, 'reminder');
+            const pushSuccess = await showPushNotification(
+                'Story Potion',
+                settings.message,
+                {
+                    icon: '/app_logo/logo.png',
+                    tag: 'diary-reminder',
+                    requireInteraction: false
+                }
+            );
+            
+            // 푸시 알림이 실패하면 인앱 토스트로 대체
+            if (!pushSuccess) {
+                showNotification(settings.message, 'reminder');
+            }
         }
     };
 
@@ -77,6 +110,7 @@ export const useNotification = (user) => {
     return {
         notification,
         showNotification,
+        showPushNotification,
         hideNotification,
         settings
     };
