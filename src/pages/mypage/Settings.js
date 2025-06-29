@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
@@ -10,60 +10,39 @@ import './Settings.css';
 function Settings() {
     const navigate = useNavigate();
     const { theme, setThemeMode } = useTheme();
-    
+    const [open, setOpen] = useState({
+        notification: false,
+        theme: false,
+        language: false,
+    });
+    const [language, setLanguage] = useState('한국어');
+
+    const handleAccordion = (key) => {
+        setOpen(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title="개인설정" />
             <div className="settings-container">
-                <h2 className="settings-title">개인설정</h2>
                 <ul className="settings-list">
-                    <li className="settings-item">
-                        <span>알림 설정</span>
-                        <button className="settings-button" onClick={() => navigate('/my/notification-settings')}>관리</button>
+                    {/* 알림설정 */}
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/notification-settings')}>
+                            <span>알림 설정</span>
+                        </div>
                     </li>
-                    <li className="settings-item-expanded">
-                        <div className="settings-item-title">
+                    {/* 테마 */}
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/theme-settings')}>
                             <span>테마</span>
                         </div>
-                        <div className="theme-options">
-                            <label className="theme-option">
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="system"
-                                    checked={theme === 'system'}
-                                    onChange={(e) => setThemeMode(e.target.value)}
-                                    className="theme-radio"
-                                />
-                                <span>시스템 설정</span>
-                            </label>
-                            <label className="theme-option">
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="light"
-                                    checked={theme === 'light'}
-                                    onChange={(e) => setThemeMode(e.target.value)}
-                                    className="theme-radio"
-                                />
-                                <span>라이트모드</span>
-                            </label>
-                            <label className="theme-option">
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="dark"
-                                    checked={theme === 'dark'}
-                                    onChange={(e) => setThemeMode(e.target.value)}
-                                    className="theme-radio"
-                                />
-                                <span>다크모드</span>
-                            </label>
-                        </div>
                     </li>
-                    <li className="settings-item">
-                        <span>언어</span>
-                        <button className="settings-button">한국어</button>
+                    {/* 언어 */}
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => setLanguage(language === '한국어' ? 'English' : '한국어')}>
+                            <span>언어</span>
+                        </div>
                     </li>
                 </ul>
                 <button

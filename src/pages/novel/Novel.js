@@ -514,7 +514,7 @@ const Novel = ({ user }) => {
 
     return (
         <Container>
-            <Header user={user} />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title="소설" />
             {/* <Title>Novel</Title> */}
 
             <CarouselContainer>

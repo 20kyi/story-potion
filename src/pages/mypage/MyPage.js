@@ -9,10 +9,11 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import EditIcon from '../../components/icons/EditIcon';
 import RecentActivityIcon from '../../components/icons/RecentActivityIcon';
 import NotificationIcon from '../../components/icons/NotificationIcon';
-import InviteFriendIcon from '../../components/icons/InviteFriendIcon';
-import ShopIcon from '../../components/icons/ShopIcon';
-import CustomerServiceIcon from '../../components/icons/CustomerServiceIcon';
 import NoticeIcon from '../../components/icons/NoticeIcon';
+import CustomerServiceIcon from '../../components/icons/CustomerServiceIcon';
+import InviteFriendIcon from '../../components/icons/InviteFriendIcon';
+import GearIcon from '../../components/icons/GearIcon';
+import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 
@@ -32,14 +33,17 @@ const MainContainer = styled.div`
 
 const ProfileContainer = styled.div`
   position: relative;
-  width: 90px;
-  height: 90px;
-  margin: 40px auto 16px;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 40px auto 16px auto;
 `;
 
 const ProfileImage = styled.img`
-  width: 90px;
-  height: 90px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   // background: #fdd2d2;
   // border: 2px solid #e46262;
@@ -47,15 +51,15 @@ const ProfileImage = styled.img`
 `;
 
 const ProfileImagePlaceholder = styled.div`
-  width: 90px;
-  height: 90px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: #fdd2d2;
   // border: 2px solid #e46262;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 64px;
   // color: #e46262;
   margin-top: 40px;
   margin-bottom: 16px;
@@ -66,16 +70,18 @@ const ProfileImagePlaceholder = styled.div`
 
 const EditIconWrapper = styled.div`
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 32px;
-  height: 32px;
-  background: rgba(210, 209, 209, 0.75);
+  bottom: 0px;
+  right: 0px;
+  width: 40px;
+  height: 40px;
+  background: rgba(210, 209, 209, 0.85);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  z-index: 2;
 `;
 
 const Nickname = styled.div`
@@ -122,9 +128,10 @@ const MenuIcon = styled.div`
 `;
 
 const MenuLabel = styled.span`
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 500;
   color: ${({ theme }) => theme.menuText};
+  margin-top: 2px;
 `;
 
 const Info = styled.div`
@@ -134,68 +141,135 @@ const Info = styled.div`
   text-align: center;
 `;
 
-const EditButton = styled.button`
-  background: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 10px;
+const EditProfileCard = styled.div`
+  background: ${({ theme }) => theme.card};
+  border-radius: 18px;
+  box-shadow: ${({ theme }) => theme.cardShadow};
+  padding: 32px 24px 24px 24px;
+  max-width: 380px;
+  margin: 40px auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const EditProfileImage = styled.div`
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #fdd2d2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  position: relative;
+  margin-bottom: 18px;
+  overflow: hidden;
+`;
+
+const EditProfileImgTag = styled.img`
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  &:hover {
-    background: #e0e0e0;
+  margin: 0;
+  padding: 0;
+`;
+
+const EditImageInput = styled.input`
+  display: none;
+`;
+
+const EditImageLabel = styled.label`
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background: rgba(220,220,220,0.85);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+`;
+
+const EditLabel = styled.label`
+  font-size: 15px;
+  font-weight: 500;
+  color: #888;
+  margin-bottom: 6px;
+  margin-top: 20px;
+  align-self: flex-start;
+`;
+
+const EditInputWrap = styled.div`
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const EditInput = styled.input`
+  width: 100%;
+  padding: 13px 15px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  &:focus {
+    border-color: #e46262;
+    box-shadow: 0 0 0 2px rgba(228,98,98,0.08);
   }
 `;
 
-const LogoutButton = styled.button`
+const EditButtonRow = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 18px;
+  gap: 15px;
+`;
+
+const EditSaveButton = styled.button`
+  flex: 1 1 0;
+  height: 52px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 11px;
+  border: none;
   background: #e46262;
   color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 32px;
-  font-size: 16px;
-  font-weight: 600;
   cursor: pointer;
-  margin-top: 20px;
-  transition: background 0.2s;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  &:hover {
+  transition: background 0.18s, color 0.18s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  letter-spacing: 0.01em;
+  margin-right: 8px;
+  &:hover, &:focus {
     background: #cb6565;
   }
 `;
 
-const FormContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-`;
-
-const Input = styled.input`
-  width: 80%;
-  max-width: 300px;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-`;
-
-const FileInput = styled.input`
-  margin-top: 10px;
-  margin-bottom: 20px;
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+const EditCancelTextButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0 8px;
+  height: 52px;
+  &:hover, &:focus {
+    color: #e46262;
+    text-decoration: underline;
+  }
 `;
 
 function MyPage({ user }) {
@@ -262,24 +336,32 @@ function MyPage({ user }) {
       <Header user={user} />
       <MainContainer className="my-page-container">
         {isEditing ? (
-          <FormContainer>
-            {newProfileImageUrl ? (
-              <ProfileImage src={newProfileImageUrl} alt="Profile" />
-            ) : (
-              <ProfileImagePlaceholder>😊</ProfileImagePlaceholder>
-            )}
-            <FileInput type="file" onChange={handleFileChange} />
-            <Input
-              type="text"
-              value={newDisplayName}
-              onChange={(e) => setNewDisplayName(e.target.value)}
-              placeholder="새로운 닉네임"
-            />
-            <ButtonContainer>
-              <LogoutButton onClick={handleProfileUpdate}>저장</LogoutButton>
-              <EditButton onClick={() => setIsEditing(false)}>취소</EditButton>
-            </ButtonContainer>
-          </FormContainer>
+          <EditProfileCard>
+            <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {newProfileImageUrl ? (
+                <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
+              ) : (
+                <span role="img" aria-label="profile" style={{ fontSize: '64px', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#fdd2d2', margin: 0, padding: 0 }}>😊</span>
+              )}
+              <EditImageInput id="profile-image-upload" type="file" accept="image/*" onChange={handleFileChange} />
+            </EditImageLabel>
+            <EditInputWrap>
+              <EditLabel htmlFor="edit-nickname">닉네임</EditLabel>
+              <EditInput
+                id="edit-nickname"
+                type="text"
+                value={newDisplayName}
+                onChange={(e) => setNewDisplayName(e.target.value)}
+                placeholder="닉네임을 입력하세요"
+                maxLength={20}
+                autoComplete="off"
+              />
+            </EditInputWrap>
+            <EditButtonRow>
+              <EditCancelTextButton onClick={() => setIsEditing(false)}>취소</EditCancelTextButton>
+              <EditSaveButton onClick={handleProfileUpdate}>저장</EditSaveButton>
+            </EditButtonRow>
+          </EditProfileCard>
         ) : (
           <>
             <ProfileContainer>
@@ -303,31 +385,31 @@ function MyPage({ user }) {
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
-                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <GearIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>개인설정</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/notice')}>
                 <MenuIcon as="div">
-                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>공지사항</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
-                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>고객지원</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/social')}>
                 <MenuIcon as="div">
-                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>소셜</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
-                  <NoticeIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <CrownIcon color={theme.theme === 'dark' ? '#fff' : '#181725'} />
                 </MenuIcon>
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>

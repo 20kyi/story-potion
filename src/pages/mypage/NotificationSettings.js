@@ -17,16 +17,20 @@ function NotificationSettings({ user }) {
     const [loading, setLoading] = useState(true);
     const [pushPermission, setPushPermission] = useState('default');
     const [isPushSupported, setIsPushSupported] = useState(false);
+    const [eventEnabled, setEventEnabled] = useState(false);
+    const [marketingEnabled, setMarketingEnabled] = useState(false);
 
     // 사용자의 알림 설정 불러오기
     useEffect(() => {
         const loadSettings = async () => {
             if (!user) return;
-            
+
             try {
                 const localSettings = await storageManager.getItem(`notificationSettings_${user.uid}`);
                 if (localSettings) {
                     setSettings(localSettings);
+                    setEventEnabled(!!localSettings.eventEnabled);
+                    setMarketingEnabled(!!localSettings.marketingEnabled);
                 }
             } catch (error) {
                 console.error('알림 설정 불러오기 실패:', error);
@@ -43,7 +47,7 @@ function NotificationSettings({ user }) {
         const checkPushSupport = () => {
             const supported = pushNotificationManager.isPushSupported();
             setIsPushSupported(supported);
-            
+
             if (supported) {
                 const permission = pushNotificationManager.getPermissionStatus();
                 setPushPermission(permission);
@@ -71,7 +75,7 @@ function NotificationSettings({ user }) {
             alert('사용자 정보를 찾을 수 없습니다.');
             return;
         }
-        
+
         try {
             const success = await storageManager.setItem(`notificationSettings_${user.uid}`, newSettings);
             if (success) {
@@ -88,20 +92,20 @@ function NotificationSettings({ user }) {
 
     const handleToggle = async () => {
         const newSettings = { ...settings, enabled: !settings.enabled };
-        
+
         // 알림을 켤 때 푸시 권한 확인
         if (newSettings.enabled && pushPermission !== 'granted') {
             const shouldRequest = window.confirm(
                 '푸시 알림을 받으려면 브라우저 알림 권한이 필요합니다. 권한을 요청하시겠습니까?'
             );
-            
+
             if (shouldRequest) {
                 await requestPushPermission();
             } else {
                 return; // 권한 요청을 거부하면 알림을 켜지 않음
             }
         }
-        
+
         saveSettings(newSettings);
     };
 
@@ -113,6 +117,33 @@ function NotificationSettings({ user }) {
     const handleMessageChange = (e) => {
         const newSettings = { ...settings, message: e.target.value };
         saveSettings(newSettings);
+    };
+
+    const handleEventToggle = () => setEventEnabled((prev) => !prev);
+    const handleMarketingToggle = () => setMarketingEnabled((prev) => !prev);
+
+    // 저장 버튼 핸들러 추가
+    const handleSaveAll = async () => {
+        if (!user) {
+            alert('사용자 정보를 찾을 수 없습니다.');
+            return;
+        }
+        const newSettings = {
+            ...settings,
+            eventEnabled,
+            marketingEnabled
+        };
+        try {
+            const success = await storageManager.setItem(`notificationSettings_${user.uid}`, newSettings);
+            if (success) {
+                setSettings(newSettings);
+                alert('저장되었습니다.');
+            } else {
+                alert('저장에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('저장 중 오류가 발생했습니다.');
+        }
     };
 
     if (loading) {
@@ -129,47 +160,12 @@ function NotificationSettings({ user }) {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title="알림 설정" />
             <div className="notification-settings-container">
-                <h2 className="notification-settings-title">알림 설정</h2>
-                
-                {/* 푸시 알림 권한 상태 */}
-                {isPushSupported && (
-                    <div className="notification-permission-status">
-                        <div className="permission-item">
-                            <span className="permission-label">브라우저 알림 권한</span>
-                            <span className={`permission-status ${pushPermission}`}>
-                                {pushPermission === 'granted' ? '허용됨' : 
-                                 pushPermission === 'denied' ? '거부됨' : '요청 필요'}
-                            </span>
-                        </div>
-                        {pushPermission !== 'granted' && (
-                            <button 
-                                onClick={requestPushPermission}
-                                className="permission-request-btn"
-                            >
-                                알림 권한 요청
-                            </button>
-                        )}
-                        {pushPermission === 'granted' && (
-                            <button 
-                                onClick={() => pushNotificationManager.showLocalNotification(
-                                    'Story Potion',
-                                    '테스트 알림입니다! 🎉'
-                                )}
-                                className="permission-request-btn"
-                                style={{ marginTop: '8px' }}
-                            >
-                                테스트 알림 보내기
-                            </button>
-                        )}
-                    </div>
-                )}
-                
-                <div className="notification-section">
-                    <div className="notification-item">
+                <div className="notification-card notification-section">
+                    <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">일기 작성 리마인더</span>
+                            <span className="notification-label" style={{ fontSize: 20 }}>일기 작성 리마인더</span>
                             <span className="notification-description">
                                 매일 설정된 시간에 일기 작성을 알려드립니다
                             </span>
@@ -183,42 +179,63 @@ function NotificationSettings({ user }) {
                             <span className="toggle-slider"></span>
                         </label>
                     </div>
-                </div>
-
-                {settings.enabled && (
-                    <div className="notification-details">
-                        <div className="notification-item">
-                            <span className="notification-label">알림 시간</span>
+                    {settings.enabled && (
+                        <div className="notification-item notification-row">
+                            <span className="notification-label" style={{ fontSize: 20 }}>알림 시간</span>
                             <input
                                 type="time"
                                 value={settings.time}
                                 onChange={handleTimeChange}
-                                className="time-input"
+                                className="time-input styled-input"
                             />
                         </div>
-                        
-                        <div className="notification-item">
-                            <span className="notification-label">알림 메시지</span>
+                    )}
+                    <div className="notification-item notification-toggle-row">
+                        <div className="notification-item-content">
+                            <span className="notification-label" style={{ fontSize: 20 }}>이벤트/공지 알림</span>
+                            <span className="notification-description">
+                                중요 공지, 이벤트, 업데이트 소식을 받아보세요
+                            </span>
+                        </div>
+                        <label className="toggle-switch">
                             <input
-                                type="text"
-                                value={settings.message}
-                                onChange={handleMessageChange}
-                                placeholder="알림 메시지를 입력하세요"
-                                className="message-input"
-                                maxLength={50}
+                                type="checkbox"
+                                checked={eventEnabled}
+                                onChange={handleEventToggle}
                             />
-                        </div>
+                            <span className="toggle-slider"></span>
+                        </label>
                     </div>
-                )}
+                    <div className="notification-item notification-toggle-row">
+                        <div className="notification-item-content">
+                            <span className="notification-label" style={{ fontSize: 20 }}>마케팅/프로모션 알림</span>
+                            <span className="notification-description">
+                                광고성 정보, 프로모션, 할인 소식을 받아보세요
+                            </span>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={marketingEnabled}
+                                onChange={handleMarketingToggle}
+                            />
+                            <span className="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
 
-                <div className="notification-info">
+                <div className="notification-card notification-info">
                     <h3>알림 정보</h3>
                     <ul>
-                        <li>• 매일 설정된 시간에 알림이 표시됩니다</li>
-                        <li>• 이미 일기를 작성한 날에는 알림이 표시되지 않습니다</li>
-                        <li>• 알림을 끄면 더 이상 알림을 받지 않습니다</li>
-                        <li>• 브라우저 알림 권한이 필요합니다</li>
+                        <li>매일 설정된 시간에 알림이 표시됩니다</li>
+                        <li>이미 일기를 작성한 날에는 알림이 표시되지 않습니다</li>
+                        <li>알림을 끄면 더 이상 알림을 받지 않습니다</li>
+                        <li>브라우저 알림 권한이 필요합니다</li>
                     </ul>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+                    <button className="styled-btn" style={{ width: '100%', fontSize: 18, fontWeight: 600, padding: '14px 0' }} onClick={handleSaveAll}>저장</button>
                 </div>
             </div>
             <Navigation />

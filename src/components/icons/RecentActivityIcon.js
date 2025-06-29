@@ -2,11 +2,9 @@
 
 import React from 'react';
 
-const RecentActivityIcon = ({ width = '20', height = '22', color = '#181725' }) => (
-    <svg width={width} height={height} viewBox="0 0 20 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 1L1 5V19C1 19.5304 1.21071 20.0391 1.58579 20.4142C1.96086 20.7893 2.46957 21 3 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V5L16 1H4Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M1 5H19" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M14 9C14 10.0609 13.5786 11.0783 12.8284 11.8284C12.0783 12.5786 11.0609 13 10 13C8.93913 13 7.92172 12.5786 7.17157 11.8284C6.42143 11.0783 6 10.0609 6 9" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+const RecentActivityIcon = ({ width = 24, height = 24, color = '#181725' }) => (
+    <svg width={width} height={height} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" clipRule="evenodd" d="M0.5 14H14V13H1V0H0V13.5L0.5 14ZM2 11.5V3.5L2.5 3H4.5L5 3.5V11.5L4.5 12H2.5L2 11.5ZM4 11V4H3V11H4ZM10 1.5V11.5L10.5 12H12.5L13 11.5V1.5L12.5 1H10.5L10 1.5ZM12 2V11H11V2H12ZM6 11.5V5.5L6.5 5H8.5L9 5.5V11.5L8.5 12H6.5L6 11.5ZM8 11V6H7V11H8Z" fill={color} />
     </svg>
 );
 

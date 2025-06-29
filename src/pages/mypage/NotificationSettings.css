@@ -8,11 +8,11 @@
 }
 
 .notification-settings-title {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 30px;
-    color: var(--text-primary);
-    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    margin-top: 0;
+    text-align: left;
 }
 
 /* 푸시 알림 권한 상태 */
@@ -26,36 +26,36 @@
 
 .permission-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .permission-label {
+    font-size: 1rem;
     font-weight: 500;
-    color: var(--text-primary);
 }
 
 .permission-status {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 0.98rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 8px;
 }
 
 .permission-status.granted {
-    background: #4CAF50;
-    color: white;
+    background: #e6f7e6;
+    color: #2e7d32;
 }
 
 .permission-status.denied {
-    background: #f44336;
-    color: white;
+    background: #ffeaea;
+    color: #d32f2f;
 }
 
 .permission-status.default {
-    background: #ff9800;
-    color: white;
+    background: #f5f5f5;
+    color: #888;
 }
 
 .permission-request-btn {
@@ -96,29 +96,26 @@
 }
 
 .notification-item-content {
-    flex: 1;
-    margin-right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .notification-label {
-    display: block;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
+    font-size: 1.05rem;
 }
 
 .notification-description {
-    display: block;
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.4;
+    font-size: 0.92rem;
+    color: #888;
 }
 
 /* 토글 스위치 */
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 50px;
+    width: 44px;
     height: 24px;
 }
 
@@ -135,9 +132,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
-    transition: 0.3s;
+    background: #ccc;
     border-radius: 24px;
+    transition: .3s;
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background: #6c63ff;
 }
 
 .toggle-slider:before {
@@ -147,17 +148,13 @@
     width: 18px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
+    background: #fff;
     border-radius: 50%;
+    transition: .3s;
 }
 
-input:checked + .toggle-slider {
-    background-color: var(--primary-color);
-}
-
-input:checked + .toggle-slider:before {
-    transform: translateX(26px);
+.toggle-switch input:checked+.toggle-slider:before {
+    transform: translateX(20px);
 }
 
 /* 알림 상세 설정 */
@@ -194,31 +191,28 @@ input:checked + .toggle-slider:before {
 
 /* 알림 정보 */
 .notification-info {
-    background: var(--bg-secondary);
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid var(--border-color);
+    font-size: 0.97rem;
+    color: #666;
+    background: #f8f8fa;
+    border: 1px solid #f0f0f0;
 }
 
 .notification-info h3 {
-    font-size: 18px;
+    font-size: 1.05rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 16px;
+    margin-bottom: 8px;
+    margin-top: 0;
 }
 
 .notification-info ul {
-    list-style: none;
-    padding: 0;
+    padding-left: 18px;
     margin: 0;
 }
 
 .notification-info li {
-    color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 8px;
-    padding-left: 0;
+    font-size: 0.93rem;
+    color: #888;
+    margin-bottom: 2px;
 }
 
 /* 다크모드 스타일 */
@@ -242,23 +236,42 @@ body.dark .message-input {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 768px) {
-    .notification-settings-container {
-        padding: 16px;
+@media (max-width: 600px) {
+    .notification-card {
+        padding: 14px 8px;
     }
-    
-    .notification-item {
-        flex-direction: column;
-        align-items: flex-start;
+
+    .notification-settings-title {
+        font-size: 1.1rem;
     }
-    
-    .notification-item-content {
-        margin-right: 0;
-        margin-bottom: 12px;
+}
+
+/* 한 줄 정렬용 */
+.notification-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notification-row .notification-label {
+    min-width: 90px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+.notification-row .styled-input {
+    flex: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .notification-row .notification-label {
+        min-width: 70px;
+        font-size: 0.98rem;
     }
-    
-    .time-input,
-    .message-input {
-        width: 100%;
+
+    .notification-row {
+        gap: 8px;
     }
-} 
+}

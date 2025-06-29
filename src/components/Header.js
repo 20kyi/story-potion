@@ -64,7 +64,17 @@ const LogoText = styled.span`
   user-select: none;
 `;
 
-const Header = ({ user, rightActions }) => {
+const CenterSection = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+`;
+
+const Header = ({ user, rightActions, title }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
@@ -100,6 +110,11 @@ const Header = ({ user, rightActions }) => {
           <LogoText>STORYPOTION</LogoText>
         )}
       </LeftSection>
+      {!isHome && title && (
+        <CenterSection>
+          <span style={{ fontSize: 20, fontWeight: 700 }}>{title}</span>
+        </CenterSection>
+      )}
       {rightActions && <RightSection>{rightActions}</RightSection>}
     </HeaderContainer>
   );
