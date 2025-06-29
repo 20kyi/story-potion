@@ -13,12 +13,6 @@ const NavBar = styled.nav`
   display: flex;
   justify-content: space-around;
   z-index: 100;
-
-  /* 다크모드 대응 */
-  body.dark & {
-    background: #232323;
-    box-shadow: 0 -2px 16px rgba(0,0,0,0.18);
-  }
 `;
 
 const NavButton = styled.button`
@@ -37,11 +31,6 @@ const NavText = styled.span`
   font-size: 12px;
   color: ${({ active, theme }) => active ? theme.primary : '#bdbdbd'};
   font-weight: ${({ active }) => active ? 700 : 400};
-
-  /* 다크모드 대응 */
-  body.dark & {
-    color: ${props => props.active ? '#ffb3b3' : '#888'};
-  }
 `;
 
 function Navigation() {

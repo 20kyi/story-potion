@@ -94,9 +94,9 @@ function App() {
 
 // ThemeContext의 theme 값을 받아서 styled-components ThemeProvider로 전달하는 래퍼 컴포넌트
 function ThemeConsumerWrapper({ children }) {
-    const { theme } = useTheme();
+    const { actualTheme } = useTheme();
     return (
-        <StyledThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+        <StyledThemeProvider theme={actualTheme === 'dark' ? darkTheme : lightTheme}>
             {children}
         </StyledThemeProvider>
     );
