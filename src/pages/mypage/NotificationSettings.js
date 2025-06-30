@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
+import { auth, db, getFcmToken } from '../../firebase';
 import storageManager from '../../utils/storage';
 import pushNotificationManager from '../../utils/pushNotification';
 import './NotificationSettings.css';
+import { doc, setDoc } from 'firebase/firestore';
 
 function NotificationSettings({ user }) {
     const navigate = useNavigate();
@@ -57,15 +58,50 @@ function NotificationSettings({ user }) {
         checkPushSupport();
     }, []);
 
+    // FCM 토큰 Firestore 저장 함수
+    const saveFcmTokenToFirestore = async (uid, token) => {
+        try {
+            await setDoc(doc(db, "users", uid), { fcmToken: token }, { merge: true });
+        } catch (error) {
+            console.error('FCM 토큰 Firestore 저장 실패:', error);
+        }
+    };
+
     // 푸시 알림 권한 요청
     const requestPushPermission = async () => {
         const granted = await pushNotificationManager.requestPermission();
         if (granted) {
             setPushPermission('granted');
             await pushNotificationManager.subscribeToPush();
+            // FCM 토큰 발급 및 Firestore 저장
+            if (user) {
+                try {
+                    const token = await getFcmToken();
+                    if (token) {
+                        await saveFcmTokenToFirestore(user.uid, token);
+                        console.log('FCM 토큰 Firestore 저장 완료:', token);
+                    }
+                } catch (error) {
+                    console.error('FCM 토큰 Firestore 저장 중 오류:', error);
+                }
+            }
             alert('푸시 알림 권한이 허용되었습니다!');
         } else {
             alert('푸시 알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.');
+        }
+    };
+
+    // Firestore에 알림 설정 저장
+    const saveSettingsToFirestore = async (uid, newSettings) => {
+        try {
+            await setDoc(doc(db, "users", uid), {
+                reminderEnabled: newSettings.enabled,
+                reminderTime: newSettings.time,
+                eventEnabled: newSettings.eventEnabled,
+                marketingEnabled: newSettings.marketingEnabled
+            }, { merge: true });
+        } catch (error) {
+            console.error('Firestore 저장 실패:', error);
         }
     };
 
@@ -81,6 +117,8 @@ function NotificationSettings({ user }) {
             if (success) {
                 setSettings(newSettings);
                 console.log('알림 설정이 성공적으로 저장되었습니다:', newSettings);
+                // Firestore에도 저장
+                await saveSettingsToFirestore(user.uid, newSettings);
             } else {
                 alert('알림 설정 저장에 실패했습니다.');
             }
@@ -138,6 +176,8 @@ function NotificationSettings({ user }) {
             if (success) {
                 setSettings(newSettings);
                 alert('저장되었습니다.');
+                // Firestore에도 저장
+                await saveSettingsToFirestore(user.uid, newSettings);
             } else {
                 alert('저장에 실패했습니다.');
             }
