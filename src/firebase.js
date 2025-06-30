@@ -9,12 +9,12 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: process.env.REACT_APP_API_KEY,
-    authDomain: process.env.REACT_APP_AUTH_DOMAIN,
-    projectId: process.env.REACT_APP_PROJECT_ID,
-    storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
-    messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
-    appId: process.env.REACT_APP_APP_ID
+    apiKey: "AIzaSyCaK3OBCexXBSLi4NqFT1Fv3MzzTBEhG-8",
+    authDomain: "story-potion.firebaseapp.com",
+    projectId: "story-potion",
+    storageBucket: "story-potion.firebasestorage.app",
+    messagingSenderId: "607033226027",
+    appId: "1:607033226027:web:f0c9d3541ae35e04370b6e"
 };
 
 // Initialize Firebase
