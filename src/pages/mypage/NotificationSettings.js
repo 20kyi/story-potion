@@ -6,7 +6,7 @@ import { auth, db, getFcmToken } from '../../firebase';
 import storageManager from '../../utils/storage';
 import pushNotificationManager from '../../utils/pushNotification';
 import './NotificationSettings.css';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 function NotificationSettings({ user }) {
     const navigate = useNavigate();
@@ -25,21 +25,26 @@ function NotificationSettings({ user }) {
     useEffect(() => {
         const loadSettings = async () => {
             if (!user) return;
-
             try {
-                const localSettings = await storageManager.getItem(`notificationSettings_${user.uid}`);
-                if (localSettings) {
-                    setSettings(localSettings);
-                    setEventEnabled(!!localSettings.eventEnabled);
-                    setMarketingEnabled(!!localSettings.marketingEnabled);
+                // Firestore에서 알림 설정 불러오기
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setSettings({
+                        enabled: !!data.reminderEnabled,
+                        time: data.reminderTime || '21:00',
+                        message: data.message || '오늘의 일기를 작성해보세요! 📝'
+                    });
+                    setEventEnabled(!!data.eventEnabled);
+                    setMarketingEnabled(!!data.marketingEnabled);
                 }
             } catch (error) {
-                console.error('알림 설정 불러오기 실패:', error);
+                console.error('알림 설정 Firestore 불러오기 실패:', error);
             } finally {
                 setLoading(false);
             }
         };
-
         loadSettings();
     }, [user]);
 
