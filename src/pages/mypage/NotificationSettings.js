@@ -162,6 +162,7 @@ function NotificationSettings({ user }) {
 
     // 저장 버튼 핸들러 추가
     const handleSaveAll = async () => {
+        alert('handleSaveAll 실행됨');
         console.log('handleSaveAll 실행됨');
         if (!user) {
             console.log('user 없음');
