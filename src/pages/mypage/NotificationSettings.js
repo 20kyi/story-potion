@@ -162,7 +162,9 @@ function NotificationSettings({ user }) {
 
     // 저장 버튼 핸들러 추가
     const handleSaveAll = async () => {
+        console.log('handleSaveAll 실행됨');
         if (!user) {
+            console.log('user 없음');
             alert('사용자 정보를 찾을 수 없습니다.');
             return;
         }
@@ -176,13 +178,28 @@ function NotificationSettings({ user }) {
             if (success) {
                 setSettings(newSettings);
                 alert('저장되었습니다.');
-                // Firestore에도 저장
                 await saveSettingsToFirestore(user.uid, newSettings);
+
+                // 디버깅 로그 추가
+                console.log('알림 상태:', newSettings.enabled, '권한:', pushPermission);
+
+                if (newSettings.enabled && pushPermission === 'granted') {
+                    console.log('FCM 토큰 발급 시도');
+                    const token = await getFcmToken();
+                    console.log('발급된 FCM 토큰:', token);
+                    if (token) {
+                        await saveFcmTokenToFirestore(user.uid, token);
+                        console.log('FCM 토큰 Firestore 저장 완료:', token);
+                    } else {
+                        console.error('FCM 토큰 발급 실패');
+                    }
+                }
             } else {
                 alert('저장에 실패했습니다.');
             }
         } catch (error) {
             alert('저장 중 오류가 발생했습니다.');
+            console.error(error);
         }
     };
 
