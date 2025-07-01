@@ -15,6 +15,7 @@ const HeaderContainer = styled.header`
   box-shadow: 0 2px 12px ${({ theme }) => theme.cardShadow};
   background-color: ${({ theme }) => theme.card};
   padding: 16px 20px 12px 20px;
+  padding-top: env(safe-area-inset-top, 24px);
 `;
 
 const LeftSection = styled.div`

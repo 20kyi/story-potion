@@ -462,6 +462,7 @@ function WriteDiary({ user }) {
             overflowY: 'scroll',
             minHeight: 0,
             width: '100%',
+            paddingTop: '8px',
         },
         // header: {
         //     display: 'flex',
@@ -600,7 +601,7 @@ function WriteDiary({ user }) {
     };
 
     return (
-        <div ref={containerRef} style={{ ...styles.container, paddingBottom: keyboardHeight }}>
+        <div ref={containerRef} style={styles.container}>
             <Header
                 user={user}
                 rightActions={
@@ -613,7 +614,7 @@ function WriteDiary({ user }) {
                     </button>
                 }
             />
-            <main style={styles.mainContent}>
+            <main style={{ ...styles.mainContent, paddingBottom: keyboardHeight }}>
                 {/* <TopRow> */}
                 <DiaryDate>{formatDate(diary.date)}</DiaryDate>
                 {/* </TopRow> */}

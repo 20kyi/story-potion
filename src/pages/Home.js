@@ -18,7 +18,7 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 40px;
+  padding-top: 10px;
   padding-bottom: 100px;
   margin: 40px auto;
   max-width: 600px;
