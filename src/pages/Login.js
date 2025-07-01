@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
@@ -9,6 +9,8 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { Browser } from '@capacitor/browser';
+import { Keyboard } from '@capacitor/keyboard';
 
 const Container = styled.div`
   display: flex;
@@ -253,6 +255,23 @@ function Login() {
     password: ''
   });
   const [error, setError] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const mainRef = useRef();
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (!window.Capacitor) return;
+    const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+      setKeyboardHeight(info.keyboardHeight);
+    });
+    const onHide = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -272,10 +291,12 @@ function Login() {
 
   const handleSocialLogin = async (provider) => {
     if (provider === 'Google') {
-      const googleProvider = new GoogleAuthProvider();
+      const clientId = '607033226027-8f2q1anu11vdm5usbdcv418um9jsvk1e.apps.googleusercontent.com';
+      const redirectUri = 'storypotion://auth';
+      const scope = 'profile email openid';
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
       try {
-        await signInWithPopup(auth, googleProvider);
-        navigate('/');
+        await Browser.open({ url: oauthUrl });
       } catch (error) {
         setError('Google 로그인에 실패했습니다. 다시 시도해주세요.');
       }
@@ -287,58 +308,72 @@ function Login() {
   };
 
   return (
-    <Container>
-      <ContentWrapper>
-        <LogoSection>
-          <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
-        </LogoSection>
-        <FormSection>
-          {/* <Title>로그인</Title> */}
-          <Form onSubmit={handleSubmit}>
-            <Input
-              type="email"
-              name="email"
-              placeholder="이메일"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <PasswordContainer>
-              <PasswordInput
-                type={passwordShown ? "text" : "password"}
-                name="password"
-                placeholder="비밀번호"
-                value={formData.password}
+    <div ref={mainRef} style={{ paddingBottom: keyboardHeight }}>
+      <Container>
+        <ContentWrapper>
+          <LogoSection>
+            <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
+          </LogoSection>
+          <FormSection>
+            {/* <Title>로그인</Title> */}
+            <Form onSubmit={handleSubmit}>
+              <Input
+                type="email"
+                name="email"
+                placeholder="이메일"
+                value={formData.email}
                 onChange={handleChange}
+                ref={inputRef}
+                onFocus={e => {
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
               />
-              <EyeIcon onClick={() => setPasswordShown(!passwordShown)}>
-                {passwordShown ? <FaEyeSlash /> : <FaEye />}
-              </EyeIcon>
-            </PasswordContainer>
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            <Button type="submit">로그인</Button>
-          </Form>
-          <Divider>또는</Divider>
-          <SocialLoginContainer>
-            <SocialButton color="#4285F4" onClick={() => handleSocialLogin('Google')}>
-              <FaGoogle />
-            </SocialButton>
-            <SocialButton color="#1877F2" onClick={() => handleSocialLogin('Facebook')}>
-              <FaFacebook />
-            </SocialButton>
-            <SocialButton color="#FEE500" onClick={() => handleSocialLogin('Kakao')}>
-              <RiKakaoTalkFill style={{ color: '#3c1e1e' }} />
-            </SocialButton>
-            <SocialButton onClick={() => handleSocialLogin('Naver')}>
-              <NaverIcon>N</NaverIcon>
-            </SocialButton>
-          </SocialLoginContainer>
-          <SignupLink>
-            계정이 없으신가요?
-            <Link to="/signup">회원가입</Link>
-          </SignupLink>
-        </FormSection>
-      </ContentWrapper>
-    </Container>
+              <PasswordContainer>
+                <PasswordInput
+                  type={passwordShown ? "text" : "password"}
+                  name="password"
+                  placeholder="비밀번호"
+                  value={formData.password}
+                  onChange={handleChange}
+                  ref={inputRef}
+                  onFocus={e => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                  }}
+                />
+                <EyeIcon onClick={() => setPasswordShown(!passwordShown)}>
+                  {passwordShown ? <FaEyeSlash /> : <FaEye />}
+                </EyeIcon>
+              </PasswordContainer>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              <Button type="submit">로그인</Button>
+            </Form>
+            <Divider>또는</Divider>
+            <SocialLoginContainer>
+              <SocialButton color="#4285F4" onClick={() => handleSocialLogin('Google')}>
+                <FaGoogle />
+              </SocialButton>
+              <SocialButton color="#1877F2" onClick={() => handleSocialLogin('Facebook')}>
+                <FaFacebook />
+              </SocialButton>
+              <SocialButton color="#FEE500" onClick={() => handleSocialLogin('Kakao')}>
+                <RiKakaoTalkFill style={{ color: '#3c1e1e' }} />
+              </SocialButton>
+              <SocialButton onClick={() => handleSocialLogin('Naver')}>
+                <NaverIcon>N</NaverIcon>
+              </SocialButton>
+            </SocialLoginContainer>
+            <SignupLink>
+              계정이 없으신가요?
+              <Link to="/signup">회원가입</Link>
+            </SignupLink>
+          </FormSection>
+        </ContentWrapper>
+      </Container>
+    </div>
   );
 }
 

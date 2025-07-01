@@ -11,6 +11,7 @@ import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/ToastProvider';
 import { usePrompt } from '../../hooks/usePrompt';
 import { useTheme } from 'styled-components';
+import { Keyboard } from '@capacitor/keyboard';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -199,10 +200,12 @@ function WriteDiary({ user }) {
     const [isWeatherSheetOpen, setIsWeatherSheetOpen] = useState(false);
     const toast = useToast();
     const prevLocation = useRef(location);
-    const textareaRef = useRef(null);
+    const textareaRef = useRef();
     const theme = useTheme();
     const isDark = theme.mode === 'dark';
     const labelColor = isDark ? '#fff' : '#222';
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const containerRef = useRef();
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -258,6 +261,20 @@ function WriteDiary({ user }) {
     useEffect(() => {
         setDiary(prev => ({ ...prev, date: formatDateToString(selectedDate) }));
     }, [selectedDate]);
+
+    useEffect(() => {
+        if (!window.Capacitor) return;
+        const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+            setKeyboardHeight(info.keyboardHeight);
+        });
+        const onHide = Keyboard.addListener('keyboardWillHide', () => {
+            setKeyboardHeight(0);
+        });
+        return () => {
+            onShow.remove();
+            onHide.remove();
+        };
+    }, []);
 
     const fetchDiaryForDate = async (date) => {
         const dateStr = formatDateToString(date);
@@ -430,7 +447,7 @@ function WriteDiary({ user }) {
         container: {
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100vh',
+            minHeight: '100svh',
             position: 'relative',
             maxWidth: '600px',
             margin: '40px auto',
@@ -442,7 +459,7 @@ function WriteDiary({ user }) {
             flex: 1,
             position: 'relative',
             paddingBottom: '100px',
-            overflowY: 'auto',
+            overflowY: 'scroll',
             minHeight: 0,
             width: '100%',
         },
@@ -583,7 +600,7 @@ function WriteDiary({ user }) {
     };
 
     return (
-        <div style={styles.container}>
+        <div ref={containerRef} style={{ ...styles.container, paddingBottom: keyboardHeight }}>
             <Header
                 user={user}
                 rightActions={
@@ -825,9 +842,8 @@ function WriteDiary({ user }) {
                     placeholder="일기 내용"
                     value={diary.content}
                     onChange={handleChange}
-                    onInput={e => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
+                    onFocus={e => {
+                        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }}
                     required
                 />

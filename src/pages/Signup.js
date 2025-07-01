@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { Keyboard } from '@capacitor/keyboard';
 
 const Container = styled.div`
   display: flex;
@@ -182,6 +183,23 @@ function Signup() {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const mainRef = useRef();
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (!window.Capacitor) return;
+    const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+      setKeyboardHeight(info.keyboardHeight);
+    });
+    const onHide = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -223,62 +241,88 @@ function Signup() {
   };
 
   return (
-    <Container>
-      <ContentWrapper>
-        <LogoSection>
-          <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
-        </LogoSection>
-        <FormSection>
-          {/* <Title>회원가입</Title> */}
-          <Form onSubmit={handleSubmit}>
-            <Input
-              type="text"
-              name="nickname"
-              placeholder="닉네임"
-              value={formData.nickname}
-              onChange={handleChange}
-            />
-            <Input
-              type="email"
-              name="email"
-              placeholder="이메일"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <PasswordContainer>
-              <PasswordInput
-                type={passwordShown ? "text" : "password"}
-                name="password"
-                placeholder="비밀번호"
-                value={formData.password}
+    <div ref={mainRef} style={{ paddingBottom: keyboardHeight }}>
+      <Container>
+        <ContentWrapper>
+          <LogoSection>
+            <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
+          </LogoSection>
+          <FormSection>
+            {/* <Title>회원가입</Title> */}
+            <Form onSubmit={handleSubmit}>
+              <Input
+                type="text"
+                name="nickname"
+                placeholder="닉네임"
+                value={formData.nickname}
                 onChange={handleChange}
+                ref={inputRef}
+                onFocus={e => {
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
               />
-              <EyeIcon onClick={() => setPasswordShown(!passwordShown)}>
-                {passwordShown ? <FaEyeSlash /> : <FaEye />}
-              </EyeIcon>
-            </PasswordContainer>
-            <PasswordContainer>
-              <PasswordInput
-                type={confirmPasswordShown ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="비밀번호 확인"
-                value={formData.confirmPassword}
+              <Input
+                type="email"
+                name="email"
+                placeholder="이메일"
+                value={formData.email}
                 onChange={handleChange}
+                ref={inputRef}
+                onFocus={e => {
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
               />
-              <EyeIcon onClick={() => setConfirmPasswordShown(!confirmPasswordShown)}>
-                {confirmPasswordShown ? <FaEyeSlash /> : <FaEye />}
-              </EyeIcon>
-            </PasswordContainer>
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            <Button type="submit">회원가입</Button>
-          </Form>
-          <LoginLink>
-            이미 계정이 있으신가요?
-            <Link to="/login">로그인</Link>
-          </LoginLink>
-        </FormSection>
-      </ContentWrapper>
-    </Container>
+              <PasswordContainer>
+                <PasswordInput
+                  type={passwordShown ? "text" : "password"}
+                  name="password"
+                  placeholder="비밀번호"
+                  value={formData.password}
+                  onChange={handleChange}
+                  ref={inputRef}
+                  onFocus={e => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                  }}
+                />
+                <EyeIcon onClick={() => setPasswordShown(!passwordShown)}>
+                  {passwordShown ? <FaEyeSlash /> : <FaEye />}
+                </EyeIcon>
+              </PasswordContainer>
+              <PasswordContainer>
+                <PasswordInput
+                  type={confirmPasswordShown ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="비밀번호 확인"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  ref={inputRef}
+                  onFocus={e => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                  }}
+                />
+                <EyeIcon onClick={() => setConfirmPasswordShown(!confirmPasswordShown)}>
+                  {confirmPasswordShown ? <FaEyeSlash /> : <FaEye />}
+                </EyeIcon>
+              </PasswordContainer>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              <Button type="submit">회원가입</Button>
+            </Form>
+            <LoginLink>
+              이미 계정이 있으신가요?
+              <Link to="/login">로그인</Link>
+            </LoginLink>
+          </FormSection>
+        </ContentWrapper>
+      </Container>
+    </div>
   );
 }
 
