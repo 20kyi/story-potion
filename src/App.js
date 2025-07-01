@@ -30,6 +30,9 @@ import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
 import ThemeSettings from './pages/mypage/ThemeSettings';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Keyboard } from '@capacitor/keyboard';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -86,9 +89,27 @@ function App() {
             setIsLoading(false);
         });
 
+        // 딥링크 복귀 시 access_token 파싱
+        CapacitorApp.addListener('appUrlOpen', (data) => {
+            const url = data.url;
+            if (url.startsWith('myapp://auth')) {
+                const params = new URLSearchParams(url.split('#')[1]);
+                const accessToken = params.get('access_token');
+                console.log('구글 access_token:', accessToken);
+                // accessToken을 이용해 추가 인증 처리 가능
+            }
+        });
+
         // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
+
+    if (window.Capacitor) {
+        StatusBar.setOverlaysWebView({ overlay: false });
+        StatusBar.setStyle({ style: Style.Light });
+        Keyboard.setScroll({ isDisabled: false });
+        Keyboard.setResizeMode({ mode: 'body' }); // 'native'에서 'body'로 변경
+    }
 
     return (
         <Router>
