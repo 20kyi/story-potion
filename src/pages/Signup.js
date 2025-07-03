@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 const Container = styled.div`
   display: flex;
@@ -191,16 +192,18 @@ function Signup() {
   const inputRef = useRef();
 
   useEffect(() => {
-    if (!window.Capacitor) return;
-    const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
-      setKeyboardHeight(info.keyboardHeight);
-    });
-    const onHide = Keyboard.addListener('keyboardWillHide', () => {
-      setKeyboardHeight(0);
-    });
+    let onShow, onHide;
+    if (Capacitor.getPlatform() !== 'web') {
+      onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(info.keyboardHeight);
+      });
+      onHide = Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardHeight(0);
+      });
+    }
     return () => {
-      onShow.remove();
-      onHide.remove();
+      if (onShow) onShow.remove();
+      if (onHide) onHide.remove();
     };
   }, []);
 

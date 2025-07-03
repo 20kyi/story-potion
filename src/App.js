@@ -33,6 +33,7 @@ import ThemeSettings from './pages/mypage/ThemeSettings';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -104,11 +105,11 @@ function App() {
         return () => unsubscribe();
     }, []);
 
-    if (window.Capacitor) {
+    if (Capacitor.getPlatform() !== 'web') {
         StatusBar.setOverlaysWebView({ overlay: false });
         StatusBar.setStyle({ style: Style.Light });
         Keyboard.setScroll({ isDisabled: false });
-        Keyboard.setResizeMode({ mode: 'body' }); // 'native'에서 'body'로 변경
+        Keyboard.setResizeMode({ mode: 'body' });
     }
 
     return (

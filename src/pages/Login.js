@@ -6,11 +6,13 @@ import { RiKakaoTalkFill } from 'react-icons/ri';
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithCredential
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Browser } from '@capacitor/browser';
 import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 const Container = styled.div`
   display: flex;
@@ -263,17 +265,37 @@ function Login() {
   const inputRef = useRef();
 
   useEffect(() => {
-    if (!window.Capacitor) return;
-    const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
-      setKeyboardHeight(info.keyboardHeight);
-    });
-    const onHide = Keyboard.addListener('keyboardWillHide', () => {
-      setKeyboardHeight(0);
-    });
+    let onShow, onHide;
+    if (Capacitor.getPlatform() !== 'web') {
+      onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(info.keyboardHeight);
+      });
+      onHide = Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardHeight(0);
+      });
+    }
     return () => {
-      onShow.remove();
-      onHide.remove();
+      if (onShow) onShow.remove();
+      if (onHide) onHide.remove();
     };
+  }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('id_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const idToken = params.get('id_token');
+      if (idToken) {
+        const credential = GoogleAuthProvider.credential(idToken);
+        signInWithCredential(auth, credential)
+          .then(() => {
+            navigate('/');
+          })
+          .catch((error) => {
+            setError('구글 인증에 실패했습니다. 다시 시도해주세요.');
+          });
+      }
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -294,15 +316,15 @@ function Login() {
 
   const handleSocialLogin = async (provider) => {
     if (provider === 'Google') {
-      const clientId = '607033226027-8f2q1anu11vdm5usbdcv418um9jsvk1e.apps.googleusercontent.com';
-      const redirectUri = 'storypotion://auth';
-      const scope = 'profile email openid';
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
+      const googleProvider = new GoogleAuthProvider();
       try {
-        await Browser.open({ url: oauthUrl });
-      } catch (error) {
+        await signInWithPopup(auth, googleProvider); // 팝업 로그인
+        navigate('/');
+      } catch (e) {
+        console.error(e);
         setError('Google 로그인에 실패했습니다. 다시 시도해주세요.');
       }
+      return;
     } else if (provider === 'Facebook') {
       alert(`${provider} 로그인은 현재 준비 중입니다.`);
     } else {

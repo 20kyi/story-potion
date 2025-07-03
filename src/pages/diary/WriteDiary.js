@@ -12,6 +12,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import { usePrompt } from '../../hooks/usePrompt';
 import { useTheme } from 'styled-components';
 import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -263,16 +264,18 @@ function WriteDiary({ user }) {
     }, [selectedDate]);
 
     useEffect(() => {
-        if (!window.Capacitor) return;
-        const onShow = Keyboard.addListener('keyboardWillShow', (info) => {
-            setKeyboardHeight(info.keyboardHeight);
-        });
-        const onHide = Keyboard.addListener('keyboardWillHide', () => {
-            setKeyboardHeight(0);
-        });
+        let onShow, onHide;
+        if (Capacitor.getPlatform() !== 'web') {
+            onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+                setKeyboardHeight(info.keyboardHeight);
+            });
+            onHide = Keyboard.addListener('keyboardWillHide', () => {
+                setKeyboardHeight(0);
+            });
+        }
         return () => {
-            onShow.remove();
-            onHide.remove();
+            if (onShow) onShow.remove();
+            if (onHide) onHide.remove();
         };
     }, []);
 
