@@ -140,41 +140,6 @@ const Button = styled.button`
   }
 `;
 
-const GenreSelection = styled.div`
-  margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-`;
-
-const GenreButton = styled.button`
-  background: ${({ selected, theme }) => (selected ? theme.primary : theme.card)};
-  color: ${({ selected, theme }) => (selected ? 'white' : theme.text)};
-  border: 1px solid ${({ selected, theme }) => (selected ? theme.primary : theme.border)};
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  &:hover {
-    background: ${({ theme }) => theme.secondary};
-    color: white;
-  }
-`;
-
-const AiButton = styled(Button)`
-  background: #6c81e7;
-  width: auto;
-  padding: 8px 15px;
-  font-size: 14px;
-  margin: 0 0 0 10px;
-
-  &:hover {
-    background: #5a6dbf;
-  }
-`;
-
 const loadingMessages = [
     "당신의 일기가 한 편의 소설로 변신하는 중이에요…",
     "마법사가 당신의 이야기를 엮고 있어요. 잠시만 기다려주세요!",
@@ -186,6 +151,15 @@ const loadingMessages = [
     "스토리 포션이 마법을 부리는 중입니다…"
 ];
 
+const potionImages = [
+    { genre: '로맨스', src: '/potion/romance.png', label: '로맨스' },
+    { genre: '역사', src: '/potion/historical.png', label: '역사' },
+    { genre: '추리', src: '/potion/mystery.png', label: '미스터리' },
+    { genre: '공포', src: '/potion/horror.png', label: '공포' },
+    { genre: '동화', src: '/potion/fairytale.png', label: '동화' },
+    { genre: '판타지', src: '/potion/fantasy.png', label: '판타지' },
+];
+
 function NovelCreate({ user }) {
     const location = useLocation();
     const navigate = useNavigate();
@@ -194,14 +168,13 @@ function NovelCreate({ user }) {
     const [weekDiaries, setWeekDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isNovelGenerated, setIsNovelGenerated] = useState(false);
-    const [selectedGenre, setSelectedGenre] = useState('');
+    const [selectedPotion, setSelectedPotion] = useState(0);
     const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
     const [isCoverLoading, setIsCoverLoading] = useState(false);
     const [title, setTitle] = useState(initialTitle || '나의 소설');
     const [isTitleLoading, setIsTitleLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
-
-    const genres = ['로맨스', '역사', '추리', '공포', '동화', '판타지'];
+    const selectedGenre = potionImages[selectedPotion].genre;
 
     useEffect(() => {
         if (!user || !dateRange) {
@@ -242,10 +215,6 @@ function NovelCreate({ user }) {
     const handleGenerateNovel = async () => {
         if (weekDiaries.length === 0) {
             alert("소설을 생성할 일기가 없습니다.");
-            return;
-        }
-        if (!selectedGenre) {
-            alert("소설의 장르를 선택해주세요.");
             return;
         }
 
@@ -304,6 +273,10 @@ function NovelCreate({ user }) {
         }
     };
 
+    const potionRadius = 110;
+    const potionCenterX = 160;
+    const potionCenterY = 140;
+
     if (isLoading) {
         return (
             <Container>
@@ -352,24 +325,52 @@ function NovelCreate({ user }) {
 
             {!isNovelGenerated && (
                 <>
-                    <SectionTitle>어떤 장르의 소설을 만들어볼까요?</SectionTitle>
-                    <GenreSelection>
-                        {genres.map(genre => (
-                            <GenreButton
-                                key={genre}
-                                selected={selectedGenre === genre}
-                                onClick={() => setSelectedGenre(genre)}
-                            >
-                                {genre}
-                            </GenreButton>
-                        ))}
-                    </GenreSelection>
+                    <SectionTitle>어떤 마법의 포션을 선택할까요?</SectionTitle>
+                    <div style={{ position: 'relative', width: 320, height: 280, margin: '0 auto 24px' }}>
+                        {potionImages.map((potion, idx) => {
+                            const angle = ((idx - selectedPotion) * (360 / potionImages.length)) * (Math.PI / 180);
+                            const x = potionCenterX + potionRadius * Math.sin(angle);
+                            const y = potionCenterY - potionRadius * Math.cos(angle);
+                            return (
+                                <img
+                                    key={potion.genre}
+                                    src={potion.src}
+                                    alt={potion.label}
+                                    style={{
+                                        position: 'absolute',
+                                        left: x - 40,
+                                        top: y - 40,
+                                        width: 80,
+                                        height: 80,
+                                        borderRadius: '50%',
+                                        boxShadow: idx === selectedPotion ? '0 0 16px #fff' : 'none',
+                                        opacity: idx === selectedPotion ? 1 : 0.7,
+                                        zIndex: idx === selectedPotion ? 2 : 1,
+                                        transform: idx === selectedPotion ? 'scale(1.15)' : 'scale(1)',
+                                        transition: 'all 0.3s',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={() => setSelectedPotion(idx)}
+                                />
+                            );
+                        })}
+                        <button
+                            style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: 32, background: 'none', border: 'none', cursor: 'pointer', zIndex: 3 }}
+                            onClick={() => setSelectedPotion((prev) => (prev - 1 + potionImages.length) % potionImages.length)}
+                        >{'<'}</button>
+                        <button
+                            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontSize: 32, background: 'none', border: 'none', cursor: 'pointer', zIndex: 3 }}
+                            onClick={() => setSelectedPotion((prev) => (prev + 1) % potionImages.length)}
+                        >{'>'}</button>
+                    </div>
+                    <div style={{ fontSize: 20, marginBottom: 16, color: '#e97ec7', fontWeight: 600 }}>{potionImages[selectedPotion].label} 포션</div>
+                    <div className="desc" style={{ marginBottom: 24, color: '#333', fontSize: 16 }}>당신의 하루를 {potionImages[selectedPotion].label}하게 풀어드립니다.</div>
                 </>
             )}
 
             {!isNovelGenerated ? (
-                <Button onClick={handleGenerateNovel} disabled={!selectedGenre || isLoading}>
-                    {isLoading ? '소설 생성 중...' : (selectedGenre ? `'${selectedGenre}' 장르로 소설 만들기` : '장르를 선택해주세요')}
+                <Button onClick={handleGenerateNovel} disabled={isLoading}>
+                    {isLoading ? '소설 생성 중...' : `${potionImages[selectedPotion].label} 포션 선택`}
                 </Button>
             ) : (
                 <>
