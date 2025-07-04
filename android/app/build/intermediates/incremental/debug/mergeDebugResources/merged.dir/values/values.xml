@@ -332,12 +332,20 @@
     <string name="call_notification_screening_text">Screening an incoming call</string>
     <string name="copy_toast_msg">Link copied to clipboard</string>
     <string name="custom_url_scheme">com.example.storypotion</string>
+    <string name="default_web_client_id" translatable="false">607033226027-v621p8ut2u43t12kjc98c485e14bcse7.apps.googleusercontent.com</string>
     <string name="fallback_menu_item_copy_link">Copy link</string>
     <string name="fallback_menu_item_open_in_browser">Open in browser</string>
     <string name="fallback_menu_item_share_link">Share link</string>
+    <string name="gcm_defaultSenderId" translatable="false">607033226027</string>
+    <string name="google_api_key" translatable="false">AIzaSyAZEfP_vqnflRVyBbMCpT0-V1HKCdYFEl4</string>
+    <string name="google_app_id" translatable="false">1:607033226027:android:0090a554ad21bf47370b6e</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAZEfP_vqnflRVyBbMCpT0-V1HKCdYFEl4</string>
+    <string name="google_storage_bucket" translatable="false">story-potion.firebasestorage.app</string>
     <string name="no_webview_text">This app requires a WebView to work</string>
     <string name="package_name">com.example.storypotion</string>
+    <string name="project_id" translatable="false">story-potion</string>
     <string name="search_menu_title">Search</string>
+    <string name="server_client_id">여기에_Android용_client_id_입력.apps.googleusercontent.com</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="title_activity_main">story-potion</string>
     <style name="AlertDialog.AppCompat" parent="Base.AlertDialog.AppCompat"/>

@@ -8,8 +8,6 @@
         android:minSdkVersion="23"
         android:targetSdkVersion="35" />
 
-    <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
 
     <queries>
@@ -35,6 +33,8 @@
         android:supportsRtl="true"
         android:testOnly="true"
         android:theme="@style/AppTheme" >
+
+        <!-- 기본 앱 Activity -->
         <activity
             android:name="com.example.storypotion.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
@@ -57,6 +57,22 @@
                 <data
                     android:host="auth"
                     android:scheme="storypotion" />
+            </intent-filter>
+        </activity>
+
+        <!-- ✅ Firebase 인증 리디렉션 핸들러 추가 -->
+        <activity
+            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="storypotion.firebaseapp.com"
+                    android:scheme="https" /> <!-- ← 여기에 네 프로젝트 ID 넣기 -->
             </intent-filter>
         </activity>
 

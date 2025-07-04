@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.storypotion.app-mergeDebugResources-26:/values-hy/values-hy.xml",
+            "outputFile": "com.example.storypotion.app-mergeDebugResources-27:/values-hy/values-hy.xml",
             "map": [
                 {
                     "source": "C:\\Users\\20kyi\\.gradle\\caches\\8.11.1\\transforms\\ce7a7439fda0c36e77102a7d38ff3226\\transformed\\browser-1.8.0\\res\\values-hy\\values-hy.xml",
