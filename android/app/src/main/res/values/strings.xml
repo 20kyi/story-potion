@@ -4,4 +4,5 @@
     <string name="title_activity_main">story-potion</string>
     <string name="package_name">com.example.storypotion</string>
     <string name="custom_url_scheme">com.example.storypotion</string>
+    <string name="server_client_id">여기에_Android용_client_id_입력.apps.googleusercontent.com</string>
 </resources>

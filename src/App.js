@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from './firebase';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Keyboard } from '@capacitor/keyboard';
+
+// 페이지 및 컴포넌트 임포트 생략 (기존 그대로)
 import Home from './pages/Home';
 import WriteDiary from './pages/diary/WriteDiary';
 import Diary from './pages/diary/Diary';
@@ -24,32 +30,23 @@ import Support from './pages/mypage/Support';
 import Social from './pages/mypage/Social';
 import Premium from './pages/mypage/Premium';
 import NoticeDetail from './pages/mypage/NoticeDetail';
+import ThemeSettings from './pages/mypage/ThemeSettings';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
-import ThemeSettings from './pages/mypage/ThemeSettings';
-import { App as CapacitorApp } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { Keyboard } from '@capacitor/keyboard';
-import { Capacitor } from '@capacitor/core';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
     const showNavigation = !['/login', '/signup'].includes(location.pathname);
     const { notification, hideNotification } = useNotification(user);
 
-    if (isLoading) {
-        return <div>로딩 중...</div>; // 간단한 로딩 인디케이터
-    }
+    if (isLoading) return <div>로딩 중...</div>;
 
     return (
         <div className="App">
-            <NotificationToast
-                notification={notification}
-                onClose={hideNotification}
-            />
+            <NotificationToast notification={notification} onClose={hideNotification} />
             <Routes>
                 <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
                 <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
@@ -78,7 +75,7 @@ const AppLayout = ({ user, isLoading }) => {
             {showNavigation && user && <Navigation user={user} />}
         </div>
     );
-}
+};
 
 function App() {
     const [user, setUser] = useState(null);
@@ -90,18 +87,25 @@ function App() {
             setIsLoading(false);
         });
 
-        // 딥링크 복귀 시 access_token 파싱
-        CapacitorApp.addListener('appUrlOpen', (data) => {
-            const url = data.url;
-            if (url.startsWith('myapp://auth')) {
-                const params = new URLSearchParams(url.split('#')[1]);
-                const accessToken = params.get('access_token');
-                console.log('구글 access_token:', accessToken);
-                // accessToken을 이용해 추가 인증 처리 가능
+        // 🔐 딥링크 리디렉션 처리
+        CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+            if (url.startsWith('storypotion://auth')) {
+                const hash = url.split('#')[1];
+                const params = new URLSearchParams(hash);
+                const idToken = params.get('id_token');
+
+                if (idToken) {
+                    try {
+                        const credential = GoogleAuthProvider.credential(idToken);
+                        await signInWithCredential(auth, credential);
+                        console.log('✅ Firebase 로그인 성공');
+                    } catch (error) {
+                        console.error('❌ Firebase 로그인 실패:', error);
+                    }
+                }
             }
         });
 
-        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
 
@@ -125,7 +129,6 @@ function App() {
     );
 }
 
-// ThemeContext의 theme 값을 받아서 styled-components ThemeProvider로 전달하는 래퍼 컴포넌트
 function ThemeConsumerWrapper({ children }) {
     const { actualTheme } = useTheme();
     return (
@@ -135,4 +138,4 @@ function ThemeConsumerWrapper({ children }) {
     );
 }
 
-export default App; 
+export default App;

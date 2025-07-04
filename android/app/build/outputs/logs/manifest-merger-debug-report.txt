@@ -1,20 +1,20 @@
 -- Merging decision tree log ---
 provider#androidx.core.content.FileProvider
-INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:34:9-42:20
+INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:48:9-56:20
 	android:grantUriPermissions
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:38:13-47
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:52:13-47
 	android:authorities
 		INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:36:13-64
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:50:13-64
 	android:exported
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:37:13-37
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:51:13-37
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:35:13-62
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:49:13-62
 manifest
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-48:12
-INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-48:12
-INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-48:12
-INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-48:12
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-61:12
+INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-61:12
+INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-61:12
+INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:1-61:12
 MERGED from [:capacitor-app] C:\story-potion\node_modules\@capacitor\app\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:2:1-7:12
 MERGED from [:capacitor-browser] C:\story-potion\node_modules\@capacitor\browser\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:2:1-21:12
 MERGED from [:capacitor-keyboard] C:\story-potion\node_modules\@capacitor\keyboard\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:2:1-7:12
@@ -56,6 +56,7 @@ MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\20kyi\.gradle\cache
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] C:\Users\20kyi\.gradle\caches\8.11.1\transforms\c7519e99783a8412739804580db52b13\transformed\annotation-experimental-1.4.1\AndroidManifest.xml:2:1-7:12
 MERGED from [org.apache.cordova:framework:10.1.1] C:\Users\20kyi\.gradle\caches\8.11.1\transforms\1684f9ee58db97dc3c9598ebbc48c3f5\transformed\framework-10.1.1\AndroidManifest.xml:20:1-27:12
 	package
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:3:5-38
 		INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml
 	android:versionName
 		INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml
@@ -64,8 +65,8 @@ MERGED from [org.apache.cordova:framework:10.1.1] C:\Users\20kyi\.gradle\caches\
 	xmlns:android
 		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:2:11-69
 application
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:4:5-43:19
-INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:4:5-43:19
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:5:5-58:19
+INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml:5:5-58:19
 MERGED from [:capacitor-browser] C:\story-potion\node_modules\@capacitor\browser\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:13:5-19:19
 MERGED from [:capacitor-browser] C:\story-potion\node_modules\@capacitor\browser\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:13:5-19:19
 MERGED from [:capacitor-cordova-android-plugins] C:\story-potion\android\capacitor-cordova-android-plugins\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:8:5-9:19
@@ -87,73 +88,81 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\20
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.15.0] C:\Users\20kyi\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:9:9-35
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:10:9-35
 	android:label
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:7:9-41
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:8:9-41
 	android:roundIcon
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:8:9-54
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:9:9-54
 	android:icon
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:6:9-43
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:7:9-43
 	android:allowBackup
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:5:9-35
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:6:9-35
 	android:theme
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:10:9-40
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:11:9-40
 activity#com.example.storypotion.MainActivity
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:12:9-32:20
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:14:9-34:20
 	android:label
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:15:13-56
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:17:13-56
 	android:launchMode
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:17:13-44
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:19:13-44
 	android:windowSoftInputMode
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:19:13-55
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:21:13-55
 	android:exported
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:18:13-36
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:20:13-36
 	android:configChanges
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:13:13-140
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:15:13-140
 	android:theme
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:16:13-62
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:18:13-62
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:14:13-41
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:16:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:21:13-24:29
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:23:13-26:29
 action#android.intent.action.MAIN
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:22:17-69
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:24:17-69
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:22:25-66
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:24:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:23:17-77
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:25:17-77
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:23:27-74
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:25:27-74
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:auth+data:scheme:storypotion
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:25:13-30:29
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:28:13-33:29
 action#android.intent.action.VIEW
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:26:17-69
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:29:17-69
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:26:25-66
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:29:25-66
 category#android.intent.category.DEFAULT
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:27:17-76
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:30:17-76
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:27:27-73
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:30:27-73
 category#android.intent.category.BROWSABLE
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:28:17-78
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:31:17-78
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:28:27-75
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:31:27-75
 data
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:29:17-74
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:32:17-74
 	android:host
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:29:52-71
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:32:52-71
 	android:scheme
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:29:23-51
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:32:23-51
+activity#com.google.firebase.auth.internal.GenericIdpActivity
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:37:9-46:20
+	android:exported
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:38:13-36
+	android:name
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:37:19-86
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:storypotion.firebaseapp.com+data:scheme:https
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:39:13-45:29
 uses-permission#android.permission.INTERNET
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:47:5-67
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:60:5-67
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:47:22-64
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:60:22-64
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:39:13-41:64
+ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:53:13-55:53
 	android:resource
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:41:17-51
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:55:17-51
 	android:name
-		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:40:17-67
+		ADDED from C:\story-potion\android\app\src\main\AndroidManifest.xml:54:17-67
 uses-sdk
 INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\story-potion\android\app\src\main\AndroidManifest.xml
