@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.storypotion.app-mergeDebugResources-27:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.example.storypotion.app-mergeDebugResources-30:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "C:\\Users\\20kyi\\.gradle\\caches\\8.11.1\\transforms\\ef234481c09f01fb9f0508a5da2b1126\\transformed\\core-splashscreen-1.0.1\\res\\values-watch-v20\\values-watch-v20.xml",
@@ -11,6 +11,30 @@
                         "startOffsets": "55,129,205,280,357,428,496,566",
                         "endColumns": "73,75,74,76,70,67,69,67",
                         "endOffsets": "124,200,275,352,423,491,561,629"
+                    },
+                    "to": {
+                        "startLines": "10,11,12,13,14,15,16,17",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "715,789,865,940,1017,1088,1156,1226",
+                        "endColumns": "73,75,74,76,70,67,69,67",
+                        "endOffsets": "784,860,935,1012,1083,1151,1221,1289"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\20kyi\\.gradle\\caches\\8.11.1\\transforms\\4267cb82173dcf309b902d83da0918bb\\transformed\\play-services-auth-20.7.0\\res\\values-watch-v20\\values.xml",
+                    "from": {
+                        "startLines": "4,5,6,7,8,9,10,11",
+                        "startColumns": "0,0,0,0,0,0,0,0",
+                        "startOffsets": "173,248,324,399,474,561,638,725",
+                        "endColumns": "74,75,74,74,86,76,86,75",
+                        "endOffsets": "247,323,398,473,560,637,724,800"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,134,214,293,372,463,544,635",
+                        "endColumns": "78,79,78,78,90,80,90,79",
+                        "endOffsets": "129,209,288,367,458,539,630,710"
                     }
                 },
                 {
@@ -24,12 +48,12 @@
                         "endOffsets": "209,380,553"
                     },
                     "to": {
-                        "startLines": "10,13,16",
+                        "startLines": "18,21,24",
                         "startColumns": "4,4,4",
-                        "startOffsets": "634,793,964",
-                        "endLines": "12,15,18",
+                        "startOffsets": "1294,1453,1624",
+                        "endLines": "20,23,26",
                         "endColumns": "12,12,12",
-                        "endOffsets": "788,959,1132"
+                        "endOffsets": "1448,1619,1792"
                     }
                 }
             ]

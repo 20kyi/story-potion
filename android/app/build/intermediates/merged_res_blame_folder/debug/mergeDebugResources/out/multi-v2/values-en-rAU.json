@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.storypotion.app-mergeDebugResources-27:/values-en-rAU/values-en-rAU.xml",
+            "outputFile": "com.example.storypotion.app-mergeDebugResources-30:/values-en-rAU/values-en-rAU.xml",
             "map": [
                 {
                     "source": "C:\\Users\\20kyi\\.gradle\\caches\\8.11.1\\transforms\\5f51ed623ec66baebfa6a053fe8a8b2a\\transformed\\core-1.15.0\\res\\values-en-rAU\\values-en-rAU.xml",
