@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -86,6 +86,7 @@ function NovelView({ user }) {
     const isDateKey = idParts.length === 3 && idParts.every(part => !isNaN(Number(part)));
     const [novel, setNovel] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!user || !id) {
@@ -142,6 +143,18 @@ function NovelView({ user }) {
         });
     };
 
+    const handleDelete = async () => {
+        if (!novel || !novel.id) return;
+        if (!window.confirm('정말 이 소설을 삭제하시겠습니까?')) return;
+        try {
+            await deleteDoc(doc(db, 'novels', novel.id));
+            alert('소설이 삭제되었습니다.');
+            navigate('/novel');
+        } catch (error) {
+            alert('삭제에 실패했습니다.');
+        }
+    };
+
     if (loading) {
         return (
             <Container>
@@ -170,6 +183,12 @@ function NovelView({ user }) {
                 <NovelInfo>
                     <NovelTitle>{novel.title}</NovelTitle>
                     <NovelDate>{formatDate(novel.createdAt)}</NovelDate>
+                    {/* 삭제 버튼 */}
+                    {novel.id && (
+                        <button onClick={handleDelete} style={{ marginTop: 16, background: '#e46262', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>
+                            소설 삭제하기
+                        </button>
+                    )}
                 </NovelInfo>
             </NovelHeader>
             <NovelContent>

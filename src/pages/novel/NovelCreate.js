@@ -166,7 +166,6 @@ const PotionSelectSection = styled.div`
   position: relative;
   width: 100%;
   min-height: 480px;
-  background: url('/bg_shelf_diary.png') center top/cover no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -270,6 +269,8 @@ function NovelCreate({ user }) {
         return `${date.getMonth() + 1}월 ${date.getDate()}일`;
     };
 
+    // 1) 소설 저장하기 버튼 및 handleSave 함수 제거
+    // 2) handleGenerateNovel 함수에서 소설 생성 후 자동 저장 및 이동
     const handleGenerateNovel = async () => {
         if (!selectedGenre) {
             toast.showToast('포션(장르)을 선택해주세요!', 'error');
@@ -294,7 +295,24 @@ function NovelCreate({ user }) {
             setTitle(result.data.title);
             setGeneratedImageUrl(result.data.imageUrl);
             setIsNovelGenerated(true);
-            toast.showToast('소설이 성공적으로 생성되었습니다!', 'success');
+            // 소설 자동 저장 및 이동
+            const newNovel = {
+                userId: user.uid,
+                title: result.data.title,
+                imageUrl: result.data.imageUrl,
+                week,
+                dateRange,
+                genre: selectedGenre,
+                content: result.data.content,
+                createdAt: new Date(),
+                year,
+                month,
+                weekNum,
+            };
+            const docRef = await addDoc(collection(db, 'novels'), newNovel);
+            toast.showToast('소설이 저장되었습니다!', 'success');
+            const dateKey = `${year}-${month}-${weekNum}`;
+            navigate(`/novel/${dateKey}`);
         } catch (error) {
             toast.showToast('소설 생성에 실패했습니다. 다시 시도해주세요.', 'error');
         } finally {
@@ -302,96 +320,151 @@ function NovelCreate({ user }) {
         }
     };
 
-    const handleSave = async () => {
-        if (!user) return;
-        if (!isNovelGenerated) {
-            alert('먼저 소설을 생성해주세요.');
-            return;
-        }
-
-        try {
-            const newNovel = {
-                userId: user.uid,
-                title,
-                imageUrl: generatedImageUrl,
-                week,
-                dateRange,
-                genre: selectedGenre,
-                content,
-                createdAt: new Date(),
-                year,
-                month,
-                weekNum,
-            };
-            await addDoc(collection(db, 'novels'), newNovel);
-            toast.showToast('소설이 저장되었습니다!', 'success');
-            const dateKey = `${year}-${month}-${weekNum}`;
-            navigate(`/novel/${dateKey}`);
-        } catch (error) {
-            toast.showToast('소설 저장에 실패했습니다.', 'error');
-        }
-    };
+    // 소설 결과 화면에서 저장 버튼/코드 삭제
 
     return (
         <Container>
             <Header user={user} />
-            <PotionSelectSection>
-                <PotionGrid>
-                    {potionImages.map((potion, idx) => (
-                        <motion.div
-                            key={potion.genre}
-                            as={PotionItem}
-                            selected={selectedPotion === idx}
-                            onClick={() => setSelectedPotion(idx)}
-                            whileHover={{ scale: 1.03, rotate: -4 }}
-                            whileTap={{ scale: 0.97, rotate: 2 }}
-                            animate={selectedPotion === idx ? { scale: 1.04, rotate: 1 } : { scale: 1, rotate: 0 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                            style={{ zIndex: selectedPotion === idx ? 2 : 1 }}
-                        >
-                            <StyledPotionImg
-                                src={potion.src}
-                                alt={potion.label}
+            {isLoading ? (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, width: '100vw', height: '100vh',
+                        background: 'rgba(255,255,255,0.97)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <img src="/app_logo/logo3.png" alt="로딩" style={{ width: 120, marginBottom: 32, animation: 'spin 1.5s linear infinite' }} />
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#e46262', marginBottom: 12 }}>
+                        소설을 만드는 중입니다...
+                    </div>
+                    <div style={{ fontSize: 16, color: '#888' }}>{loadingMessage}</div>
+                    <style>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            ) : (
+                <PotionSelectSection>
+                    {/* 첫 번째 줄 포션 */}
+                    <PotionGrid style={{ marginTop: 40, marginBottom: 0 }}>
+                        {potionImages.slice(0, 3).map((potion, idx) => (
+                            <motion.div
+                                key={potion.genre}
+                                as={PotionItem}
                                 selected={selectedPotion === idx}
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                whileHover={{ scale: 1.2 }}
-                                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                            />
-                            {selectedPotion === idx && (
-                                <motion.div
-                                    as={PotionLabel}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 * idx }}
-                                >
-                                    {potion.label}
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    ))}
-                </PotionGrid>
-                {!isNovelGenerated && (
-                    <Button
-                        onClick={handleGenerateNovel}
-                        disabled={selectedPotion === null || isLoading}
-                        style={{
-                            opacity: selectedPotion === null ? 0.5 : 1,
-                            margin: '0 auto',
-                            marginTop: 40,
-                            position: 'relative',
-                            zIndex: 3,
-                            maxWidth: 220,
-                        }}
-                    >
-                        {isLoading ? loadingMessage : '소설 생성하기'}
-                    </Button>
-                )}
-            </PotionSelectSection>
-            {isNovelGenerated && (
+                                onClick={() => setSelectedPotion(idx)}
+                                whileHover={{ scale: 1.03, rotate: -4 }}
+                                whileTap={{ scale: 0.97, rotate: 2 }}
+                                animate={selectedPotion === idx ? { scale: 1.04, rotate: 1 } : { scale: 1, rotate: 0 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                style={{ zIndex: selectedPotion === idx ? 2 : 1 }}
+                            >
+                                <StyledPotionImg
+                                    src={potion.src}
+                                    alt={potion.label}
+                                    selected={selectedPotion === idx}
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    whileHover={{ scale: 1.2 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                />
+                            </motion.div>
+                        ))}
+                    </PotionGrid>
+                    {/* 첫 번째 선반 */}
+                    <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 0, zIndex: 1, position: 'relative' }} />
+                    {/* 두 번째 줄 포션 */}
+                    <PotionGrid style={{ marginTop: 10, marginBottom: 0 }}>
+                        {potionImages.slice(3, 6).map((potion, idx) => (
+                            <motion.div
+                                key={potion.genre}
+                                as={PotionItem}
+                                selected={selectedPotion === idx + 3}
+                                onClick={() => setSelectedPotion(idx + 3)}
+                                whileHover={{ scale: 1.03, rotate: -4 }}
+                                whileTap={{ scale: 0.97, rotate: 2 }}
+                                animate={selectedPotion === idx + 3 ? { scale: 1.04, rotate: 1 } : { scale: 1, rotate: 0 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                style={{ zIndex: selectedPotion === idx + 3 ? 2 : 1 }}
+                            >
+                                <StyledPotionImg
+                                    src={potion.src}
+                                    alt={potion.label}
+                                    selected={selectedPotion === idx + 3}
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    whileHover={{ scale: 1.2 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                />
+                            </motion.div>
+                        ))}
+                    </PotionGrid>
+                    {/* 두 번째 선반 */}
+                    <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 30, zIndex: 1, position: 'relative' }} />
+                    {/* 소설 생성 버튼 및 책 이미지 */}
+                    {!isNovelGenerated && (
+                        <div
+                            style={{
+                                position: 'relative',
+                                width: '60%',
+                                maxWidth: 260,
+                                margin: '24px auto 0 auto',
+                                display: 'block',
+                                zIndex: 1,
+                                cursor: selectedPotion !== null && !isLoading ? 'pointer' : 'default',
+                                opacity: selectedPotion === null ? 0.5 : 1,
+                            }}
+                            onClick={selectedPotion !== null && !isLoading ? handleGenerateNovel : undefined}
+                            aria-disabled={selectedPotion === null || isLoading}
+                        >
+                            <img src="/book.png" alt="book" style={{ width: '100%', display: 'block' }} />
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, width: '100%', height: '100%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 700, fontSize: 18, color: '#fff', textShadow: '0 2px 8px #0008',
+                                    pointerEvents: 'none',
+                                    userSelect: 'none',
+                                }}
+                            >
+                                {isLoading
+                                    ? loadingMessage
+                                    : selectedPotion !== null
+                                        ? `${potionImages[selectedPotion].label} 소설 만들기`
+                                        : '소설 만들기'}
+                            </div>
+                        </div>
+                    )}
+                </PotionSelectSection>
+            )}
+            {isNovelGenerated ? (
+                <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    minHeight: '60vh', width: '100%',
+                }}>
+                    {/* 소설 표지 */}
+                    {generatedImageUrl && (
+                        <img src={generatedImageUrl} alt="소설 표지" style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 16, marginBottom: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
+                    )}
+                    {/* 소설 제목 */}
+                    <h2 style={{ fontSize: 24, fontWeight: 700, color: '#e46262', marginBottom: 18, textAlign: 'center' }}>{title}</h2>
+                    {/* 소설 내용 */}
+                    <div style={{ fontSize: 16, color: '#333', background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'left', whiteSpace: 'pre-line' }}>
+                        {content}
+                    </div>
+                </div>
+            ) : (
                 <>
                     <NovelContent>{content}</NovelContent>
-                    <Button onClick={handleSave}>소설 저장하기</Button>
+                    {/* 소설 저장하기 버튼 및 handleSave 함수 제거 */}
                 </>
             )}
             <Navigation />

@@ -235,21 +235,26 @@ const ProgressBar = styled.div`
 
 const CreateButton = styled.button`
   width: 100%;
-  background-color: ${props => props.completed ? '#cb6565' : '#fdd2d2'};
-  color: ${props => props.completed ? 'white' : '#e46262'};
-  border: none;
+  background-color: ${({ completed }) =>
+        completed ? '#E6F6F2' : '#4F8CFF'};
+  color: ${({ completed }) =>
+        completed ? '#2DBD85' : '#fff'};
+  border: ${({ completed }) =>
+        completed ? '2px solid #2DBD85' : 'none'};
   border-radius: 10px;
   padding: 12px;
   font-size: 14px;
   cursor: pointer;
   opacity: 1;
   transition: all 0.2s ease;
+  font-weight: 700;
+  box-shadow: ${({ completed }) =>
+        completed ? 'none' : '0 2px 8px rgba(79,140,255,0.08)'};
   &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-  &:active {
-    transform: translateY(0);
+    background-color: ${({ completed }) =>
+        completed ? '#B2E9DB' : '#2563eb'};
+    color: #fff;
+    opacity: 0.96;
   }
 `;
 
