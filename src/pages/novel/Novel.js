@@ -235,12 +235,24 @@ const ProgressBar = styled.div`
 
 const CreateButton = styled.button`
   width: 100%;
-  background-color: ${({ completed }) =>
-        completed ? '#E6F6F2' : '#4F8CFF'};
-  color: ${({ completed }) =>
-        completed ? '#2DBD85' : '#fff'};
-  border: ${({ completed }) =>
-        completed ? '2px solid #2DBD85' : 'none'};
+  background-color: ${({ children, completed, theme }) => {
+        if (children === '일기 채우기') return '#F5F6FA'; // 연회색
+        if (children === '소설 만들기') return '#f5f5f5';
+        if (children === '소설 보기') return theme.primary; // 분홍
+        return theme.primary;
+    }};
+  color: ${({ children, completed, theme }) => {
+        if (children === '일기 채우기') return '#868E96';
+        if (children === '소설 만들기') return '#e07e7e';
+        if (children === '소설 보기') return '#fff';
+        return '#fff';
+    }};
+  border: ${({ children, theme }) => {
+        if (children === '일기 채우기') return '2px solid #868E96';
+        if (children === '소설 만들기') return '2px solid #e07e7e';
+        if (children === '소설 보기') return 'none';
+        return 'none';
+    }};
   border-radius: 10px;
   padding: 12px;
   font-size: 14px;
@@ -248,11 +260,15 @@ const CreateButton = styled.button`
   opacity: 1;
   transition: all 0.2s ease;
   font-weight: 700;
-  box-shadow: ${({ completed }) =>
-        completed ? 'none' : '0 2px 8px rgba(79,140,255,0.08)'};
+  box-shadow: ${({ children }) =>
+        (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
-    background-color: ${({ completed }) =>
-        completed ? '#B2E9DB' : '#2563eb'};
+    background-color: ${({ children, theme }) => {
+        if (children === '일기 채우기') return '#E9ECEF';
+        if (children === '소설 만들기') return '#C3CAD6'; // hover 저채도 블루
+        if (children === '소설 보기') return theme.secondary;
+        return theme.secondary;
+    }};
     color: #fff;
     opacity: 0.96;
   }
@@ -602,11 +618,11 @@ const Novel = ({ user }) => {
                                     <div />
                                 </ProgressBar>
                                 {novelId ? (
-                                    <CreateButton completed onClick={() => navigate(`/novel/${novelKey}`)}>
+                                    <CreateButton completed={true} onClick={() => navigate(`/novel/${novelKey}`)}>
                                         소설 보기
                                     </CreateButton>
                                 ) : (
-                                    <CreateButton completed={isCompleted} onClick={() => handleCreateNovel(week)}>
+                                    <CreateButton completed={false} onClick={() => handleCreateNovel(week)}>
                                         {isCompleted ? '소설 만들기' : '일기 채우기'}
                                     </CreateButton>
                                 )}
