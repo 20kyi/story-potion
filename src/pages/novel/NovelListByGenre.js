@@ -10,15 +10,22 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #fff;
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 40px;
+  padding-top: 10px;
   padding-bottom: 100px;
   margin: 40px auto;
   max-width: 600px;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 const Title = styled.h1`
-  color: #333;
+  color: ${({ theme }) => theme.text};
   font-size: 18px;
   font-weight: 600;
   text-align: center;
@@ -66,7 +73,7 @@ const NovelItem = styled.div`
 
 const WeekTitle = styled.h2`
   font-size: 14px;
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   font-weight: 500;
   margin: 0 0 12px 0;
 `;
@@ -76,14 +83,14 @@ const NovelCover = styled.img`
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: 4px;
-  background-color: #f0f0f0;
+  background-color: ${({ theme }) => theme.card};
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   margin-bottom: 12px;
 `;
 
 const NovelTitle = styled.h3`
   font-size: 14px;
-  color: #333;
+  color: ${({ theme }) => theme.text};
   font-weight: 500;
   margin: 0;
   line-height: 1.4;
@@ -97,13 +104,13 @@ const LoadingContainer = styled.div`
     align-items: center;
     height: 50vh;
     font-size: 18px;
-    color: #666;
+    color: ${({ theme }) => theme.cardSubText};
 `;
 
 const NoNovelsMessage = styled.div`
     text-align: center;
     margin-top: 50px;
-    color: #888;
+    color: ${({ theme }) => theme.cardSubText};
 `;
 
 const genreBanners = {
