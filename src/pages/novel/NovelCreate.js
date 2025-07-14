@@ -4,7 +4,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp, updateDoc, increment } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useToast } from '../../components/ui/ToastProvider';
 import { motion } from 'framer-motion';
@@ -311,6 +311,17 @@ function NovelCreate({ user }) {
                 weekNum,
             };
             const docRef = await addDoc(collection(db, 'novels'), newNovel);
+            // 소설 저장 성공 시 포인트 50p 차감
+            try {
+                console.log('포인트 차감 시도:', user?.uid);
+                await updateDoc(doc(db, "users", user.uid), {
+                    point: increment(-50)
+                });
+                console.log('포인트 차감 성공');
+            } catch (pointError) {
+                toast.showToast('포인트 차감에 실패했습니다.', 'error');
+                console.error('포인트 차감 에러:', pointError);
+            }
             toast.showToast('소설이 저장되었습니다!', 'success');
             const dateKey = `${year}-${month}-${weekNum}`;
             navigate(`/novel/${dateKey}`);
@@ -341,6 +352,17 @@ function NovelCreate({ user }) {
         console.log('저장 시도 데이터:', newNovel);
         try {
             await addDoc(collection(db, 'novels'), newNovel);
+            // 소설 저장 성공 시 포인트 50p 차감 (에러 발생 시 안내)
+            try {
+                console.log('포인트 차감 시도:', user?.uid);
+                await updateDoc(doc(db, "users", user.uid), {
+                    point: increment(-50)
+                });
+                console.log('포인트 차감 성공');
+            } catch (pointError) {
+                toast.showToast('포인트 차감에 실패했습니다.', 'error');
+                console.error('포인트 차감 에러:', pointError);
+            }
             setIsNovelSaved(true);
             toast.showToast('소설이 저장되었습니다!', 'success');
         } catch (error) {

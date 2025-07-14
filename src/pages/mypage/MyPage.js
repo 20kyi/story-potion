@@ -16,6 +16,8 @@ import GearIcon from '../../components/icons/GearIcon';
 import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const MainContainer = styled.div`
   display: flex;
@@ -277,6 +279,7 @@ function MyPage({ user }) {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newProfileImageFile, setNewProfileImageFile] = useState(null);
   const [newProfileImageUrl, setNewProfileImageUrl] = useState('');
+  const [point, setPoint] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -284,6 +287,17 @@ function MyPage({ user }) {
     if (user) {
       setNewDisplayName(user.displayName || '');
       setNewProfileImageUrl(user.photoURL || '');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      // Firestore에서 포인트 불러오기
+      getDoc(doc(db, "users", user.uid)).then((docSnap) => {
+        if (docSnap.exists()) {
+          setPoint(docSnap.data().point || 0);
+        }
+      });
     }
   }, [user]);
 
@@ -375,7 +389,9 @@ function MyPage({ user }) {
               </EditIconWrapper>
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
-            <Info>오늘도 즐거운 하루!</Info>
+            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0' }}>
+              <span role="img" aria-label="coin">🪙</span> {point.toLocaleString()}p
+            </div>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">

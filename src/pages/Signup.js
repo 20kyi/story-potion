@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "../firebase";
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 
@@ -216,6 +218,13 @@ function Signup() {
         formData.email,
         formData.password
       );
+      // Firestore에 사용자 정보 + 포인트 100 저장
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        displayName: formData.nickname,
+        email: formData.email,
+        photoURL: userCredential.user.photoURL || "",
+        point: 100
+      });
       alert('회원가입이 완료되었습니다!');
       navigate('/login');
     } catch (error) {
