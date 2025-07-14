@@ -11,10 +11,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #fff;
-  body.dark & {
-    background-color: #232323;
-  }
+  background-color: ${({ theme }) => theme.background};
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
@@ -28,7 +25,6 @@ const ContentWrapper = styled.div`
   min-height: 100vh;
   padding-top: 0;
   width: 100%;
-  
   @media (min-width: 1024px) {
     flex-direction: row;
     justify-content: space-between;
@@ -43,7 +39,6 @@ const FormSection = styled.div`
   align-items: center;
   width: 100%;
   max-width: 400px;
-
   @media (min-width: 1024px) {
     align-items: center;
     max-width: none;
@@ -53,7 +48,6 @@ const FormSection = styled.div`
 
 const LogoSection = styled.div`
   margin-bottom: 40px;
-
   @media (min-width: 1024px) {
     margin-bottom: 0;
     flex: 1;
@@ -72,7 +66,7 @@ const Logo = styled.img`
 
 const Title = styled.h1`
   font-size: 28px;
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   margin-bottom: 30px;
   font-weight: 700;
 `;
@@ -96,17 +90,16 @@ const PasswordInput = styled.input`
   padding: 14px 20px;
   padding-right: 45px;
   border-radius: 15px;
-  border: 1px solid #fdd2d2;
+  border: 1px solid ${({ theme }) => theme.border};
   font-size: 16px;
-  color: #40392b;
-  background-color: #f9f9f9;
+  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }) => theme.card};
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
   width: 100%;
-
   &:focus {
-    border-color: #e46262;
-    background-color: #fff;
+    border-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }) => theme.background};
   }
 `;
 
@@ -123,16 +116,15 @@ const EyeIcon = styled.div`
 const Input = styled.input`
   padding: 14px 20px;
   border-radius: 15px;
-  border: 1px solid #fdd2d2;
+  border: 1px solid ${({ theme }) => theme.border};
   font-size: 16px;
-  color: #40392b;
-  background-color: #f9f9f9;
+  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }) => theme.card};
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
-
   &:focus {
-    border-color: #e46262;
-    background-color: #fff;
+    border-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }) => theme.background};
   }
 `;
 
@@ -147,7 +139,6 @@ const Button = styled.button`
   cursor: pointer;
   margin-top: 20px;
   transition: all 0.3s;
-
   &:hover {
     box-shadow: 0 4px 15px rgba(228, 98, 98, 0.4);
   }
@@ -163,13 +154,11 @@ const LoginLink = styled.div`
   margin-top: 25px;
   font-size: 14px;
   color: #555;
-
   a {
-    color: #e46262;
+    color: ${({ theme }) => theme.primary};
     text-decoration: none;
     font-weight: 600;
     margin-left: 5px;
-
     &:hover {
       text-decoration: underline;
     }
