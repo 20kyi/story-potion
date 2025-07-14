@@ -389,7 +389,8 @@ function MyPage({ user }) {
               </EditIconWrapper>
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
-            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0' }}>
+            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0', cursor: 'pointer' }}
+              onClick={() => navigate('/my/point-history')}>
               <span role="img" aria-label="coin">🪙</span> {point.toLocaleString()}p
             </div>
             <MenuGrid>

@@ -416,6 +416,13 @@ function WriteDiary({ user }) {
                     await updateDoc(doc(db, "users", user.uid), {
                         point: increment(10)
                     });
+                    // 포인트 적립 내역 기록
+                    await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                        type: 'earn',
+                        amount: 10,
+                        desc: '일기 작성',
+                        createdAt: new Date()
+                    });
                     console.log('포인트 적립 성공');
                 } catch (pointError) {
                     toast.showToast('포인트 적립에 실패했습니다.', 'error');

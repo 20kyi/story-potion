@@ -317,6 +317,13 @@ function NovelCreate({ user }) {
                 await updateDoc(doc(db, "users", user.uid), {
                     point: increment(-50)
                 });
+                // 포인트 사용 내역 기록
+                await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                    type: 'use',
+                    amount: -50,
+                    desc: '소설 생성',
+                    createdAt: new Date()
+                });
                 console.log('포인트 차감 성공');
             } catch (pointError) {
                 toast.showToast('포인트 차감에 실패했습니다.', 'error');
