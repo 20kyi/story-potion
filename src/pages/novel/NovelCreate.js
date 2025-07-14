@@ -4,7 +4,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, doc, setDoc, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useToast } from '../../components/ui/ToastProvider';
 import { motion } from 'framer-motion';
@@ -236,6 +236,7 @@ function NovelCreate({ user }) {
     const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
     const [title, setTitle] = useState(initialTitle || '나의 소설');
     const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+    const [isNovelSaved, setIsNovelSaved] = useState(false);
     const selectedGenre = selectedPotion !== null ? potionImages[selectedPotion].genre : null;
 
     // 내부적으로만 일기 fetch (UI에는 노출 X)
@@ -320,8 +321,35 @@ function NovelCreate({ user }) {
         }
     };
 
-    // 소설 결과 화면에서 저장 버튼/코드 삭제
+    // 소설 저장하기 함수 추가
+    const handleSaveNovel = async () => {
+        if (!isNovelGenerated || isNovelSaved) return;
+        // undefined/null/함수 등 비정상 값 제거 및 안전한 값 할당
+        const newNovel = {
+            userId: user?.uid || '',
+            title: title || '',
+            imageUrl: generatedImageUrl || '',
+            week: week || '',
+            dateRange: dateRange || '',
+            genre: selectedGenre || '',
+            content: content || '',
+            createdAt: Timestamp.now(), // Firestore Timestamp로 저장
+            year: year || 0,
+            month: month || 0,
+            weekNum: weekNum || 0,
+        };
+        console.log('저장 시도 데이터:', newNovel);
+        try {
+            await addDoc(collection(db, 'novels'), newNovel);
+            setIsNovelSaved(true);
+            toast.showToast('소설이 저장되었습니다!', 'success');
+        } catch (error) {
+            toast.showToast('소설 저장에 실패했습니다.', 'error');
+            console.error('Firestore 저장 에러:', error);
+        }
+    };
 
+    // 소설 결과 화면에서 저장 버튼 추가
     return (
         <Container>
             <Header user={user} />
@@ -460,6 +488,15 @@ function NovelCreate({ user }) {
                     <div style={{ fontSize: 16, color: '#333', background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'left', whiteSpace: 'pre-line' }}>
                         {content}
                     </div>
+                    {/* 저장하기 버튼 */}
+                    {!isNovelSaved && (
+                        <Button onClick={handleSaveNovel} style={{ marginTop: 24 }}>
+                            소설 저장하기
+                        </Button>
+                    )}
+                    {isNovelSaved && (
+                        <div style={{ color: '#4caf50', marginTop: 16 }}>저장 완료!</div>
+                    )}
                 </div>
             ) : (
                 <>
