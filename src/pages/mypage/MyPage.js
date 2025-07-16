@@ -213,14 +213,14 @@ const EditLabel = styled.label`
 const EditInputWrap = styled.div`
   width: 100%;
   max-width: 260px;
-  margin-bottom: 22px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
 `;
 
 const EditInput = styled.input`
   width: 100%;
-  padding: 13px 15px;
+  padding: 10px 15px;
   border: 1.5px solid #e0e0e0;
   border-radius: 8px;
   font-size: 16px;
@@ -238,7 +238,7 @@ const EditButtonRow = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
-  margin-top: 18px;
+  margin-top: 40px;
   gap: 15px;
 `;
 
@@ -280,7 +280,7 @@ const PasswordInputWrap = styled.div`
   position: relative;
   width: 100%;
   max-width: 260px;
-  margin-bottom: 22px;
+  margin-bottom: 0px;
   display: flex;
   flex-direction: column;
 `;
