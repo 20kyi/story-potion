@@ -4,8 +4,22 @@ import { db } from '../../firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
+import styled from 'styled-components';
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 20px;
+  padding-top: 56px; /* 헤더 높이만큼 여백 */
+  margin: 40px auto;
+  max-width: 600px;
+  background: #fff;
+  position: relative;
+`;
 
 function PointHistory({ user }) {
+    console.log('현재 로그인한 user.uid:', user?.uid);
     const [history, setHistory] = useState([]);
     const navigate = useNavigate();
 
@@ -52,11 +66,11 @@ function PointHistory({ user }) {
     }
 
     return (
-        <div style={{ maxWidth: 500, margin: '0 auto', minHeight: '100vh', background: '#fff', position: 'relative' }}>
-            <Header user={user} />
+        <Container>
+            <Header user={user} title="포인트 내역" />
             <div style={{ padding: 24 }}>
-                <button onClick={() => navigate(-1)} style={{ marginBottom: 16, background: 'none', border: 'none', color: '#e46262', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>← 뒤로가기</button>
-                <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>포인트 내역</h2>
+                {/* <button onClick={() => navigate(-1)} style={{ marginBottom: 16, background: 'none', border: 'none', color: '#e46262', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>← 뒤로가기</button> */}
+                {/* <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>포인트 내역</h2> */}
                 <div style={{ color: '#888', fontSize: 14, marginBottom: 16 }}>
                     포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다.<br />
                     내역이 실시간으로 반영됩니다.
@@ -85,8 +99,8 @@ function PointHistory({ user }) {
                 )}
                 {/* 하단 돌아가기 버튼 제거 */}
             </div>
-            <Navigation style={{ position: 'fixed', left: 0, right: 0, bottom: 0, width: '100%', maxWidth: 500, margin: '0 auto' }} />
-        </div>
+            <Navigation />
+        </Container>
     );
 }
 

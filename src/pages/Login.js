@@ -10,7 +10,8 @@ import {
   signInWithPopup,
   signInWithCredential
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import {
   Container, ContentWrapper, FormSection, LogoSection, Logo, Title,
   Form, PasswordContainer, PasswordInput, EyeIcon, Input,
@@ -85,7 +86,20 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      // 로그인 성공 시 users/{userId} 문서 자동 생성
+      const user = userCredential.user;
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          point: 0,
+          createdAt: new Date()
+        });
+      }
       navigate('/');
     } catch {
       setError('이메일 또는 비밀번호가 잘못되었습니다.');
@@ -119,7 +133,20 @@ function Login() {
         alert('웹 환경, signInWithPopup 시도');
         console.log('웹 환경, signInWithPopup 시도');
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        // 소셜 로그인 성공 시 users/{userId} 문서 자동 생성
+        const user = result.user;
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            point: 0,
+            createdAt: new Date()
+          });
+        }
         navigate('/');
       }
     } catch (e) {
