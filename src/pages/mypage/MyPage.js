@@ -22,6 +22,8 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import EyeIcon from '../../components/icons/EyeIcon';
 import EyeOffIcon from '../../components/icons/EyeOffIcon';
+import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 const MainContainer = styled.div`
   display: flex;
@@ -33,6 +35,10 @@ const MainContainer = styled.div`
   margin-top: 50px;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 100px;
 `;
 
 const ProfileContainer = styled.div`
@@ -312,6 +318,7 @@ function MyPage({ user }) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
   useEffect(() => {
@@ -331,6 +338,22 @@ function MyPage({ user }) {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    let onShow, onHide;
+    if (Capacitor.getPlatform() !== 'web') {
+      onShow = Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(info.keyboardHeight);
+      });
+      onHide = Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardHeight(0);
+      });
+    }
+    return () => {
+      if (onShow) onShow.remove();
+      if (onHide) onHide.remove();
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -379,7 +402,7 @@ function MyPage({ user }) {
   return (
     <>
       <Header user={user} title="마이페이지" />
-      <MainContainer className="my-page-container">
+      <MainContainer className="my-page-container" style={{ paddingBottom: 100 + keyboardHeight }}>
         {isEditing ? (
           <EditProfileCard>
             <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
@@ -400,6 +423,7 @@ function MyPage({ user }) {
                 placeholder="닉네임을 입력하세요"
                 maxLength={20}
                 autoComplete="off"
+                onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
               />
             </EditInputWrap>
             {/* 비밀번호 변경 입력창: 구글 로그인 사용자는 숨김 */}
@@ -415,6 +439,7 @@ function MyPage({ user }) {
                       onChange={e => setCurrentPassword(e.target.value)}
                       placeholder="현재 비밀번호 입력"
                       autoComplete="current-password"
+                      onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
                     />
                     <PasswordInputIcon onClick={() => setShowCurrentPassword(v => !v)}>
                       {showCurrentPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
@@ -431,6 +456,7 @@ function MyPage({ user }) {
                       onChange={e => setNewPassword(e.target.value)}
                       placeholder="새 비밀번호 입력"
                       autoComplete="new-password"
+                      onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
                     />
                     <PasswordInputIcon onClick={() => setShowNewPassword(v => !v)}>
                       {showNewPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
@@ -447,6 +473,7 @@ function MyPage({ user }) {
                       onChange={e => setConfirmPassword(e.target.value)}
                       placeholder="새 비밀번호 확인"
                       autoComplete="new-password"
+                      onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
                     />
                     <PasswordInputIcon onClick={() => setShowConfirmPassword(v => !v)}>
                       {showConfirmPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
