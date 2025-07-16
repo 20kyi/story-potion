@@ -347,7 +347,7 @@ function MyPage({ user }) {
 
   return (
     <>
-      <Header user={user} />
+      <Header user={user} title="마이페이지" />
       <MainContainer className="my-page-container">
         {isEditing ? (
           <EditProfileCard>
