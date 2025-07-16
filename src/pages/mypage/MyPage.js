@@ -97,7 +97,7 @@ const Nickname = styled.div`
 const MenuGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  gap: 0px;
   margin-top: 30px;
   width: 100%;
 `;
@@ -130,7 +130,7 @@ const MenuIcon = styled.div`
 `;
 
 const MenuLabel = styled.span`
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.menuText};
   margin-top: 2px;
