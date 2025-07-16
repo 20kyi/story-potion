@@ -13,6 +13,7 @@ const Container = styled.div`
   padding: 20px;
 //   padding-top: 56px; /* 헤더 높이만큼 여백 */
   margin: 40px auto;
+  margin-top: 50px;
   max-width: 600px;
   background: #fff;
   position: relative;

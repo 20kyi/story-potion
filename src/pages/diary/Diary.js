@@ -36,8 +36,8 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  padding-top: 0;
-  margin: 40px auto;
+//   padding-top: 50px;
+  margin: 50px auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
 `;

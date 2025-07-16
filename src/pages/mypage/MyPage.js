@@ -18,19 +18,21 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import EyeIcon from '../../components/icons/EyeIcon';
+import EyeOffIcon from '../../components/icons/EyeOffIcon';
 
 const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 20px;
-  padding-bottom: 100px;
-  // margin-top: 10px;
+  // padding-top: 0;
   margin: 40px auto;
+  margin-top: 50px;
   max-width: 600px;
+  background: ${({ theme }) => theme.background};
 `;
 
 const ProfileContainer = styled.div`
@@ -274,6 +276,23 @@ const EditCancelTextButton = styled.button`
   }
 `;
 
+const PasswordInputWrap = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+`;
+const PasswordInputIcon = styled.div`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 2;
+`;
+
 function MyPage({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newDisplayName, setNewDisplayName] = useState('');
@@ -282,6 +301,18 @@ function MyPage({ user }) {
   const [point, setPoint] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
+  // 비밀번호 변경 관련 상태
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwChangeLoading, setPwChangeLoading] = useState(false);
+  const [pwChangeError, setPwChangeError] = useState('');
+  const [pwChangeSuccess, setPwChangeSuccess] = useState('');
+  // 비밀번호 보기 상태
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   useEffect(() => {
     if (user) {
@@ -351,7 +382,7 @@ function MyPage({ user }) {
       <MainContainer className="my-page-container">
         {isEditing ? (
           <EditProfileCard>
-            <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
               {newProfileImageUrl ? (
                 <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
               ) : (
@@ -371,9 +402,106 @@ function MyPage({ user }) {
                 autoComplete="off"
               />
             </EditInputWrap>
+            {/* 비밀번호 변경 입력창: 구글 로그인 사용자는 숨김 */}
+            {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (
+              <>
+                <PasswordInputWrap>
+                  <EditLabel htmlFor="current-password">현재 비밀번호</EditLabel>
+                  <div style={{ position: 'relative' }}>
+                    <EditInput
+                      id="current-password"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      placeholder="현재 비밀번호 입력"
+                      autoComplete="current-password"
+                    />
+                    <PasswordInputIcon onClick={() => setShowCurrentPassword(v => !v)}>
+                      {showCurrentPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                    </PasswordInputIcon>
+                  </div>
+                </PasswordInputWrap>
+                <PasswordInputWrap>
+                  <EditLabel htmlFor="new-password" style={{ marginTop: 12 }}>새 비밀번호</EditLabel>
+                  <div style={{ position: 'relative' }}>
+                    <EditInput
+                      id="new-password"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="새 비밀번호 입력"
+                      autoComplete="new-password"
+                    />
+                    <PasswordInputIcon onClick={() => setShowNewPassword(v => !v)}>
+                      {showNewPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                    </PasswordInputIcon>
+                  </div>
+                </PasswordInputWrap>
+                <PasswordInputWrap>
+                  <EditLabel htmlFor="confirm-password" style={{ marginTop: 12 }}>새 비밀번호 확인</EditLabel>
+                  <div style={{ position: 'relative' }}>
+                    <EditInput
+                      id="confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="새 비밀번호 확인"
+                      autoComplete="new-password"
+                    />
+                    <PasswordInputIcon onClick={() => setShowConfirmPassword(v => !v)}>
+                      {showConfirmPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                    </PasswordInputIcon>
+                  </div>
+                  {pwChangeError && <div style={{ color: '#e46262', fontSize: 13, marginTop: 8 }}>{pwChangeError}</div>}
+                  {pwChangeSuccess && <div style={{ color: '#27ae60', fontSize: 13, marginTop: 8 }}>{pwChangeSuccess}</div>}
+                </PasswordInputWrap>
+              </>
+            )}
             <EditButtonRow>
               <EditCancelTextButton onClick={() => setIsEditing(false)}>취소</EditCancelTextButton>
-              <EditSaveButton onClick={handleProfileUpdate}>저장</EditSaveButton>
+              <EditSaveButton
+                onClick={async () => {
+                  setPwChangeError('');
+                  setPwChangeSuccess('');
+                  // 1. 비밀번호 변경 로직 (입력값이 있을 때만)
+                  if (user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (currentPassword || newPassword || confirmPassword)) {
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                      setPwChangeError('모든 비밀번호 입력란을 채워주세요.');
+                      return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                      setPwChangeError('새 비밀번호가 일치하지 않습니다.');
+                      return;
+                    }
+                    if (newPassword.length < 6) {
+                      setPwChangeError('비밀번호는 6자 이상이어야 합니다.');
+                      return;
+                    }
+                    setPwChangeLoading(true);
+                    try {
+                      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                      await reauthenticateWithCredential(user, credential);
+                      await updatePassword(user, newPassword);
+                      setPwChangeSuccess('비밀번호가 성공적으로 변경되었습니다!');
+                      setCurrentPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    } catch (error) {
+                      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        setPwChangeError('현재 비밀번호가 올바르지 않습니다.');
+                      } else {
+                        setPwChangeError(error.message || '비밀번호 변경에 실패했습니다.');
+                      }
+                      setPwChangeLoading(false);
+                      return;
+                    }
+                    setPwChangeLoading(false);
+                  }
+                  // 2. 프로필(닉네임/사진) 저장 로직
+                  await handleProfileUpdate();
+                }}
+                disabled={pwChangeLoading}
+              >저장</EditSaveButton>
             </EditButtonRow>
           </EditProfileCard>
         ) : (
