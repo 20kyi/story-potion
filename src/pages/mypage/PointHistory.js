@@ -11,7 +11,7 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  padding-top: 56px; /* 헤더 높이만큼 여백 */
+//   padding-top: 56px; /* 헤더 높이만큼 여백 */
   margin: 40px auto;
   max-width: 600px;
   background: #fff;
