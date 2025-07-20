@@ -44,6 +44,16 @@ import EyeOffIcon from '../../components/icons/EyeOffIcon';
 import PointIcon from '../../components/icons/PointIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
+import { isAdmin } from '../../utils/adminAuth';
+
+// 관리자 아이콘 추가
+const AdminIcon = ({ color = '#222' }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill={color}/>
+    <path d="M19 15L19.74 18.26L23 19L19.74 19.74L19 23L18.26 19.74L15 19L18.26 18.26L19 15Z" fill={color}/>
+    <path d="M5 6L5.5 7.5L7 8L5.5 8.5L5 10L4.5 8.5L3 8L4.5 7.5L5 6Z" fill={color}/>
+  </svg>
+);
 
 const MainContainer = styled.div`
   display: flex;
@@ -637,6 +647,22 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>
+              
+              {/* 관리자 메뉴 - 관리자만 표시 */}
+              {isAdmin(user) && (
+                <MenuButton 
+                  onClick={() => navigate('/admin/users')}
+                  style={{ 
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    border: '2px solid #3498db'
+                  }}
+                >
+                  <MenuIcon as="div">
+                    <AdminIcon color="#3498db" />
+                  </MenuIcon>
+                  <MenuLabel style={{ color: '#3498db', fontWeight: '600' }}>관리자</MenuLabel>
+                </MenuButton>
+              )}
             </MenuGrid>
           </>
         )}

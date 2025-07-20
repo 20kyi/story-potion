@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { 
   generateSampleUsers, 
@@ -38,6 +39,7 @@ import {
   diagnoseUserIssues,
   findUserByEmail
 } from '../../utils/debugUsers';
+import { requireAdmin } from '../../utils/adminAuth';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -150,7 +152,16 @@ const UserPoints = styled.div`
   font-weight: bold;
 `;
 
-function UserManagement() {
+function UserManagement({ user }) {
+  const navigate = useNavigate();
+
+  // 관리자 권한 체크
+  useEffect(() => {
+    if (!requireAdmin(user, navigate)) {
+      return;
+    }
+  }, [user, navigate]);
+
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [users, setUsers] = useState([]);
