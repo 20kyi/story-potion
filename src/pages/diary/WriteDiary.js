@@ -242,13 +242,21 @@ function WriteDiary({ user }) {
     ];
 
     useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const dateParam = params.get('date');
-        if (dateParam && user) {
-            // new Date()는 T00:00:00Z가 아닌 로컬 시간대를 사용하도록 합니다.
-            const date = new Date(dateParam.replace(/-/g, '/'));
+        // location.state에서 전달받은 날짜 처리
+        if (location.state && location.state.selectedDate && user) {
+            const date = new Date(location.state.selectedDate.replace(/-/g, '/'));
             setSelectedDate(date);
             fetchDiaryForDate(date);
+        } else {
+            // URL 파라미터에서 날짜 처리 (기존 방식)
+            const params = new URLSearchParams(location.search);
+            const dateParam = params.get('date');
+            if (dateParam && user) {
+                // new Date()는 T00:00:00Z가 아닌 로컬 시간대를 사용하도록 합니다.
+                const date = new Date(dateParam.replace(/-/g, '/'));
+                setSelectedDate(date);
+                fetchDiaryForDate(date);
+            }
         }
     }, [location, user]);
 

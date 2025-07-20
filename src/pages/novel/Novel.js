@@ -520,8 +520,46 @@ const Novel = ({ user }) => {
         });
     };
 
-    const handleWriteDiary = () => {
-        navigate('/write');
+    const handleWriteDiary = (week) => {
+        // 해당 주차에서 작성하지 않은 첫 번째 날짜 찾기
+        const weekStartDate = new Date(week.start);
+        const weekEndDate = new Date(week.end);
+        
+        // 해당 주차의 모든 날짜 생성
+        const weekDates = [];
+        const currentDate = new Date(weekStartDate);
+        while (currentDate <= weekEndDate) {
+            weekDates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        // 해당 주차의 일기들 찾기
+        const weekDiaries = diaries.filter(diary => {
+            const diaryDate = new Date(diary.date);
+            return diaryDate >= weekStartDate && diaryDate <= weekEndDate;
+        });
+        
+        // 작성하지 않은 첫 번째 날짜 찾기
+        const writtenDates = weekDiaries.map(diary => formatDate(diary.date));
+        const unwrittenDate = weekDates.find(date => {
+            const dateStr = formatDate(date);
+            return !writtenDates.includes(dateStr);
+        });
+        
+        if (unwrittenDate) {
+            // 일기 작성 페이지로 이동 (해당 날짜와 함께)
+            navigate('/write', {
+                state: {
+                    selectedDate: formatDate(unwrittenDate),
+                    year: unwrittenDate.getFullYear(),
+                    month: unwrittenDate.getMonth() + 1,
+                    weekNum: week.weekNum
+                }
+            });
+        } else {
+            // 모든 날짜가 작성된 경우 (이론적으로는 발생하지 않음)
+            navigate('/write');
+        }
     };
 
     const handleYearChange = (year) => {
@@ -622,7 +660,7 @@ const Novel = ({ user }) => {
                                         소설 보기
                                     </CreateButton>
                                 ) : (
-                                    <CreateButton completed={false} onClick={() => handleCreateNovel(week)}>
+                                    <CreateButton completed={false} onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}>
                                         {isCompleted ? '소설 만들기' : '일기 채우기'}
                                     </CreateButton>
                                 )}
