@@ -3,7 +3,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, updateDoc, increment, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, addDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
@@ -132,6 +132,160 @@ const InfoText = styled.p`
   margin-bottom: 8px;
 `;
 
+// 새로운 스타일 컴포넌트들
+const TabContainer = styled.div`
+  margin-top: 30px;
+  margin-bottom: 100px;
+`;
+
+const TabHeader = styled.div`
+  display: flex;
+  background: ${({ theme }) => theme.card};
+  border-radius: 15px 15px 0 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+`;
+
+const TabButton = styled.button`
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: ${({ active, theme }) => active ? '#e46262' : 'transparent'};
+  color: ${({ active, theme }) => active ? 'white' : theme.text};
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ active }) => active ? '#d45555' : 'rgba(228, 98, 98, 0.1)'};
+  }
+`;
+
+const TabContent = styled.div`
+  background: ${({ theme }) => theme.card};
+  border-radius: 0 0 15px 15px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-height: 300px;
+`;
+
+const HistoryList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const HistoryItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: ${({ theme }) => theme.background};
+  border-radius: 12px;
+  border-left: 4px solid ${({ type }) => 
+    type === 'charge' ? '#333333' : 
+    type === 'earn' ? '#333333' : 
+    type === 'use' ? '#e74c3c' : '#95a5a6'
+  };
+`;
+
+const HistoryInfo = styled.div`
+  flex: 1;
+`;
+
+const HistoryTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 4px;
+`;
+
+const HistoryDate = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#888'};
+`;
+
+const HistoryAmount = styled.div`
+  font-size: 16px;
+  font-weight: 700;
+  color: ${({ type }) => 
+    type === 'charge' ? '#333333' : 
+    type === 'earn' ? '#333333' : 
+    type === 'use' ? '#e74c3c' : '#95a5a6'
+  };
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: ${({ theme }) => theme.subText || '#888'};
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+`;
+
+const EmptyText = styled.div`
+  font-size: 16px;
+  margin-bottom: 8px;
+`;
+
+const EmptySubText = styled.div`
+  font-size: 14px;
+  opacity: 0.7;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 16px 0;
+`;
+
+const PageButton = styled.button`
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: ${({ theme }) => theme.card};
+  color: ${({ theme }) => theme.text};
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  &:hover {
+    background: rgba(228, 98, 98, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const PageInfo = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  margin: 0 16px;
+`;
+
 const packages = [
   { id: 1, points: 100, price: '1,000원', bonus: '' },
   { id: 2, points: 300, price: '2,500원', bonus: '+50 보너스' },
@@ -146,6 +300,15 @@ function PointCharge({ user }) {
     const [currentPoints, setCurrentPoints] = useState(0);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('charge');
+    const [historyData, setHistoryData] = useState({
+        charge: [],
+        earn: [],
+        use: [],
+        all: []
+    });
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
 
     // 현재 포인트 조회
     useEffect(() => {
@@ -161,6 +324,37 @@ function PointCharge({ user }) {
                 }
             };
             fetchPoints();
+        }
+    }, [user]);
+
+    // 포인트 히스토리 조회
+    useEffect(() => {
+        if (user?.uid) {
+            const fetchHistory = async () => {
+                try {
+                    const historyRef = collection(db, 'users', user.uid, 'pointHistory');
+                    const q = query(historyRef, orderBy('createdAt', 'desc'), limit(50));
+                    const querySnapshot = await getDocs(q);
+                    
+                    const allHistory = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+                    }));
+
+                    const categorized = {
+                        charge: allHistory.filter(item => item.type === 'charge'),
+                        earn: allHistory.filter(item => item.type === 'earn'),
+                        use: allHistory.filter(item => item.type === 'use'),
+                        all: allHistory
+                    };
+
+                    setHistoryData(categorized);
+                } catch (error) {
+                    console.error('히스토리 조회 실패:', error);
+                }
+            };
+            fetchHistory();
         }
     }, [user]);
 
@@ -197,12 +391,99 @@ function PointCharge({ user }) {
             
             toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
             setSelectedPackage(null);
+
+            // 히스토리 새로고침
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (error) {
             console.error('포인트 충전 실패:', error);
             toast.showToast('포인트 충전에 실패했습니다.', 'error');
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const formatDate = (date) => {
+        return new Intl.DateTimeFormat('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    };
+
+
+
+    const renderHistoryList = (historyList) => {
+        if (historyList.length === 0) {
+            return (
+                <EmptyState theme={theme}>
+                    <EmptyIcon>📊</EmptyIcon>
+                    <EmptyText>내역이 없습니다</EmptyText>
+                    <EmptySubText>
+                        {activeTab === 'charge' && '포인트 충전 내역이 없습니다'}
+                        {activeTab === 'earn' && '포인트 적립 내역이 없습니다'}
+                        {activeTab === 'use' && '포인트 사용 내역이 없습니다'}
+                        {activeTab === 'all' && '포인트 내역이 없습니다'}
+                    </EmptySubText>
+                </EmptyState>
+            );
+        }
+
+        // 페이징 계산
+        const totalPages = Math.ceil(historyList.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const currentItems = historyList.slice(startIndex, endIndex);
+
+        return (
+            <>
+                <HistoryList>
+                    {currentItems.map((item) => (
+                        <HistoryItem key={item.id} theme={theme} type={item.type}>
+                            <HistoryInfo theme={theme}>
+                                <HistoryTitle theme={theme}>{item.desc}</HistoryTitle>
+                                <HistoryDate theme={theme}>{formatDate(item.createdAt)}</HistoryDate>
+                            </HistoryInfo>
+                                                    <HistoryAmount type={item.type}>
+                            {item.type === 'use' ? '-' : '+'}{Math.abs(item.amount)}p
+                        </HistoryAmount>
+                        </HistoryItem>
+                    ))}
+                </HistoryList>
+                
+                {/* 페이징 컨트롤 */}
+                {totalPages > 1 && (
+                    <PaginationContainer theme={theme}>
+                        <PageButton
+                            theme={theme}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </PageButton>
+                        
+                        <PageInfo theme={theme}>
+                            {currentPage} / {totalPages}
+                        </PageInfo>
+                        
+                        <PageButton
+                            theme={theme}
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </PageButton>
+                    </PaginationContainer>
+                )}
+            </>
+        );
     };
 
     return (
@@ -251,6 +532,55 @@ function PointCharge({ user }) {
             >
                 {isLoading ? '충전 중...' : '포인트 충전하기'}
             </PurchaseButton>
+
+            {/* 포인트 내역 탭 */}
+            <TabContainer>
+                <TabHeader theme={theme}>
+                    <TabButton
+                        active={activeTab === 'all'}
+                        onClick={() => {
+                            setActiveTab('all');
+                            setCurrentPage(1);
+                        }}
+                        theme={theme}
+                    >
+                        전체
+                    </TabButton>
+                    <TabButton
+                        active={activeTab === 'charge'}
+                        onClick={() => {
+                            setActiveTab('charge');
+                            setCurrentPage(1);
+                        }}
+                        theme={theme}
+                    >
+                        충전
+                    </TabButton>
+                    <TabButton
+                        active={activeTab === 'earn'}
+                        onClick={() => {
+                            setActiveTab('earn');
+                            setCurrentPage(1);
+                        }}
+                        theme={theme}
+                    >
+                        적립
+                    </TabButton>
+                    <TabButton
+                        active={activeTab === 'use'}
+                        onClick={() => {
+                            setActiveTab('use');
+                            setCurrentPage(1);
+                        }}
+                        theme={theme}
+                    >
+                        사용
+                    </TabButton>
+                </TabHeader>
+                <TabContent theme={theme}>
+                    {renderHistoryList(historyData[activeTab])}
+                </TabContent>
+            </TabContainer>
 
             <Navigation />
         </Container>
