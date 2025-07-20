@@ -7,7 +7,14 @@
 
 // 관리자 이메일 목록 (firestore.rules와 동일하게 유지)
 const ADMIN_EMAILS = [
-  '0521kimyi@gmail.com'  // 메인 관리자
+  '0521kimyi@gmail.com',  // 메인 관리자
+  'acho1821@gmail.com',   // 서브 관리자
+  '20kyi@naver.com'       // 서브 관리자
+];
+
+// 메인 관리자 이메일 목록 (전체 권한)
+const MAIN_ADMIN_EMAILS = [
+  '0521kimyi@gmail.com'  // 메인 관리자만
 ];
 
 /**
@@ -52,6 +59,27 @@ export const getAdminEmails = () => {
  */
 export const isAdminEmail = (email) => {
   return ADMIN_EMAILS.includes(email);
+};
+
+/**
+ * 사용자가 메인 관리자인지 확인 (전체 권한)
+ * @param {Object} user - Firebase Auth 사용자 객체
+ * @returns {boolean} 메인 관리자 여부
+ */
+export const isMainAdmin = (user) => {
+  if (!user || !user.email) {
+    return false;
+  }
+  return MAIN_ADMIN_EMAILS.includes(user.email);
+};
+
+/**
+ * 특정 이메일이 메인 관리자인지 확인
+ * @param {string} email - 확인할 이메일
+ * @returns {boolean} 메인 관리자 여부
+ */
+export const isMainAdminEmail = (email) => {
+  return MAIN_ADMIN_EMAILS.includes(email);
 };
 
 /**

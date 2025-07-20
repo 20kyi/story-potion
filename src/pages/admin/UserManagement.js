@@ -40,7 +40,7 @@ import {
   diagnoseUserIssues,
   findUserByEmail
 } from '../../utils/debugUsers';
-import { requireAdmin } from '../../utils/adminAuth';
+import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -670,141 +670,151 @@ function UserManagement({ user }) {
             {loading ? '동기화 중...' : '현재 사용자 동기화'}
           </Button>
           
-          <Button 
-            onClick={handleCreateTestUsers} 
-            disabled={loading}
-            style={{ backgroundColor: '#e67e22' }}
-          >
-            {loading ? '생성 중...' : '테스트 사용자 생성'}
-          </Button>
+          {isMainAdmin(user) && (
+            <Button 
+              onClick={handleCreateTestUsers} 
+              disabled={loading}
+              style={{ backgroundColor: '#e67e22' }}
+            >
+              {loading ? '생성 중...' : '테스트 사용자 생성'}
+            </Button>
+          )}
         </div>
         
-        {/* 수동 사용자 생성 */}
-        <div style={{ marginBottom: '15px' }}>
-          <strong style={{ color: theme.text }}>수동 사용자 생성:</strong><br/>
-          <Input
-            theme={theme}
-            type="text"
-            value={manualUserData.uid}
-            onChange={(e) => setManualUserData({...manualUserData, uid: e.target.value})}
-            placeholder="UID"
-            style={{ width: '200px' }}
-          />
-          <Input
-            theme={theme}
-            type="email"
-            value={manualUserData.email}
-            onChange={(e) => setManualUserData({...manualUserData, email: e.target.value})}
-            placeholder="이메일"
-            style={{ width: '200px' }}
-          />
-          <Input
-            theme={theme}
-            type="text"
-            value={manualUserData.displayName}
-            onChange={(e) => setManualUserData({...manualUserData, displayName: e.target.value})}
-            placeholder="닉네임"
-            style={{ width: '150px' }}
-          />
-          <Input
-            theme={theme}
-            type="number"
-            value={manualUserData.point}
-            onChange={(e) => setManualUserData({...manualUserData, point: parseInt(e.target.value) || 0})}
-            placeholder="포인트"
-            style={{ width: '100px' }}
-          />
-          <Button 
-            onClick={handleCreateManualUser} 
-            disabled={loading}
-            style={{ backgroundColor: '#9b59b6' }}
-          >
-            {loading ? '생성 중...' : '수동 생성'}
-          </Button>
-        </div>
-        
-        {/* 기존 사용자 생성 */}
-        <div style={{ marginBottom: '15px' }}>
-          <strong style={{ color: theme.text }}>기존 Auth 사용자 생성:</strong><br/>
-          <Button 
-            onClick={handleCreateExistingUsers} 
-            disabled={loading}
-            style={{ backgroundColor: '#e74c3c', marginTop: '10px' }}
-          >
-            {loading ? '생성 중...' : '5명 기존 사용자 일괄 생성'}
-          </Button>
-          
-          <div style={{ 
-            marginTop: '10px', 
-            fontSize: '12px', 
-            color: theme.theme === 'dark' ? '#bdc3c7' : '#666' 
-          }}>
-            <strong style={{ color: theme.text }}>Firebase Auth 사용자 목록:</strong><br/>
-            • acho180201@naver.com (2025. 7. 4.)<br/>
-            • 20kyi@naver.com (2025. 7. 1.)<br/>
-            • acho1821@gmail.com (2025. 6. 20.)<br/>
-            • hyejin@sungkyul.ac.kr (2025. 6. 20.)<br/>
-            • 0521kimyi@gmail.com (2025. 6. 20.)
+        {/* 수동 사용자 생성 - 메인 관리자만 */}
+        {isMainAdmin(user) && (
+          <div style={{ marginBottom: '15px' }}>
+            <strong style={{ color: theme.text }}>수동 사용자 생성:</strong><br/>
+            <Input
+              theme={theme}
+              type="text"
+              value={manualUserData.uid}
+              onChange={(e) => setManualUserData({...manualUserData, uid: e.target.value})}
+              placeholder="UID"
+              style={{ width: '200px' }}
+            />
+            <Input
+              theme={theme}
+              type="email"
+              value={manualUserData.email}
+              onChange={(e) => setManualUserData({...manualUserData, email: e.target.value})}
+              placeholder="이메일"
+              style={{ width: '200px' }}
+            />
+            <Input
+              theme={theme}
+              type="text"
+              value={manualUserData.displayName}
+              onChange={(e) => setManualUserData({...manualUserData, displayName: e.target.value})}
+              placeholder="닉네임"
+              style={{ width: '150px' }}
+            />
+            <Input
+              theme={theme}
+              type="number"
+              value={manualUserData.point}
+              onChange={(e) => setManualUserData({...manualUserData, point: parseInt(e.target.value) || 0})}
+              placeholder="포인트"
+              style={{ width: '100px' }}
+            />
+            <Button 
+              onClick={handleCreateManualUser} 
+              disabled={loading}
+              style={{ backgroundColor: '#9b59b6' }}
+            >
+              {loading ? '생성 중...' : '수동 생성'}
+            </Button>
           </div>
-        </div>
+        )}
         
-        {/* 선택적 사용자 생성 */}
-        <div style={{ marginBottom: '15px' }}>
-          <strong style={{ color: theme.text }}>선택적 사용자 생성:</strong><br/>
-          <div style={{ marginTop: '5px' }}>
-            {['acho180201@naver.com', '20kyi@naver.com', 'acho1821@gmail.com', 'hyejin@sungkyul.ac.kr', '0521kimyi@gmail.com'].map(email => (
-              <label key={email} style={{ 
-                display: 'block', 
-                marginBottom: '5px',
-                color: theme.text
-              }}>
-                <input
-                  type="checkbox"
-                  checked={selectedEmails.includes(email)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedEmails([...selectedEmails, email]);
-                    } else {
-                      setSelectedEmails(selectedEmails.filter(e => e !== email));
-                    }
-                  }}
-                  style={{ marginRight: '8px' }}
-                />
-                {email}
-              </label>
-            ))}
+        {/* 기존 사용자 생성 - 메인 관리자만 */}
+        {isMainAdmin(user) && (
+          <div style={{ marginBottom: '15px' }}>
+            <strong style={{ color: theme.text }}>기존 Auth 사용자 생성:</strong><br/>
+            <Button 
+              onClick={handleCreateExistingUsers} 
+              disabled={loading}
+              style={{ backgroundColor: '#e74c3c', marginTop: '10px' }}
+            >
+              {loading ? '생성 중...' : '5명 기존 사용자 일괄 생성'}
+            </Button>
+            
+            <div style={{ 
+              marginTop: '10px', 
+              fontSize: '12px', 
+              color: theme.theme === 'dark' ? '#bdc3c7' : '#666' 
+            }}>
+              <strong style={{ color: theme.text }}>Firebase Auth 사용자 목록:</strong><br/>
+              • acho180201@naver.com (2025. 7. 4.)<br/>
+              • 20kyi@naver.com (2025. 7. 1.)<br/>
+              • acho1821@gmail.com (2025. 6. 20.)<br/>
+              • hyejin@sungkyul.ac.kr (2025. 6. 20.)<br/>
+              • 0521kimyi@gmail.com (2025. 6. 20.)
+            </div>
           </div>
-          <Button 
-            onClick={handleCreateUsersByEmails} 
-            disabled={loading || selectedEmails.length === 0}
-            style={{ backgroundColor: '#f39c12', marginTop: '10px' }}
-          >
-            {loading ? '생성 중...' : `선택된 ${selectedEmails.length}명 생성`}
-          </Button>
-        </div>
+        )}
+        
+        {/* 선택적 사용자 생성 - 메인 관리자만 */}
+        {isMainAdmin(user) && (
+          <div style={{ marginBottom: '15px' }}>
+            <strong style={{ color: theme.text }}>선택적 사용자 생성:</strong><br/>
+            <div style={{ marginTop: '5px' }}>
+              {['acho180201@naver.com', '20kyi@naver.com', 'acho1821@gmail.com', 'hyejin@sungkyul.ac.kr', '0521kimyi@gmail.com'].map(email => (
+                <label key={email} style={{ 
+                  display: 'block', 
+                  marginBottom: '5px',
+                  color: theme.text
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedEmails.includes(email)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedEmails([...selectedEmails, email]);
+                      } else {
+                        setSelectedEmails(selectedEmails.filter(e => e !== email));
+                      }
+                    }}
+                    style={{ marginRight: '8px' }}
+                  />
+                  {email}
+                </label>
+              ))}
+            </div>
+            <Button 
+              onClick={handleCreateUsersByEmails} 
+              disabled={loading || selectedEmails.length === 0}
+              style={{ backgroundColor: '#f39c12', marginTop: '10px' }}
+            >
+              {loading ? '생성 중...' : `선택된 ${selectedEmails.length}명 생성`}
+            </Button>
+          </div>
+        )}
       </Section>
 
-      {/* 샘플 사용자 생성 */}
-      <Section theme={theme}>
-        <SectionTitle theme={theme}>📝 샘플 사용자 생성</SectionTitle>
-        <div>
-          <Input
-            theme={theme}
-            type="number"
-            value={userCount}
-            onChange={(e) => setUserCount(e.target.value)}
-            placeholder="생성할 사용자 수"
-            min="1"
-            max="100"
-          />
-          <Button 
-            onClick={handleCreateSampleUsers} 
-            disabled={loading}
-          >
-            {loading ? '생성 중...' : '샘플 사용자 생성'}
-          </Button>
-        </div>
-      </Section>
+      {/* 샘플 사용자 생성 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>📝 샘플 사용자 생성</SectionTitle>
+          <div>
+            <Input
+              theme={theme}
+              type="number"
+              value={userCount}
+              onChange={(e) => setUserCount(e.target.value)}
+              placeholder="생성할 사용자 수"
+              min="1"
+              max="100"
+            />
+            <Button 
+              onClick={handleCreateSampleUsers} 
+              disabled={loading}
+            >
+              {loading ? '생성 중...' : '샘플 사용자 생성'}
+            </Button>
+          </div>
+        </Section>
+      )}
 
       {/* 사용자 검색 */}
       <Section theme={theme}>
@@ -856,15 +866,17 @@ function UserManagement({ user }) {
       {/* 사용자 목록 */}
       <Section theme={theme}>
         <SectionTitle theme={theme}>👥 사용자 목록 ({users.length}명)</SectionTitle>
-        <div style={{ marginBottom: '10px' }}>
-          <Button 
-            onClick={handleBulkUpdatePoints} 
-            disabled={loading || users.length === 0}
-            variant="danger"
-          >
-            포인트 1000으로 일괄 설정
-          </Button>
-        </div>
+        {isMainAdmin(user) && (
+          <div style={{ marginBottom: '10px' }}>
+            <Button 
+              onClick={handleBulkUpdatePoints} 
+              disabled={loading || users.length === 0}
+              variant="danger"
+            >
+              포인트 1000으로 일괄 설정
+            </Button>
+          </div>
+        )}
         
         <UserList theme={theme}>
           {users.map((user) => (
@@ -888,9 +900,10 @@ function UserManagement({ user }) {
         </UserList>
       </Section>
 
-      {/* 포인트 지급 */}
-      <Section theme={theme}>
-        <SectionTitle theme={theme}>💰 포인트 일괄 지급</SectionTitle>
+      {/* 포인트 지급 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>💰 포인트 일괄 지급</SectionTitle>
         <div style={{ marginBottom: '15px' }}>
           <Input
             theme={theme}
@@ -963,6 +976,7 @@ function UserManagement({ user }) {
           )}
         </div>
       </Section>
+      )}
 
       {/* 디버깅 */}
       <Section theme={theme}>
@@ -1053,9 +1067,10 @@ function UserManagement({ user }) {
         )}
       </Section>
 
-      {/* 빠른 액션 */}
-      <Section theme={theme}>
-        <SectionTitle theme={theme}>⚡ 빠른 액션</SectionTitle>
+      {/* 빠른 액션 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>⚡ 빠른 액션</SectionTitle>
         <div>
           <Button 
             onClick={async () => {
@@ -1104,6 +1119,7 @@ function UserManagement({ user }) {
           </Button>
         </div>
       </Section>
+      )}
     </Container>
   );
 }

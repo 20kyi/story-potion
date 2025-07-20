@@ -70,6 +70,25 @@ export const saveUserToFirestore = async (userData) => {
   try {
     const { uid, ...userInfo } = userData;
     
+    // 관리자 권한 확인
+    const { getAuth } = await import('firebase/auth');
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    
+    // 메인 관리자 이메일 확인 (전체 권한 필요)
+    const mainAdminEmails = [
+      '0521kimyi@gmail.com'  // 메인 관리자만
+    ];
+    const isMainAdmin = mainAdminEmails.includes(currentUser.email);
+    
+    if (!isMainAdmin) {
+      throw new Error('메인 관리자 권한이 필요합니다.');
+    }
+    
     // 사용자 기본 정보 저장
     await setDoc(doc(db, 'users', uid), {
       ...userInfo,
