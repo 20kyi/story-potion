@@ -47,12 +47,16 @@ const GenreCard = styled.div`
   width: 100%;
   aspect-ratio: 1;
   cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 8px;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
   }
 `;
 
