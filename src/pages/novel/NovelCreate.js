@@ -508,33 +508,38 @@ function NovelCreate({ user }) {
                                     transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                                     style={{ zIndex: selectedPotion === idx ? 2 : 1 }}
                                 >
-                                    <StyledPotionImg
-                                        src={potion.src}
-                                        alt={potion.label}
-                                        selected={selectedPotion === idx}
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        whileHover={{ scale: 1.2 }}
-                                        transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                                    />
-                                    {/* 포션 개수 표시 */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-8px',
-                                        right: '-8px',
-                                        background: '#3498f3',
-                                        color: 'white',
-                                        borderRadius: '50%',
-                                        width: '24px',
-                                        height: '24px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        border: '2px solid white'
-                                    }}>
-                                        {ownedPotions[potionId]}
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <StyledPotionImg
+                                            src={potion.src}
+                                            alt={potion.label}
+                                            selected={selectedPotion === idx}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            whileHover={{ scale: 1.2 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                        />
+                                        {/* 포션 개수 표시 */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            right: '-6px',
+                                            background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
+                                            color: 'white',
+                                            borderRadius: '12px',
+                                            minWidth: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: '700',
+                                            border: '2px solid white',
+                                            boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
+                                            zIndex: 10,
+                                            padding: '0 4px'
+                                        }}>
+                                            {ownedPotions[potionId]}
+                                        </div>
                                     </div>
                                 </motion.div>
                             );
@@ -569,33 +574,38 @@ function NovelCreate({ user }) {
                                     transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                                     style={{ zIndex: selectedPotion === idx + 3 ? 2 : 1 }}
                                 >
-                                    <StyledPotionImg
-                                        src={potion.src}
-                                        alt={potion.label}
-                                        selected={selectedPotion === idx + 3}
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        whileHover={{ scale: 1.2 }}
-                                        transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                                    />
-                                    {/* 포션 개수 표시 */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-8px',
-                                        right: '-8px',
-                                        background: '#3498f3',
-                                        color: 'white',
-                                        borderRadius: '50%',
-                                        width: '24px',
-                                        height: '24px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        border: '2px solid white'
-                                    }}>
-                                        {ownedPotions[potionId]}
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <StyledPotionImg
+                                            src={potion.src}
+                                            alt={potion.label}
+                                            selected={selectedPotion === idx + 3}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            whileHover={{ scale: 1.2 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                        />
+                                        {/* 포션 개수 표시 */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            right: '-6px',
+                                            background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
+                                            color: 'white',
+                                            borderRadius: '12px',
+                                            minWidth: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: '700',
+                                            border: '2px solid white',
+                                            boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
+                                            zIndex: 10,
+                                            padding: '0 4px'
+                                        }}>
+                                            {ownedPotions[potionId]}
+                                        </div>
                                     </div>
                                 </motion.div>
                             );
