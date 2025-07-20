@@ -1,3 +1,23 @@
+/**
+ * PointHistory.js - 포인트 내역 페이지 컴포넌트
+ * 
+ * 주요 기능:
+ * - 사용자의 포인트 적립/사용/충전 내역 표시
+ * - Firestore에서 포인트 히스토리 데이터 조회
+ * - 포인트 타입별 색상 구분 (적립: 파랑, 사용: 빨강, 충전: 초록)
+ * - 실시간 내역 업데이트
+ * - 다크모드/라이트모드 지원
+ * 
+ * 데이터 구조:
+ * - collection: 'users/{userId}/pointHistory'
+ * - 필드: type(earn/use/charge), amount, desc, createdAt
+ * 
+ * 사용된 라이브러리:
+ * - firebase/firestore: 데이터베이스 조회
+ * - styled-components: 스타일링
+ * - react-router-dom: 네비게이션
+ */
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
@@ -21,15 +41,21 @@ const Container = styled.div`
   position: relative;
 `;
 
+/**
+ * 포인트 내역 페이지 컴포넌트
+ * @param {Object} user - 현재 로그인한 사용자 정보
+ */
 function PointHistory({ user }) {
     console.log('현재 로그인한 user.uid:', user?.uid);
-    const [history, setHistory] = useState([]);
+    const [history, setHistory] = useState([]); // 포인트 내역 데이터
     const navigate = useNavigate();
     const theme = useTheme();
 
+    // 사용자 포인트 내역을 Firestore에서 가져오기
     useEffect(() => {
         if (!user?.uid) return;
         const fetchHistory = async () => {
+            // 사용자의 포인트 히스토리 컬렉션에서 최신순으로 조회
             const q = query(
                 collection(db, 'users', user.uid, 'pointHistory'),
                 orderBy('createdAt', 'desc')
@@ -41,6 +67,11 @@ function PointHistory({ user }) {
         fetchHistory();
     }, [user]);
 
+    /**
+     * 포인트 타입에 따른 한글 라벨 반환
+     * @param {string} type - 포인트 타입 (earn/use/charge)
+     * @returns {string} 한글 라벨
+     */
     const getTypeLabel = (type) => {
         switch (type) {
             case 'earn': return '적립';
@@ -50,11 +81,16 @@ function PointHistory({ user }) {
         }
     };
 
+    /**
+     * 포인트 타입에 따른 색상 반환
+     * @param {string} type - 포인트 타입 (earn/use/charge)
+     * @returns {string} 색상 코드
+     */
     const getTypeColor = (type) => {
         switch (type) {
-            case 'earn': return '#3498f3'; // 파랑
-            case 'use': return '#e46262'; // 빨강
-            case 'charge': return '#27ae60'; // 초록
+            case 'earn': return '#3498f3'; // 파랑 - 적립
+            case 'use': return '#e46262'; // 빨강 - 사용
+            case 'charge': return '#27ae60'; // 초록 - 충전
             default: return '#888';
         }
     };

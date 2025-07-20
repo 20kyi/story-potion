@@ -37,6 +37,11 @@ import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
 import PointHistory from './pages/mypage/PointHistory';
+import UserManagement from './pages/admin/UserManagement';
+import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
+import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
+import './utils/createExistingUsers'; // 기존 사용자 생성 스크립트 로드
+import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -73,6 +78,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
+                <Route path="/admin/users" element={user ? <UserManagement /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>

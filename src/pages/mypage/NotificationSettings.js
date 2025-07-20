@@ -1,3 +1,25 @@
+/**
+ * NotificationSettings.js - 알림 설정 페이지 컴포넌트
+ * 
+ * 주요 기능:
+ * - 푸시 알림 권한 관리
+ * - 일기 작성 리마인더 알림 설정
+ * - 이벤트 알림 설정
+ * - 마케팅 알림 설정
+ * - 알림 시간 및 메시지 커스터마이징
+ * - FCM 토큰 관리 및 Firestore 저장
+ * - 로컬 스토리지와 Firestore 동기화
+ * 
+ * 데이터 저장:
+ * - 로컬 스토리지: 즉시 접근 가능한 설정
+ * - Firestore: 서버 동기화 및 백업
+ * 
+ * 사용된 라이브러리:
+ * - firebase: FCM 토큰, Firestore
+ * - utils/storage: 로컬 스토리지 관리
+ * - utils/pushNotification: 푸시 알림 관리
+ */
+
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
@@ -8,18 +30,28 @@ import pushNotificationManager from '../../utils/pushNotification';
 import './NotificationSettings.css';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
+/**
+ * 알림 설정 페이지 컴포넌트
+ * @param {Object} user - 현재 로그인한 사용자 정보
+ */
 function NotificationSettings({ user }) {
     const navigate = useNavigate();
+    
+    // 알림 설정 상태
     const [settings, setSettings] = useState({
-        enabled: false,
-        time: '21:00',
-        message: '오늘의 일기를 작성해보세요! 📝'
+        enabled: false, // 알림 활성화 여부
+        time: '21:00', // 알림 시간 (기본값: 오후 9시)
+        message: '오늘의 일기를 작성해보세요! 📝' // 알림 메시지
     });
-    const [loading, setLoading] = useState(true);
-    const [pushPermission, setPushPermission] = useState('default');
-    const [isPushSupported, setIsPushSupported] = useState(false);
-    const [eventEnabled, setEventEnabled] = useState(false);
-    const [marketingEnabled, setMarketingEnabled] = useState(false);
+    
+    // UI 상태
+    const [loading, setLoading] = useState(true); // 로딩 상태
+    const [pushPermission, setPushPermission] = useState('default'); // 푸시 권한 상태
+    const [isPushSupported, setIsPushSupported] = useState(false); // 푸시 알림 지원 여부
+    
+    // 추가 알림 설정
+    const [eventEnabled, setEventEnabled] = useState(false); // 이벤트 알림
+    const [marketingEnabled, setMarketingEnabled] = useState(false); // 마케팅 알림
 
     // 사용자의 알림 설정 불러오기
     useEffect(() => {
@@ -63,7 +95,11 @@ function NotificationSettings({ user }) {
         checkPushSupport();
     }, []);
 
-    // FCM 토큰 Firestore 저장 함수
+    /**
+     * FCM 토큰을 Firestore에 저장
+     * @param {string} uid - 사용자 ID
+     * @param {string} token - FCM 토큰
+     */
     const saveFcmTokenToFirestore = async (uid, token) => {
         try {
             await setDoc(doc(db, "users", uid), { fcmToken: token }, { merge: true });
@@ -72,7 +108,10 @@ function NotificationSettings({ user }) {
         }
     };
 
-    // 푸시 알림 권한 요청
+    /**
+     * 푸시 알림 권한 요청 및 FCM 토큰 발급
+     * 사용자에게 브라우저 알림 권한을 요청하고, 허용 시 FCM 토큰을 발급받아 저장
+     */
     const requestPushPermission = async () => {
         const granted = await pushNotificationManager.requestPermission();
         if (granted) {

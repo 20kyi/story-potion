@@ -1,3 +1,22 @@
+/**
+ * MyPage.js - 마이페이지 메인 컴포넌트
+ * 
+ * 주요 기능:
+ * - 사용자 프로필 정보 표시 및 편집
+ * - 프로필 이미지 업로드/변경
+ * - 닉네임 변경
+ * - 비밀번호 변경
+ * - 마이페이지 메뉴 네비게이션
+ * - 로그아웃 기능
+ * - 다크모드/라이트모드 지원
+ * 
+ * 사용된 라이브러리:
+ * - styled-components: 스타일링
+ * - firebase: 인증, 스토리지, Firestore
+ * - react-router-dom: 페이지 네비게이션
+ * - @capacitor/keyboard: 키보드 이벤트 처리
+ */
+
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Header from '../../components/Header';
@@ -22,6 +41,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import EyeIcon from '../../components/icons/EyeIcon';
 import EyeOffIcon from '../../components/icons/EyeOffIcon';
+import PointIcon from '../../components/icons/PointIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 
@@ -299,28 +319,40 @@ const PasswordInputIcon = styled.div`
   z-index: 2;
 `;
 
+/**
+ * 마이페이지 메인 컴포넌트
+ * @param {Object} user - 현재 로그인한 사용자 정보
+ */
 function MyPage({ user }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newDisplayName, setNewDisplayName] = useState('');
-  const [newProfileImageFile, setNewProfileImageFile] = useState(null);
-  const [newProfileImageUrl, setNewProfileImageUrl] = useState('');
-  const [point, setPoint] = useState(0);
+  // 프로필 편집 관련 상태
+  const [isEditing, setIsEditing] = useState(false); // 편집 모드 활성화 여부
+  const [newDisplayName, setNewDisplayName] = useState(''); // 새로운 닉네임
+  const [newProfileImageFile, setNewProfileImageFile] = useState(null); // 새 프로필 이미지 파일
+  const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
+  const [point, setPoint] = useState(0); // 사용자 포인트
+  
+  // 네비게이션 및 테마
   const navigate = useNavigate();
   const theme = useTheme();
+  
   // 비밀번호 변경 관련 상태
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [pwChangeLoading, setPwChangeLoading] = useState(false);
-  const [pwChangeError, setPwChangeError] = useState('');
-  const [pwChangeSuccess, setPwChangeSuccess] = useState('');
-  // 비밀번호 보기 상태
+  const [currentPassword, setCurrentPassword] = useState(''); // 현재 비밀번호
+  const [newPassword, setNewPassword] = useState(''); // 새 비밀번호
+  const [confirmPassword, setConfirmPassword] = useState(''); // 새 비밀번호 확인
+  const [pwChangeLoading, setPwChangeLoading] = useState(false); // 비밀번호 변경 로딩 상태
+  const [pwChangeError, setPwChangeError] = useState(''); // 비밀번호 변경 오류 메시지
+  const [pwChangeSuccess, setPwChangeSuccess] = useState(''); // 비밀번호 변경 성공 메시지
+  
+  // 비밀번호 보기/숨김 상태
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // 모바일 키보드 높이 (키보드가 올라올 때 화면 조정용)
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
+  // 사용자 정보가 변경될 때 편집 폼 초기화
   useEffect(() => {
     if (user) {
       setNewDisplayName(user.displayName || '');
@@ -328,6 +360,7 @@ function MyPage({ user }) {
     }
   }, [user]);
 
+  // 사용자 포인트 정보를 Firestore에서 가져오기
   useEffect(() => {
     if (user?.uid) {
       // Firestore에서 포인트 불러오기
@@ -339,22 +372,30 @@ function MyPage({ user }) {
     }
   }, [user]);
 
+  // 모바일 키보드 이벤트 리스너 설정 (웹에서는 제외)
   useEffect(() => {
     let onShow, onHide;
     if (Capacitor.getPlatform() !== 'web') {
+      // 키보드가 나타날 때 높이 정보 저장
       onShow = Keyboard.addListener('keyboardWillShow', (info) => {
         setKeyboardHeight(info.keyboardHeight);
       });
+      // 키보드가 사라질 때 높이 초기화
       onHide = Keyboard.addListener('keyboardWillHide', () => {
         setKeyboardHeight(0);
       });
     }
+    // 컴포넌트 언마운트 시 리스너 제거
     return () => {
       if (onShow) onShow.remove();
       if (onHide) onHide.remove();
     };
   }, []);
 
+  /**
+   * 로그아웃 처리
+   * Firebase Auth에서 로그아웃하고 로그인 페이지로 리디렉션
+   */
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -366,6 +407,10 @@ function MyPage({ user }) {
     }
   };
 
+  /**
+   * 프로필 이미지 파일 선택 처리
+   * 선택된 파일을 상태에 저장하고 미리보기 URL 생성
+   */
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -374,17 +419,23 @@ function MyPage({ user }) {
     }
   };
 
+  /**
+   * 프로필 정보 업데이트 처리
+   * 이미지 업로드 및 사용자 정보 변경을 Firebase에 반영
+   */
   const handleProfileUpdate = async () => {
     if (!user) return;
 
     try {
       let photoURL = user.photoURL;
+      // 새 이미지가 선택된 경우 Firebase Storage에 업로드
       if (newProfileImageFile) {
         const storageRef = ref(storage, `profile_images/${user.uid}`);
         await uploadBytes(storageRef, newProfileImageFile);
         photoURL = await getDownloadURL(storageRef);
       }
 
+      // Firebase Auth 프로필 정보 업데이트
       await updateProfile(auth.currentUser, {
         displayName: newDisplayName,
         photoURL: photoURL,
@@ -544,9 +595,10 @@ function MyPage({ user }) {
               </EditIconWrapper>
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
-            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0', cursor: 'pointer' }}
+            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               onClick={() => navigate('/my/point-history')}>
-              <span role="img" aria-label="coin">🪙</span> {point.toLocaleString()}p
+              <PointIcon width={20} height={20} color="#3498f3" />
+              {point.toLocaleString()}p
             </div>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>

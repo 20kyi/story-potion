@@ -3,9 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users: Users can only read/write their own user data
+    // 관리자 이메일 (실제 관리자 이메일로 교체하세요)
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == '0521kimyi@gmail.com';  // 여기에 실제 관리자 이메일 입력
+    }
+
+    // Users: 관리자는 모든 사용자 데이터 읽기/쓰기 가능, 일반 사용자는 자신의 데이터만
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
 
       // pointHistory는 반드시 users/{userId} 내부에 중첩
       match /pointHistory/{docId} {
