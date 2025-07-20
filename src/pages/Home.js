@@ -5,7 +5,7 @@ import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import PencilIcon from '../components/icons/PencilIcon';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import dailyTopics from '../data/topics.json';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -34,7 +34,7 @@ const Container = styled.div`
 const MainButtonRow = styled.div`
   display: flex;
   gap: 16px;
-  margin-bottom: 36px;
+  margin-bottom: 10px;
   align-items: stretch;
 
   // @media (min-width: 768px) {
@@ -190,7 +190,8 @@ const SectionLabel = styled.div`
   font-size: 20px;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 18px;
+  margin-bottom: 10px;
+  margin-top: 10px;
   // @media (min-width: 768px) {
   //   font-size: 24px;
   // }
@@ -198,8 +199,88 @@ const SectionLabel = styled.div`
 
 const MyNovelRow = styled.div`
   display: flex;
-  gap: 18px;
-  margin-bottom: 30px;
+  gap: 16px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  // padding-bottom: 8px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const PotionSection = styled.div`
+  // margin-top: 10px;
+`;
+
+const PotionRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+`;
+
+const PotionCard = styled.div`
+  width: 100%;
+  height: 110px;
+  background: ${({ theme }) => theme.card};
+  border-radius: 16px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.95);
+    background: ${({ theme }) => theme.cardHover || '#f8f9fa'};
+  }
+`;
+
+const PotionImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 6px;
+`;
+
+const PotionCount = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+`;
+
+const PotionName = styled.div`
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+`;
+
+const EmptyPotionCard = styled.div`
+  width: 100%;
+  height: 110px;
+  background: ${({ theme }) => theme.card};
+  border-radius: 16px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  opacity: 0.5;
+  grid-column: 1 / -1;
+`;
+
+const EmptyPotionText = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  text-align: center;
 `;
 
 const MyNovelBox = styled.div`
@@ -209,10 +290,14 @@ const MyNovelBox = styled.div`
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  gap: 18px;
+  margin-bottom: 10px;
 `;
 
+
+
 const MyNovelTitle = styled.div`
-  margin-top: 10px;
+  // margin-top: 10px;
   font-size: 15px;
   color: #cb6565;
   font-weight: 600;
@@ -350,6 +435,17 @@ function Home({ user }) {
   const navigate = useNavigate();
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
+  const [ownedPotions, setOwnedPotions] = useState({});
+
+  // 포션 데이터
+  const potionData = [
+    { id: 'romance', name: '로맨스', image: '/potion/romance.png' },
+    { id: 'historical', name: '역사', image: '/potion/historical.png' },
+    { id: 'mystery', name: '추리', image: '/potion/mystery.png' },
+    { id: 'horror', name: '공포', image: '/potion/horror.png' },
+    { id: 'fairytale', name: '동화', image: '/potion/fairytale.png' },
+    { id: 'fantasy', name: '판타지', image: '/potion/fantasy.png' },
+  ];
 
   // 오늘의 글감 선택 로직
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
@@ -397,6 +493,16 @@ function Home({ user }) {
       const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3));
       const novelSnapshot = await getDocs(novelsQuery);
       setRecentNovels(novelSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+
+      // Fetch user's potions
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setOwnedPotions(userDoc.data().potions || {});
+        }
+      } catch (error) {
+        console.error('포션 정보 조회 실패:', error);
+      }
     };
 
     fetchRecentData();
@@ -500,6 +606,34 @@ function Home({ user }) {
             ))
           }
         </MyNovelRow>
+
+        <PotionSection>
+          <SectionLabel>내 포션</SectionLabel>
+          <PotionRow>
+            {potionData.map(potion => {
+              const count = ownedPotions[potion.id] || 0;
+              return count > 0 ? (
+                <PotionCard 
+                  key={potion.id} 
+                  onClick={() => navigate('/my/potion-shop')}
+                  title={`${potion.name} 포션 ${count}개 보유`}
+                >
+                  <PotionImage src={potion.image} alt={potion.name} />
+                  <PotionCount>{count}</PotionCount>
+                  <PotionName>{potion.name}</PotionName>
+                </PotionCard>
+              ) : null;
+            })}
+            {Object.values(ownedPotions).every(count => !count || count <= 0) && (
+              <EmptyPotionCard>
+                <EmptyPotionText>보유한 포션이 없어요</EmptyPotionText>
+                <EmptyPotionText style={{ fontSize: '10px', marginTop: '4px' }}>
+                  포션 상점에서 구매해보세요!
+                </EmptyPotionText>
+              </EmptyPotionCard>
+            )}
+          </PotionRow>
+        </PotionSection>
       </ContentGrid>
 
       <Navigation />
