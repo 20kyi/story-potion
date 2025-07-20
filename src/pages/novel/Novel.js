@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
@@ -29,44 +26,34 @@ const Container = styled.div`
 `;
 
 
-const CarouselContainer = styled.div`
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 5px;
+const GenreGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   margin-bottom: 20px;
-  .slick-dots {
-    bottom: -35px;
-    li {
-      margin: 0 4px;
-      button:before {
-        color: #fdd2d2;
-        opacity: 0.5;
-        font-size: 8px;
-      }
-      &.slick-active button:before {
-        color: #cb6565;
-        opacity: 1;
-      }
-    }
-  }
-  .slick-slide {
-    padding: 0 5px;
-  }
-  .slick-list {
-    margin: 0 -5px;
+  gap: 0;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media (orientation: landscape) {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    max-width: 450px;
   }
 `;
 
-const CarouselSlide = styled.div`
+const GenreCard = styled.div`
   width: 100%;
-  min-width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border-radius: 0;
-  padding: 0;
+  aspect-ratio: 1;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
 `;
 
 const MonthSelector = styled.div`
@@ -169,7 +156,7 @@ const DatePickerButton = styled.button`
 `;
 
 const WeeklySection = styled.div`
-  margin-top: 60px;
+  margin-top: 20px;
   overflow: hidden;
 `;
 
@@ -296,18 +283,7 @@ const Novel = ({ user }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [novelsMap, setNovelsMap] = useState({});
 
-    const settings = {
-        dots: true,
-        infinite: true,
-        speed: 500,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 4000,
-        pauseOnHover: false,
-        arrows: false,
-        cssEase: "linear"
-    };
+
 
     useEffect(() => {
         if (!user) {
@@ -576,29 +552,13 @@ const Novel = ({ user }) => {
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="소설" />
             {/* <Title>Novel</Title> */}
 
-            <CarouselContainer>
-                <Slider {...settings}>
-                    {bannerData.map((banner, idx) => (
-                        <CarouselSlide key={idx} onClick={() => navigate(`/novels/genre/${banner.genre}`)}>
-                            <img
-                                src={banner.src}
-                                alt={`배너 ${banner.genre}`}
-                                style={{
-                                    width: '80vw',
-                                    maxWidth: '280px',
-                                    minWidth: '120px',
-                                    height: 'auto',
-                                    objectFit: 'cover',
-                                    borderRadius: '16px',
-                                    display: 'block',
-                                    margin: '0 auto',
-                                    marginTop: '10px',
-                                }}
-                            />
-                        </CarouselSlide>
-                    ))}
-                </Slider>
-            </CarouselContainer>
+            <GenreGrid>
+                {bannerData.map((banner, idx) => (
+                    <GenreCard key={idx} onClick={() => navigate(`/novels/genre/${banner.genre}`)}>
+                        <img src={banner.src} alt={`${banner.genre} 장르`} />
+                    </GenreCard>
+                ))}
+            </GenreGrid>
             <WeeklySection>
                 <MonthSelector>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
