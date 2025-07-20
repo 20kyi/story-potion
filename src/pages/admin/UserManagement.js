@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTheme } from '../../ThemeContext';
 import { 
   generateSampleUsers, 
   batchSaveUsers, 
@@ -45,25 +46,30 @@ const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  padding-bottom: 120px;
   font-family: 'Arial', sans-serif;
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
+  min-height: 100vh;
 `;
 
 const Header = styled.h1`
-  color: #333;
+  color: ${({ theme }) => theme.text};
   text-align: center;
   margin-bottom: 30px;
 `;
 
 const Section = styled.div`
-  background: white;
+  background: ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : 'white'};
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.3' : '0.1'});
+  border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
 `;
 
 const SectionTitle = styled.h2`
-  color: #555;
+  color: ${({ theme }) => theme.text};
   margin-bottom: 15px;
   border-bottom: 2px solid #3498f3;
   padding-bottom: 10px;
@@ -91,18 +97,32 @@ const Button = styled.button`
 
 const Input = styled.input`
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#ddd'};
   border-radius: 4px;
   margin: 5px;
   font-size: 14px;
+  background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
+  color: ${({ theme }) => theme.text};
+  
+  &:focus {
+    outline: none;
+    border-color: #3498f3;
+  }
 `;
 
 const Select = styled.select`
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#ddd'};
   border-radius: 4px;
   margin: 5px;
   font-size: 14px;
+  background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
+  color: ${({ theme }) => theme.text};
+  
+  &:focus {
+    outline: none;
+    border-color: #3498f3;
+  }
 `;
 
 const Status = styled.div`
@@ -117,14 +137,15 @@ const Status = styled.div`
 const UserList = styled.div`
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid #ddd;
+  border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#ddd'};
   border-radius: 4px;
   padding: 10px;
+  background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#f8f9fa'};
 `;
 
 const UserItem = styled.div`
   padding: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#eee'};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -139,11 +160,11 @@ const UserInfo = styled.div`
 `;
 
 const UserName = styled.strong`
-  color: #333;
+  color: ${({ theme }) => theme.text};
 `;
 
 const UserEmail = styled.div`
-  color: #666;
+  color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
   font-size: 12px;
 `;
 
@@ -154,6 +175,7 @@ const UserPoints = styled.div`
 
 function UserManagement({ user }) {
   const navigate = useNavigate();
+  const theme = useTheme();
 
   // 관리자 권한 체크
   useEffect(() => {
@@ -605,8 +627,8 @@ function UserManagement({ user }) {
   };
 
   return (
-    <Container>
-      <Header>🔧 사용자 데이터 관리</Header>
+    <Container theme={theme}>
+      <Header theme={theme}>🔧 사용자 데이터 관리</Header>
       
       {status && (
         <Status type={status.type}>
@@ -615,17 +637,19 @@ function UserManagement({ user }) {
       )}
 
       {/* 사용자 동기화 */}
-      <Section>
-        <SectionTitle>🔄 사용자 동기화</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>🔄 사용자 동기화</SectionTitle>
         
         {/* 현재 상태 표시 */}
         {usersCollectionStats && (
           <div style={{ 
-            background: '#e8f4fd', 
+            background: theme.theme === 'dark' ? '#34495e' : '#e8f4fd', 
             padding: '10px', 
             borderRadius: '5px', 
             marginBottom: '15px',
-            fontSize: '14px'
+            fontSize: '14px',
+            color: theme.text,
+            border: theme.theme === 'dark' ? '1px solid #2c3e50' : 'none'
           }}>
             <strong>📊 Firestore users 컬렉션 현황:</strong><br/>
             총 사용자: {usersCollectionStats.totalUsers}명<br/>
@@ -657,8 +681,9 @@ function UserManagement({ user }) {
         
         {/* 수동 사용자 생성 */}
         <div style={{ marginBottom: '15px' }}>
-          <strong>수동 사용자 생성:</strong><br/>
+          <strong style={{ color: theme.text }}>수동 사용자 생성:</strong><br/>
           <Input
+            theme={theme}
             type="text"
             value={manualUserData.uid}
             onChange={(e) => setManualUserData({...manualUserData, uid: e.target.value})}
@@ -666,6 +691,7 @@ function UserManagement({ user }) {
             style={{ width: '200px' }}
           />
           <Input
+            theme={theme}
             type="email"
             value={manualUserData.email}
             onChange={(e) => setManualUserData({...manualUserData, email: e.target.value})}
@@ -673,6 +699,7 @@ function UserManagement({ user }) {
             style={{ width: '200px' }}
           />
           <Input
+            theme={theme}
             type="text"
             value={manualUserData.displayName}
             onChange={(e) => setManualUserData({...manualUserData, displayName: e.target.value})}
@@ -680,6 +707,7 @@ function UserManagement({ user }) {
             style={{ width: '150px' }}
           />
           <Input
+            theme={theme}
             type="number"
             value={manualUserData.point}
             onChange={(e) => setManualUserData({...manualUserData, point: parseInt(e.target.value) || 0})}
@@ -697,7 +725,7 @@ function UserManagement({ user }) {
         
         {/* 기존 사용자 생성 */}
         <div style={{ marginBottom: '15px' }}>
-          <strong>기존 Auth 사용자 생성:</strong><br/>
+          <strong style={{ color: theme.text }}>기존 Auth 사용자 생성:</strong><br/>
           <Button 
             onClick={handleCreateExistingUsers} 
             disabled={loading}
@@ -706,8 +734,12 @@ function UserManagement({ user }) {
             {loading ? '생성 중...' : '5명 기존 사용자 일괄 생성'}
           </Button>
           
-          <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-            <strong>Firebase Auth 사용자 목록:</strong><br/>
+          <div style={{ 
+            marginTop: '10px', 
+            fontSize: '12px', 
+            color: theme.theme === 'dark' ? '#bdc3c7' : '#666' 
+          }}>
+            <strong style={{ color: theme.text }}>Firebase Auth 사용자 목록:</strong><br/>
             • acho180201@naver.com (2025. 7. 4.)<br/>
             • 20kyi@naver.com (2025. 7. 1.)<br/>
             • acho1821@gmail.com (2025. 6. 20.)<br/>
@@ -718,10 +750,14 @@ function UserManagement({ user }) {
         
         {/* 선택적 사용자 생성 */}
         <div style={{ marginBottom: '15px' }}>
-          <strong>선택적 사용자 생성:</strong><br/>
+          <strong style={{ color: theme.text }}>선택적 사용자 생성:</strong><br/>
           <div style={{ marginTop: '5px' }}>
             {['acho180201@naver.com', '20kyi@naver.com', 'acho1821@gmail.com', 'hyejin@sungkyul.ac.kr', '0521kimyi@gmail.com'].map(email => (
-              <label key={email} style={{ display: 'block', marginBottom: '5px' }}>
+              <label key={email} style={{ 
+                display: 'block', 
+                marginBottom: '5px',
+                color: theme.text
+              }}>
                 <input
                   type="checkbox"
                   checked={selectedEmails.includes(email)}
@@ -749,10 +785,11 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 샘플 사용자 생성 */}
-      <Section>
-        <SectionTitle>📝 샘플 사용자 생성</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>📝 샘플 사용자 생성</SectionTitle>
         <div>
           <Input
+            theme={theme}
             type="number"
             value={userCount}
             onChange={(e) => setUserCount(e.target.value)}
@@ -770,10 +807,11 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 사용자 검색 */}
-      <Section>
-        <SectionTitle>🔍 사용자 검색</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>🔍 사용자 검색</SectionTitle>
         <div>
           <Select 
+            theme={theme}
             value={searchField} 
             onChange={(e) => setSearchField(e.target.value)}
           >
@@ -785,6 +823,7 @@ function UserManagement({ user }) {
           </Select>
           
           <Select 
+            theme={theme}
             value={searchOperator} 
             onChange={(e) => setSearchOperator(e.target.value)}
           >
@@ -797,6 +836,7 @@ function UserManagement({ user }) {
           </Select>
           
           <Input
+            theme={theme}
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
@@ -814,8 +854,8 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 사용자 목록 */}
-      <Section>
-        <SectionTitle>👥 사용자 목록 ({users.length}명)</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>👥 사용자 목록 ({users.length}명)</SectionTitle>
         <div style={{ marginBottom: '10px' }}>
           <Button 
             onClick={handleBulkUpdatePoints} 
@@ -826,18 +866,22 @@ function UserManagement({ user }) {
           </Button>
         </div>
         
-        <UserList>
+        <UserList theme={theme}>
           {users.map((user) => (
-            <UserItem key={user.uid}>
+            <UserItem key={user.uid} theme={theme}>
               <UserInfo>
-                <UserName>{user.displayName || '이름 없음'}</UserName>
-                <UserEmail>{user.email}</UserEmail>
+                <UserName theme={theme}>{user.displayName || '이름 없음'}</UserName>
+                <UserEmail theme={theme}>{user.email}</UserEmail>
               </UserInfo>
               <UserPoints>{user.point || 0}p</UserPoints>
             </UserItem>
           ))}
           {users.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              color: theme.theme === 'dark' ? '#bdc3c7' : '#666', 
+              padding: '20px' 
+            }}>
               사용자가 없습니다.
             </div>
           )}
@@ -845,10 +889,11 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 포인트 지급 */}
-      <Section>
-        <SectionTitle>💰 포인트 일괄 지급</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>💰 포인트 일괄 지급</SectionTitle>
         <div style={{ marginBottom: '15px' }}>
           <Input
+            theme={theme}
             type="number"
             value={pointAmount}
             onChange={(e) => setPointAmount(parseInt(e.target.value) || 0)}
@@ -857,6 +902,7 @@ function UserManagement({ user }) {
             style={{ width: '120px' }}
           />
           <Input
+            theme={theme}
             type="text"
             value={pointReason}
             onChange={(e) => setPointReason(e.target.value)}
@@ -891,11 +937,13 @@ function UserManagement({ user }) {
           
           {pointsStats && (
             <div style={{ 
-              background: '#f8f9fa', 
+              background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa', 
               padding: '10px', 
               borderRadius: '5px', 
               marginTop: '10px',
-              fontSize: '14px'
+              fontSize: '14px',
+              color: theme.text,
+              border: theme.theme === 'dark' ? '1px solid #2c3e50' : 'none'
             }}>
               <strong>📊 포인트 통계:</strong><br/>
               총 사용자: {pointsStats.totalUsers}명<br/>
@@ -917,8 +965,8 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 디버깅 */}
-      <Section>
-        <SectionTitle>🔧 디버깅</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>🔧 디버깅</SectionTitle>
         <div>
           <Button 
             onClick={handleCompareAuthAndFirestore} 
@@ -948,12 +996,13 @@ function UserManagement({ user }) {
         {/* 디버깅 결과 표시 */}
         {debugInfo && (
           <div style={{ 
-            background: '#f8f9fa', 
+            background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa', 
             padding: '15px', 
             borderRadius: '5px', 
             marginTop: '15px',
             fontSize: '14px',
-            border: '1px solid #dee2e6'
+            border: theme.theme === 'dark' ? '1px solid #2c3e50' : '1px solid #dee2e6',
+            color: theme.text
           }}>
             <strong>🔍 디버깅 결과:</strong><br/>
             {debugInfo.missingUsers && debugInfo.missingUsers.length > 0 && (
@@ -1005,8 +1054,8 @@ function UserManagement({ user }) {
       </Section>
 
       {/* 빠른 액션 */}
-      <Section>
-        <SectionTitle>⚡ 빠른 액션</SectionTitle>
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>⚡ 빠른 액션</SectionTitle>
         <div>
           <Button 
             onClick={async () => {
