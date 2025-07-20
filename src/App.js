@@ -37,6 +37,8 @@ import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
 import PointHistory from './pages/mypage/PointHistory';
+import PotionShop from './pages/mypage/PotionShop';
+import PointCharge from './pages/mypage/PointCharge';
 import UserManagement from './pages/admin/UserManagement';
 import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
 import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
@@ -79,6 +81,8 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
+                <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/premium/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}

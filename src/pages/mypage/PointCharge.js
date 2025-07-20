@@ -8,7 +8,6 @@ import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
-import ShopIcon from '../../components/icons/ShopIcon';
 
 const Container = styled.div`
   display: flex;
@@ -133,112 +132,6 @@ const InfoText = styled.p`
   margin-bottom: 8px;
 `;
 
-const MenuGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 30px;
-`;
-
-const MenuButton = styled.button`
-  display: flex;
-  align-items: center;
-  background: ${({ theme }) => theme.card};
-  border: none;
-  border-radius: 15px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  text-align: left;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-`;
-
-const MenuIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  margin-right: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(52, 152, 243, 0.1);
-  border-radius: 12px;
-`;
-
-const MenuContent = styled.div`
-  flex: 1;
-`;
-
-const MenuTitle = styled.div`
-  font-size: 18px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 4px;
-`;
-
-const MenuDescription = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#666'};
-`;
-
-const PremiumSection = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-`;
-
-const PremiumTitle = styled.h3`
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: ${({ theme }) => theme.text};
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const FeatureList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const FeatureItem = styled.li`
-  padding: 12px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.border || '#f1f1f1'};
-  font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const PremiumButton = styled.button`
-  background: linear-gradient(135deg, #e46262, #cb6565);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 16px 32px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(228, 98, 98, 0.3);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(228, 98, 98, 0.4);
-  }
-`;
-
 const packages = [
   { id: 1, points: 100, price: '1,000원', bonus: '' },
   { id: 2, points: 300, price: '2,500원', bonus: '+50 보너스' },
@@ -246,13 +139,7 @@ const packages = [
   { id: 4, points: 1000, price: '7,000원', bonus: '+250 보너스' },
 ];
 
-const premiumFeatures = [
-  { id: 'ads', title: '광고 제거', description: '모든 광고를 제거하고 깔끔한 환경을 제공합니다' },
-  { id: 'theme', title: '프리미엄 전용 테마', description: '독점적인 다크/라이트 테마를 사용할 수 있습니다' },
-  { id: 'report', title: 'AI 일기 분석 리포트', description: 'AI가 분석한 상세한 일기 리포트를 받아보세요' },
-];
-
-function Premium({ user }) {
+function PointCharge({ user }) {
     const navigate = useNavigate();
     const toast = useToast();
     const theme = useTheme();
@@ -320,7 +207,7 @@ function Premium({ user }) {
 
     return (
         <Container theme={theme}>
-            <Header user={user} title="프리미엄" />
+            <Header user={user} title="포인트 충전" />
             
             <PointDisplay theme={theme}>
                 <PointAmount>
@@ -330,56 +217,44 @@ function Premium({ user }) {
                 <PointLabel theme={theme}>현재 보유 포인트</PointLabel>
             </PointDisplay>
 
-            {/* 메뉴 그리드 */}
-            <MenuGrid>
-                <MenuButton onClick={() => navigate('/my/premium/charge')} theme={theme}>
-                    <MenuIcon>
-                        <PointIcon width={24} height={24} color="#3498f3" />
-                    </MenuIcon>
-                    <MenuContent>
-                        <MenuTitle theme={theme}>포인트 충전</MenuTitle>
-                        <MenuDescription theme={theme}>
-                            포인트를 충전하여 포션을 구매하거나 프리미엄 기능을 이용하세요
-                        </MenuDescription>
-                    </MenuContent>
-                </MenuButton>
+            <InfoSection theme={theme}>
+                <InfoTitle theme={theme}>포인트 사용법</InfoTitle>
+                <InfoText theme={theme}>
+                    • 포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다
+                </InfoText>
+                <InfoText theme={theme}>
+                    • 소설 생성 시 포션 1개당 50포인트가 차감됩니다
+                </InfoText>
+                <InfoText theme={theme}>
+                    • 포인트는 소설 생성에만 사용됩니다
+                </InfoText>
+            </InfoSection>
 
-                <MenuButton onClick={() => navigate('/my/potion-shop')} theme={theme}>
-                    <MenuIcon>
-                        <ShopIcon width={24} height={24} color="#e46262" />
-                    </MenuIcon>
-                    <MenuContent>
-                        <MenuTitle theme={theme}>포션 상점</MenuTitle>
-                        <MenuDescription theme={theme}>
-                            포인트로 포션을 구매하여 소설을 생성하세요
-                        </MenuDescription>
-                    </MenuContent>
-                </MenuButton>
-            </MenuGrid>
+            <PackageGrid>
+                {packages.map((pkg) => (
+                    <PackageCard
+                        key={pkg.id}
+                        theme={theme}
+                        selected={selectedPackage === pkg.id}
+                        onClick={() => setSelectedPackage(pkg.id)}
+                    >
+                        <PackagePoints>{pkg.points}p</PackagePoints>
+                        <PackagePrice>{pkg.price}</PackagePrice>
+                        {pkg.bonus && <PackageBonus>{pkg.bonus}</PackageBonus>}
+                    </PackageCard>
+                ))}
+            </PackageGrid>
 
-            {/* 프리미엄 기능 섹션 */}
-            <PremiumSection theme={theme}>
-                <PremiumTitle theme={theme}>
-                    <span style={{ color: '#e46262' }}>👑</span>
-                    프리미엄 혜택
-                </PremiumTitle>
-                <FeatureList>
-                    {premiumFeatures.map((feature) => (
-                        <FeatureItem key={feature.id} theme={theme}>
-                            {feature.title}
-                        </FeatureItem>
-                    ))}
-                </FeatureList>
-            </PremiumSection>
-
-            {/* 프리미엄 가입 버튼 */}
-            <PremiumButton>
-                프리미엄 가입하기
-            </PremiumButton>
+            <PurchaseButton
+                onClick={handlePurchase}
+                disabled={!selectedPackage || isLoading}
+            >
+                {isLoading ? '충전 중...' : '포인트 충전하기'}
+            </PurchaseButton>
 
             <Navigation />
         </Container>
     );
 }
 
-export default Premium; 
+export default PointCharge; 

@@ -26,6 +26,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
+import PointIcon from '../../components/icons/PointIcon';
 
 const Container = styled.div`
   display: flex;
@@ -114,6 +115,31 @@ function PointHistory({ user }) {
                 <div style={{ color: theme.subText || '#888', fontSize: 14, marginBottom: 16 }}>
                     포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다.<br />
                     내역이 실시간으로 반영됩니다.
+                </div>
+                
+                {/* 포인트 충전 버튼 */}
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                    <button
+                        onClick={() => navigate('/my/premium/charge')}
+                        style={{
+                            background: '#3498f3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '25px',
+                            padding: '12px 24px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(52, 152, 243, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            margin: '0 auto'
+                        }}
+                    >
+                        <PointIcon width={20} height={20} color="white" />
+                        포인트 충전하기
+                    </button>
                 </div>
                 {history.length === 0 ? (
                     <div style={{ color: theme.subText || '#888', textAlign: 'center', marginTop: 40 }}>포인트 내역이 없습니다.</div>

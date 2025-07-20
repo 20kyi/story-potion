@@ -42,6 +42,7 @@ import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 
 import EyeIcon from '../../components/icons/EyeIcon';
 import EyeOffIcon from '../../components/icons/EyeOffIcon';
 import PointIcon from '../../components/icons/PointIcon';
+import ShopIcon from '../../components/icons/ShopIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
@@ -606,7 +607,7 @@ function MyPage({ user }) {
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
             <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              onClick={() => navigate('/my/point-history')}>
+              onClick={() => navigate('/my/premium/charge')}>
               <PointIcon width={20} height={20} color="#3498f3" />
               {point.toLocaleString()}p
             </div>
