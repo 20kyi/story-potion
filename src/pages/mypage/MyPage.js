@@ -330,6 +330,35 @@ const PasswordInputIcon = styled.div`
   z-index: 2;
 `;
 
+const AdminButton = styled.div`
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #3498db;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  z-index: 100;
+
+  &:hover {
+    background: rgba(52, 152, 219, 0.2);
+    border-color: rgba(52, 152, 219, 0.5);
+  }
+
+  &:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+`;
+
 /**
  * 마이페이지 메인 컴포넌트
  * @param {Object} user - 현재 로그인한 사용자 정보
@@ -649,24 +678,19 @@ function MyPage({ user }) {
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>
               
-              {/* 관리자 메뉴 - 관리자만 표시 */}
-              {isAdmin(user) && (
-                <MenuButton 
-                  onClick={() => navigate('/admin/users')}
-                  style={{ 
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    border: '2px solid #3498db'
-                  }}
-                >
-                  <MenuIcon as="div">
-                    <AdminIcon color="#3498db" />
-                  </MenuIcon>
-                  <MenuLabel style={{ color: '#3498db', fontWeight: '600' }}>관리자</MenuLabel>
-                </MenuButton>
-              )}
+
             </MenuGrid>
           </>
         )}
+        
+        {/* 관리자 버튼 - 관리자만 표시 */}
+        {isAdmin(user) && (
+          <AdminButton onClick={() => navigate('/admin/users')}>
+            <AdminIcon color="#3498db" width={14} height={14} />
+            관리자
+          </AdminButton>
+        )}
+        
         <Navigation />
       </MainContainer>
     </>
