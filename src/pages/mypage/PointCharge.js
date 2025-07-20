@@ -183,11 +183,6 @@ const HistoryItem = styled.div`
   padding: 16px;
   background: ${({ theme }) => theme.background};
   border-radius: 12px;
-  border-left: 4px solid ${({ type }) => 
-    type === 'charge' ? '#333333' : 
-    type === 'earn' ? '#333333' : 
-    type === 'use' ? '#e74c3c' : '#95a5a6'
-  };
 `;
 
 const HistoryInfo = styled.div`
