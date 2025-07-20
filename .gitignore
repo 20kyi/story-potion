@@ -12,3 +12,21 @@
 /build
 /node_modules
 .env
+functions/firebase-debug.log
+
+# Android build files
+android/app/build/
+android/.gradle/
+android/.idea/
+android/build/
+
+# Firebase cache
+.firebase/
+firebase-debug.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

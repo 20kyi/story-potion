@@ -21,6 +21,11 @@ export const lightTheme = {
     writeCardGradient: 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)', // 일기쓰기 버튼 그라디언트
     menuText: '#222', // 메뉴 텍스트 색상 (라이트)
     menuHover: '#e0e0e0', // 메뉴 버튼 hover 배경색 (라이트)
+    primaryBlue: '#4F8CFF', // 산뜻한 파랑(버튼)
+    primaryBlueHover: '#2563eb',
+    secondaryMint: '#E6F6F2', // 연민트(서브 버튼)
+    secondaryMintHover: '#B2E9DB',
+    secondaryMintText: '#2DBD85', // 민트 텍스트/테두리
 };
 
 // darkTheme: 다크 모드 색상
@@ -43,4 +48,9 @@ export const darkTheme = {
     writeCardGradient: 'linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%)', // 일기쓰기 버튼 그라디언트
     menuText: '#d1d5db', // 메뉴 텍스트 색상 (다크, 연회색)
     menuHover: '#333333', // 메뉴 버튼 hover 배경색 (다크)
+    primaryBlue: '#4F8CFF',
+    primaryBlueHover: '#2563eb',
+    secondaryMint: '#2A3A3A', // 다크에서 민트 대신 어두운 배경
+    secondaryMintHover: '#1A2828',
+    secondaryMintText: '#2DBD85',
 }; 

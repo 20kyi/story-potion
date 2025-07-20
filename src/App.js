@@ -36,6 +36,7 @@ import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
+import PointHistory from './pages/mypage/PointHistory';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -71,6 +72,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/point-history" element={<PointHistory user={user} />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>

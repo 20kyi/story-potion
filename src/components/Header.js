@@ -15,7 +15,8 @@ const HeaderContainer = styled.header`
   box-shadow: 0 2px 12px ${({ theme }) => theme.cardShadow};
   background-color: ${({ theme }) => theme.card};
   padding: 16px 20px 12px 20px;
-  padding-top: env(safe-area-inset-top, 24px);
+  padding-top: calc(env(safe-area-inset-top, 24px) + 16px); /* 모바일 상단 safe area 대응 */
+  // padding-top: env(safe-area-inset-top, 24px);
 
   @media (min-width: 768px) {
     padding-top: 12px;

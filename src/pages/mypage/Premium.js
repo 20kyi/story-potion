@@ -7,7 +7,7 @@ function Premium() {
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="프리미엄" />
-            <div style={{ maxWidth: 600, margin: '40px auto', padding: 24, paddingTop: 40, minHeight: '100vh', paddingBottom: 120 }}>
+            <div style={{ maxWidth: 600, margin: '40px auto', marginTop: 50, padding: 24, paddingTop: 40, minHeight: '100vh', paddingBottom: 120 }}>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 40 }}>
                     <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', fontWeight: 400, fontSize: '1.1rem' }}>광고 제거</li>
                     <li style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', fontWeight: 400, fontSize: '1.1rem' }}>프리미엄 전용 테마</li>

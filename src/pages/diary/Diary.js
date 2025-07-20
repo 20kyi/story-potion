@@ -36,8 +36,8 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  padding-top: 0;
-  margin: 40px auto;
+//   padding-top: 50px;
+  margin: 50px auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
 `;
@@ -45,13 +45,13 @@ const Container = styled.div`
 const EmotionGraphContainer = styled.div`
   margin-top: 30px;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ theme }) => theme.card};
   border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: ${({ theme }) => theme.cardShadow};
 `;
 
 const GraphTitle = styled.h3`
-  color: #e46262;
+  color: ${({ theme }) => theme.primary};
   margin-bottom: 20px;
   text-align: center;
 `;

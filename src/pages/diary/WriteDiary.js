@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { db, storage } from '../../firebase';
-import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
 import Button from '../../components/ui/Button';
@@ -411,6 +411,23 @@ function WriteDiary({ user }) {
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
                 toast.showToast('일기가 저장되었습니다.', 'success');
+                // 포인트 적립: 일기 최초 저장 시 10포인트 지급
+                try {
+                    await updateDoc(doc(db, "users", user.uid), {
+                        point: increment(10)
+                    });
+                    // 포인트 적립 내역 기록
+                    await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                        type: 'earn',
+                        amount: 10,
+                        desc: '일기 작성',
+                        createdAt: new Date()
+                    });
+                    console.log('포인트 적립 성공');
+                } catch (pointError) {
+                    toast.showToast('포인트 적립에 실패했습니다.', 'error');
+                    console.error('포인트 적립 에러:', pointError);
+                }
             }
 
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행

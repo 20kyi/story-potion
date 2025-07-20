@@ -10,7 +10,8 @@ import {
   signInWithPopup,
   signInWithCredential
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import {
   Container, ContentWrapper, FormSection, LogoSection, Logo, Title,
   Form, PasswordContainer, PasswordInput, EyeIcon, Input,
@@ -47,20 +48,27 @@ function Login() {
   useEffect(() => {
     if (isMobile) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        alert('appUrlOpen 이벤트 발생! url: ' + url);
+        console.log('appUrlOpen 이벤트 발생! url:', url);
         if (url && url.startsWith('storypotion://auth')) {
           const hash = url.split('#')[1];
           const params = new URLSearchParams(hash);
           const idToken = params.get('id_token');
           if (idToken) {
+            alert('id_token 추출 성공: ' + idToken);
+            console.log('id_token 추출 성공:', idToken);
             try {
               const credential = GoogleAuthProvider.credential(idToken);
               await signInWithCredential(auth, credential);
+              alert('Firebase 로그인 성공!');
               navigate('/');
             } catch (e) {
+              alert('Firebase 로그인 실패: ' + e.message);
               console.error('Firebase 로그인 실패:', e);
               setError('로그인 실패. 다시 시도해주세요.');
             }
           } else {
+            alert('id_token 없음. URL: ' + url);
             console.error('id_token 없음. URL:', url);
             setError('로그인 실패: 토큰이 없습니다.');
           }
@@ -78,7 +86,20 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      // 로그인 성공 시 users/{userId} 문서 자동 생성
+      const user = userCredential.user;
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          point: 0,
+          createdAt: new Date()
+        });
+      }
       navigate('/');
     } catch {
       setError('이메일 또는 비밀번호가 잘못되었습니다.');
@@ -86,6 +107,8 @@ function Login() {
   };
 
   const handleSocialLogin = async () => {
+    alert('구글 로그인 버튼 클릭됨');
+    console.log('구글 로그인 버튼 클릭됨');
     const androidClientId = '607033226027-srdkp30ievjn5kjms4ds25n727muanh9.apps.googleusercontent.com';
     const redirectUri = 'storypotion://auth';
     const nonce = Math.random().toString(36).substring(2);
@@ -94,20 +117,40 @@ function Login() {
       'https://accounts.google.com/o/oauth2/v2/auth?' +
       `client_id=${androidClientId}` +
       `&redirect_uri=${redirectUri}` +
-      `&response_type=token id_token` +
+      `&response_type=code` +
       `&scope=openid%20email%20profile` +
       `&nonce=${nonce}` +
       `&prompt=consent`;
 
     try {
       if (isMobile) {
+        alert('모바일 환경, 브라우저 오픈 시도');
+        console.log('모바일 환경, 브라우저 오픈 시도');
         await Browser.open({ url: authUrl });
+        alert('브라우저 오픈 성공');
+        console.log('브라우저 오픈 성공');
       } else {
+        alert('웹 환경, signInWithPopup 시도');
+        console.log('웹 환경, signInWithPopup 시도');
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        // 소셜 로그인 성공 시 users/{userId} 문서 자동 생성
+        const user = result.user;
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            point: 0,
+            createdAt: new Date()
+          });
+        }
         navigate('/');
       }
     } catch (e) {
+      alert('Google 로그인 실패: ' + e.message);
       console.error('Google 로그인 실패:', e);
       setError('Google 로그인에 실패했습니다.');
     }
@@ -145,7 +188,7 @@ function Login() {
                 </EyeIcon>
               </PasswordContainer>
               {error && <ErrorMessage>{error}</ErrorMessage>}
-              <Button type="submit">로그인</Button>
+              <Button type="submit">로그인 하세요</Button>
             </Form>
             <Divider>또는</Divider>
             <SocialLoginContainer>

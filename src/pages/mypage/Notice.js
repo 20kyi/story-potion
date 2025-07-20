@@ -8,7 +8,7 @@ function Notice() {
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="공지사항" />
-            <div style={{ maxWidth: 600, margin: '40px auto', padding: 24, paddingTop: 40, minHeight: '100vh', /* background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', */ }}>
+            <div style={{ maxWidth: 600, margin: '40px auto', marginTop: 50, padding: 24, paddingTop: 40, minHeight: '100vh', /* background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', */ }}>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                     {notices.map(notice => (
                         <li key={notice.id} style={{ borderBottom: '1px solid #f1f1f1', padding: '18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 400 }}>

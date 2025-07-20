@@ -11,7 +11,7 @@ function NoticeDetail() {
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="공지사항" />
-            <div style={{ maxWidth: 600, margin: '40px auto', padding: 24, paddingTop: 40, minHeight: '100vh' }}>
+            <div style={{ maxWidth: 600, margin: '40px auto', marginTop: 50, padding: 24, paddingTop: 40, minHeight: '100vh' }}>
                 {notice ? (
                     <>
                         <h2 style={{ color: '#222', marginTop: 10, marginBottom: 10, textAlign: 'left', fontWeight: 500, fontSize: 22 }}>{notice.title}</h2>
