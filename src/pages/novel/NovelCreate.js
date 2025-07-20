@@ -157,7 +157,7 @@ const loadingMessages = [
 const potionImages = [
     { genre: '로맨스', src: '/potion/romance.png', label: '로맨스' },
     { genre: '역사', src: '/potion/historical.png', label: '역사' },
-    { genre: '추리', src: '/potion/mystery.png', label: '미스터리' },
+    { genre: '추리', src: '/potion/mystery.png', label: '추리' },
     { genre: '공포', src: '/potion/horror.png', label: '공포' },
     { genre: '동화', src: '/potion/fairytale.png', label: '동화' },
     { genre: '판타지', src: '/potion/fantasy.png', label: '판타지' },

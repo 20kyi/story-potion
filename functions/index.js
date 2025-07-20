@@ -36,8 +36,8 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
                     imagePrompt = `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`;
                     break;
                 case '추리':
-                    contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다. 아래는 한 주간의 일기입니다.\n${diaryBanClause}\n소설은 실제 서점에서 판매되는 추리 소설처럼 치밀하고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 단서, 반전, 미스터리, 탐정의 추리 과정, 인물 간의 심리전과 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
-                    titlePrompt = `이 소설은 미스터리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
+                    contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다. 아래는 한 주간의 일기입니다.\n${diaryBanClause}\n소설은 실제 서점에서 판매되는 추리 소설처럼 치밀하고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 단서, 반전, 추리, 탐정의 추리 과정, 인물 간의 심리전과 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. [일기 내용]\n${diaryContents}`;
+                    titlePrompt = `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘. [소설 내용]\n${novelContent?.substring(0, 1000)}`;
                     imagePrompt = `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`;
                     break;
                 case '역사':

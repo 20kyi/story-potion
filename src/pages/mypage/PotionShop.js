@@ -162,11 +162,11 @@ const potions = [
     description: '역사적 배경의 소설을 만들어요'
   },
   { 
-    id: 'mystery', 
-    name: '미스터리 포션', 
-    price: 50, 
-    image: '/potion/mystery.png',
-    description: '긴장감 넘치는 미스터리를 만들어요'
+            id: 'mystery',
+        name: '추리 포션',
+        price: 50,
+        image: '/potion/mystery.png',
+        description: '긴장감 넘치는 추리를 만들어요'
   },
   { 
     id: 'horror', 

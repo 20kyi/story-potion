@@ -237,19 +237,19 @@ const CreateButton = styled.button`
   width: 100%;
   background-color: ${({ children, completed, theme }) => {
         if (children === '일기 채우기') return '#F5F6FA'; // 연회색
-        if (children === '소설 만들기 🪙50p') return '#f5f5f5';
+        if (children === '소설 만들기') return '#f5f5f5';
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
   color: ${({ children, completed, theme }) => {
         if (children === '일기 채우기') return '#868E96';
-        if (children === '소설 만들기 🪙50p') return '#e07e7e';
+        if (children === '소설 만들기') return '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
   border: ${({ children, theme }) => {
         if (children === '일기 채우기') return '2px solid #868E96';
-        if (children === '소설 만들기 🪙50p') return '2px solid #e07e7e';
+        if (children === '소설 만들기') return '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
         return 'none';
     }};
@@ -265,7 +265,7 @@ const CreateButton = styled.button`
   &:hover {
     background-color: ${({ children, theme }) => {
         if (children === '일기 채우기') return '#E9ECEF';
-        if (children === '소설 만들기 🪙50p') return '#C3CAD6'; // hover 저채도 블루
+        if (children === '소설 만들기') return '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
@@ -623,7 +623,7 @@ const Novel = ({ user }) => {
                                     </CreateButton>
                                 ) : (
                                     <CreateButton completed={false} onClick={() => handleCreateNovel(week)}>
-                                        {isCompleted ? '소설 만들기 🪙50p' : '일기 채우기'}
+                                        {isCompleted ? '소설 만들기' : '일기 채우기'}
                                     </CreateButton>
                                 )}
                             </WeeklyCard>
