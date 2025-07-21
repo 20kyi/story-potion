@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import storageManager from '../utils/storage';
 import pushNotificationManager from '../utils/pushNotification';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { db } from '../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export const useNotification = (user) => {
     const [notification, setNotification] = useState(null);
@@ -10,7 +13,7 @@ export const useNotification = (user) => {
     useEffect(() => {
         const loadSettings = async () => {
             if (!user) return;
-            
+
             try {
                 const localSettings = await storageManager.getItem(`notificationSettings_${user.uid}`);
                 if (localSettings) {
@@ -41,9 +44,9 @@ export const useNotification = (user) => {
 
     // 푸시 알림 표시 함수
     const showPushNotification = async (title, message, options = {}) => {
-        if (pushNotificationManager.isPushSupported() && 
+        if (pushNotificationManager.isPushSupported() &&
             pushNotificationManager.getPermissionStatus() === 'granted') {
-            
+
             try {
                 await pushNotificationManager.showLocalNotification(title, {
                     body: message,
@@ -63,6 +66,47 @@ export const useNotification = (user) => {
         setNotification(null);
     };
 
+    // 알림 설정 저장
+    const saveSettings = async (newSettings) => {
+        if (!user) {
+            alert('사용자 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const settingsWithTimezone = { ...newSettings, reminderTimezone: timezone };
+            const success = await storageManager.setItem(`notificationSettings_${user.uid}`, settingsWithTimezone);
+            if (success) {
+                setSettings(settingsWithTimezone);
+                console.log('알림 설정이 성공적으로 저장되었습니다:', settingsWithTimezone);
+                // Firestore에도 저장
+                await saveSettingsToFirestore(user.uid, settingsWithTimezone);
+                // LocalNotifications 예약/취소 코드 제거됨 (서버 푸시 방식으로 전환)
+            } else {
+                alert('알림 설정 저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('저장소 저장 실패:', error);
+            alert('알림 설정 저장에 실패했습니다. 저장소 접근 권한을 확인해주세요.');
+        }
+    };
+
+    // Firestore에 알림 설정 저장 함수 추가
+    const saveSettingsToFirestore = async (uid, newSettings) => {
+        try {
+            await setDoc(doc(db, "users", uid), {
+                reminderEnabled: newSettings.enabled,
+                reminderTime: newSettings.time,
+                eventEnabled: newSettings.eventEnabled,
+                marketingEnabled: newSettings.marketingEnabled,
+                reminderTimezone: newSettings.reminderTimezone // 타임존 저장
+            }, { merge: true });
+        } catch (error) {
+            console.error('Firestore 저장 실패:', error);
+        }
+    };
+
     // 일기 작성 리마인더 체크
     const checkDiaryReminder = async () => {
         if (!user || !settings || !settings.enabled) return;
@@ -79,7 +123,7 @@ export const useNotification = (user) => {
         // 오늘 일기를 이미 작성했는지 확인 (저장소에서)
         const today = new Date().toISOString().split('T')[0];
         const todayDiary = await storageManager.getItem(`diary_${user.uid}_${today}`);
-        
+
         if (!todayDiary) {
             // 오늘 일기를 작성하지 않았으면 알림 표시
             const pushSuccess = await showPushNotification(
@@ -91,7 +135,7 @@ export const useNotification = (user) => {
                     requireInteraction: false
                 }
             );
-            
+
             // 푸시 알림이 실패하면 인앱 토스트로 대체
             if (!pushSuccess) {
                 showNotification(settings.message, 'reminder');

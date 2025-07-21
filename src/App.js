@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 // 페이지 및 컴포넌트 임포트 생략 (기존 그대로)
 import Home from './pages/Home';
@@ -121,6 +122,13 @@ function App() {
                     }
                 }
             }
+        });
+
+        // FCM 푸시 알림 수신 리스너 등록
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            console.log('푸시 알림 수신:', notification);
+            // TODO: 필요시 Toast 등으로 표시
+            alert(notification.title + '\n' + notification.body);
         });
 
         return () => unsubscribe();

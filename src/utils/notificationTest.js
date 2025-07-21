@@ -205,8 +205,8 @@ class NotificationTest {
                     {
                         title,
                         body,
-                        id: Math.floor(Date.now() % 1000000), // Java int 범위 내의 값으로 수정
-                        schedule: { at: new Date(Date.now() + 1000) }, // 1초 후 표시
+                        id: Math.floor(Date.now() % 1000000),
+                        // schedule: { at: new Date(Date.now() + 1000) }, // 즉시 알림을 위해 제거
                         sound: null,
                         attachments: null,
                         actionTypeId: "",

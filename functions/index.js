@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { OpenAI } = require("openai");
+const { DateTime } = require('luxon');
 
 admin.initializeApp();
 
@@ -129,25 +130,25 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
 
 // 일기 작성 리마인더 예약 푸시 함수
 exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(async (context) => {
-    const now = new Date();
-    const hour = now.getHours().toString().padStart(2, '0');
-    const minute = now.getMinutes().toString().padStart(2, '0');
-    const currentTime = `${hour}:${minute}`;
-
     const usersSnapshot = await admin.firestore().collection('users')
         .where('reminderEnabled', '==', true)
-        .where('reminderTime', '==', currentTime)
         .get();
 
     const messages = [];
     usersSnapshot.forEach(doc => {
-        const token = doc.data().fcmToken;
-        if (token) {
+        const user = doc.data();
+        if (!user.fcmToken || !user.reminderTime) return;
+        const timezone = user.reminderTimezone || 'Asia/Seoul';
+        const now = DateTime.now().setZone(timezone);
+        const hour = now.toFormat('HH');
+        const minute = now.toFormat('mm');
+        const currentTime = `${hour}:${minute}`;
+        if (currentTime === user.reminderTime) {
             messages.push({
-                token,
+                token: user.fcmToken,
                 notification: {
                     title: '일기 작성 리마인더',
-                    body: '오늘의 일기를 잊지 마세요!'
+                    body: user.message || '오늘의 일기를 잊지 마세요!'
                 }
             });
         }
@@ -155,9 +156,9 @@ exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(
 
     if (messages.length > 0) {
         await admin.messaging().sendAll(messages);
-        console.log(`${messages.length}명에게 리마인더 푸시 발송 완료 (${currentTime})`);
+        console.log(`${messages.length}명에게 리마인더 푸시 발송 완료`);
     } else {
-        console.log(`리마인더 대상자 없음 (${currentTime})`);
+        console.log('리마인더 대상자 없음');
     }
     return null;
 }); 
