@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'fireb
 import { useSwipeable } from 'react-swipeable';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useToast } from '../../components/ui/ToastProvider';
+import { useTheme } from '../../ThemeContext';
 
 const Container = styled.div`
   display: flex;
@@ -40,9 +41,9 @@ const ContentContainer = styled.div`
   position: relative;
   width: 100%;
   min-height: 200px;
-  border: 1px solid #fdd2d2;
+  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
   border-radius: 12px;
-  background: #fafafa;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
   padding: 16px;
   margin-bottom: 20px;
   overflow: visible;
@@ -85,6 +86,8 @@ function DiaryView({ user }) {
     const [noMoreFuture, setNoMoreFuture] = useState(false); // 미래 안내 상태
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const toast = useToast();
+    const theme = useTheme();
+    const isDark = theme.mode === 'dark';
 
     // 날짜 계산 함수
     const getAdjacentDate = (baseDate, diff) => {
@@ -298,11 +301,11 @@ function DiaryView({ user }) {
             height: '150px',
             objectFit: 'cover',
             borderRadius: '8px',
-            border: '1px solid #fdd2d2'
+            border: `1px solid ${isDark ? '#4a4a4a' : '#fdd2d2'}`
         },
         noDiary: {
             textAlign: 'center',
-            color: '#888',
+            color: isDark ? '#aaa' : '#888',
             fontSize: '16px',
             marginTop: '40px'
         }
@@ -347,9 +350,9 @@ function DiaryView({ user }) {
             <div style={styles.content}>
                 <main style={styles.mainContent}>
                     {isLoading ? (
-                        <div>로딩 중...</div>
+                        <div style={{ color: isDark ? '#fff' : '#000' }}>로딩 중...</div>
                     ) : noMoreFuture ? (
-                        <div style={{ textAlign: 'center', color: '#888', fontSize: '14px', marginTop: '80px' }}>
+                        <div style={{ textAlign: 'center', color: isDark ? '#aaa' : '#888', fontSize: '14px', marginTop: '80px' }}>
                             더이상 일기가 없습니다.<br />
                             (왼쪽으로 스와이프하면 이전 일기로 돌아갑니다)
                         </div>

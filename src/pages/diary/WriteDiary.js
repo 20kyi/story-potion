@@ -10,7 +10,7 @@ import imageCompression from 'browser-image-compression';
 import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/ToastProvider';
 import { usePrompt } from '../../hooks/usePrompt';
-import { useTheme } from 'styled-components';
+import { useTheme } from '../../ThemeContext';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 
@@ -97,7 +97,7 @@ const ImagePreviewBox = styled.div`
   height: 100px;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid #fdd2d2;
+  border: 2px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
   background: #fafafa;
   display: flex;
   align-items: center;
@@ -262,7 +262,7 @@ const StickerPlaceholder = styled.div`
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #999;
+  color: ${({ theme }) => theme.mode === 'dark' ? '#aaa' : '#999'};
   font-size: 14px;
   
   .icon {
@@ -330,9 +330,9 @@ const ContentContainer = styled.div`
   position: relative;
   width: 100%;
   min-height: 300px;
-  border: 1px solid #fdd2d2;
+  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
   border-radius: 12px;
-  background: #fafafa;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
   padding: 16px;
   margin-bottom: 20px;
   overflow: visible;
