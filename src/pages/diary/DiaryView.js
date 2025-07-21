@@ -15,9 +15,9 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  padding-top: 40px;
+  padding-bottom: 100px;
   margin: 0 auto;
-  margin-top: 50px;
+  margin-top: 60px;
   max-width: 600px;
   width: 100%;
   box-sizing: border-box;

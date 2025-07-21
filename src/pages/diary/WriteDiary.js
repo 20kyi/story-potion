@@ -331,18 +331,42 @@ const ContentTextarea = styled.textarea`
   white-space: pre-wrap;
   position: relative;
   min-height: 300px;
+  overflow-y: auto; /* 자동 스크롤 추가 */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a #2a2a2a' : '#fdd2d2 #fafafa'}; /* Firefox */
+  
+  /* Webkit 스크롤바 스타일링 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.mode === 'dark' ? '#5a5a5a' : '#ecc2c2'};
+  }
 `;
 
 const ContentContainer = styled.div`
   position: relative;
   width: 100%;
+  max-width: 100%;
   min-height: 300px;
   border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
   border-radius: 12px;
   background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
   padding: 16px;
   margin-bottom: 20px;
-  overflow: visible;
+  overflow: ${() => window.innerWidth <= 768 ? 'hidden' : 'visible'};
+  box-sizing: border-box;
 `;
 
 const StickerElement = styled.div`
@@ -491,7 +515,8 @@ function WriteDiary({ user }) {
             textareaRef.current.style.height = 'auto';
             const scrollHeight = textareaRef.current.scrollHeight;
             const minHeight = 300;
-            const newHeight = Math.max(scrollHeight, minHeight);
+            const maxHeight = window.innerWidth <= 768 ? 800 : 600; // 모바일에서 더 큰 최대 높이
+            const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
             textareaRef.current.style.height = newHeight + 'px';
             setContentHeight(newHeight + 32); // padding 고려
         }
@@ -506,6 +531,15 @@ function WriteDiary({ user }) {
         if (Capacitor.getPlatform() !== 'web') {
             onShow = Keyboard.addListener('keyboardWillShow', (info) => {
                 setKeyboardHeight(info.keyboardHeight);
+                // 키보드가 올라올 때 입력창이 가려지지 않도록 스크롤
+                setTimeout(() => {
+                    if (textareaRef.current) {
+                        textareaRef.current.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                }, 100);
             });
             onHide = Keyboard.addListener('keyboardWillHide', () => {
                 setKeyboardHeight(0);
@@ -533,10 +567,14 @@ function WriteDiary({ user }) {
 
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleMouseMove, { passive: false });
+        document.addEventListener('touchend', handleMouseUp);
 
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleMouseMove);
+            document.removeEventListener('touchend', handleMouseUp);
         };
     }, [draggedSticker, dragStartPos, stickers]);
 
@@ -809,7 +847,11 @@ function WriteDiary({ user }) {
 
         const padding = 16; // ContentContainer의 padding
         const minHeight = 300; // 최소 높이
-        const fixedWidth = 600; // 고정 너비
+
+        // 모바일에서는 실제 화면 너비를 계산, 데스크탑에서는 고정 너비
+        const isMobile = window.innerWidth <= 768;
+        const containerWidth = isMobile ? Math.min(window.innerWidth - 40, 600) : 600; // 40px는 좌우 마진
+        const fixedWidth = `${containerWidth}px`;
 
         // 모든 스티커의 최대 위치 계산 (가로는 제한)
         const maxY = Math.max(...currentStickers.map(s => s.y + s.height));
@@ -817,17 +859,18 @@ function WriteDiary({ user }) {
         // 컨테이너 크기 계산 (가로는 고정, 세로만 동적)
         const containerHeight = Math.max(minHeight, maxY + padding * 2);
 
-        console.log('Container size update:', { maxY, containerHeight });
+        console.log('Container size update:', { maxY, containerHeight, isMobile, fixedWidth, containerWidth });
 
-        // ContentContainer의 크기 업데이트 (가로는 고정)
+        // ContentContainer의 크기 업데이트 (가로는 고정 픽셀 값)
         const contentContainer = document.querySelector('[data-content-container]');
         if (contentContainer) {
-            contentContainer.style.width = `${fixedWidth}px`;
+            contentContainer.style.width = fixedWidth;
             contentContainer.style.height = `${containerHeight}px`;
+            contentContainer.style.maxWidth = '100%'; // 부모 컨테이너를 넘지 않도록
         }
     };
 
-    // 드래그 시작 처리
+    // 드래그 시작 처리 (마우스 + 터치)
     const handleDragStart = (e, stickerId, action) => {
         e.preventDefault();
         e.stopPropagation();
@@ -835,21 +878,29 @@ function WriteDiary({ user }) {
         const sticker = stickers.find(s => s.id === stickerId);
         if (!sticker) return;
 
-        setDragStartPos({ x: e.clientX, y: e.clientY });
+        // 마우스와 터치 이벤트 모두 지원
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+        setDragStartPos({ x: clientX, y: clientY });
         setSelectedSticker(stickerId);
         setDraggedSticker({ id: stickerId, action });
 
         console.log('Drag start:', action, stickerId);
     };
 
-    // 드래그 중 처리
+    // 드래그 중 처리 (마우스 + 터치)
     const handleDragMove = (e) => {
         if (!draggedSticker || !dragStartPos) return;
 
         e.preventDefault();
 
-        const deltaX = e.clientX - dragStartPos.x;
-        const deltaY = e.clientY - dragStartPos.y;
+        // 마우스와 터치 이벤트 모두 지원
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+        const deltaX = clientX - dragStartPos.x;
+        const deltaY = clientY - dragStartPos.y;
 
         console.log('Drag move:', draggedSticker.action, deltaX, deltaY);
 
@@ -867,7 +918,7 @@ function WriteDiary({ user }) {
             }
         }
 
-        setDragStartPos({ x: e.clientX, y: e.clientY });
+        setDragStartPos({ x: clientX, y: clientY });
     };
 
     // 드래그 종료 처리
@@ -884,21 +935,26 @@ function WriteDiary({ user }) {
         container: {
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100svh',
+            minHeight: window.innerWidth <= 768 ? '120vh' : '100vh', // 모바일에서 더 긴 화면
             position: 'relative',
             maxWidth: '600px',
-            margin: '40px auto',
-            padding: '20px',
-            paddingTop: '40px',
-            // paddingBottom: '100px',
+            width: '100%',
+            margin: window.innerWidth <= 768 ? '0 auto' : '60px auto',
+            padding: window.innerWidth <= 768 ? '20px' : '20px',
+            paddingTop: window.innerWidth <= 768 ? '20px' : '20px',
+            marginBottom: window.innerWidth <= 768 ? '100px' : '100px',
+            paddingBottom: window.innerWidth <= 768 ? '200px' : '180px', // 키보드 대응을 위해 더 큰 패딩
+            overflowX: 'hidden', // 가로 스크롤 방지
         },
         mainContent: {
             flex: 1,
             position: 'relative',
-            paddingBottom: '100px',
+            paddingBottom: window.innerWidth <= 768 ? '250px' : '220px', // 키보드 대응을 위해 더 큰 패딩
             minHeight: 0,
             width: '100%',
+            maxWidth: '100%',
             paddingTop: '8px',
+            overflowX: 'hidden', // 가로 스크롤 방지
         },
         // header: {
         //     display: 'flex',
@@ -1315,6 +1371,7 @@ function WriteDiary({ user }) {
                                 src={sticker.src}
                                 alt={sticker.type}
                                 onMouseDown={(e) => handleDragStart(e, sticker.id, 'move')}
+                                onTouchStart={(e) => handleDragStart(e, sticker.id, 'move')}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     selectSticker(sticker.id);
@@ -1322,7 +1379,8 @@ function WriteDiary({ user }) {
                                 style={{
                                     cursor: draggedSticker?.id === sticker.id ? 'grabbing' : 'grab',
                                     userSelect: 'none',
-                                    pointerEvents: 'auto'
+                                    pointerEvents: 'auto',
+                                    touchAction: 'none'
                                 }}
                                 draggable={false}
                             />
@@ -1353,6 +1411,11 @@ function WriteDiary({ user }) {
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                                         }}
                                         onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDragStart(e, sticker.id, 'resize');
+                                        }}
+                                        onTouchStart={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             handleDragStart(e, sticker.id, 'resize');
