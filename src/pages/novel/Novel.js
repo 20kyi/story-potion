@@ -13,9 +13,9 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 40px;
+//   padding-top: 40px;
   padding-bottom: 100px;
-  margin: 40px auto;
+  margin: 60px auto;
   max-width: 600px;
   overflow-y: auto;
   position: relative;
@@ -504,7 +504,7 @@ const Novel = ({ user }) => {
         // 해당 주차에서 작성하지 않은 첫 번째 날짜 찾기
         const weekStartDate = new Date(week.start);
         const weekEndDate = new Date(week.end);
-        
+
         // 해당 주차의 모든 날짜 생성
         const weekDates = [];
         const currentDate = new Date(weekStartDate);
@@ -512,20 +512,20 @@ const Novel = ({ user }) => {
             weekDates.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
+
         // 해당 주차의 일기들 찾기
         const weekDiaries = diaries.filter(diary => {
             const diaryDate = new Date(diary.date);
             return diaryDate >= weekStartDate && diaryDate <= weekEndDate;
         });
-        
+
         // 작성하지 않은 첫 번째 날짜 찾기
         const writtenDates = weekDiaries.map(diary => formatDate(diary.date));
         const unwrittenDate = weekDates.find(date => {
             const dateStr = formatDate(date);
             return !writtenDates.includes(dateStr);
         });
-        
+
         if (unwrittenDate) {
             // 일기 작성 페이지로 이동 (해당 날짜와 함께)
             navigate('/write', {

@@ -37,7 +37,7 @@ const Container = styled.div`
   min-height: 100vh;
   padding: 20px;
 //   padding-top: 50px;
-  margin: 50px auto;
+  margin: 60px auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
 `;
@@ -109,7 +109,7 @@ function Diary({ user }) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginTop: '20px',
+            // marginTop: '20px',
             marginBottom: '20px'
         },
         monthText: {

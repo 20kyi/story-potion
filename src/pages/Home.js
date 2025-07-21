@@ -18,9 +18,9 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 30px;
+  // padding-top: 30px;
   padding-bottom: 100px;
-  margin: 40px auto;
+  margin: 60px auto;
   max-width: 600px;
   overflow-y: auto;
   position: relative;
@@ -613,8 +613,8 @@ function Home({ user }) {
             {potionData.map(potion => {
               const count = ownedPotions[potion.id] || 0;
               return count > 0 ? (
-                <PotionCard 
-                  key={potion.id} 
+                <PotionCard
+                  key={potion.id}
                   onClick={() => navigate('/my/potion-shop')}
                   title={`${potion.name} 포션 ${count}개 보유`}
                 >
