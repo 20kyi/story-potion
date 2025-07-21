@@ -28,10 +28,10 @@ const MenuList = styled.ul`
 
 const MenuItem = styled.li`
   background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
+//   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 14px;
+//   margin-bottom: 16px;
   font-weight: 500;
   font-size: 16px;
   display: flex;
@@ -39,7 +39,7 @@ const MenuItem = styled.li`
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: ${({ theme }) => theme.cardShadow};
+//   box-shadow: ${({ theme }) => theme.cardShadow};
 
   &:hover {
     transform: translateY(-2px);
@@ -120,7 +120,7 @@ function Social() {
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="소셜" />
             <MainContainer theme={theme}>
-                <SectionTitle theme={theme}>친구 관리</SectionTitle>
+                <SectionTitle theme={theme} style={{ marginTop: '0px', marginBottom: '16px' }}>친구 관리</SectionTitle>
                 <MenuList>
                     <MenuItem
                         onClick={handleFriendSearch}

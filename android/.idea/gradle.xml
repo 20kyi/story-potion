@@ -16,6 +16,8 @@
             <option value="$PROJECT_DIR$/../node_modules/@capacitor/app/android" />
             <option value="$PROJECT_DIR$/../node_modules/@capacitor/browser/android" />
             <option value="$PROJECT_DIR$/../node_modules/@capacitor/keyboard/android" />
+            <option value="$PROJECT_DIR$/../node_modules/@capacitor/local-notifications/android" />
+            <option value="$PROJECT_DIR$/../node_modules/@capacitor/push-notifications/android" />
             <option value="$PROJECT_DIR$/../node_modules/@capacitor/status-bar/android" />
           </set>
         </option>

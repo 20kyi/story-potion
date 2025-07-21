@@ -1,4 +1,7 @@
 import { Capacitor } from '@capacitor/core';
+// 추가: Capacitor PushNotifications import
+import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 /**
  * 알림 테스트 유틸리티
@@ -54,8 +57,16 @@ class NotificationTest {
                 permission: permission,
                 message: this.getPermissionMessage(permission)
             };
+        } else if (this.isAndroid) {
+            // 안드로이드 앱 환경: 명시적으로 알림 권한 요청
+            const result = await PushNotifications.requestPermissions();
+            return {
+                granted: result.receive === 'granted',
+                permission: result.receive,
+                message: result.receive === 'granted' ? '알림 권한이 허용되었습니다.' : '알림 권한이 거부되었습니다.'
+            };
         } else {
-            // 앱 환경에서는 권한이 이미 있다고 가정
+            // 기타 앱 환경에서는 권한이 이미 있다고 가정
             return {
                 granted: true,
                 permission: 'granted',
@@ -186,13 +197,28 @@ class NotificationTest {
     /**
      * 앱 알림 보내기 (향후 Capacitor 플러그인 추가 시 구현)
      */
-    async sendAppNotification(title, body) {
-        // 현재는 웹 알림과 동일하게 처리
-        // 나중에 Capacitor LocalNotifications 플러그인 추가 시 구현
-        console.log('앱 알림 전송 (현재는 웹 알림과 동일):', { title, body });
-
-        // 임시로 웹 알림 방식 사용
-        return await this.sendWebNotification(title, body);
+    async sendAppNotification(title = 'Story Potion 테스트', body = '알림 기능이 정상적으로 작동합니다! 🎉') {
+        if (this.isAndroid) {
+            // Capacitor LocalNotifications 사용
+            await LocalNotifications.schedule({
+                notifications: [
+                    {
+                        title,
+                        body,
+                        id: Math.floor(Date.now() % 1000000), // Java int 범위 내의 값으로 수정
+                        schedule: { at: new Date(Date.now() + 1000) }, // 1초 후 표시
+                        sound: null,
+                        attachments: null,
+                        actionTypeId: "",
+                        extra: null
+                    }
+                ]
+            });
+            return true;
+        } else {
+            // 기존 웹 알림 방식
+            return await this.sendWebNotification(title, body);
+        }
     }
 
     /**
