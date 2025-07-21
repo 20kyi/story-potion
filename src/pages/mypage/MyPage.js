@@ -35,7 +35,7 @@ import GearIcon from '../../components/icons/GearIcon';
 import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
@@ -68,7 +68,6 @@ const MainContainer = styled.div`
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 100px;
 `;
 
 const ProfileContainer = styled.div`
@@ -478,6 +477,12 @@ function MyPage({ user }) {
         photoURL: photoURL,
       });
 
+      // Firestore users 문서에도 photoURL 반영
+      await updateDoc(doc(db, 'users', user.uid), {
+        displayName: newDisplayName,
+        photoURL: photoURL
+      });
+
       alert('프로필이 성공적으로 업데이트되었습니다.');
       setIsEditing(false);
     } catch (error) {
@@ -490,7 +495,7 @@ function MyPage({ user }) {
   return (
     <>
       <Header user={user} title="마이페이지" />
-      <MainContainer className="my-page-container" style={{ paddingBottom: 100 + keyboardHeight }}>
+      <MainContainer className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
         {isEditing ? (
           <EditProfileCard>
             <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>

@@ -119,15 +119,27 @@ const genreBanners = {
   '역사': process.env.PUBLIC_URL + '/novel_banner/historical.png',
   '동화': process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
   '판타지': process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+  '공포': process.env.PUBLIC_URL + '/novel_banner/horror.png'
+};
+
+const genreMap = {
+  fantasy: '판타지',
+  romance: '로맨스',
+  mystery: '추리',
+  historical: '역사',
+  fairytale: '동화',
+  horror: '공포'
 };
 
 const NovelListByGenre = ({ user }) => {
-  const { genre } = useParams();
+  const { genre: genreParam } = useParams();
+  const genre = (genreMap[genreParam] || genreParam).trim(); // 한글로 변환 후 trim
   const navigate = useNavigate();
   const [novels, setNovels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('useEffect 실행', user, genre);
     if (!user || !genre) {
       setIsLoading(false);
       return;
@@ -136,11 +148,12 @@ const NovelListByGenre = ({ user }) => {
     const fetchNovels = async () => {
       setIsLoading(true);
       try {
+        console.log('Firestore 쿼리 userId:', user.uid, 'genre:', genre);
         const novelsRef = collection(db, 'novels');
         const q = query(novelsRef,
           where('userId', '==', user.uid),
           where('genre', '==', genre),
-          orderBy('createdAt', 'desc') // Reverted to desc to use existing index
+          orderBy('createdAt', 'desc')
         );
 
         const querySnapshot = await getDocs(q);
@@ -148,9 +161,10 @@ const NovelListByGenre = ({ user }) => {
           id: doc.id,
           ...doc.data()
         }));
+        console.log('fetchedNovels:', fetchedNovels);
         setNovels(fetchedNovels);
       } catch (error) {
-        // console.error("Error fetching novels by genre: ", error);
+        console.error('Error fetching novels by genre:', error);
       } finally {
         setIsLoading(false);
       }
@@ -178,7 +192,7 @@ const NovelListByGenre = ({ user }) => {
         ) : novels.length > 0 ? (
           <NovelGrid>
             {novels.map(novel => (
-              <NovelItem key={novel.id} onClick={() => handleNovelClick(novel)}>
+              <NovelItem key={novel.id || novel.title} onClick={() => handleNovelClick(novel)}>
                 <WeekTitle>{novel.week}</WeekTitle>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelTitle>{novel.title}</NovelTitle>

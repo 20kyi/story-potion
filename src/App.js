@@ -28,6 +28,7 @@ import NotificationSettings from './pages/mypage/NotificationSettings';
 import Notice from './pages/mypage/Notice';
 import Support from './pages/mypage/Support';
 import Social from './pages/mypage/Social';
+import FriendSearch from './pages/mypage/FriendSearch';
 import Premium from './pages/mypage/Premium';
 import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
@@ -78,6 +79,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/notice/:id" element={user ? <NoticeDetail user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/friend-search" element={user ? <FriendSearch user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
