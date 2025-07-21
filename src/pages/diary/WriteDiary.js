@@ -939,7 +939,7 @@ function WriteDiary({ user }) {
             position: 'relative',
             maxWidth: '600px',
             width: '100%',
-            margin: window.innerWidth <= 768 ? '0 auto' : '60px auto',
+            margin: window.innerWidth <= 768 ? '60 auto' : '60px auto',
             padding: window.innerWidth <= 768 ? '20px' : '20px',
             paddingTop: window.innerWidth <= 768 ? '20px' : '20px',
             marginBottom: window.innerWidth <= 768 ? '100px' : '100px',
