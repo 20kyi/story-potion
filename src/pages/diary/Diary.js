@@ -551,7 +551,18 @@ function Diary({ user }) {
             const future = isFutureDate(date);
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
-            const emotionImg = diary && diary.emotion ? emotionImageMap[diary.emotion] : null;
+
+            // 스티커가 있으면 첫 번째 스티커를, 없으면 감정 이모티콘을 표시
+            let displayImg = null;
+            if (diary) {
+                if (diary.stickers && diary.stickers.length > 0) {
+                    // 첫 번째 스티커를 대표 이미지로 사용
+                    displayImg = diary.stickers[0].src;
+                } else if (diary.emotion) {
+                    // 스티커가 없으면 감정 이모티콘 사용
+                    displayImg = emotionImageMap[diary.emotion];
+                }
+            }
 
             days.push(
                 <td key={`current-${day}`} style={styles.dateCell}>
@@ -569,9 +580,9 @@ function Diary({ user }) {
                     >
                         <span style={{ color: document.body.classList.contains('dark') ? '#fff' : '#000' }}>{day}</span>
                         {isToday && <div style={styles.todayCircle} />}
-                        {/* 감정 이미지만, 없으면 빈 공간 */}
+                        {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
                         <div style={{ marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                            {emotionImg && <img src={emotionImg} alt="감정" style={{ width: 24, height: 24, marginBottom: 2 }} />}
+                            {displayImg && <img src={displayImg} alt="대표 이미지" style={{ width: 24, height: 24, marginBottom: 2 }} />}
                         </div>
                     </button>
                 </td>
