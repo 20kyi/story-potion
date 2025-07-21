@@ -50,7 +50,6 @@ const ContentContainer = styled.div`
 
 const StickerElement = styled.div`
   position: absolute;
-  transform: ${props => `rotate(${props.rotation}deg)`};
 `;
 
 const StickerImage = styled.img`
@@ -380,7 +379,6 @@ function DiaryView({ user }) {
                                     diary.stickers.map((sticker) => (
                                         <StickerElement
                                             key={sticker.id}
-                                            rotation={sticker.rotation}
                                             style={{
                                                 left: sticker.x,
                                                 top: sticker.y,

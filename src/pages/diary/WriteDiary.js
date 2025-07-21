@@ -153,24 +153,32 @@ const StickerHandle = styled.div`
 
 const StickerDeleteButton = styled.button`
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
   border: none;
-  background: #ff6b6b;
+  background: #ff4757;
   color: white;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 6px rgba(255, 71, 87, 0.3);
+  z-index: 15;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: #ff5252;
-    transform: scale(1.1);
+    background: #ff3742;
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(255, 71, 87, 0.4);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
@@ -334,7 +342,6 @@ const StickerElement = styled.div`
   position: absolute;
   cursor: move;
   user-select: none;
-  transform: ${props => `rotate(${props.rotation}deg)`};
   border: ${props => props.isSelected ? '2px solid #cb6565' : 'none'};
   border-radius: 4px;
   
@@ -380,8 +387,6 @@ function WriteDiary({ user }) {
     const [contentHeight, setContentHeight] = useState(300);
     const [draggedSticker, setDraggedSticker] = useState(null);
     const [dragStartPos, setDragStartPos] = useState(null);
-    const [rotationStartAngle, setRotationStartAngle] = useState(0);
-    const [initialStickerRotation, setInitialStickerRotation] = useState(0);
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -724,7 +729,6 @@ function WriteDiary({ user }) {
             y: 50,
             width: 60,
             height: 60,
-            rotation: 0,
             zIndex: stickerCounter
         };
         setStickers(prev => {
@@ -763,15 +767,7 @@ function WriteDiary({ user }) {
         });
     };
 
-    const updateStickerRotation = (stickerId, rotation) => {
-        setStickers(prev =>
-            prev.map(sticker =>
-                sticker.id === stickerId
-                    ? { ...sticker, rotation }
-                    : sticker
-            )
-        );
-    };
+
 
     const removeSticker = (stickerId) => {
         setStickers(prev => {
@@ -816,24 +812,14 @@ function WriteDiary({ user }) {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('Drag start:', action, stickerId);
-
         const sticker = stickers.find(s => s.id === stickerId);
         if (!sticker) return;
 
-        setDraggedSticker({ id: stickerId, action });
         setDragStartPos({ x: e.clientX, y: e.clientY });
         setSelectedSticker(stickerId);
+        setDraggedSticker({ id: stickerId, action });
 
-        // 회전의 경우 초기 각도 저장
-        if (action === 'rotate') {
-            const centerX = sticker.x + sticker.width / 2;
-            const centerY = sticker.y + sticker.height / 2;
-            const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
-            setRotationStartAngle(startAngle);
-            setInitialStickerRotation(sticker.rotation || 0);
-            console.log('Rotation start angle:', startAngle, 'initial sticker rotation:', sticker.rotation);
-        }
+        console.log('Drag start:', action, stickerId);
     };
 
     // 드래그 중 처리
@@ -859,17 +845,6 @@ function WriteDiary({ user }) {
                 const newHeight = Math.max(20, sticker.height + deltaY);
                 updateStickerSize(draggedSticker.id, newWidth, newHeight);
             }
-        } else if (draggedSticker.action === 'rotate') {
-            const sticker = stickers.find(s => s.id === draggedSticker.id);
-            if (sticker) {
-                const centerX = sticker.x + sticker.width / 2;
-                const centerY = sticker.y + sticker.height / 2;
-                const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
-                const angleDiff = currentAngle - rotationStartAngle;
-                const newRotation = initialStickerRotation - angleDiff;
-                console.log('Rotation:', currentAngle, rotationStartAngle, angleDiff, newRotation);
-                updateStickerRotation(draggedSticker.id, newRotation);
-            }
         }
 
         setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -880,8 +855,6 @@ function WriteDiary({ user }) {
         console.log('Drag end');
         setDraggedSticker(null);
         setDragStartPos(null);
-        setRotationStartAngle(0);
-        setInitialStickerRotation(0);
     };
 
     // 작성 중 여부 판별
@@ -1310,7 +1283,6 @@ function WriteDiary({ user }) {
                             key={sticker.id}
                             data-sticker-id={sticker.id}
                             isSelected={selectedSticker === sticker.id}
-                            rotation={sticker.rotation || 0}
                             style={{
                                 left: sticker.x,
                                 top: sticker.y,
@@ -1335,15 +1307,30 @@ function WriteDiary({ user }) {
                                 draggable={false}
                             />
 
+                            {/* 삭제 버튼 - 항상 표시 */}
+                            <StickerDeleteButton
+                                onClick={() => removeSticker(sticker.id)}
+                                title="삭제"
+                                style={{
+                                    opacity: selectedSticker === sticker.id ? 1 : 0.7
+                                }}
+                            >
+                                ✕
+                            </StickerDeleteButton>
+
                             {selectedSticker === sticker.id && (
                                 <>
                                     {/* 크기 조절 핸들 (우하단) */}
                                     <StickerHandle
                                         style={{
-                                            bottom: '-6px',
-                                            right: '-6px',
+                                            bottom: '-8px',
+                                            right: '-8px',
                                             cursor: 'nw-resize',
-                                            background: draggedSticker?.id === sticker.id && draggedSticker?.action === 'resize' ? '#a54a4a' : '#cb6565'
+                                            background: draggedSticker?.id === sticker.id && draggedSticker?.action === 'resize' ? '#a54a4a' : '#cb6565',
+                                            width: '16px',
+                                            height: '16px',
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                                         }}
                                         onMouseDown={(e) => {
                                             e.preventDefault();
@@ -1352,30 +1339,6 @@ function WriteDiary({ user }) {
                                         }}
                                         title="크기 조절"
                                     />
-
-                                    {/* 회전 핸들 (우상단) */}
-                                    <StickerHandle
-                                        style={{
-                                            top: '-6px',
-                                            right: '-6px',
-                                            cursor: 'crosshair',
-                                            background: draggedSticker?.id === sticker.id && draggedSticker?.action === 'rotate' ? '#a54a4a' : '#cb6565'
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDragStart(e, sticker.id, 'rotate');
-                                        }}
-                                        title="회전"
-                                    />
-
-                                    {/* 삭제 버튼 */}
-                                    <StickerDeleteButton
-                                        onClick={() => removeSticker(sticker.id)}
-                                        title="삭제"
-                                    >
-                                        ×
-                                    </StickerDeleteButton>
                                 </>
                             )}
                         </StickerElement>
