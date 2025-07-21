@@ -98,7 +98,7 @@ const ImagePreviewBox = styled.div`
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
-  background: #fafafa;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -200,9 +200,16 @@ const StickerPanel = styled.div`
 
 const StickerGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
   margin-bottom: 20px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
 `;
 
 const StickerItem = styled.button`
@@ -374,7 +381,7 @@ function WriteDiary({ user }) {
     const prevLocation = useRef(location);
     const textareaRef = useRef();
     const theme = useTheme();
-    const isDark = theme.mode === 'dark';
+    const isDark = theme.actualTheme === 'dark';
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
@@ -1063,7 +1070,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: labelColor,
+                                    color: isDark ? '#ffffff' : '#222',
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -1071,7 +1078,7 @@ function WriteDiary({ user }) {
                                 오늘의 날씨
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: labelColor, fontWeight: 500, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
                                 오늘의 날씨
                                 <img
                                     src={weatherImageMap[diary.weather]}
@@ -1099,7 +1106,7 @@ function WriteDiary({ user }) {
                                     alignItems: 'center',
                                     justifyContent: 'flex-start',
                                     fontSize: 16,
-                                    color: labelColor,
+                                    color: isDark ? '#ffffff' : '#222',
                                     fontWeight: 600,
                                     padding: '0 0'
                                 }}
@@ -1107,7 +1114,7 @@ function WriteDiary({ user }) {
                                 내 기분
                             </Button>
                         ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: labelColor, fontWeight: 500, padding: 0 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
                                 내 기분
                                 <img
                                     src={emotionImageMap[diary.emotion]}
@@ -1136,7 +1143,7 @@ function WriteDiary({ user }) {
                 {isWeatherSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: isDark ? '#232323' : '#fff',
+                        background: isDark ? '#1a1a1a' : '#fff',
                         borderTopLeftRadius: 20, borderTopRightRadius: 20,
                         boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
                         padding: 24, minHeight: 220,
@@ -1171,7 +1178,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffe29f' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -1185,7 +1192,7 @@ function WriteDiary({ user }) {
                 {isEmotionSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: isDark ? '#232323' : '#fff',
+                        background: isDark ? '#1a1a1a' : '#fff',
                         borderTopLeftRadius: 20, borderTopRightRadius: 20,
                         boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
                         padding: 24, minHeight: 220,
@@ -1220,7 +1227,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffe29f' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>
