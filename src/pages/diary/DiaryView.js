@@ -16,10 +16,13 @@ const Container = styled.div`
   min-height: 100vh;
   padding: 20px;
   padding-top: 40px;
-  margin: 40px auto;
+  margin: 0 auto;
   max-width: 600px;
+  width: 100%;
+  box-sizing: border-box;
   background: ${({ theme }) => theme.background};
   overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const DiaryTitle = styled.h2`
@@ -47,6 +50,8 @@ const ContentContainer = styled.div`
   padding: 16px;
   margin-bottom: 20px;
   overflow: visible;
+  box-sizing: border-box;
+  max-width: 100%;
 `;
 
 const StickerElement = styled.div`
@@ -208,13 +213,14 @@ function DiaryView({ user }) {
 
         const padding = 16; // ContentContainer의 padding
         const minHeight = 200; // 최소 높이
+        const maxContainerWidth = 600; // 최대 컨테이너 너비
 
         // 모든 스티커의 최대 위치 계산
         const maxX = Math.max(...diary.stickers.map(s => s.x + s.width));
         const maxY = Math.max(...diary.stickers.map(s => s.y + s.height));
 
-        // 컨테이너 크기 계산 (패딩 포함)
-        const containerWidth = Math.max(600, maxX + padding * 2); // 최소 너비 600px
+        // 컨테이너 크기 계산 (패딩 포함, 최대 너비 제한)
+        const containerWidth = Math.min(maxContainerWidth, Math.max(600, maxX + padding * 2));
         const containerHeight = Math.max(minHeight, maxY + padding * 2);
 
         console.log('DiaryView Container size update:', { maxX, maxY, containerWidth, containerHeight });

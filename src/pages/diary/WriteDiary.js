@@ -743,12 +743,26 @@ function WriteDiary({ user }) {
 
     const updateStickerPosition = (stickerId, x, y) => {
         setStickers(prev => {
+            const sticker = prev.find(s => s.id === stickerId);
+            if (!sticker) return prev;
+
+            // ContentContainer의 현재 너비 가져오기
+            const contentContainer = document.querySelector('[data-content-container]');
+            const containerWidth = contentContainer ? contentContainer.offsetWidth : 600;
+            const padding = 16; // ContentContainer의 padding
+            const maxX = containerWidth - padding * 2 - sticker.width; // 오른쪽 경계
+            const minX = 0; // 왼쪽 경계
+
+            // x 좌표를 경계 내로 제한
+            const clampedX = Math.max(minX, Math.min(maxX, x));
+
             const updatedStickers = prev.map(sticker =>
                 sticker.id === stickerId
-                    ? { ...sticker, x, y }
+                    ? { ...sticker, x: clampedX, y }
                     : sticker
             );
-            // 최신 스티커 데이터로 컨테이너 크기 업데이트
+
+            // 최신 스티커 데이터로 컨테이너 크기 업데이트 (가로는 제한)
             setTimeout(() => updateContainerSize(updatedStickers), 0);
             return updatedStickers;
         });
@@ -782,27 +796,26 @@ function WriteDiary({ user }) {
         setSelectedSticker(stickerId);
     };
 
-    // 컨테이너 크기를 스티커 위치에 맞게 업데이트
+    // 컨테이너 크기를 스티커 위치에 맞게 업데이트 (가로 크기 확장 방지)
     const updateContainerSize = (currentStickers = stickers) => {
         if (currentStickers.length === 0) return;
 
         const padding = 16; // ContentContainer의 padding
         const minHeight = 300; // 최소 높이
+        const fixedWidth = 600; // 고정 너비
 
-        // 모든 스티커의 최대 위치 계산
-        const maxX = Math.max(...currentStickers.map(s => s.x + s.width));
+        // 모든 스티커의 최대 위치 계산 (가로는 제한)
         const maxY = Math.max(...currentStickers.map(s => s.y + s.height));
 
-        // 컨테이너 크기 계산 (패딩 포함)
-        const containerWidth = Math.max(600, maxX + padding * 2); // 최소 너비 600px
+        // 컨테이너 크기 계산 (가로는 고정, 세로만 동적)
         const containerHeight = Math.max(minHeight, maxY + padding * 2);
 
-        console.log('Container size update:', { maxX, maxY, containerWidth, containerHeight });
+        console.log('Container size update:', { maxY, containerHeight });
 
-        // ContentContainer의 크기 업데이트
+        // ContentContainer의 크기 업데이트 (가로는 고정)
         const contentContainer = document.querySelector('[data-content-container]');
         if (contentContainer) {
-            contentContainer.style.width = `${containerWidth}px`;
+            contentContainer.style.width = `${fixedWidth}px`;
             contentContainer.style.height = `${containerHeight}px`;
         }
     };
