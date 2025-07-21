@@ -126,6 +126,134 @@ const RemoveButton = styled.button`
   color: #cb6565;
 `;
 
+// 스티커 관련 스타일 컴포넌트들
+
+const StickerImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+`;
+
+const StickerControls = styled.div`
+  position: absolute;
+  top: -30px;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  padding: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const StickerControlButton = styled.button`
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #cb6565;
+  color: white;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: #a54a4a;
+  }
+`;
+
+const StickerPanel = styled.div`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: ${props => props.theme.mode === 'dark' ? '#232323' : '#fff'};
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: ${props => props.theme.mode === 'dark' ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)'};
+  padding: 24px;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  animation: slideUp 0.2s ease;
+`;
+
+const StickerGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const StickerItem = styled.button`
+  width: 50px;
+  height: 50px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background: ${props => props.theme.mode === 'dark' ? '#333' : '#f5f5f5'};
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+`;
+
+const StickerButton = styled.button`
+  position: fixed;
+  bottom: 120px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: #cb6565;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(203, 101, 101, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: #a54a4a;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(203, 101, 101, 0.4);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const StickerPlaceholder = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #999;
+  font-size: 14px;
+  
+  .icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+`;
+
 // 사진 추가하기 버튼 styled-component 추가
 const UploadLabel = styled.label`
   display: flex;
@@ -177,6 +305,32 @@ const ContentTextarea = styled.textarea`
   resize: none;
   font-family: inherit;
   white-space: pre-wrap;
+  position: relative;
+  min-height: 300px;
+`;
+
+const ContentContainer = styled.div`
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  border: 1px solid #fdd2d2;
+  border-radius: 12px;
+  background: #fafafa;
+  padding: 16px;
+  margin-bottom: 20px;
+`;
+
+const StickerElement = styled.div`
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  transform: ${props => `rotate(${props.rotation}deg)`};
+  border: ${props => props.isSelected ? '2px solid #cb6565' : 'none'};
+  border-radius: 4px;
+  
+  &:hover {
+    border: 2px solid #cb6565;
+  }
 `;
 
 function WriteDiary({ user }) {
@@ -207,6 +361,13 @@ function WriteDiary({ user }) {
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
+
+    // 스티커 관련 state
+    const [stickers, setStickers] = useState([]);
+    const [isStickerPanelOpen, setIsStickerPanelOpen] = useState(false);
+    const [selectedSticker, setSelectedSticker] = useState(null);
+    const [stickerCounter, setStickerCounter] = useState(0);
+    const [contentHeight, setContentHeight] = useState(300);
 
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
@@ -241,6 +402,45 @@ function WriteDiary({ user }) {
         { value: 'cry', label: '슬픔' }
     ];
 
+    // 스티커 목록
+    const stickerList = [
+        { id: 'cutlery', name: '커틀러리', src: '/sticker/cutlery.png' },
+        { id: 'closednote', name: '노트', src: '/sticker/closednote.png' },
+        { id: 'note', name: '메모', src: '/sticker/note.png' },
+        { id: 'error', name: '에러', src: '/sticker/error.png' },
+        { id: 'clock', name: '시계', src: '/sticker/clock.png' },
+        { id: 'music2', name: '음악', src: '/sticker/music2.png' },
+        { id: 'phone_chat', name: '채팅', src: '/sticker/phone_chat.png' },
+        { id: 'hamburger', name: '햄버거', src: '/sticker/hamburger.png' },
+        { id: 'cake2', name: '케이크', src: '/sticker/cake2.png' },
+        { id: 'laptop2', name: '노트북', src: '/sticker/laptop2.png' },
+        { id: 'coffee_takeout', name: '커피', src: '/sticker/coffee_takeout.png' },
+        { id: 'bed', name: '침대', src: '/sticker/bed.png' },
+        { id: 'music', name: '음악', src: '/sticker/music.png' },
+        { id: 'shopping', name: '쇼핑', src: '/sticker/shopping.png' },
+        { id: 'juice', name: '주스', src: '/sticker/juice.png' },
+        { id: 'laptop', name: '노트북', src: '/sticker/laptop.png' },
+        { id: 'camera', name: '카메라', src: '/sticker/camera.png' },
+        { id: 'calander', name: '달력', src: '/sticker/calander.png' },
+        { id: 'run', name: '달리기', src: '/sticker/run.png' },
+        { id: 'gift', name: '선물', src: '/sticker/gift.png' },
+        { id: 'piggybank', name: '저금통', src: '/sticker/piggybank.png' },
+        { id: 'heart', name: '하트', src: '/sticker/heart.png' },
+        { id: 'weight', name: '운동', src: '/sticker/weight.png' },
+        { id: 'movie', name: '영화', src: '/sticker/movie.png' },
+        { id: 'cake', name: '케이크', src: '/sticker/cake.png' },
+        { id: 'sleep', name: '잠', src: '/sticker/sleep.png' },
+        { id: 'Headset', name: '헤드셋', src: '/sticker/Headset.png' },
+        { id: 'food', name: '음식', src: '/sticker/food.png' },
+        { id: 'diary2', name: '다이어리', src: '/sticker/diary2.png' },
+        { id: 'laundry', name: '빨래', src: '/sticker/laundry.png' },
+        { id: 'noddle', name: '면', src: '/sticker/noddle.png' },
+        { id: 'love_chat', name: '러브채팅', src: '/sticker/love_chat.png' },
+        { id: 'food2', name: '음식2', src: '/sticker/food2.png' },
+        { id: 'diary', name: '다이어리', src: '/sticker/diary.png' },
+        { id: 'coffee', name: '커피', src: '/sticker/coffee.png' }
+    ];
+
     useEffect(() => {
         // location.state에서 전달받은 날짜 처리
         if (location.state && location.state.selectedDate && user) {
@@ -263,7 +463,11 @@ function WriteDiary({ user }) {
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+            const scrollHeight = textareaRef.current.scrollHeight;
+            const minHeight = 300;
+            const newHeight = Math.max(scrollHeight, minHeight);
+            textareaRef.current.style.height = newHeight + 'px';
+            setContentHeight(newHeight + 32); // padding 고려
         }
     }, [diary.content]);
 
@@ -287,6 +491,47 @@ function WriteDiary({ user }) {
         };
     }, []);
 
+    // 스티커 드래그 앤 드롭 기능
+    useEffect(() => {
+        const handleMouseDown = (e) => {
+            const stickerElement = e.target.closest('[data-sticker-id]');
+            if (!stickerElement) {
+                setSelectedSticker(null);
+                return;
+            }
+
+            const stickerId = stickerElement.dataset.stickerId;
+            setSelectedSticker(stickerId);
+
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const sticker = stickers.find(s => s.id === stickerId);
+            if (!sticker) return;
+
+            const startStickerX = sticker.x;
+            const startStickerY = sticker.y;
+
+            const handleMouseMove = (e) => {
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                updateStickerPosition(stickerId, startStickerX + deltaX, startStickerY + deltaY);
+            };
+
+            const handleMouseUp = () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousedown', handleMouseDown);
+        return () => {
+            document.removeEventListener('mousedown', handleMouseDown);
+        };
+    }, [stickers]);
+
     const fetchDiaryForDate = async (date) => {
         const dateStr = formatDateToString(date);
         const diariesRef = collection(db, 'diaries');
@@ -306,6 +551,8 @@ function WriteDiary({ user }) {
                 date: dateStr,
             });
             setImagePreview(existingDiary.imageUrls || []);
+            setStickers(existingDiary.stickers || []);
+            setStickerCounter(existingDiary.stickers ? existingDiary.stickers.length : 0);
             setIsEditMode(true);
             setExistingDiaryId(diaryId);
         } else {
@@ -320,6 +567,8 @@ function WriteDiary({ user }) {
                 date: dateStr,
             });
             setImagePreview([]);
+            setStickers([]);
+            setStickerCounter(0);
             setIsEditMode(false);
             setExistingDiaryId(null);
         }
@@ -408,6 +657,7 @@ function WriteDiary({ user }) {
                 weather: diary.weather,
                 emotion: diary.emotion,
                 mood: diary.mood,
+                stickers: stickers,
                 createdAt: new Date(),
             };
 
@@ -468,8 +718,64 @@ function WriteDiary({ user }) {
         setIsWeatherSheetOpen(false);
     };
 
+    // 스티커 관련 함수들
+    const addSticker = (sticker) => {
+        const newSticker = {
+            id: `sticker_${stickerCounter}`,
+            type: sticker.id,
+            src: sticker.src,
+            x: 50,
+            y: 50,
+            width: 60,
+            height: 60,
+            rotation: 0,
+            zIndex: stickerCounter
+        };
+        setStickers(prev => [...prev, newSticker]);
+        setStickerCounter(prev => prev + 1);
+        setIsStickerPanelOpen(false);
+    };
+
+    const updateStickerPosition = (stickerId, x, y) => {
+        setStickers(prev =>
+            prev.map(sticker =>
+                sticker.id === stickerId
+                    ? { ...sticker, x, y }
+                    : sticker
+            )
+        );
+    };
+
+    const updateStickerSize = (stickerId, width, height) => {
+        setStickers(prev =>
+            prev.map(sticker =>
+                sticker.id === stickerId
+                    ? { ...sticker, width, height }
+                    : sticker
+            )
+        );
+    };
+
+    const updateStickerRotation = (stickerId, rotation) => {
+        setStickers(prev =>
+            prev.map(sticker =>
+                sticker.id === stickerId
+                    ? { ...sticker, rotation }
+                    : sticker
+            )
+        );
+    };
+
+    const removeSticker = (stickerId) => {
+        setStickers(prev => prev.filter(sticker => sticker.id !== stickerId));
+    };
+
+    const selectSticker = (stickerId) => {
+        setSelectedSticker(stickerId);
+    };
+
     // 작성 중 여부 판별
-    const isDirty = diary.title || diary.content || diary.mood || diary.weather || diary.emotion || imagePreview.length > 0;
+    const isDirty = diary.title || diary.content || diary.mood || diary.weather || diary.emotion || imagePreview.length > 0 || stickers.length > 0;
 
     const styles = {
         container: {
@@ -487,7 +793,6 @@ function WriteDiary({ user }) {
             flex: 1,
             position: 'relative',
             paddingBottom: '100px',
-            overflowY: 'scroll',
             minHeight: 0,
             width: '100%',
             paddingTop: '8px',
@@ -856,6 +1161,8 @@ function WriteDiary({ user }) {
                     </ImagePreviewContainer>
                 </div>
 
+
+
                 <TitleInput
                     type="text"
                     name="title"
@@ -865,17 +1172,123 @@ function WriteDiary({ user }) {
                     required
                 />
 
-                <ContentTextarea
-                    ref={textareaRef}
-                    name="content"
-                    placeholder="일기 내용"
-                    value={diary.content}
-                    onChange={handleChange}
-                    onFocus={e => {
-                        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}
-                    required
-                />
+                {/* 일기 내용 작성 영역 (스티커 포함) */}
+                <ContentContainer style={{ height: contentHeight }}>
+                    <ContentTextarea
+                        ref={textareaRef}
+                        name="content"
+                        placeholder="일기 내용을 작성하세요..."
+                        value={diary.content}
+                        onChange={handleChange}
+                        onFocus={e => {
+                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                        required
+                    />
+
+                    {/* 스티커들 */}
+                    {stickers.map((sticker) => (
+                        <StickerElement
+                            key={sticker.id}
+                            data-sticker-id={sticker.id}
+                            isSelected={selectedSticker === sticker.id}
+                            style={{
+                                left: sticker.x,
+                                top: sticker.y,
+                                width: sticker.width,
+                                height: sticker.height,
+                                zIndex: sticker.zIndex
+                            }}
+                        >
+                            <StickerImage src={sticker.src} alt={sticker.type} />
+                            {selectedSticker === sticker.id && (
+                                <StickerControls>
+                                    <StickerControlButton
+                                        onClick={() => updateStickerSize(sticker.id, sticker.width + 10, sticker.height + 10)}
+                                        title="크게"
+                                    >
+                                        +
+                                    </StickerControlButton>
+                                    <StickerControlButton
+                                        onClick={() => updateStickerSize(sticker.id, Math.max(20, sticker.width - 10), Math.max(20, sticker.height - 10))}
+                                        title="작게"
+                                    >
+                                        -
+                                    </StickerControlButton>
+                                    <StickerControlButton
+                                        onClick={() => updateStickerRotation(sticker.id, sticker.rotation + 15)}
+                                        title="회전"
+                                    >
+                                        ↻
+                                    </StickerControlButton>
+                                    <StickerControlButton
+                                        onClick={() => removeSticker(sticker.id)}
+                                        title="삭제"
+                                        style={{ background: '#ff6b6b' }}
+                                    >
+                                        ×
+                                    </StickerControlButton>
+                                </StickerControls>
+                            )}
+                        </StickerElement>
+                    ))}
+                </ContentContainer>
+
+                {/* 스티커 패널 */}
+                {isStickerPanelOpen && (
+                    <>
+                        <div
+                            onClick={() => setIsStickerPanelOpen(false)}
+                            style={{
+                                position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+                                background: 'rgba(0,0,0,0.15)'
+                            }}
+                        />
+                        <StickerPanel>
+                            <div style={{
+                                fontWeight: 300,
+                                fontSize: 18,
+                                marginBottom: 16,
+                                color: isDark ? '#f1f1f1' : '#222',
+                                textAlign: 'center'
+                            }}>
+                                스티커를 선택하세요
+                            </div>
+                            <StickerGrid>
+                                {stickerList.map((sticker) => (
+                                    <StickerItem
+                                        key={sticker.id}
+                                        onClick={() => addSticker(sticker)}
+                                        title={sticker.name}
+                                    >
+                                        <img src={sticker.src} alt={sticker.name} />
+                                    </StickerItem>
+                                ))}
+                            </StickerGrid>
+                            <button
+                                type="button"
+                                onClick={() => setIsStickerPanelOpen(false)}
+                                style={{
+                                    marginTop: 24,
+                                    color: isDark ? '#aaa' : '#888',
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: 16,
+                                    cursor: 'pointer',
+                                    display: 'block',
+                                    margin: '0 auto'
+                                }}
+                            >
+                                닫기
+                            </button>
+                        </StickerPanel>
+                    </>
+                )}
+
+                {/* 플로팅 스티커 버튼 */}
+                <StickerButton onClick={() => setIsStickerPanelOpen(true)}>
+                    🎨
+                </StickerButton>
             </main>
             <div style={styles.navigationFixed}>
                 <Navigation />

@@ -35,6 +35,28 @@ const DiaryContent = styled.p`
   color: ${({ theme }) => theme.diaryContent};
 `;
 
+const ContentContainer = styled.div`
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid #fdd2d2;
+  border-radius: 12px;
+  background: #fafafa;
+  padding: 16px;
+  margin-bottom: 20px;
+`;
+
+const StickerElement = styled.div`
+  position: absolute;
+  transform: ${props => `rotate(${props.rotation}deg)`};
+`;
+
+const StickerImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+`;
+
 const DiaryDate = styled.div`
   font-size: 18px;
   color: ${({ theme }) => theme.text};
@@ -313,8 +335,32 @@ function DiaryView({ user }) {
                                     ))}
                                 </div>
                             )}
+
                             <DiaryTitle>{diary.title}</DiaryTitle>
-                            <DiaryContent>{diary.content}</DiaryContent>
+
+                            {/* 일기 내용 영역 (스티커 포함) */}
+                            <ContentContainer>
+                                <DiaryContent>{diary.content}</DiaryContent>
+
+                                {/* 스티커들 */}
+                                {!isLoading && !noMoreFuture && diary && diary.stickers && diary.stickers.length > 0 && (
+                                    diary.stickers.map((sticker) => (
+                                        <StickerElement
+                                            key={sticker.id}
+                                            rotation={sticker.rotation}
+                                            style={{
+                                                left: sticker.x,
+                                                top: sticker.y,
+                                                width: sticker.width,
+                                                height: sticker.height,
+                                                zIndex: sticker.zIndex
+                                            }}
+                                        >
+                                            <StickerImage src={sticker.src} alt={sticker.type} />
+                                        </StickerElement>
+                                    ))
+                                )}
+                            </ContentContainer>
                         </>
                     ) : (
                         <div style={styles.noDiary}>
