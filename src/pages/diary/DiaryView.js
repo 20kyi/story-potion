@@ -18,6 +18,7 @@ const Container = styled.div`
   margin: 40px auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
+  overflow-y: auto;
 `;
 
 const DiaryTitle = styled.h2`
@@ -44,6 +45,7 @@ const ContentContainer = styled.div`
   background: #fafafa;
   padding: 16px;
   margin-bottom: 20px;
+  overflow: visible;
 `;
 
 const StickerElement = styled.div`
@@ -152,6 +154,13 @@ function DiaryView({ user }) {
         fetchDiary();
     }, [user, date]);
 
+    // 일기가 로드되면 컨테이너 크기 업데이트
+    useEffect(() => {
+        if (diary && !isLoading) {
+            setTimeout(() => updateContainerSize(), 100);
+        }
+    }, [diary, isLoading]);
+
     const handleDelete = async () => {
         setShowDeleteModal(true);
     };
@@ -191,6 +200,31 @@ function DiaryView({ user }) {
         setShowDeleteModal(false);
     };
 
+    // 컨테이너 크기를 스티커 위치에 맞게 업데이트
+    const updateContainerSize = () => {
+        if (!diary || !diary.stickers || diary.stickers.length === 0) return;
+
+        const padding = 16; // ContentContainer의 padding
+        const minHeight = 200; // 최소 높이
+
+        // 모든 스티커의 최대 위치 계산
+        const maxX = Math.max(...diary.stickers.map(s => s.x + s.width));
+        const maxY = Math.max(...diary.stickers.map(s => s.y + s.height));
+
+        // 컨테이너 크기 계산 (패딩 포함)
+        const containerWidth = Math.max(600, maxX + padding * 2); // 최소 너비 600px
+        const containerHeight = Math.max(minHeight, maxY + padding * 2);
+
+        console.log('DiaryView Container size update:', { maxX, maxY, containerWidth, containerHeight });
+
+        // ContentContainer의 크기 업데이트
+        const contentContainer = document.querySelector('[data-content-container]');
+        if (contentContainer) {
+            contentContainer.style.width = `${containerWidth}px`;
+            contentContainer.style.height = `${containerHeight}px`;
+        }
+    };
+
     const styles = {
         container: {
             display: 'flex',
@@ -210,7 +244,6 @@ function DiaryView({ user }) {
             // borderRadius: '30px',
             // padding: '20px',
             flex: 1,
-            overflowY: 'auto',
             position: 'relative',
             minHeight: 0,
         },
@@ -339,7 +372,7 @@ function DiaryView({ user }) {
                             <DiaryTitle>{diary.title}</DiaryTitle>
 
                             {/* 일기 내용 영역 (스티커 포함) */}
-                            <ContentContainer>
+                            <ContentContainer data-content-container>
                                 <DiaryContent>{diary.content}</DiaryContent>
 
                                 {/* 스티커들 */}
