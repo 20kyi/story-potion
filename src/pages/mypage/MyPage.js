@@ -50,9 +50,9 @@ import { isAdmin } from '../../utils/adminAuth';
 // 관리자 아이콘 추가
 const AdminIcon = ({ color = '#222' }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill={color}/>
-    <path d="M19 15L19.74 18.26L23 19L19.74 19.74L19 23L18.26 19.74L15 19L18.26 18.26L19 15Z" fill={color}/>
-    <path d="M5 6L5.5 7.5L7 8L5.5 8.5L5 10L4.5 8.5L3 8L4.5 7.5L5 6Z" fill={color}/>
+    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill={color} />
+    <path d="M19 15L19.74 18.26L23 19L19.74 19.74L19 23L18.26 19.74L15 19L18.26 18.26L19 15Z" fill={color} />
+    <path d="M5 6L5.5 7.5L7 8L5.5 8.5L5 10L4.5 8.5L3 8L4.5 7.5L5 6Z" fill={color} />
   </svg>
 );
 
@@ -138,6 +138,7 @@ const MenuGrid = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 0px;
   margin-top: 30px;
+  margin-bottom: 30px;
   width: 100%;
 `;
 
@@ -331,23 +332,20 @@ const PasswordInputIcon = styled.div`
 `;
 
 const AdminButton = styled.div`
-  position: fixed;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 10px;
   background: rgba(52, 152, 219, 0.1);
   border: 1px solid rgba(52, 152, 219, 0.3);
-  border-radius: 20px;
+  border-radius: 16px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   color: #3498db;
   font-weight: 500;
   transition: all 0.2s ease;
-  z-index: 100;
+  margin: 8px auto;
+  width: fit-content;
 
   &:hover {
     background: rgba(52, 152, 219, 0.2);
@@ -355,7 +353,7 @@ const AdminButton = styled.div`
   }
 
   &:active {
-    transform: translateX(-50%) scale(0.95);
+    transform: scale(0.95);
   }
 `;
 
@@ -370,11 +368,11 @@ function MyPage({ user }) {
   const [newProfileImageFile, setNewProfileImageFile] = useState(null); // 새 프로필 이미지 파일
   const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
   const [point, setPoint] = useState(0); // 사용자 포인트
-  
+
   // 네비게이션 및 테마
   const navigate = useNavigate();
   const theme = useTheme();
-  
+
   // 비밀번호 변경 관련 상태
   const [currentPassword, setCurrentPassword] = useState(''); // 현재 비밀번호
   const [newPassword, setNewPassword] = useState(''); // 새 비밀번호
@@ -382,12 +380,12 @@ function MyPage({ user }) {
   const [pwChangeLoading, setPwChangeLoading] = useState(false); // 비밀번호 변경 로딩 상태
   const [pwChangeError, setPwChangeError] = useState(''); // 비밀번호 변경 오류 메시지
   const [pwChangeSuccess, setPwChangeSuccess] = useState(''); // 비밀번호 변경 성공 메시지
-  
+
   // 비밀번호 보기/숨김 상태
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // 모바일 키보드 높이 (키보드가 올라올 때 화면 조정용)
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -677,12 +675,14 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>프리미엄</MenuLabel>
               </MenuButton>
-              
+
 
             </MenuGrid>
           </>
         )}
-        
+
+        <Navigation />
+
         {/* 관리자 버튼 - 관리자만 표시 */}
         {isAdmin(user) && (
           <AdminButton onClick={() => navigate('/admin/users')}>
@@ -690,8 +690,6 @@ function MyPage({ user }) {
             관리자
           </AdminButton>
         )}
-        
-        <Navigation />
       </MainContainer>
     </>
   );
