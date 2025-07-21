@@ -46,6 +46,7 @@ import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
 import './utils/createExistingUsers'; // 기존 사용자 생성 스크립트 로드
 import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
 import './utils/adminAuth'; // 관리자 권한 체크 스크립트 로드
+import FriendNovelList from './pages/novel/FriendNovelList';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -85,6 +86,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/premium/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
+                <Route path="/friend-novels" element={<FriendNovelList />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}

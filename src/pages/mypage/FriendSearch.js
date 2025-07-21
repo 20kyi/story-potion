@@ -665,7 +665,10 @@ function FriendSearch({ user }) {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                     >
-                        <UserInfo>
+                        <UserInfo
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => navigate(`/friend-novels?userId=${friend.user.uid}`)}
+                        >
                             <UserAvatar
                                 src={
                                     friend.user.photoURL &&
