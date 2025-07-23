@@ -138,7 +138,7 @@ function FriendNovelList() {
                         novels.map((novel) => (
                             <NovelItem
                                 key={novel.id}
-                                onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}
+                                onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}
                                 style={{ display: 'flex', alignItems: 'center' }}
                             >
                                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc } from 'firebase/firestore';
+import { getFsDoc as getDocFS } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -81,11 +82,15 @@ const NovelContent = styled.div`
 
 function NovelView({ user }) {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const targetUserId = searchParams.get('userId') || user.uid;
     // id가 연-월-주차(예: 2025-6-3) 형식인지 확인
     const idParts = id ? id.split('-') : [];
     const isDateKey = idParts.length === 3 && idParts.every(part => !isNaN(Number(part)));
     const [novel, setNovel] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [accessGranted, setAccessGranted] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -96,9 +101,12 @@ function NovelView({ user }) {
 
         const fetchNovel = async () => {
             setLoading(true);
+            setError('');
+            setAccessGranted(false);
             try {
+                let fetchedNovel = null;
                 if (isDateKey) {
-                    // 연-월-주차로 쿼리
+                    // 연-월-주차로 쿼리 (targetUserId 사용)
                     const [year, month, weekNum] = idParts.map(Number);
                     const novelsRef = collection(db, 'novels');
                     const q = query(
@@ -106,33 +114,81 @@ function NovelView({ user }) {
                         where('year', '==', year),
                         where('month', '==', month),
                         where('weekNum', '==', weekNum),
-                        where('userId', '==', user.uid)
+                        where('userId', '==', targetUserId)
                     );
                     const snapshot = await getDocs(q);
                     if (!snapshot.empty) {
-                        setNovel({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
-                    } else {
-                        setNovel(null);
+                        fetchedNovel = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
                     }
                 } else {
                     // 기존: 랜덤 문서 ID로 접근
                     const novelRef = doc(db, 'novels', id);
                     const novelSnap = await getDoc(novelRef);
-                    if (novelSnap.exists() && novelSnap.data().userId === user.uid) {
-                        setNovel({ ...novelSnap.data(), id: novelSnap.id });
-                    } else {
-                        setNovel(null);
+                    if (novelSnap.exists()) {
+                        fetchedNovel = { ...novelSnap.data(), id: novelSnap.id };
                     }
+                }
+                if (!fetchedNovel) {
+                    setNovel(null);
+                    setError('소설을 찾을 수 없거나 접근 권한이 없습니다.');
+                    return;
+                }
+                setNovel(fetchedNovel);
+                // 본인 소설은 바로 접근 허용
+                if (fetchedNovel.userId === user.uid) {
+                    setAccessGranted(true);
+                    return;
+                }
+                // 친구 관계 확인 (friendships 컬렉션)
+                const friendshipId = [user.uid, fetchedNovel.userId].sort().join('_');
+                const friendshipRef = fsDoc(db, 'friendships', friendshipId);
+                const friendshipSnap = await getFsDoc(friendshipRef);
+                if (!friendshipSnap.exists()) {
+                    setError('친구만 열람할 수 있습니다.');
+                    return;
+                }
+                // 친구 소설: 결제 기록 확인
+                const viewedRef = fsDoc(db, 'users', user.uid, 'viewedNovels', fetchedNovel.id);
+                const viewedSnap = await getFsDoc(viewedRef);
+                if (viewedSnap.exists()) {
+                    setAccessGranted(true);
+                    return;
+                }
+                // 트랜잭션: 포인트 차감/지급 (모든 읽기 먼저)
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const userRef = fsDoc(db, 'users', user.uid);
+                        const ownerRef = fsDoc(db, 'users', fetchedNovel.userId);
+                        const userSnap = await transaction.get(userRef);
+                        const ownerSnap = await transaction.get(ownerRef);
+                        const viewedSnapTx = await transaction.get(viewedRef);
+                        if (!userSnap.exists()) throw new Error('내 계정 정보를 찾을 수 없습니다.');
+                        if (viewedSnapTx.exists()) return; // 이미 결제됨
+                        const myPoint = userSnap.data().point || 0;
+                        if (myPoint < 10) throw new Error('포인트가 부족합니다. (10포인트 필요)');
+                        // 차감/지급
+                        transaction.update(userRef, { point: myPoint - 10 });
+                        if (ownerSnap.exists()) {
+                            const ownerPoint = ownerSnap.data().point || 0;
+                            transaction.update(ownerRef, { point: ownerPoint + 5 });
+                        }
+                        // 결제 기록 저장
+                        transaction.set(viewedRef, { viewedAt: new Date() });
+                    });
+                    setAccessGranted(true);
+                } catch (e) {
+                    setError(e.message || '포인트 결제에 실패했습니다.');
                 }
             } catch (error) {
                 setNovel(null);
+                setError('소설을 찾을 수 없거나 접근 권한이 없습니다.');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchNovel();
-    }, [id, user]);
+    }, [id, user, targetUserId]);
 
     const formatDate = (timestamp) => {
         if (!timestamp) return '날짜 정보 없음';
@@ -165,11 +221,11 @@ function NovelView({ user }) {
         );
     }
 
-    if (!novel) {
+    if (!novel || (!accessGranted && error)) {
         return (
             <Container>
                 <Header user={user} />
-                <div>소설을 찾을 수 없거나 접근 권한이 없습니다.</div>
+                <div>{error || '소설을 찾을 수 없거나 접근 권한이 없습니다.'}</div>
                 <Navigation />
             </Container>
         );
@@ -184,7 +240,7 @@ function NovelView({ user }) {
                     <NovelTitle>{novel.title}</NovelTitle>
                     <NovelDate>{formatDate(novel.createdAt)}</NovelDate>
                     {/* 삭제 버튼 */}
-                    {novel.id && (
+                    {novel.id && novel.userId === user.uid && (
                         <button onClick={handleDelete} style={{ marginTop: 16, background: '#e46262', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>
                             소설 삭제하기
                         </button>
