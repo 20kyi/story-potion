@@ -6,15 +6,18 @@
  */
 
 import { db } from '../firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDocs, 
-  query, 
+import {
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  query,
   where,
   addDoc,
-  Timestamp 
+  Timestamp,
+  orderBy,
+  startAfter,
+  limit
 } from 'firebase/firestore';
 
 /**
@@ -29,7 +32,7 @@ export const generateSampleUsers = (count = 10) => {
     '한미영', '송태호', '윤서연', '임재현', '강지은',
     '조현우', '백소영', '남기준', '오하나', '신동현'
   ];
-  
+
   const sampleEmails = [
     'user1@example.com', 'user2@example.com', 'user3@example.com',
     'user4@example.com', 'user5@example.com', 'user6@example.com',
@@ -57,7 +60,7 @@ export const generateSampleUsers = (count = 10) => {
     };
     users.push(user);
   }
-  
+
   return users;
 };
 
@@ -69,26 +72,26 @@ export const generateSampleUsers = (count = 10) => {
 export const saveUserToFirestore = async (userData) => {
   try {
     const { uid, ...userInfo } = userData;
-    
+
     // 관리자 권한 확인
     const { getAuth } = await import('firebase/auth');
     const auth = getAuth();
     const currentUser = auth.currentUser;
-    
+
     if (!currentUser) {
       throw new Error('로그인이 필요합니다.');
     }
-    
+
     // 메인 관리자 이메일 확인 (전체 권한 필요)
     const mainAdminEmails = [
       '0521kimyi@gmail.com'  // 메인 관리자만
     ];
     const isMainAdmin = mainAdminEmails.includes(currentUser.email);
-    
+
     if (!isMainAdmin) {
       throw new Error('메인 관리자 권한이 필요합니다.');
     }
-    
+
     // 사용자 기본 정보 저장
     await setDoc(doc(db, 'users', uid), {
       ...userInfo,
@@ -138,7 +141,7 @@ export const batchSaveUsers = async (users) => {
       results.failed++;
       results.errors.push(`사용자 ${user.displayName} 저장 실패`);
     }
-    
+
     // Firebase 요청 제한을 피하기 위한 지연
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -165,6 +168,52 @@ export const getExistingUsers = async () => {
   } catch (error) {
     console.error('❌ 기존 사용자 조회 실패:', error);
     return [];
+  }
+};
+
+/**
+ * 페이지네이션, 정렬, 검색 지원 유저 조회
+ * @param {Object} options - 쿼리 옵션 { limit, orderBy, orderDir, startAfter, where: [{field, op, value}] }
+ * @returns {Promise<{users: Array, lastDoc: any}>} 사용자 목록과 마지막 문서
+ */
+export const getUsersWithQuery = async (options = {}) => {
+  const {
+    limit: pageLimit = 20,
+    orderBy: orderField = 'createdAt',
+    orderDir = 'desc',
+    startAfter: startAfterDoc = null,
+    where: whereArr = []
+  } = options;
+  try {
+    let q = collection(db, 'users');
+    let queryConstraints = [];
+    // where 조건
+    whereArr.forEach(cond => {
+      queryConstraints.push(where(cond.field, cond.op, cond.value));
+    });
+    // 정렬
+    if (orderField) {
+      queryConstraints.push(orderBy(orderField, orderDir));
+    }
+    // 페이지네이션
+    if (startAfterDoc) {
+      queryConstraints.push(startAfter(startAfterDoc));
+    }
+    // limit
+    if (pageLimit) {
+      queryConstraints.push(limit(pageLimit));
+    }
+    const qFinal = query(q, ...queryConstraints);
+    const snapshot = await getDocs(qFinal);
+    const users = [];
+    snapshot.forEach(doc => {
+      users.push({ uid: doc.id, ...doc.data() });
+    });
+    const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+    return { users, lastDoc };
+  } catch (error) {
+    console.error('❌ getUsersWithQuery 실패:', error);
+    return { users: [], lastDoc: null };
   }
 };
 
@@ -205,7 +254,7 @@ export const updateUserData = async (uid, updateData) => {
       ...updateData,
       updatedAt: Timestamp.now()
     }, { merge: true });
-    
+
     console.log(`✅ 사용자 ${uid} 업데이트 완료`);
     return true;
   } catch (error) {
@@ -226,7 +275,7 @@ export const addPointHistory = async (uid, historyData) => {
       ...historyData,
       createdAt: Timestamp.now()
     });
-    
+
     console.log(`✅ 사용자 ${uid} 포인트 히스토리 추가 완료`);
     return true;
   } catch (error) {

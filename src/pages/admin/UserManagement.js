@@ -15,7 +15,8 @@ import {
   getExistingUsers,
   getUsersByCondition,
   updateUserData,
-  migrationExamples
+  migrationExamples,
+  getUsersWithQuery
 } from '../../utils/userMigration';
 import {
   givePointsToAllUsers,
@@ -36,6 +37,7 @@ import {
   findUserByEmail
 } from '../../utils/debugUsers';
 import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
+import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit } from 'firebase/firestore';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -130,12 +132,11 @@ const Status = styled.div`
 `;
 
 const UserList = styled.div`
-  max-height: 400px;
-  overflow-y: auto;
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#ddd'};
   border-radius: 4px;
-  padding: 10px;
   background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#f8f9fa'};
+  word-break: break-all;
+  overflow-wrap: anywhere;
 `;
 
 const UserItem = styled.div`
@@ -144,7 +145,14 @@ const UserItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+  flex-wrap: wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 4px;
+  }
   &:last-child {
     border-bottom: none;
   }
@@ -152,15 +160,22 @@ const UserItem = styled.div`
 
 const UserInfo = styled.div`
   flex: 1;
+  min-width: 0;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 `;
 
 const UserName = styled.strong`
   color: ${({ theme }) => theme.text};
+  word-break: break-all;
+  overflow-wrap: anywhere;
 `;
 
 const UserEmail = styled.div`
   color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
   font-size: 12px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 `;
 
 const UserPoints = styled.div`
@@ -197,33 +212,71 @@ function UserManagement({ user }) {
     point: 500
   });
   const [debugInfo, setDebugInfo] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetail, setUserDetail] = useState(null);
+  const [userActivity, setUserActivity] = useState({ diaries: [], novels: [], comments: [] });
+  const [detailLoading, setDetailLoading] = useState(false);
+  const db = getFirestore();
+  const [pointInput, setPointInput] = useState(0);
+  const [pointActionLoading, setPointActionLoading] = useState(false);
+  const [pointActionStatus, setPointActionStatus] = useState(null);
 
-  // 기존 사용자 목록 로드
-  useEffect(() => {
-    loadExistingUsers();
-    loadUsersCollectionStatus();
-  }, []);
+  // 페이지네이션/정렬 상태
+  const [pageLimit] = useState(10);
+  const [orderByField, setOrderByField] = useState('createdAt');
+  const [orderDir, setOrderDir] = useState('desc');
+  const [lastDoc, setLastDoc] = useState(null);
+  const [pageStack, setPageStack] = useState([]); // 이전 페이지 스택
 
-  const loadExistingUsers = async () => {
+  // 상태 표시용 컬러 뱃지
+  const renderStatusBadge = (status) => {
+    let color = '#2ecc40', text = '정상';
+    if (status === '정지') { color = '#e74c3c'; text = '정지'; }
+    if (status === '탈퇴') { color = '#95a5a6'; text = '탈퇴'; }
+    return <span style={{ background: color, color: 'white', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{text}</span>;
+  };
+
+  // Firestore에서 유저 목록 불러오기 (페이지네이션/정렬/검색)
+  const loadUsersPage = async (opts = {}) => {
     setLoading(true);
     try {
-      const existingUsers = await getExistingUsers();
-      setUsers(existingUsers);
-      setStatus({ type: 'success', message: `${existingUsers.length}명의 사용자를 불러왔습니다.` });
-    } catch (error) {
-      setStatus({ type: 'error', message: '사용자 목록 로드 실패: ' + error.message });
+      const { users: loadedUsers, lastDoc: newLastDoc } = await getUsersWithQuery({
+        limit: pageLimit,
+        orderBy: orderByField,
+        orderDir,
+        startAfter: opts.startAfter || null,
+        where: opts.where || []
+      });
+      setUsers(loadedUsers);
+      setLastDoc(newLastDoc);
+      if (opts.isNext) setPageStack([...pageStack, lastDoc]);
+      if (opts.isPrev) setLastDoc(pageStack[pageStack.length - 2] || null);
+    } catch (e) {
+      setStatus({ type: 'error', message: '유저 목록 불러오기 실패: ' + e.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const loadUsersCollectionStatus = async () => {
-    try {
-      const { stats } = await getUsersCollectionStatus();
-      setUsersCollectionStats(stats);
-    } catch (error) {
-      console.error('users 컬렉션 현황 로드 실패:', error);
-    }
+  // 최초 로드
+  useEffect(() => {
+    loadUsersPage();
+    // eslint-disable-next-line
+  }, [orderByField, orderDir]);
+
+  // 정렬 변경 핸들러
+  const handleSort = (field) => {
+    if (orderByField === field) setOrderDir(orderDir === 'desc' ? 'asc' : 'desc');
+    else setOrderByField(field);
+  };
+
+  // 다음/이전 페이지
+  const handleNextPage = () => loadUsersPage({ startAfter: lastDoc, isNext: true });
+  const handlePrevPage = () => {
+    const prevStack = [...pageStack];
+    prevStack.pop();
+    setPageStack(prevStack);
+    loadUsersPage({ startAfter: prevStack[prevStack.length - 1] || null, isPrev: true });
   };
 
   // 샘플 사용자 생성 및 저장
@@ -245,7 +298,7 @@ function UserManagement({ user }) {
       });
 
       // 사용자 목록 새로고침
-      await loadExistingUsers();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
     } catch (error) {
       setStatus({ type: 'error', message: '샘플 사용자 생성 실패: ' + error.message });
     } finally {
@@ -295,7 +348,7 @@ function UserManagement({ user }) {
     setStatus({ type: 'info', message: '모든 사용자 로드 중...' });
 
     try {
-      await loadExistingUsers();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
     } finally {
       setLoading(false);
     }
@@ -333,7 +386,7 @@ function UserManagement({ user }) {
         message: `포인트 지급 완료: 성공 ${result.success}명, 실패 ${result.failed}명 (총 ${result.total}명 중 ${result.usersWithoutPoints}명에게 지급)`
       });
 
-      await loadExistingUsers();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
       await handleLoadPointsStats();
     } catch (error) {
       setStatus({ type: 'error', message: '포인트 지급 실패: ' + error.message });
@@ -380,7 +433,7 @@ function UserManagement({ user }) {
         message: `조건부 포인트 지급 완료: 성공 ${result.success}명, 실패 ${result.failed}명`
       });
 
-      await loadExistingUsers();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
       await handleLoadPointsStats();
     } catch (error) {
       setStatus({ type: 'error', message: '조건부 포인트 지급 실패: ' + error.message });
@@ -402,8 +455,7 @@ function UserManagement({ user }) {
         } else {
           setStatus({ type: 'success', message: '현재 사용자 동기화 완료!' });
         }
-        await loadExistingUsers();
-        await loadUsersCollectionStatus();
+        await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
       } else {
         setStatus({ type: 'error', message: '현재 사용자 동기화 실패' });
       }
@@ -430,8 +482,7 @@ function UserManagement({ user }) {
         message: `테스트 사용자 생성 완료: 성공 ${result.success}명, 실패 ${result.failed}명`
       });
 
-      await loadExistingUsers();
-      await loadUsersCollectionStatus();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
     } catch (error) {
       setStatus({ type: 'error', message: '테스트 사용자 생성 실패: ' + error.message });
     } finally {
@@ -461,8 +512,7 @@ function UserManagement({ user }) {
         } else {
           setStatus({ type: 'success', message: '수동 사용자 생성 완료!' });
         }
-        await loadExistingUsers();
-        await loadUsersCollectionStatus();
+        await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
       } else {
         setStatus({ type: 'error', message: '수동 사용자 생성 실패: ' + result.error });
       }
@@ -557,11 +607,66 @@ function UserManagement({ user }) {
         message: `포인트 업데이트 완료: 성공 ${successCount}명, 실패 ${failCount}명`
       });
 
-      await loadExistingUsers();
+      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
     } catch (error) {
       setStatus({ type: 'error', message: '포인트 업데이트 실패: ' + error.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 유저 상세 정보/활동 내역 불러오기
+  const openUserDetail = async (u) => {
+    setSelectedUser(u);
+    setDetailLoading(true);
+    // 기본 정보
+    setUserDetail(u);
+    // 활동 내역 fetch (예시: diaries, novels, comments 컬렉션)
+    try {
+      const [diariesSnap, novelsSnap, commentsSnap] = await Promise.all([
+        getDocs(query(collection(db, 'diaries'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
+        getDocs(query(collection(db, 'novels'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
+        getDocs(query(collection(db, 'comments'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
+      ]);
+      setUserActivity({
+        diaries: diariesSnap.docs.map(d => d.data()),
+        novels: novelsSnap.docs.map(d => d.data()),
+        comments: commentsSnap.docs.map(d => d.data()),
+      });
+    } catch (e) {
+      setUserActivity({ diaries: [], novels: [], comments: [] });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+  const closeUserDetail = () => { setSelectedUser(null); setUserDetail(null); setUserActivity({ diaries: [], novels: [], comments: [] }); };
+
+  // 가입일/접속일 포맷 함수
+  const formatDate = (val) => {
+    if (!val) return '';
+    if (val.seconds) return new Date(val.seconds * 1000).toLocaleString();
+    if (typeof val === 'string' || typeof val === 'number') return new Date(val).toLocaleString();
+    return '';
+  };
+
+  // 포인트 지급/차감 핸들러
+  const handlePointChange = async (delta) => {
+    if (!selectedUser) return;
+    setPointActionLoading(true);
+    setPointActionStatus(null);
+    try {
+      const newPoint = (selectedUser.point || 0) + delta;
+      const ok = await updateUserData(selectedUser.uid, { point: newPoint });
+      if (ok) {
+        setUserDetail({ ...selectedUser, point: newPoint });
+        setPointActionStatus({ type: 'success', message: `포인트 ${delta > 0 ? '지급' : '차감'} 완료` });
+      } else {
+        setPointActionStatus({ type: 'error', message: '포인트 변경 실패' });
+      }
+    } catch (e) {
+      setPointActionStatus({ type: 'error', message: '포인트 변경 오류: ' + e.message });
+    } finally {
+      setPointActionLoading(false);
     }
   };
 
@@ -741,38 +846,30 @@ function UserManagement({ user }) {
       {/* 사용자 목록 */}
       <Section theme={theme}>
         <SectionTitle theme={theme}>👥 사용자 목록 ({users.length}명)</SectionTitle>
-        {isMainAdmin(user) && (
-          <div style={{ marginBottom: '10px' }}>
-            <Button
-              onClick={handleBulkUpdatePoints}
-              disabled={loading || users.length === 0}
-              variant="danger"
-            >
-              포인트 1000으로 일괄 설정
-            </Button>
-          </div>
-        )}
-
+        <div style={{ marginBottom: 8 }}>
+          <Button onClick={() => handleSort('createdAt')}>가입일 정렬</Button>
+          <Button onClick={() => handleSort('point')}>포인트 정렬</Button>
+        </div>
         <UserList theme={theme}>
           {users.map((user) => (
-            <UserItem key={user.uid} theme={theme}>
+            <UserItem key={user.uid} theme={theme} onClick={() => openUserDetail(user)} style={{ cursor: 'pointer' }}>
               <UserInfo>
                 <UserName theme={theme}>{user.displayName || '이름 없음'}</UserName>
                 <UserEmail theme={theme}>{user.email}</UserEmail>
+                <div style={{ marginTop: 4 }}>{renderStatusBadge(user.status)}</div>
               </UserInfo>
               <UserPoints>{user.point || 0}p</UserPoints>
+              <div style={{ fontSize: 12, color: '#888', marginLeft: 12 }}>{formatDate(user.createdAt)}</div>
             </UserItem>
           ))}
           {users.length === 0 && (
-            <div style={{
-              textAlign: 'center',
-              color: theme.theme === 'dark' ? '#bdc3c7' : '#666',
-              padding: '20px'
-            }}>
-              사용자가 없습니다.
-            </div>
+            <div style={{ textAlign: 'center', color: theme.theme === 'dark' ? '#bdc3c7' : '#666', padding: '20px' }}>사용자가 없습니다.</div>
           )}
         </UserList>
+        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          <Button onClick={handlePrevPage} disabled={pageStack.length === 0}>이전</Button>
+          <Button onClick={handleNextPage} disabled={!lastDoc}>다음</Button>
+        </div>
       </Section>
 
       {/* 포인트 지급 - 메인 관리자만 */}
@@ -951,7 +1048,7 @@ function UserManagement({ user }) {
               onClick={async () => {
                 const result = await migrationExamples.createSampleUsers();
                 setStatus({ type: 'success', message: `샘플 사용자 생성: 성공 ${result.success}명` });
-                await loadExistingUsers();
+                await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
               }}
               disabled={loading}
             >
@@ -984,7 +1081,7 @@ function UserManagement({ user }) {
               onClick={async () => {
                 const result = await pointUpdateExamples.give500PointsToZeroUsers();
                 setStatus({ type: 'success', message: `500포인트 지급: 성공 ${result.success}명` });
-                await loadExistingUsers();
+                await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
                 await handleLoadPointsStats();
               }}
               disabled={loading}
@@ -994,6 +1091,55 @@ function UserManagement({ user }) {
             </Button>
           </div>
         </Section>
+      )}
+
+      {/* 유저 상세 정보 모달 */}
+      {selectedUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeUserDetail}>
+          <div style={{
+            background: 'white',
+            borderRadius: 8,
+            padding: 24,
+            minWidth: 280,
+            maxWidth: '95vw',
+            width: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            wordBreak: 'break-all',
+            overflowWrap: 'anywhere',
+            boxSizing: 'border-box'
+          }} onClick={e => e.stopPropagation()}>
+            <h2>유저 상세 정보</h2>
+            {detailLoading ? <div>로딩 중...</div> : userDetail && (
+              <div>
+                <div><b>이메일:</b> {userDetail.email}</div>
+                <div><b>닉네임:</b> {userDetail.displayName}</div>
+                <div><b>가입일:</b> {formatDate(userDetail.createdAt)}</div>
+                <div><b>포인트:</b> {userDetail.point || 0}p</div>
+                <div style={{ margin: '8px 0' }}>
+                  <input type="number" value={pointInput} onChange={e => setPointInput(Number(e.target.value))} style={{ width: 80, marginRight: 8 }} />
+                  <Button onClick={() => handlePointChange(pointInput)} disabled={pointActionLoading || !pointInput}>지급</Button>
+                  <Button onClick={() => handlePointChange(-pointInput)} disabled={pointActionLoading || !pointInput} style={{ marginLeft: 4, background: '#e74c3c' }}>차감</Button>
+                  {pointActionStatus && <span style={{ marginLeft: 8, color: pointActionStatus.type === 'success' ? 'green' : 'red' }}>{pointActionStatus.message}</span>}
+                </div>
+                <div><b>상태:</b> {renderStatusBadge(userDetail.status)}</div>
+                <div><b>최근 접속일:</b> {formatDate(userDetail.lastLoginAt)}</div>
+                <div><b>마지막 활동일:</b> {formatDate(userDetail.lastActivityAt)}</div>
+                <hr />
+                <div><b>최근 일기</b>
+                  <ul>{userActivity.diaries.map((d, i) => <li key={i}>{d.title || '(제목 없음)'} <span style={{ color: '#888' }}>{formatDate(d.createdAt)}</span></li>)}</ul>
+                </div>
+                <div><b>최근 소설</b>
+                  <ul>{userActivity.novels.map((n, i) => <li key={i}>{n.title || '(제목 없음)'} <span style={{ color: '#888' }}>{formatDate(n.createdAt)}</span></li>)}</ul>
+                </div>
+                <div><b>최근 댓글</b>
+                  <ul>{userActivity.comments.map((c, i) => <li key={i}>{c.content || '(내용 없음)'} <span style={{ color: '#888' }}>{formatDate(c.createdAt)}</span></li>)}</ul>
+                </div>
+              </div>
+            )}
+            <div style={{ marginTop: 16, textAlign: 'right' }}><Button onClick={closeUserDetail}>닫기</Button></div>
+          </div>
+        </div>
       )}
     </Container>
   );
