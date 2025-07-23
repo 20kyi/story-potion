@@ -44,7 +44,6 @@ import PointCharge from './pages/mypage/PointCharge';
 import UserManagement from './pages/admin/UserManagement';
 import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
 import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
-import './utils/createExistingUsers'; // 기존 사용자 생성 스크립트 로드
 import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
 import './utils/adminAuth'; // 관리자 권한 체크 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';

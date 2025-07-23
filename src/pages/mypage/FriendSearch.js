@@ -634,10 +634,15 @@ function FriendSearch({ user }) {
                                 <UserEmail theme={theme}>{request.toUser.email}</UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <StatusBadge className={request.status}>
-                            {request.status === 'pending' ? '대기중' :
-                                request.status === 'accepted' ? '수락됨' : '거절됨'}
-                        </StatusBadge>
+                        <ActionRow>
+                            <RejectButton
+                                className="danger"
+                                onClick={() => {/* 요청 취소 함수 구현 필요 */ }}
+                                disabled={isLoading}
+                            >
+                                요청 취소
+                            </RejectButton>
+                        </ActionRow>
                     </UserCard>
                 ))
             )}

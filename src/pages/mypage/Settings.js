@@ -182,7 +182,6 @@ function Settings() {
                 </button>
                 <div className="withdraw-link">
                     <span
-                        style={{ color: '#e46262', cursor: 'pointer', fontWeight: 'bold' }}
                         onClick={async () => {
                             if (!window.confirm('정말로 회원 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.')) return;
                             try {
