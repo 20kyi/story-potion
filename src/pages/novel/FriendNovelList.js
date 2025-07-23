@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, doc, getDoc, runTransaction, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc, runTransaction, setDoc, addDoc, Timestamp } from 'firebase/firestore';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -206,6 +206,14 @@ function FriendNovelList({ user }) {
                 }
                 // 결제 기록 저장
                 transaction.set(viewedRef, { viewedAt: new Date() });
+            });
+            // 포인트 사용 내역 기록
+            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                type: 'use',
+                amount: -10,
+                desc: '친구 소설 열람',
+                novelId: novel.id,
+                createdAt: Timestamp.now(),
             });
             setPurchased((prev) => ({ ...prev, [novel.id]: true }));
             alert('구매가 완료되었습니다!');
