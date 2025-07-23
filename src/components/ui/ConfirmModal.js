@@ -1,7 +1,7 @@
 import React from "react";
 import './ConfirmModal.css';
 
-const ConfirmModal = ({ open, title, description, onCancel, onConfirm }) => {
+const ConfirmModal = ({ open, title, description, onCancel, onConfirm, confirmText = '삭제' }) => {
     if (!open) return null;
     return (
         <div className="confirm-modal-overlay">
@@ -10,7 +10,7 @@ const ConfirmModal = ({ open, title, description, onCancel, onConfirm }) => {
                 {description && <p className="confirm-modal-desc">{description}</p>}
                 <div className="confirm-modal-actions">
                     <button className="confirm-modal-btn cancel" onClick={onCancel}>취소</button>
-                    <button className="confirm-modal-btn delete" onClick={onConfirm}>삭제</button>
+                    <button className="confirm-modal-btn delete" onClick={onConfirm}>{confirmText}</button>
                 </div>
             </div>
         </div>

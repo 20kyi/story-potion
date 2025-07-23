@@ -86,7 +86,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/premium/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
-                <Route path="/friend-novels" element={<FriendNovelList />} />
+                <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
