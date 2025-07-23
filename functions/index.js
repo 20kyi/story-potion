@@ -137,28 +137,39 @@ exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(
     const messages = [];
     usersSnapshot.forEach(doc => {
         const user = doc.data();
-        if (!user.fcmToken || !user.reminderTime) return;
+        const token = user.fcmToken;
+        const reminderTime = user.reminderTime;
+
+        if (!token || !reminderTime) return;
+
         const timezone = user.reminderTimezone || 'Asia/Seoul';
-        const now = DateTime.now().setZone(timezone);
-        const hour = now.toFormat('HH');
-        const minute = now.toFormat('mm');
-        const currentTime = `${hour}:${minute}`;
-        if (currentTime === user.reminderTime) {
+        const now = DateTime.now().setZone(timezone).toFormat('HH:mm');
+
+        // 약간의 오차 허용 (±30초 범위)
+        const reminderHourMinute = DateTime.fromFormat(reminderTime, 'HH:mm', { zone: timezone });
+        const diff = Math.abs(DateTime.now().setZone(timezone).diff(reminderHourMinute, 'minutes').minutes);
+        if (diff <= 1) {
             messages.push({
-                token: user.fcmToken,
+                token,
                 notification: {
                     title: '일기 작성 리마인더',
-                    body: user.message || '오늘의 일기를 잊지 마세요!'
+                    body: user.message || '오늘의 일기를 잊지 마세요!',
                 }
             });
         }
     });
 
-    if (messages.length > 0) {
-        await admin.messaging().sendAll(messages);
-        console.log(`${messages.length}명에게 리마인더 푸시 발송 완료`);
-    } else {
+    if (messages.length === 0) {
         console.log('리마인더 대상자 없음');
+        return null;
     }
+
+    try {
+        const response = await admin.messaging().sendAll(messages);
+        console.log(`${response.successCount}명에게 리마인더 푸시 발송 완료`);
+    } catch (error) {
+        console.error('FCM 전송 오류:', error);
+    }
+
     return null;
-}); 
+});

@@ -6,6 +6,9 @@ import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { useTheme } from '../../ThemeContext';
 import notificationTest from '../../utils/notificationTest';
+import { deleteUser } from 'firebase/auth';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebase';
 import './Settings.css';
 
 function Settings() {
@@ -178,7 +181,30 @@ function Settings() {
                     로그아웃
                 </button>
                 <div className="withdraw-link">
-                    <span>탈퇴하기</span>
+                    <span
+                        style={{ color: '#e46262', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={async () => {
+                            if (!window.confirm('정말로 회원 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.')) return;
+                            try {
+                                const user = auth.currentUser;
+                                if (!user) throw new Error('로그인이 필요합니다.');
+                                // Firestore user document 삭제
+                                await deleteDoc(doc(db, 'users', user.uid));
+                                // Firebase Auth 계정 삭제
+                                await deleteUser(user);
+                                alert('회원 탈퇴가 완료되었습니다.');
+                                navigate('/');
+                            } catch (error) {
+                                if (error.code === 'auth/requires-recent-login') {
+                                    alert('보안을 위해 다시 로그인 후 탈퇴를 시도해 주세요.');
+                                } else {
+                                    alert('회원 탈퇴에 실패했습니다: ' + error.message);
+                                }
+                            }
+                        }}
+                    >
+                        탈퇴하기
+                    </span>
                 </div>
             </div>
             <Navigation />

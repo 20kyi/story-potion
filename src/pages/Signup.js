@@ -218,12 +218,25 @@ function Signup() {
         formData.email,
         formData.password
       );
-      // Firestore에 사용자 정보 + 포인트 100 저장
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      // Firestore에 사용자 정보 + 기존 회원과 동일한 필드 저장
+      const user = userCredential.user;
+      const providerId = user.providerData[0]?.providerId || "password";
+      await setDoc(doc(db, "users", user.uid), {
+        authProvider: providerId,
+        createdAt: new Date(),
         displayName: formData.nickname,
         email: formData.email,
-        photoURL: userCredential.user.photoURL || "",
-        point: 100
+        emailVerified: user.emailVerified || false,
+        eventEnabled: false,
+        fcmToken: "",
+        isActive: true,
+        lastLoginAt: new Date(),
+        marketingEnabled: false,
+        point: 100,
+        reminderEnabled: false,
+        reminderTime: "",
+        updatedAt: new Date(),
+        photoURL: user.photoURL || ""
       });
       alert('회원가입이 완료되었습니다!');
       navigate('/login');
