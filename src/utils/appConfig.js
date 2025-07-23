@@ -5,7 +5,7 @@ export const APP_CONFIG = {
     // 앱 정보
     APP_NAME: 'Story Potion',
     APP_VERSION: '1.0.0',
-    
+
     // 저장소 키들
     STORAGE_KEYS: {
         NOTIFICATION_SETTINGS: 'notificationSettings',
@@ -14,21 +14,21 @@ export const APP_CONFIG = {
         USER_PREFERENCES: 'userPreferences',
         THEME: 'theme'
     },
-    
+
     // 알림 설정 기본값
     DEFAULT_NOTIFICATION_SETTINGS: {
         enabled: false,
         time: '21:00',
         message: '오늘의 일기를 작성해보세요! 📝'
     },
-    
+
     // 테마 설정
     THEMES: {
         LIGHT: 'light',
         DARK: 'dark',
         SYSTEM: 'system'
     },
-    
+
     // 앱 환경 감지
     ENVIRONMENT: {
         isWeb: typeof window !== 'undefined' && window.localStorage,
@@ -53,7 +53,7 @@ export const getEnvironmentConfig = () => {
             platform: 'mobile'
         };
     }
-    
+
     return {
         storage: 'localStorage',
         notifications: 'browser',
@@ -66,7 +66,7 @@ export const migrateData = async (fromStorage, toStorage) => {
     try {
         // 기존 데이터 백업
         const backup = await fromStorage.getAllKeys();
-        
+
         // 새 저장소로 데이터 이전
         for (const key of backup) {
             const data = await fromStorage.getItem(key);
@@ -74,11 +74,31 @@ export const migrateData = async (fromStorage, toStorage) => {
                 await toStorage.setItem(key, data);
             }
         }
-        
+
         console.log('데이터 마이그레이션이 완료되었습니다.');
         return true;
     } catch (error) {
         console.error('데이터 마이그레이션 실패:', error);
         return false;
     }
-}; 
+};
+
+// 포인트 정책 관리 유틸
+import { db } from '../firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
+// Firestore에서 정책값을 읽는 함수
+export async function getPointPolicy(key, defaultValue) {
+    const docRef = doc(db, 'config', 'pointPolicies');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data()[key] !== undefined) {
+        return docSnap.data()[key];
+    }
+    return defaultValue;
+}
+
+// Firestore에 정책값을 저장하는 함수 (관리자용)
+export async function setPointPolicy(key, value) {
+    const docRef = doc(db, 'config', 'pointPolicies');
+    await setDoc(docRef, { [key]: value }, { merge: true });
+} 

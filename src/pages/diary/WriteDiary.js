@@ -13,6 +13,7 @@ import { usePrompt } from '../../hooks/usePrompt';
 import { useTheme } from '../../ThemeContext';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
+import { getPointPolicy } from '../../utils/appConfig';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -1128,14 +1129,15 @@ function WriteDiary({ user }) {
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
                 toast.showToast('일기가 저장되었습니다.', 'success');
-                // 포인트 적립: 일기 최초 저장 시 10포인트 지급
+                // 포인트 적립: 일기 최초 저장 시 정책값 적용
                 try {
+                    const earnPoint = await getPointPolicy('diary_write_earn', 10);
                     await updateDoc(doc(db, "users", user.uid), {
-                        point: increment(10)
+                        point: increment(earnPoint)
                     });
                     await addDoc(collection(db, "users", user.uid, "pointHistory"), {
                         type: 'earn',
-                        amount: 10,
+                        amount: earnPoint,
                         desc: '일기 작성',
                         createdAt: new Date()
                     });

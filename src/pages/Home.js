@@ -435,6 +435,7 @@ function Home({ user }) {
   const navigate = useNavigate();
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
+  const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
   const [ownedPotions, setOwnedPotions] = useState({});
 
   // 포션 데이터
@@ -493,6 +494,45 @@ function Home({ user }) {
       const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3));
       const novelSnapshot = await getDocs(novelsQuery);
       setRecentNovels(novelSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+
+      // Fetch purchased novels
+      try {
+        const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
+        const viewedSnapshot = await getDocs(viewedNovelsRef);
+        const novelIds = viewedSnapshot.docs.map(doc => doc.id);
+        if (novelIds.length === 0) {
+          setPurchasedNovels([]);
+        } else {
+          // novelId로 novels 컬렉션에서 데이터 fetch (최신순 3개)
+          // Firestore는 in 쿼리로 최대 10개까지 지원하므로, novelIds가 많으면 최근 10개만
+          const limitedNovelIds = novelIds.slice(-10);
+          const novelsRef = collection(db, 'novels');
+          // novelId별 getDoc 병렬 fetch
+          const novelDocs = await Promise.all(limitedNovelIds.map(id => getDoc(doc(novelsRef, id))));
+          let purchased = novelDocs
+            .filter(snap => snap.exists())
+            .map(snap => ({ ...snap.data(), id: snap.id }));
+          // 최신순 정렬(createdAt 내림차순)
+          purchased = purchased.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+          // 각 소설의 userId로 닉네임/아이디 조회
+          const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
+          const userDocs = await Promise.all(ownerIds.map(uid => getDoc(doc(db, 'users', uid))));
+          const ownerMap = {};
+          userDocs.forEach((snap, idx) => {
+            if (snap.exists()) {
+              const data = snap.data();
+              ownerMap[ownerIds[idx]] = data.nickname || data.nick || data.displayName || ownerIds[idx];
+            } else {
+              ownerMap[ownerIds[idx]] = ownerIds[idx];
+            }
+          });
+          // novel에 ownerName 필드 추가
+          purchased = purchased.map(novel => ({ ...novel, ownerName: ownerMap[novel.userId] }));
+          setPurchasedNovels(purchased.slice(0, 3));
+        }
+      } catch (e) {
+        setPurchasedNovels([]);
+      }
 
       // Fetch user's potions
       try {
@@ -602,6 +642,36 @@ function Home({ user }) {
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                 }} />
                 <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
+              </MyNovelBox>
+            ))
+          }
+        </MyNovelRow>
+        {/* 내가 구매한 소설 섹션 추가 */}
+        <SectionLabel>내가 구매한 소설</SectionLabel>
+        <MyNovelRow>
+          {purchasedNovels.length > 0 ?
+            purchasedNovels.map(novel => (
+              <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}>
+                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                <MyNovelTitle>{novel.title}</MyNovelTitle>
+                <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
+              </MyNovelBox>
+            ))
+            :
+            Array(3).fill(null).map((_, idx) => (
+              <MyNovelBox key={`purchased-placeholder-${idx}`}>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '180px',
+                  aspectRatio: '2/3',
+                  background: '#fdd2d2',
+                  borderRadius: '15px',
+                  display: 'block',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                }} />
+                <MyNovelTitle style={{ color: '#aaa' }}>구매한 소설 없음</MyNovelTitle>
               </MyNovelBox>
             ))
           }
