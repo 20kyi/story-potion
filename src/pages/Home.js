@@ -431,12 +431,34 @@ const sliderSettings = {
   cssEase: 'linear',
 };
 
+// 탭 버튼 스타일 추가
+const TabBar = styled.div`
+  display: flex;
+  gap: 0;
+  margin: 18px 0 10px 0;
+  border-bottom: 1.5px solid #f0caca;
+`;
+const TabButton = styled.button`
+  flex: 1;
+  padding: 12px 0 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 3px solid ${props => props.active ? '#cb6565' : 'transparent'};
+  color: ${props => props.active ? '#cb6565' : '#888'};
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-bottom 0.2s, color 0.2s;
+`;
+
 function Home({ user }) {
   const navigate = useNavigate();
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
   const [ownedPotions, setOwnedPotions] = useState({});
+  const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
 
   // 포션 데이터
   const potionData = [
@@ -618,92 +640,109 @@ function Home({ user }) {
             </WriteDiaryButton>
           </RightColumn>
         </MainButtonRow>
-        <SectionLabel>내 소설</SectionLabel>
-        <MyNovelRow>
-          {recentNovels.length > 0 ?
-            recentNovels.map(novel => (
-              <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
-                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                <MyNovelTitle>{novel.title}</MyNovelTitle>
-              </MyNovelBox>
-            ))
-            :
-            Array(3).fill(null).map((_, idx) => (
-              <MyNovelBox key={`placeholder-${idx}`}>
-                <div style={{
-                  width: '100%',
-                  maxWidth: '180px',
-                  aspectRatio: '2/3',
-                  background: '#fdd2d2',
-                  borderRadius: '15px',
-                  display: 'block',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                }} />
-                <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
-              </MyNovelBox>
-            ))
-          }
-        </MyNovelRow>
-        {/* 내가 구매한 소설 섹션 추가 */}
-        <SectionLabel>내가 구매한 소설</SectionLabel>
-        <MyNovelRow>
-          {purchasedNovels.length > 0 ?
-            purchasedNovels.map(novel => (
-              <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}>
-                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                <MyNovelTitle>{novel.title}</MyNovelTitle>
-                <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
-              </MyNovelBox>
-            ))
-            :
-            Array(3).fill(null).map((_, idx) => (
-              <MyNovelBox key={`purchased-placeholder-${idx}`}>
-                <div style={{
-                  width: '100%',
-                  maxWidth: '180px',
-                  aspectRatio: '2/3',
-                  background: '#fdd2d2',
-                  borderRadius: '15px',
-                  display: 'block',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                }} />
-                <MyNovelTitle style={{ color: '#aaa' }}>구매한 소설 없음</MyNovelTitle>
-              </MyNovelBox>
-            ))
-          }
-        </MyNovelRow>
 
-        <PotionSection>
-          <SectionLabel>내 포션</SectionLabel>
-          <PotionRow>
-            {potionData.map(potion => {
-              const count = ownedPotions[potion.id] || 0;
-              return count > 0 ? (
-                <PotionCard
-                  key={potion.id}
-                  onClick={() => navigate('/my/potion-shop')}
-                  title={`${potion.name} 포션 ${count}개 보유`}
-                >
-                  <PotionImage src={potion.image} alt={potion.name} />
-                  <PotionCount>{count}</PotionCount>
-                  <PotionName>{potion.name}</PotionName>
-                </PotionCard>
-              ) : null;
-            })}
-            {Object.values(ownedPotions).every(count => !count || count <= 0) && (
-              <EmptyPotionCard>
-                <EmptyPotionText>보유한 포션이 없어요</EmptyPotionText>
-                <EmptyPotionText style={{ fontSize: '10px', marginTop: '4px' }}>
-                  포션 상점에서 구매해보세요!
-                </EmptyPotionText>
-              </EmptyPotionCard>
-            )}
-          </PotionRow>
-        </PotionSection>
+        {/* 탭 바 추가 */}
+        <TabBar>
+          <TabButton active={activeTab === 'my'} onClick={() => setActiveTab('my')}>내 소설</TabButton>
+          <TabButton active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>구매한 소설</TabButton>
+          <TabButton active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>내 포션</TabButton>
+        </TabBar>
+        <div style={{ height: 16 }} />
+
+        {/* 탭별 내용 */}
+        {activeTab === 'my' && (
+          <>
+            <MyNovelRow>
+              {recentNovels.length > 0 ?
+                recentNovels.map(novel => (
+                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
+                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                    <MyNovelTitle>{novel.title}</MyNovelTitle>
+                  </MyNovelBox>
+                ))
+                :
+                Array(3).fill(null).map((_, idx) => (
+                  <MyNovelBox key={`placeholder-${idx}`}>
+                    <div style={{
+                      width: '100%',
+                      maxWidth: '180px',
+                      aspectRatio: '2/3',
+                      background: '#fdd2d2',
+                      borderRadius: '15px',
+                      display: 'block',
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }} />
+                    <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
+                  </MyNovelBox>
+                ))
+              }
+            </MyNovelRow>
+          </>
+        )}
+        {activeTab === 'purchased' && (
+          <>
+            <MyNovelRow>
+              {purchasedNovels.length > 0 ?
+                purchasedNovels.map(novel => (
+                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}>
+                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                    <MyNovelTitle>{novel.title}</MyNovelTitle>
+                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
+                  </MyNovelBox>
+                ))
+                :
+                Array(3).fill(null).map((_, idx) => (
+                  <MyNovelBox key={`purchased-placeholder-${idx}`}>
+                    <div style={{
+                      width: '100%',
+                      maxWidth: '180px',
+                      aspectRatio: '2/3',
+                      background: '#fdd2d2',
+                      borderRadius: '15px',
+                      display: 'block',
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }} />
+                    <MyNovelTitle style={{ color: '#aaa' }}>구매한 소설 없음</MyNovelTitle>
+                  </MyNovelBox>
+                ))
+              }
+            </MyNovelRow>
+          </>
+        )}
+        {activeTab === 'potion' && (
+          <>
+            <PotionSection>
+              <PotionRow>
+                {potionData.map(potion => {
+                  const count = ownedPotions[potion.id] || 0;
+                  return count > 0 ? (
+                    <PotionCard
+                      key={potion.id}
+                      onClick={() => navigate('/my/potion-shop')}
+                      title={`${potion.name} 포션 ${count}개 보유`}
+                    >
+                      <PotionImage src={potion.image} alt={potion.name} />
+                      <PotionCount>{count}</PotionCount>
+                      <PotionName>{potion.name}</PotionName>
+                    </PotionCard>
+                  ) : null;
+                })}
+                {Object.values(ownedPotions).every(count => !count || count <= 0) && (
+                  <EmptyPotionCard>
+                    <EmptyPotionText>보유한 포션이 없어요</EmptyPotionText>
+                    <EmptyPotionText style={{ fontSize: '10px', marginTop: '4px' }}>
+                      포션 상점에서 구매해보세요!
+                    </EmptyPotionText>
+                  </EmptyPotionCard>
+                )}
+              </PotionRow>
+            </PotionSection>
+          </>
+        )}
       </ContentGrid>
 
       <Navigation />

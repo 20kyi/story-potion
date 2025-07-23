@@ -1,3 +1,5 @@
+import { db } from '../firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 // 앱 환경 설정 관리
 // 웹과 앱 환경에서 공통으로 사용할 설정들
 
@@ -82,10 +84,6 @@ export const migrateData = async (fromStorage, toStorage) => {
         return false;
     }
 };
-
-// 포인트 정책 관리 유틸
-import { db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 // Firestore에서 정책값을 읽는 함수
 export async function getPointPolicy(key, defaultValue) {
