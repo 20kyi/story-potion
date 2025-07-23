@@ -409,6 +409,8 @@ function WriteDiary({ user }) {
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
+    const [currentPoints, setCurrentPoints] = useState(0);
+    const [isImageLimitExtended, setIsImageLimitExtended] = useState(false);
 
     // 스티커 관련 state
     const [stickers, setStickers] = useState([]);
@@ -551,6 +553,22 @@ function WriteDiary({ user }) {
         };
     }, []);
 
+    useEffect(() => {
+        if (user?.uid) {
+            const fetchPoints = async () => {
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        setCurrentPoints(userDoc.data().point || 0);
+                    }
+                } catch (error) {
+                    console.error('포인트 조회 실패:', error);
+                }
+            };
+            fetchPoints();
+        }
+    }, [user]);
+
     // 스티커 드래그 앤 드롭 기능
     useEffect(() => {
         const handleMouseMove = (e) => {
@@ -635,8 +653,42 @@ function WriteDiary({ user }) {
         }));
     };
 
+    // 사진 한도 확장 함수
+    const handleExtendImageLimit = async () => {
+        if (currentPoints < 10) {
+            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다.', 'error');
+            return;
+        }
+        try {
+            await updateDoc(doc(db, 'users', user.uid), {
+                point: increment(-10)
+            });
+            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                type: 'use',
+                amount: -10,
+                desc: '일기 사진 한도 확장',
+                createdAt: new Date()
+            });
+            setCurrentPoints(prev => prev - 10);
+            setIsImageLimitExtended(true);
+            toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
+        } catch (error) {
+            toast.showToast('사진 한도 확장에 실패했습니다.', 'error');
+        }
+    };
+
     const handleImageUpload = async (e) => {
         const newFiles = Array.from(e.target.files);
+        const totalImages = imagePreview.length + newFiles.length;
+        // 한도 미확장 시 1장까지만 허용
+        if (!isImageLimitExtended && totalImages > 1) {
+            toast.showToast('사진 한도를 확장해야 2장 이상 업로드할 수 있습니다.', 'info');
+            return;
+        }
+        if (totalImages > 4) {
+            toast.showToast('사진은 최대 4장까지 등록할 수 있습니다.', 'error');
+            return;
+        }
         // 이미지 압축 및 리사이즈
         const compressedFiles = await Promise.all(
             newFiles.map(file =>
@@ -686,76 +738,12 @@ function WriteDiary({ user }) {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!diary.content || diary.content.trim().length < 50) {
-            toast.showToast('더 풍부한 소설 내용을 위해\n50자 이상 작성해 주세요!', 'info');
-            return;
-        }
-        setIsSubmitting(true);
-        try {
-            // 1. Firestore에 일기 텍스트만 먼저 저장 (imageUrls는 저장하지 않음)
-            const diaryData = {
-                userId: user.uid,
-                date: formatDateToString(selectedDate),
-                title: diary.title,
-                content: diary.content,
-                weather: diary.weather,
-                emotion: diary.emotion,
-                mood: diary.mood,
-                stickers: stickers,
-                createdAt: new Date(),
-            };
-
-            let diaryRef;
-            if (isEditMode && existingDiaryId) {
-                diaryRef = doc(db, 'diaries', existingDiaryId);
-                await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
-                toast.showToast('일기가 수정되었습니다.', 'success');
-            } else {
-                diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
-                toast.showToast('일기가 저장되었습니다.', 'success');
-                // 포인트 적립: 일기 최초 저장 시 10포인트 지급
-                try {
-                    await updateDoc(doc(db, "users", user.uid), {
-                        point: increment(10)
-                    });
-                    // 포인트 적립 내역 기록
-                    await addDoc(collection(db, "users", user.uid, "pointHistory"), {
-                        type: 'earn',
-                        amount: 10,
-                        desc: '일기 작성',
-                        createdAt: new Date()
-                    });
-                    console.log('포인트 적립 성공');
-                } catch (pointError) {
-                    toast.showToast('포인트 적립에 실패했습니다.', 'error');
-                    console.error('포인트 적립 에러:', pointError);
-                }
-            }
-
-            // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
-            let finalImageUrls = diary.imageUrls || [];
-            if (imageFiles.length > 0) {
-                const uploadPromises = imageFiles.map(file => {
-                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
-                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-                });
-                const uploadedUrls = await Promise.all(uploadPromises);
-                finalImageUrls = [...finalImageUrls, ...uploadedUrls];
-            }
-            // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
-            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
-                imageUrls: finalImageUrls,
-                updatedAt: new Date(),
-            });
-
-            navigate(`/diary/date/${formatDateToString(selectedDate)}`);
-        } catch (error) {
-            toast.showToast('저장에 실패했습니다.', 'error');
-        } finally {
-            setIsSubmitting(false);
-        }
+    // 사진 한도 확장 함수 (포인트 차감 X, 한도만 확장)
+    const handleExtendAndEnableImageUpload = async () => {
+        setIsImageLimitExtended(true);
+        toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
+        // 확장 후 바로 파일 선택창 열기
+        document.getElementById('image-upload').click();
     };
 
     // 감정/날씨 바텀시트 오버레이 닫기 핸들러
@@ -1092,6 +1080,93 @@ function WriteDiary({ user }) {
         }
     };
 
+    // handleSubmit 함수 재정의 (컴포넌트 내부에 추가)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!diary.content || diary.content.trim().length < 50) {
+            toast.showToast('더 풍부한 소설 내용을 위해\n50자 이상 작성해 주세요!', 'info');
+            return;
+        }
+        // 사진 한도 확장 시 저장 시점에만 포인트 차감
+        if (isImageLimitExtended) {
+            if (currentPoints < 10) {
+                toast.showToast('포인트가 부족하여 사진이 포함된 일기를 저장할 수 없습니다. (사진 한도 확장 10포인트 필요)', 'error');
+                return;
+            }
+        }
+        setIsSubmitting(true);
+        try {
+            // 1. Firestore에 일기 텍스트만 먼저 저장 (imageUrls는 저장하지 않음)
+            const diaryData = {
+                userId: user.uid,
+                date: formatDateToString(selectedDate),
+                title: diary.title,
+                content: diary.content,
+                weather: diary.weather,
+                emotion: diary.emotion,
+                mood: diary.mood,
+                stickers: stickers,
+                createdAt: new Date(),
+            };
+            let diaryRef;
+            if (isEditMode && existingDiaryId) {
+                diaryRef = doc(db, 'diaries', existingDiaryId);
+                await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
+                toast.showToast('일기가 수정되었습니다.', 'success');
+            } else {
+                diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
+                toast.showToast('일기가 저장되었습니다.', 'success');
+                // 포인트 적립: 일기 최초 저장 시 10포인트 지급
+                try {
+                    await updateDoc(doc(db, "users", user.uid), {
+                        point: increment(10)
+                    });
+                    await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                        type: 'earn',
+                        amount: 10,
+                        desc: '일기 작성',
+                        createdAt: new Date()
+                    });
+                } catch (pointError) {
+                    toast.showToast('포인트 적립에 실패했습니다.', 'error');
+                }
+            }
+            // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
+            let finalImageUrls = diary.imageUrls || [];
+            if (imageFiles.length > 0) {
+                const uploadPromises = imageFiles.map(file => {
+                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
+                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                });
+                const uploadedUrls = await Promise.all(uploadPromises);
+                finalImageUrls = [...finalImageUrls, ...uploadedUrls];
+            }
+            // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
+            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
+                imageUrls: finalImageUrls,
+                updatedAt: new Date(),
+            });
+            // 4. 사진 한도 확장 시 포인트 차감(저장 시점)
+            if (isImageLimitExtended) {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    point: increment(-10)
+                });
+                await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                    type: 'use',
+                    amount: -10,
+                    desc: '일기 사진 한도 확장',
+                    createdAt: new Date()
+                });
+                toast.showToast('사진 한도 확장으로 10포인트가 차감되었습니다.', 'info');
+            }
+            navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+        } catch (error) {
+            toast.showToast('저장에 실패했습니다.', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div ref={containerRef} style={styles.container}>
             <Header
@@ -1296,6 +1371,9 @@ function WriteDiary({ user }) {
                 )}
 
                 <div style={styles.imageContainer}>
+                    {/* 사진 개수 표시 */}
+                    {/* 사진 개수 표시(상단, 버튼 위) 코드 완전히 삭제 */}
+                    {/* 사진 추가 버튼 분기 */}
                     <input
                         type="file"
                         id="image-upload"
@@ -1303,8 +1381,9 @@ function WriteDiary({ user }) {
                         accept="image/*"
                         onChange={handleImageUpload}
                         style={{ display: 'none' }}
+                        disabled={imagePreview.length >= 4 || (!isImageLimitExtended && imagePreview.length >= 1)}
                     />
-                    <ImagePreviewContainer>
+                    <ImagePreviewContainer style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {imagePreview.map((src, index) => (
                             <ImagePreviewBox key={index}>
                                 <PreviewImg src={src} alt={`업로드 이미지 ${index + 1}`} />
@@ -1313,11 +1392,82 @@ function WriteDiary({ user }) {
                                 </RemoveButton>
                             </ImagePreviewBox>
                         ))}
-                        <UploadLabel htmlFor="image-upload">
-                            <span className="icon">📸</span>
-                            사진 추가
-                        </UploadLabel>
+                        {/* 사진이 0개이거나 2장 이상(확장됨)일 때: 일반 사진 추가 버튼 */}
+                        {(imagePreview.length === 0 || (isImageLimitExtended && imagePreview.length < 4)) && (
+                            <>
+                                <UploadLabel htmlFor="image-upload" style={{
+                                    opacity: imagePreview.length >= 4 ? 0.5 : 1,
+                                    pointerEvents: imagePreview.length >= 4 ? 'none' : 'auto',
+                                    position: 'relative',
+                                }}>
+                                    <span className="icon">📸</span>
+                                    사진 추가
+                                </UploadLabel>
+                                <span style={{
+                                    marginLeft: 6,
+                                    fontSize: 13,
+                                    color: '#cb6565',
+                                    fontWeight: 400,
+                                    minWidth: 38,
+                                    textAlign: 'left',
+                                    alignSelf: 'flex-end',
+                                    letterSpacing: '-0.5px',
+                                }}>
+                                    ({imagePreview.length}/{isImageLimitExtended ? 4 : 1})
+                                </span>
+                            </>
+                        )}
+                        {/* 사진이 1개이고 한도 미확장일 때: 확장+추가 버튼 */}
+                        {imagePreview.length === 1 && !isImageLimitExtended && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleExtendAndEnableImageUpload}
+                                    disabled={currentPoints < 10}
+                                    style={{
+                                        marginTop: 0,
+                                        width: 100,
+                                        height: 100,
+                                        borderRadius: 8,
+                                        background: currentPoints < 10 ? '#eee' : '#cb6565',
+                                        color: currentPoints < 10 ? '#aaa' : '#fff',
+                                        border: 'none',
+                                        fontSize: 15,
+                                        fontWeight: 600,
+                                        cursor: currentPoints < 10 ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'relative',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                    }}
+                                >
+                                    <span className="icon" style={{ fontSize: 24, marginBottom: 4 }}>📸</span>
+                                    사진 추가 저장 (10P)
+                                </button>
+                                <span style={{
+                                    marginLeft: 6,
+                                    fontSize: 13,
+                                    color: '#cb6565',
+                                    fontWeight: 400,
+                                    minWidth: 38,
+                                    textAlign: 'left',
+                                    alignSelf: 'flex-end',
+                                    letterSpacing: '-0.5px',
+                                }}>
+                                    ({imagePreview.length}/{isImageLimitExtended ? 4 : 1})
+                                </span>
+                            </>
+                        )}
                     </ImagePreviewContainer>
+                    {/* 안내 메시지 */}
+                    {imagePreview.length >= 4 && (
+                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>사진은 최대 4장까지 등록할 수 있습니다.</div>
+                    )}
+                    {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 10 && (
+                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>포인트가 부족하여 사진 한도 확장이 불가합니다.<br />10포인트 필요</div>
+                    )}
                 </div>
 
 
