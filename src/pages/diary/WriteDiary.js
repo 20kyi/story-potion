@@ -596,6 +596,7 @@ function WriteDiary({ user }) {
         };
     }, [draggedSticker, dragStartPos, stickers]);
 
+    // fetchDiaryForDate에서 imageLimitExtended 필드 반영
     const fetchDiaryForDate = async (date) => {
         const dateStr = formatDateToString(date);
         const diariesRef = collection(db, 'diaries');
@@ -619,6 +620,7 @@ function WriteDiary({ user }) {
             setStickerCounter(existingDiary.stickers ? existingDiary.stickers.length : 0);
             setIsEditMode(true);
             setExistingDiaryId(diaryId);
+            setIsImageLimitExtended(!!existingDiary.imageLimitExtended); // 필드 없으면 false
         } else {
             // Reset form if no diary exists for the new date
             setDiary({
@@ -635,6 +637,7 @@ function WriteDiary({ user }) {
             setStickerCounter(0);
             setIsEditMode(false);
             setExistingDiaryId(null);
+            setIsImageLimitExtended(false);
         }
     };
 
@@ -738,10 +741,18 @@ function WriteDiary({ user }) {
         }
     };
 
-    // 사진 한도 확장 함수 (포인트 차감 X, 한도만 확장)
+    // 사진 한도 확장 함수 (포인트 차감 X, 한도만 확장, 수정 모드면 Firestore에도 반영)
     const handleExtendAndEnableImageUpload = async () => {
         setIsImageLimitExtended(true);
         toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
+        // 수정 모드라면 Firestore에도 반영
+        if (isEditMode && existingDiaryId) {
+            try {
+                await updateDoc(doc(db, 'diaries', existingDiaryId), { imageLimitExtended: true });
+            } catch (e) {
+                toast.showToast('확장 상태 저장에 실패했습니다.', 'error');
+            }
+        }
         // 확장 후 바로 파일 선택창 열기
         document.getElementById('image-upload').click();
     };
@@ -1107,6 +1118,7 @@ function WriteDiary({ user }) {
                 mood: diary.mood,
                 stickers: stickers,
                 createdAt: new Date(),
+                imageLimitExtended: isImageLimitExtended, // 필드 추가
             };
             let diaryRef;
             if (isEditMode && existingDiaryId) {
@@ -1145,6 +1157,7 @@ function WriteDiary({ user }) {
             await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
                 imageUrls: finalImageUrls,
                 updatedAt: new Date(),
+                imageLimitExtended: isImageLimitExtended, // 필드 추가
             });
             // 4. 사진 한도 확장 시 포인트 차감(저장 시점)
             if (isImageLimitExtended) {
@@ -1392,33 +1405,8 @@ function WriteDiary({ user }) {
                                 </RemoveButton>
                             </ImagePreviewBox>
                         ))}
-                        {/* 사진이 0개이거나 2장 이상(확장됨)일 때: 일반 사진 추가 버튼 */}
-                        {(imagePreview.length === 0 || (isImageLimitExtended && imagePreview.length < 4)) && (
-                            <>
-                                <UploadLabel htmlFor="image-upload" style={{
-                                    opacity: imagePreview.length >= 4 ? 0.5 : 1,
-                                    pointerEvents: imagePreview.length >= 4 ? 'none' : 'auto',
-                                    position: 'relative',
-                                }}>
-                                    <span className="icon">📸</span>
-                                    사진 추가
-                                </UploadLabel>
-                                <span style={{
-                                    marginLeft: 6,
-                                    fontSize: 13,
-                                    color: '#cb6565',
-                                    fontWeight: 400,
-                                    minWidth: 38,
-                                    textAlign: 'left',
-                                    alignSelf: 'flex-end',
-                                    letterSpacing: '-0.5px',
-                                }}>
-                                    ({imagePreview.length}/{isImageLimitExtended ? 4 : 1})
-                                </span>
-                            </>
-                        )}
-                        {/* 사진이 1개이고 한도 미확장일 때: 확장+추가 버튼 */}
-                        {imagePreview.length === 1 && !isImageLimitExtended && (
+                        {/* 한도 미확장 && 사진 1장 이상이면 확장 버튼 */}
+                        {!isImageLimitExtended && imagePreview.length >= 1 && (
                             <>
                                 <button
                                     type="button"
@@ -1456,7 +1444,57 @@ function WriteDiary({ user }) {
                                     alignSelf: 'flex-end',
                                     letterSpacing: '-0.5px',
                                 }}>
-                                    ({imagePreview.length}/{isImageLimitExtended ? 4 : 1})
+                                    ({imagePreview.length}/1)
+                                </span>
+                            </>
+                        )}
+                        {/* 한도 확장 && 4장 미만이면 사진 추가 버튼 */}
+                        {isImageLimitExtended && imagePreview.length < 4 && (
+                            <>
+                                <UploadLabel htmlFor="image-upload" style={{
+                                    opacity: imagePreview.length >= 4 ? 0.5 : 1,
+                                    pointerEvents: imagePreview.length >= 4 ? 'none' : 'auto',
+                                    position: 'relative',
+                                }}>
+                                    <span className="icon">📸</span>
+                                    사진 추가
+                                </UploadLabel>
+                                <span style={{
+                                    marginLeft: 6,
+                                    fontSize: 13,
+                                    color: '#cb6565',
+                                    fontWeight: 400,
+                                    minWidth: 38,
+                                    textAlign: 'left',
+                                    alignSelf: 'flex-end',
+                                    letterSpacing: '-0.5px',
+                                }}>
+                                    ({imagePreview.length}/4)
+                                </span>
+                            </>
+                        )}
+                        {/* 한도 미확장 && 사진이 0개일 때만 사진 추가 버튼 */}
+                        {!isImageLimitExtended && imagePreview.length === 0 && (
+                            <>
+                                <UploadLabel htmlFor="image-upload" style={{
+                                    opacity: 1,
+                                    pointerEvents: 'auto',
+                                    position: 'relative',
+                                }}>
+                                    <span className="icon">📸</span>
+                                    사진 추가
+                                </UploadLabel>
+                                <span style={{
+                                    marginLeft: 6,
+                                    fontSize: 13,
+                                    color: '#cb6565',
+                                    fontWeight: 400,
+                                    minWidth: 38,
+                                    textAlign: 'left',
+                                    alignSelf: 'flex-end',
+                                    letterSpacing: '-0.5px',
+                                }}>
+                                    (0/1)
                                 </span>
                             </>
                         )}
