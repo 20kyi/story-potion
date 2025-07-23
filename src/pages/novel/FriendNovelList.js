@@ -215,6 +215,14 @@ function FriendNovelList({ user }) {
                 novelId: novel.id,
                 createdAt: Timestamp.now(),
             });
+            // 소설 주인(저자) 포인트 적립 내역 기록
+            await addDoc(collection(db, 'users', novel.userId, 'pointHistory'), {
+                type: 'earn',
+                amount: 5,
+                desc: '소설 판매 적립',
+                novelId: novel.id,
+                createdAt: Timestamp.now(),
+            });
             setPurchased((prev) => ({ ...prev, [novel.id]: true }));
             alert('구매가 완료되었습니다!');
         } catch (e) {

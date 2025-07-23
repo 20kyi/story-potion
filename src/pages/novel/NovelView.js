@@ -4,7 +4,7 @@ import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
 
 const Container = styled.div`
@@ -176,6 +176,14 @@ function NovelView({ user }) {
                         transaction.set(viewedRef, { viewedAt: new Date() });
                     });
                     setAccessGranted(true);
+                    // 소설 주인(저자) 포인트 적립 내역 기록
+                    await addDoc(collection(db, 'users', fetchedNovel.userId, 'pointHistory'), {
+                        type: 'earn',
+                        amount: 5,
+                        desc: '소설 판매 적립',
+                        novelId: fetchedNovel.id,
+                        createdAt: Timestamp.now(),
+                    });
                 } catch (e) {
                     setError(e.message || '포인트 결제에 실패했습니다.');
                 }
