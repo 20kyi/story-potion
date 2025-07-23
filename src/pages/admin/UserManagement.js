@@ -37,7 +37,7 @@ import {
   findUserByEmail
 } from '../../utils/debugUsers';
 import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
-import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -220,6 +220,8 @@ function UserManagement({ user }) {
   const [pointInput, setPointInput] = useState(0);
   const [pointActionLoading, setPointActionLoading] = useState(false);
   const [pointActionStatus, setPointActionStatus] = useState(null);
+  const [statusActionLoading, setStatusActionLoading] = useState(false);
+  const [statusActionStatus, setStatusActionStatus] = useState(null);
 
   // 페이지네이션/정렬 상태
   const [pageLimit] = useState(10);
@@ -667,6 +669,43 @@ function UserManagement({ user }) {
       setPointActionStatus({ type: 'error', message: '포인트 변경 오류: ' + e.message });
     } finally {
       setPointActionLoading(false);
+    }
+  };
+
+  // 계정 정지/해제 핸들러
+  const handleToggleStatus = async () => {
+    if (!selectedUser) return;
+    setStatusActionLoading(true);
+    setStatusActionStatus(null);
+    try {
+      const newStatus = selectedUser.status === '정지' ? '정상' : '정지';
+      const ok = await updateUserData(selectedUser.uid, { status: newStatus });
+      if (ok) {
+        setUserDetail({ ...selectedUser, status: newStatus });
+        setStatusActionStatus({ type: 'success', message: `상태가 '${newStatus}'로 변경됨` });
+      } else {
+        setStatusActionStatus({ type: 'error', message: '상태 변경 실패' });
+      }
+    } catch (e) {
+      setStatusActionStatus({ type: 'error', message: '상태 변경 오류: ' + e.message });
+    } finally {
+      setStatusActionLoading(false);
+    }
+  };
+  // 계정 탈퇴(삭제) 핸들러
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    if (!window.confirm('정말로 이 계정을 완전히 삭제하시겠습니까?')) return;
+    setStatusActionLoading(true);
+    setStatusActionStatus(null);
+    try {
+      await deleteDoc(doc(db, 'users', selectedUser.uid));
+      setStatusActionStatus({ type: 'success', message: '계정이 삭제되었습니다.' });
+      setTimeout(() => { closeUserDetail(); loadUsersPage(); }, 1000);
+    } catch (e) {
+      setStatusActionStatus({ type: 'error', message: '계정 삭제 오류: ' + e.message });
+    } finally {
+      setStatusActionLoading(false);
     }
   };
 
@@ -1123,6 +1162,13 @@ function UserManagement({ user }) {
                   {pointActionStatus && <span style={{ marginLeft: 8, color: pointActionStatus.type === 'success' ? 'green' : 'red' }}>{pointActionStatus.message}</span>}
                 </div>
                 <div><b>상태:</b> {renderStatusBadge(userDetail.status)}</div>
+                <div style={{ margin: '8px 0' }}>
+                  <Button onClick={handleToggleStatus} disabled={statusActionLoading} style={{ background: '#f39c12' }}>
+                    {userDetail.status === '정지' ? '정지 해제' : '계정 정지'}
+                  </Button>
+                  <Button onClick={handleDeleteUser} disabled={statusActionLoading} style={{ background: '#e74c3c', marginLeft: 8 }}>계정 삭제</Button>
+                  {statusActionStatus && <span style={{ marginLeft: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red' }}>{statusActionStatus.message}</span>}
+                </div>
                 <div><b>최근 접속일:</b> {formatDate(userDetail.lastLoginAt)}</div>
                 <div><b>마지막 활동일:</b> {formatDate(userDetail.lastActivityAt)}</div>
                 <hr />

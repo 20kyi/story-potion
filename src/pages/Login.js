@@ -94,6 +94,13 @@ function Login() {
           point: 0,
           createdAt: new Date()
         });
+      } else {
+        const userData = userSnap.data();
+        if (userData.status === '정지') {
+          setError('정지된 계정입니다. 관리자에게 문의하세요.');
+          await auth.signOut();
+          return;
+        }
       }
       navigate('/');
     } catch {
@@ -137,6 +144,13 @@ function Login() {
             point: 0,
             createdAt: new Date()
           });
+        } else {
+          const userData = userSnap.data();
+          if (userData.status === '정지') {
+            setError('정지된 계정입니다. 관리자에게 문의하세요.');
+            await auth.signOut();
+            return;
+          }
         }
         navigate('/');
       }
