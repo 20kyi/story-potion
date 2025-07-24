@@ -1,0 +1,69 @@
+name: Android Build & Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Build web app
+      run: npm run build
+      
+    - name: Install Capacitor CLI
+      run: npm install -g @capacitor/cli
+      
+    - name: Sync Capacitor
+      run: npx cap sync android
+      
+    - name: Build Android APK
+      run: npx cap build android
+      
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Deploy to Firebase Hosting
+      if: github.ref == 'refs/heads/main'
+      run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
+      
+    - name: Upload to Firebase App Distribution
+      if: github.ref == 'refs/heads/main'
+      uses: wzieba/Firebase-Distribution-Github-Action@v1
+      with:
+        appId: ${{ secrets.FIREBASE_APP_ID }}
+        serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        groups: testers
+        file: android/app/build/outputs/apk/debug/app-debug.apk
+        releaseNotes: |
+          새로운 버전 업데이트
+          - 빌드 번호: ${{ github.run_number }}
+          - 커밋: ${{ github.sha }}
+          - 웹: https://story-potion.web.app/ 
