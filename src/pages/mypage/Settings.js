@@ -7,7 +7,7 @@ import { signOut } from 'firebase/auth';
 import { useTheme } from '../../ThemeContext';
 import notificationTest from '../../utils/notificationTest';
 import { deleteUser } from 'firebase/auth';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
 
@@ -37,6 +37,12 @@ function Settings() {
         message: '확인 중...'
     });
     const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('fontFamily') || 'system-ui, sans-serif');
+    const [premiumStatus, setPremiumStatus] = useState({
+        isMonthlyPremium: false,
+        isYearlyPremium: false,
+        premiumType: null
+    });
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         document.body.style.fontFamily = fontFamily;
@@ -60,6 +66,29 @@ function Settings() {
         };
 
         checkNotificationStatus();
+    }, []);
+
+    // 프리미엄 상태 조회
+    useEffect(() => {
+        const fetchPremiumStatus = async () => {
+            try {
+                const user = auth.currentUser;
+                if (user?.uid) {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        setPremiumStatus({
+                            isMonthlyPremium: userData.isMonthlyPremium || false,
+                            isYearlyPremium: userData.isYearlyPremium || false,
+                            premiumType: userData.premiumType || null
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('프리미엄 상태 조회 실패:', error);
+            }
+        };
+        fetchPremiumStatus();
     }, []);
 
     const handleAccordion = (key) => {
@@ -122,6 +151,38 @@ function Settings() {
                 console.error('알림 테스트 실패:', error);
                 alert(`알림 테스트 실패: ${error.message}`);
             }
+        }
+    };
+
+    // 프리미엄 해지 함수
+    const handleCancelPremium = async () => {
+        if (!auth.currentUser?.uid) return;
+
+        const confirmMessage = premiumStatus.isMonthlyPremium
+            ? '월간 프리미엄을 해지하시겠습니까?'
+            : '연간 프리미엄을 해지하시겠습니까?';
+
+        if (!window.confirm(confirmMessage)) return;
+
+        setIsLoading(true);
+        try {
+            await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+                isMonthlyPremium: false,
+                isYearlyPremium: false,
+                premiumType: null,
+                premiumStartDate: null
+            });
+            setPremiumStatus({
+                isMonthlyPremium: false,
+                isYearlyPremium: false,
+                premiumType: null
+            });
+            alert('프리미엄이 해지되었습니다.');
+        } catch (error) {
+            console.error('프리미엄 해지 실패:', error);
+            alert('프리미엄 해지에 실패했습니다.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -196,6 +257,43 @@ function Settings() {
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                         </select>
+                    </li>
+
+                    {/* 구독 관리 */}
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span>구독 관리</span>
+                                <span style={{ fontSize: '12px', color: '#666' }}>
+                                    {premiumStatus.isMonthlyPremium && '💎 월간 프리미엄 회원'}
+                                    {premiumStatus.isYearlyPremium && '👑 연간 프리미엄 회원'}
+                                    {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && '⭐ 일반 회원'}
+                                </span>
+                            </div>
+                            {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+                                <button
+                                    onClick={handleCancelPremium}
+                                    disabled={isLoading}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: '#e46262',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        fontSize: '14px',
+                                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                                        opacity: isLoading ? 0.6 : 1
+                                    }}
+                                >
+                                    {isLoading ? '처리중...' : '해지하기'}
+                                </button>
+                            )}
+                        </div>
+                        {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+                            <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.4' }}>
+                                프리미엄 해지 시 즉시 모든 프리미엄 혜택이 중단됩니다.
+                            </div>
+                        )}
                     </li>
                 </ul>
                 <button

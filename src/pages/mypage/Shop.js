@@ -194,6 +194,42 @@ function Shop({ user }) {
     }
   }, [user]);
 
+  const handleMonthlyPremium = async () => {
+    setIsLoading(true);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        isMonthlyPremium: true,
+        isYearlyPremium: false,
+        premiumType: 'monthly',
+        premiumStartDate: new Date()
+      });
+      toast.showToast('월간 프리미엄 가입이 완료되었습니다!', 'success');
+    } catch (error) {
+      console.error('월간 프리미엄 가입 실패:', error);
+      toast.showToast('월간 프리미엄 가입에 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleYearlyPremium = async () => {
+    setIsLoading(true);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        isMonthlyPremium: false,
+        isYearlyPremium: true,
+        premiumType: 'yearly',
+        premiumStartDate: new Date()
+      });
+      toast.showToast('연간 프리미엄 가입이 완료되었습니다!', 'success');
+    } catch (error) {
+      console.error('연간 프리미엄 가입 실패:', error);
+      toast.showToast('연간 프리미엄 가입에 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Container theme={theme}>
       <Header user={user} title="상점" />
@@ -257,7 +293,13 @@ function Shop({ user }) {
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, textAlign: 'center' }}>월 5,900원</div>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 10, textAlign: 'center', marginTop: 10 }}>매월 결제, <br />언제든 해지 가능</div>
           </div>
-          <PremiumButton style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}>월간 가입하기</PremiumButton>
+          <PremiumButton
+            style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
+            onClick={handleMonthlyPremium}
+            disabled={isLoading}
+          >
+            {isLoading ? '처리중...' : '월간 가입하기'}
+          </PremiumButton>
         </div>
         {/* 연간 결제 카드 */}
         <div style={{ flex: 1, background: '#fff', borderRadius: 14, boxShadow: '0 4px 16px rgba(255,195,0,0.13)', padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', border: '2.5px solid #FFC300', position: 'relative', margin: 0, height: 220, textAlign: 'center' }}>
@@ -269,7 +311,13 @@ function Shop({ user }) {
             <div style={{ color: '#FFB300', fontSize: 11, marginBottom: 1, textDecoration: 'line-through', textAlign: 'center' }}>정가 70,800원</div>
             <div style={{ color: '#FF9800', fontSize: 13, marginBottom: 10, textAlign: 'center' }}>월 4,130원</div>
           </div>
-          <PremiumButton style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}>연간 가입하기</PremiumButton>
+          <PremiumButton
+            style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
+            onClick={handleYearlyPremium}
+            disabled={isLoading}
+          >
+            {isLoading ? '처리중...' : '연간 가입하기'}
+          </PremiumButton>
         </div>
       </div>
 

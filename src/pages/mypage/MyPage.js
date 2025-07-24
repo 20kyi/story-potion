@@ -70,7 +70,7 @@ const MainContainer = styled.div`
   position: relative;
   -webkit-overflow-scrolling: touch;
 `;
-
+/* 프로필 이미지 */
 const ProfileContainer = styled.div`
   position: relative;
   width: 140px;
@@ -78,7 +78,7 @@ const ProfileContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 10px auto 16px auto;
+  margin: 16px auto 16px auto;
 `;
 
 const ProfileImage = styled.img`
@@ -125,11 +125,26 @@ const EditIconWrapper = styled.div`
 `;
 
 const Nickname = styled.div`
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #cb6565;
-  margin-bottom: 8px;
   text-align: center;
+  margin-top: 20px;
+  color: ${({ theme }) => theme.text};
+`;
+
+const PremiumStatus = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  // margin-bottom: 20px;
+  padding: 8px 16px;
+  // background: ${({ theme, isPremium }) => isPremium ? 'linear-gradient(135deg, #e46262, #cb6565)' : theme.card};
+  color: ${({ theme, isPremium }) => isPremium ? 'black' : theme.subText || '#666'};
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  // box-shadow: ${({ isPremium }) => isPremium ? '0 2px 8px rgba(228, 98, 98, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'};
 `;
 
 const MenuGrid = styled.div`
@@ -361,7 +376,7 @@ const StatsContainer = styled.div`
   justify-content: center;
   align-items: center;
   gap: 32px;
-  margin: 16px 0 24px 0;
+  // margin: 16px 0 24px 0;
   padding: 16px 0;
 `;
 
@@ -402,6 +417,12 @@ function MyPage({ user }) {
   const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
   const [point, setPoint] = useState(0); // 사용자 포인트
   const [friendCount, setFriendCount] = useState(0); // 친구 수
+  const [premiumStatus, setPremiumStatus] = useState({
+    isMonthlyPremium: false,
+    isYearlyPremium: false,
+    premiumType: null
+  }); // 프리미엄 상태
+  const [isLoading, setIsLoading] = useState(false);
 
   // 네비게이션 및 테마
   const navigate = useNavigate();
@@ -438,7 +459,13 @@ function MyPage({ user }) {
       // Firestore에서 포인트 불러오기
       getDoc(doc(db, "users", user.uid)).then((docSnap) => {
         if (docSnap.exists()) {
-          setPoint(docSnap.data().point || 0);
+          const userData = docSnap.data();
+          setPoint(userData.point || 0);
+          setPremiumStatus({
+            isMonthlyPremium: userData.isMonthlyPremium || false,
+            isYearlyPremium: userData.isYearlyPremium || false,
+            premiumType: userData.premiumType || null
+          });
         }
       });
     }
@@ -541,6 +568,8 @@ function MyPage({ user }) {
       alert('프로필 업데이트에 실패했습니다.');
     }
   };
+
+  // 프리미엄 해지 함수 제거
 
   const displayName = user?.displayName || user?.email;
 
@@ -690,16 +719,47 @@ function MyPage({ user }) {
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
 
+            {/* 프리미엄 상태 표시 */}
+            <PremiumStatus
+              theme={theme}
+              isPremium={premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium}
+            >
+              {premiumStatus.isMonthlyPremium && (
+                <>
+                  <span>💎</span>
+                  월간 프리미엄 회원
+                  <span>💎</span>
+                </>
+              )}
+              {premiumStatus.isYearlyPremium && (
+                <>
+                  <span>👑</span>
+                  연간 프리미엄 회원
+                  <span>👑</span>
+                </>
+              )}
+              {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+                <>
+                  <span>⭐</span>
+                  일반 회원
+                  <span>⭐</span>
+                </>
+              )}
+            </PremiumStatus>
+
+            {/* 프리미엄 해지 버튼 제거 */}
+
             {/* 인스타그램 스타일 통계 섹션 */}
             <StatsContainer>
-              <StatItem onClick={() => navigate('/my/friend')}>
-                <StatNumber>{friendCount}</StatNumber>
-                <StatLabel>친구</StatLabel>
-              </StatItem>
               <StatItem onClick={() => navigate('/my/shop/charge')}>
                 <StatNumber>{point.toLocaleString()}</StatNumber>
                 <StatLabel>포인트</StatLabel>
               </StatItem>
+              <StatItem onClick={() => navigate('/my/friend')}>
+                <StatNumber>{friendCount}</StatNumber>
+                <StatLabel>친구</StatLabel>
+              </StatItem>
+
             </StatsContainer>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
