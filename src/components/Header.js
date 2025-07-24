@@ -77,17 +77,12 @@ const CenterSection = styled.div`
   position: absolute;
   left: 0;
   right: 0;
-  top: 16px;
+  top: calc(env(safe-area-inset-top, 24px) + 16px);
   bottom: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   pointer-events: none;
-
-  @media (min-width: 768px) {
-    top: 12px;
-    bottom: 12px;
-  }
 `;
 
 const Header = ({ user, rightActions, title }) => {
@@ -134,7 +129,7 @@ const Header = ({ user, rightActions, title }) => {
       </LeftSection>
       {!isHome && title && (
         <CenterSection>
-          <span style={{ fontSize: 20, fontWeight: 700, lineHeight: '1' }}>{title}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, lineHeight: '1', display: 'flex', alignItems: 'center', height: '100%' }}>{title}</span>
         </CenterSection>
       )}
       {rightActions && <RightSection>{rightActions}</RightSection>}
