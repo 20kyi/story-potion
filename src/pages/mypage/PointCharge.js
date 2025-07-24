@@ -283,9 +283,9 @@ const PageInfo = styled.div`
 
 const packages = [
   { id: 1, points: 100, price: '1,000원', bonus: '' },
-  { id: 2, points: 300, price: '2,500원', bonus: '+50 보너스' },
-  { id: 3, points: 500, price: '4,000원', bonus: '+100 보너스' },
-  { id: 4, points: 1000, price: '7,000원', bonus: '+250 보너스' },
+  { id: 2, points: 250, price: '2,500원', bonus: '+30 보너스' },
+  { id: 3, points: 550, price: '5,500원', bonus: '+100 보너스' },
+  { id: 4, points: 1000, price: '9,900원', bonus: '+200 보너스' },
 ];
 
 function PointCharge({ user }) {

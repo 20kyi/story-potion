@@ -5,11 +5,15 @@ import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import PencilIcon from '../components/icons/PencilIcon';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, increment, updateDoc, addDoc } from 'firebase/firestore';
 import dailyTopics from '../data/topics.json';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import { toast } from '../components/ui/Toast';
+import { getPointPolicy } from '../utils/appConfig';
+import { checkWeeklyBonus } from '../utils/weeklyBonus';
+
 
 const Container = styled.div`
   display: flex;
@@ -443,8 +447,8 @@ const TabButton = styled.button`
   padding: 12px 0 10px 0;
   background: none;
   border: none;
-  border-bottom: 3px solid ${props => props.active ? '#cb6565' : 'transparent'};
-  color: ${props => props.active ? '#cb6565' : '#888'};
+  border-bottom: 3px solid ${props => props.$active ? '#cb6565' : 'transparent'};
+  color: ${props => props.$active ? '#cb6565' : '#888'};
   font-size: 17px;
   font-weight: 600;
   cursor: pointer;
@@ -459,6 +463,7 @@ function Home({ user }) {
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
   const [ownedPotions, setOwnedPotions] = useState({});
   const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
+
 
   // 포션 데이터
   const potionData = [
@@ -500,6 +505,8 @@ function Home({ user }) {
       alert('오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
+
+
 
   useEffect(() => {
     if (!user) return;
@@ -577,6 +584,13 @@ function Home({ user }) {
     return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const formatDateToString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <Container>
       <Header user={user} />
@@ -602,6 +616,8 @@ function Home({ user }) {
           ))}
         </Slider>
       </CarouselContainer>
+
+
 
       <ContentGrid>
         <SectionLabel>최근일기</SectionLabel>
@@ -643,9 +659,9 @@ function Home({ user }) {
 
         {/* 탭 바 추가 */}
         <TabBar>
-          <TabButton active={activeTab === 'my'} onClick={() => setActiveTab('my')}>내 소설</TabButton>
-          <TabButton active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>구매한 소설</TabButton>
-          <TabButton active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>내 포션</TabButton>
+          <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>내 소설</TabButton>
+          <TabButton $active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>구매한 소설</TabButton>
+          <TabButton $active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>내 포션</TabButton>
         </TabBar>
         <div style={{ height: 16 }} />
 

@@ -150,42 +150,42 @@ const potions = [
   {
     id: 'romance',
     name: '로맨스 포션',
-    price: 50,
+    price: 80,
     image: '/potion/romance.png',
     description: '달콤한 로맨스 소설을 만들어요'
   },
   {
     id: 'historical',
     name: '역사 포션',
-    price: 50,
+    price: 80,
     image: '/potion/historical.png',
     description: '역사적 배경의 소설을 만들어요'
   },
   {
     id: 'mystery',
     name: '추리 포션',
-    price: 50,
+    price: 80,
     image: '/potion/mystery.png',
     description: '긴장감 넘치는 추리를 만들어요'
   },
   {
     id: 'horror',
     name: '공포 포션',
-    price: 50,
+    price: 80,
     image: '/potion/horror.png',
     description: '소름 끼치는 공포 소설을 만들어요'
   },
   {
     id: 'fairytale',
     name: '동화 포션',
-    price: 50,
+    price: 80,
     image: '/potion/fairytale.png',
     description: '마법 같은 동화를 만들어요'
   },
   {
     id: 'fantasy',
     name: '판타지 포션',
-    price: 50,
+    price: 80,
     image: '/potion/fantasy.png',
     description: '상상력 넘치는 판타지를 만들어요'
   },

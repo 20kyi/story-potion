@@ -14,6 +14,7 @@ import { useTheme } from '../../ThemeContext';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { getPointPolicy } from '../../utils/appConfig';
+import { checkWeeklyBonus } from '../../utils/weeklyBonus';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -661,21 +662,21 @@ function WriteDiary({ user }) {
 
     // 사진 한도 확장 함수
     const handleExtendImageLimit = async () => {
-        if (currentPoints < 10) {
-            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다.', 'error');
+        if (currentPoints < 20) {
+            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다. (20포인트 필요)', 'error');
             return;
         }
         try {
             await updateDoc(doc(db, 'users', user.uid), {
-                point: increment(-10)
+                point: increment(-20)
             });
             await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                 type: 'use',
-                amount: -10,
+                amount: -20,
                 desc: '일기 사진 한도 확장',
                 createdAt: new Date()
             });
-            setCurrentPoints(prev => prev - 10);
+            setCurrentPoints(prev => prev - 20);
             setIsImageLimitExtended(true);
             toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
         } catch (error) {
@@ -1103,8 +1104,8 @@ function WriteDiary({ user }) {
         }
         // 사진 한도 확장 시 저장 시점에만 포인트 차감
         if (isImageLimitExtended) {
-            if (currentPoints < 10) {
-                toast.showToast('포인트가 부족하여 사진이 포함된 일기를 저장할 수 없습니다. (사진 한도 확장 10포인트 필요)', 'error');
+            if (currentPoints < 20) {
+                toast.showToast('포인트가 부족하여 사진이 포함된 일기를 저장할 수 없습니다. (사진 한도 확장 20포인트 필요)', 'error');
                 return;
             }
         }
@@ -1143,6 +1144,13 @@ function WriteDiary({ user }) {
                         desc: '일기 작성',
                         createdAt: new Date()
                     });
+
+                    // 일주일 연속 일기 작성 보너스 체크 (오늘 날짜인 경우에만)
+                    const today = new Date();
+                    const todayStr = formatDateToString(today);
+                    if (formatDateToString(selectedDate) === todayStr) {
+                        await checkWeeklyBonus(user.uid, today);
+                    }
                 } catch (pointError) {
                     toast.showToast('포인트 적립에 실패했습니다.', 'error');
                 }
@@ -1166,15 +1174,15 @@ function WriteDiary({ user }) {
             // 4. 사진 한도 확장 시 포인트 차감(저장 시점)
             if (isImageLimitExtended) {
                 await updateDoc(doc(db, 'users', user.uid), {
-                    point: increment(-10)
+                    point: increment(-20)
                 });
                 await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                     type: 'use',
-                    amount: -10,
+                    amount: -20,
                     desc: '일기 사진 한도 확장',
                     createdAt: new Date()
                 });
-                toast.showToast('사진 한도 확장으로 10포인트가 차감되었습니다.', 'info');
+                toast.showToast('사진 한도 확장으로 20포인트가 차감되었습니다.', 'info');
             }
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
@@ -1415,18 +1423,18 @@ function WriteDiary({ user }) {
                                 <button
                                     type="button"
                                     onClick={handleExtendAndEnableImageUpload}
-                                    disabled={currentPoints < 10}
+                                    disabled={currentPoints < 20}
                                     style={{
                                         marginTop: 0,
                                         width: 100,
                                         height: 100,
                                         borderRadius: 8,
-                                        background: currentPoints < 10 ? '#eee' : '#cb6565',
-                                        color: currentPoints < 10 ? '#aaa' : '#fff',
+                                        background: currentPoints < 20 ? '#eee' : '#cb6565',
+                                        color: currentPoints < 20 ? '#aaa' : '#fff',
                                         border: 'none',
                                         fontSize: 15,
                                         fontWeight: 600,
-                                        cursor: currentPoints < 10 ? 'not-allowed' : 'pointer',
+                                        cursor: currentPoints < 20 ? 'not-allowed' : 'pointer',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
@@ -1436,7 +1444,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <span className="icon" style={{ fontSize: 24, marginBottom: 4 }}>📸</span>
-                                    사진 추가 저장 (10P)
+                                    사진 추가 저장 (20P)
                                 </button>
                                 <span style={{
                                     marginLeft: 6,
@@ -1507,8 +1515,8 @@ function WriteDiary({ user }) {
                     {imagePreview.length >= 4 && (
                         <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>사진은 최대 4장까지 등록할 수 있습니다.</div>
                     )}
-                    {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 10 && (
-                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>포인트가 부족하여 사진 한도 확장이 불가합니다.<br />10포인트 필요</div>
+                    {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 20 && (
+                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>포인트가 부족하여 사진 한도 확장이 불가합니다.<br />20포인트 필요</div>
                     )}
                 </div>
 

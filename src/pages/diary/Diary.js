@@ -3,33 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
 import Header from '../../components/Header';
-import { Line, getElementAtEvent, Bar } from 'react-chartjs-2';
+import { useTheme } from '../../ThemeContext';
+
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-} from 'chart.js';
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-);
+import { getWeeklyDiaryStatus } from '../../utils/weeklyBonus';
+
+
 
 const Container = styled.div`
   display: flex;
@@ -42,29 +23,24 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
 `;
 
-const EmotionGraphContainer = styled.div`
-  margin-top: 30px;
-  padding: 20px;
-  background-color: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  box-shadow: ${({ theme }) => theme.cardShadow};
-`;
 
-const GraphTitle = styled.h3`
-  color: ${({ theme }) => theme.primary};
-  margin-bottom: 20px;
-  text-align: center;
-`;
 
 function Diary({ user }) {
     const navigate = useNavigate();
+    const theme = useTheme();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [diaries, setDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [previewDiary, setPreviewDiary] = useState(null);
     const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
-    const chartRef = useRef();
+
     const [longPressTimer, setLongPressTimer] = useState(null);
+    // --- 추가: 주간 일기 현황 state ---
+    const [weeklyDiaryStatus, setWeeklyDiaryStatus] = useState({
+        weekStatus: [],
+        totalWritten: 0,
+        totalDays: 7
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -96,6 +72,16 @@ function Diary({ user }) {
         };
 
         fetchDiaries();
+        // --- 추가: 주간 일기 현황 조회 ---
+        const fetchWeeklyStatus = async () => {
+            try {
+                const status = await getWeeklyDiaryStatus(user.uid, new Date());
+                setWeeklyDiaryStatus(status);
+            } catch (error) {
+                // console.error('주간 일기 현황 조회 실패:', error);
+            }
+        };
+        fetchWeeklyStatus();
     }, [user, currentDate]);
 
     const styles = {
@@ -267,15 +253,15 @@ function Diary({ user }) {
         cry: '/emotions/cry.png',
     };
 
-    // 감정 값 매핑 (그래프용, 값이 클수록 긍정)
-    const emotionValues = {
-        love: 6,
-        good: 5,
-        normal: 4,
-        surprised: 3,
-        angry: 2,
-        cry: 1
-    };
+    // // 감정 값 매핑 (그래프용, 값이 클수록 긍정)
+    // const emotionValues = {
+    //     love: 6,
+    //     good: 5,
+    //     normal: 4,
+    //     surprised: 3,
+    //     angry: 2,
+    //     cry: 1
+    // };
 
     // 감정별 색상 매핑
     const emotionBarColors = {
@@ -313,7 +299,7 @@ function Diary({ user }) {
         love: (month) => `${month}월, 사랑이 가득한 한 달이었어요`,
         good: (month) => `${month}월, 기쁨이 많았네요! 앞으로도 좋은 일만 가득하길`,
         normal: (month) => `${month}월, 평온한 하루하루가 이어졌어요`,
-        surprised: (month) => `${month}월, 놀람이 많았던 한 달이었네요!`,
+        surprised: (month) => `${month}월, 놀라움이 많았던 한 달이었네요!`,
         angry: (month) => `${month}월, 화남이 많았어요. 내 마음을 토닥여주세요`,
         cry: (month) => `${month}월, 슬픔이 많았군요. 힘든 순간도 곧 지나갈 거예요`,
         empty: (month) => `${month}월의 마음은 비어있어요`
@@ -331,136 +317,7 @@ function Diary({ user }) {
         return emotionTopMessages[mainEmotion](month);
     };
 
-    // 현재 월의 감정 데이터 가져오기
-    const getCurrentMonthEmotionData = () => {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
 
-        // 현재 월의 일수 구하기
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        // 날짜별 감정 데이터 생성
-        const emotionData = [];
-        const labels = [];
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const dateString = formatDateToString(date);
-            const diary = diaries.find(d => d.date.startsWith(dateString));
-
-            if (diary && diary.emotion) {
-                emotionData.push(emotionValues[diary.emotion]);
-                labels.push(day);
-            }
-        }
-
-        return { labels, emotionData };
-    };
-
-    // 차트 데이터 설정
-    const { labels, emotionData } = getCurrentMonthEmotionData();
-    const chartData = {
-        labels,
-        datasets: [
-            {
-                fill: true,
-                label: '월별 감정 변화',
-                data: emotionData,
-                borderColor: '#e46262',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-                    gradient.addColorStop(0, 'rgba(228, 98, 98, 0.4)');
-                    gradient.addColorStop(1, 'rgba(228, 98, 98, 0)');
-                    return gradient;
-                },
-                tension: 0.4,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#e46262',
-                pointRadius: 6,
-                pointHoverRadius: 10,
-                pointBorderWidth: 2,
-            },
-        ],
-    };
-
-    // 차트 옵션 설정
-    const chartOptions = {
-        responsive: true,
-        scales: {
-            y: {
-                min: 0,
-                max: 7,
-                grid: {
-                    display: false
-                },
-                ticks: {
-                    display: false
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                },
-                ticks: {
-                    display: false
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                enabled: false
-            }
-        }
-    };
-
-    // 그래프 포인트 클릭 핸들러 (마우스)
-    const handleChartClick = (event) => {
-        if (!chartRef.current) return;
-        const points = getElementAtEvent(chartRef.current, event);
-        if (points && points.length > 0) {
-            const idx = points[0].index;
-            const day = labels[idx];
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const dateString = formatDateToString(new Date(year, month, day));
-            const diary = diaries.find(d => d.date.startsWith(dateString));
-            if (diary) {
-                setPreviewDiary(diary);
-                setPreviewPosition({ x: event.clientX, y: event.clientY });
-            }
-        }
-    };
-
-    // 그래프 포인트 터치 핸들러 (모바일)
-    const handleChartTouch = (event) => {
-        if (!chartRef.current) return;
-        const touch = event.touches && event.touches[0];
-        if (!touch) return;
-        // Chart.js는 getElementAtEvent에 nativeEvent를 넘겨야 하므로, 좌표를 맞춰서 전달
-        const fakeEvent = {
-            ...event,
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            native: true
-        };
-        const points = getElementAtEvent(chartRef.current, fakeEvent);
-        if (points && points.length > 0) {
-            const idx = points[0].index;
-            const day = labels[idx];
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const dateString = formatDateToString(new Date(year, month, day));
-            const diary = diaries.find(d => d.date.startsWith(dateString));
-            if (diary) {
-                setPreviewDiary(diary);
-                setPreviewPosition({ x: touch.clientX, y: touch.clientY });
-            }
-        }
-    };
 
     // 달력 날짜 롱프레스 핸들러
     const handleDateLongPressStart = (date, event) => {
@@ -640,6 +497,7 @@ function Diary({ user }) {
                         {renderCalendar()}
                     </tbody>
                 </table>
+
                 {/* 감정 비율 막대(커스텀) */}
                 <div style={{ margin: '32px 0 0 0', width: '100%', maxWidth: 540, minHeight: 40, position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
                     {/* 상단 문구 */}

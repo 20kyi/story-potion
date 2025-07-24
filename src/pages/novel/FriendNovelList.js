@@ -199,12 +199,12 @@ function FriendNovelList({ user }) {
                 if (!userSnap.exists()) throw new Error('내 계정 정보를 찾을 수 없습니다.');
                 if (viewedSnapTx.exists()) return; // 이미 결제됨
                 const myPoint = userSnap.data().point || 0;
-                if (myPoint < 10) throw new Error('포인트가 부족합니다. (10포인트 필요)');
+                if (myPoint < 30) throw new Error('포인트가 부족합니다. (30포인트 필요)');
                 // 차감/지급
-                transaction.update(userRef, { point: myPoint - 10 });
+                transaction.update(userRef, { point: myPoint - 30 });
                 if (ownerSnap.exists()) {
                     const ownerPoint = ownerSnap.data().point || 0;
-                    transaction.update(ownerRef, { point: ownerPoint + 5 });
+                    transaction.update(ownerRef, { point: ownerPoint + 15 });
                 }
                 // 결제 기록 저장
                 transaction.set(viewedRef, { viewedAt: new Date() });
@@ -212,7 +212,7 @@ function FriendNovelList({ user }) {
             // 포인트 사용 내역 기록
             await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                 type: 'use',
-                amount: -10,
+                amount: -30,
                 desc: '친구 소설 열람',
                 novelId: novel.id,
                 createdAt: Timestamp.now(),
@@ -220,7 +220,7 @@ function FriendNovelList({ user }) {
             // 소설 주인(저자) 포인트 적립 내역 기록
             await addDoc(collection(db, 'users', novel.userId, 'pointHistory'), {
                 type: 'earn',
-                amount: 5,
+                amount: 15,
                 desc: '소설 판매 적립',
                 novelId: novel.id,
                 createdAt: Timestamp.now(),
@@ -240,7 +240,7 @@ function FriendNovelList({ user }) {
             <ConfirmModal
                 open={confirmOpen}
                 title="소설 구매"
-                description="이 소설을 10포인트로 구매하시겠습니까? 포인트가 차감됩니다."
+                description="이 소설을 30포인트로 구매하시겠습니까? 포인트가 차감됩니다."
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={() => handlePurchase(pendingNovel)}
                 confirmText="확인"
@@ -278,7 +278,7 @@ function FriendNovelList({ user }) {
                                         onClick={() => handlePurchaseClick(novel)}
                                         disabled={loadingNovelId === novel.id}
                                     >
-                                        {loadingNovelId === novel.id ? '구매 중...' : '10P로 구매'}
+                                        {loadingNovelId === novel.id ? '구매 중...' : '30P로 구매'}
                                     </ActionButton>
                                 )}
                             </NovelItem>

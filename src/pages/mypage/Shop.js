@@ -254,7 +254,7 @@ function Shop({ user }) {
         <div style={{ flex: 1, background: '#fff', borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1.5px solid #e0e0e0', margin: 0, height: 220, textAlign: 'center' }}>
           <div style={{ color: '#e46262', fontWeight: 700, fontSize: 12, marginBottom: 6, textAlign: 'center' }}>월간 프리미엄</div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, textAlign: 'center' }}>월 1,900원</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, textAlign: 'center' }}>월 5,900원</div>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 10, textAlign: 'center', marginTop: 10 }}>매월 결제, <br />언제든 해지 가능</div>
           </div>
           <PremiumButton style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}>월간 가입하기</PremiumButton>
@@ -264,10 +264,10 @@ function Shop({ user }) {
           <div style={{ position: 'absolute', top: -14, left: 12, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 7, padding: '3px 12px', boxShadow: '0 2px 8px rgba(255,195,0,0.13)', letterSpacing: 1 }}>추천</div>
           <div style={{ color: '#FF9800', fontWeight: 800, fontSize: 13, marginBottom: 6, textAlign: 'center', zIndex: 1, textShadow: '0 1px 2px #fffde7' }}>연간 프리미엄</div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 2, textAlign: 'center', color: '#FF6F00', textShadow: '0 1px 2px #fffde7' }}>연 15,000원</div>
-            <div style={{ color: '#FF6F00', fontWeight: 700, fontSize: 12, marginBottom: 1, textAlign: 'center', textShadow: '0 1px 2px #fffde7' }}>34% 할인</div>
-            <div style={{ color: '#FFB300', fontSize: 11, marginBottom: 1, textDecoration: 'line-through', textAlign: 'center' }}>정가 22,800원</div>
-            <div style={{ color: '#FF9800', fontSize: 13, marginBottom: 10, textAlign: 'center' }}>월 1,250원</div>
+            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 2, textAlign: 'center', color: '#FF6F00', textShadow: '0 1px 2px #fffde7' }}>연 49,560원</div>
+            <div style={{ color: '#FF9800', fontWeight: 700, fontSize: 12, marginBottom: 1, textAlign: 'center', textShadow: '0 1px 2px #fffde7' }}>30% 할인</div>
+            <div style={{ color: '#FFB300', fontSize: 11, marginBottom: 1, textDecoration: 'line-through', textAlign: 'center' }}>정가 70,800원</div>
+            <div style={{ color: '#FF9800', fontSize: 13, marginBottom: 10, textAlign: 'center' }}>월 4,130원</div>
           </div>
           <PremiumButton style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}>연간 가입하기</PremiumButton>
         </div>

@@ -168,12 +168,12 @@ function NovelView({ user }) {
                         if (!userSnap.exists()) throw new Error('내 계정 정보를 찾을 수 없습니다.');
                         if (viewedSnapTx.exists()) return; // 이미 결제됨
                         const myPoint = userSnap.data().point || 0;
-                        if (myPoint < 10) throw new Error('포인트가 부족합니다. (10포인트 필요)');
+                        if (myPoint < 30) throw new Error('포인트가 부족합니다. (30포인트 필요)');
                         // 차감/지급
-                        transaction.update(userRef, { point: myPoint - 10 });
+                        transaction.update(userRef, { point: myPoint - 30 });
                         if (ownerSnap.exists()) {
                             const ownerPoint = ownerSnap.data().point || 0;
-                            transaction.update(ownerRef, { point: ownerPoint + 5 });
+                            transaction.update(ownerRef, { point: ownerPoint + 15 });
                         }
                         // 결제 기록 저장
                         transaction.set(viewedRef, { viewedAt: new Date() });
@@ -182,7 +182,7 @@ function NovelView({ user }) {
                     // 소설 주인(저자) 포인트 적립 내역 기록
                     await addDoc(collection(db, 'users', fetchedNovel.userId, 'pointHistory'), {
                         type: 'earn',
-                        amount: 5,
+                        amount: 15,
                         desc: '소설 판매 적립',
                         novelId: fetchedNovel.id,
                         createdAt: Timestamp.now(),
