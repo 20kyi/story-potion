@@ -23,7 +23,7 @@ function Notice() {
                         <li key={notice.id} style={{ borderBottom: `1px solid ${borderColor}`, padding: '18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 400 }}>
                             <Link to={`/my/notice/${notice.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div>
-                                    <div style={{ fontWeight: 400, fontSize: 20, marginBottom: 4, color: textColor }}>{notice.title}</div>
+                                    <div style={{ fontWeight: 400, fontSize: '1.1rem', marginBottom: 4, color: textColor }}>{notice.title}</div>
                                     <div style={{ fontSize: 16, color: secondaryTextColor, fontWeight: 400 }}>{notice.date}</div>
                                 </div>
                                 <span style={{ marginLeft: 16, display: 'flex', alignItems: 'center' }}>

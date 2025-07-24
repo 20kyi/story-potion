@@ -21,7 +21,7 @@ function NoticeDetail() {
             <div style={{ maxWidth: 600, margin: '40px auto', marginTop: 50, padding: 24, paddingTop: 40, minHeight: '100vh' }}>
                 {notice ? (
                     <>
-                        <h2 style={{ color: textColor, marginTop: 10, marginBottom: 10, textAlign: 'left', fontWeight: 500, fontSize: 22 }}>{notice.title}</h2>
+                        <h2 style={{ color: textColor, marginTop: 10, marginBottom: 10, textAlign: 'left', fontWeight: 400, fontSize: '1.1rem' }}>{notice.title}</h2>
                         <div style={{ color: secondaryTextColor, fontSize: 14, textAlign: 'left', marginBottom: 20 }}>{notice.date}</div>
                         <div style={{ fontSize: 16, color: contentTextColor, lineHeight: 1.7, whiteSpace: 'pre-line', textAlign: 'left' }}>{notice.content}</div>
                     </>
