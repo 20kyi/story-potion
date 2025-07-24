@@ -60,7 +60,7 @@ const AdminIcon = ({ color = '#222' }) => (
 const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  // min-height: 100vh;
   padding: 20px;
   // padding-top: 0;
   margin: 60px auto;
