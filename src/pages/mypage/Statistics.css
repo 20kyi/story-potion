@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+
+body,
+.nanum-pen {
+    font-family: 'Nanum Pen Script', 'Comic Sans MS', cursive, sans-serif;
+}

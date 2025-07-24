@@ -18,38 +18,62 @@ const StatsGrid = styled.div`
   height: 480px;
 `;
 const StatCard = styled.div`
-  background: ${({ theme }) => theme.progressCard};
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 24px;
+  background: ${({ theme }) => theme.card};
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 24px 12px 18px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
+  min-height: 100px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  background-clip: padding-box;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+  }
+`;
+const StatImage = styled.img`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 12px;
 `;
 const StatLabel = styled.div`
   font-weight: 700;
-  margin-bottom: 10px;
-  font-size: clamp(13px, 2vw, 20px);
+  margin-bottom: 6px;
+  font-size: 1.08rem;
+  color: ${({ color }) => color || '#333'};
+  text-align: center;
 `;
 const StatNumber = styled.div`
-  font-size: clamp(16px, 3vw, 32px);
+  font-size: 1.5rem;
   font-weight: 700;
+  color: ${({ color }) => color || '#222'};
+  margin-bottom: 2px;
+  text-align: center;
 `;
 const Rank1 = styled.div`
-  font-size: clamp(14px, 2.5vw, 20px);
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: #e462a0;
 `;
 const Rank2 = styled.div`
-  font-size: clamp(12px, 2vw, 16px);
+  font-size: 0.98rem;
   font-weight: 600;
   margin-bottom: 2px;
   color: #e462a0;
 `;
 const Rank3 = styled.div`
-  font-size: clamp(10px, 1.7vw, 12px);
+  font-size: 0.95rem;
   font-weight: 500;
   color: #e462a0;
 `;
@@ -149,30 +173,36 @@ function Statistics({ user }) {
                     <StatsGrid>
                         {/* 작성한 일기 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '1 / 4' }}>
-                            <StatLabel style={{ color: '#ff8800' }}>작성한 일기</StatLabel>
-                            <StatNumber style={{ color: '#e46262' }}>{diaryCount}</StatNumber>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성된일기.png'} alt="작성된 일기" />
+                            <StatLabel color="#ff8800">작성한 일기</StatLabel>
+                            <StatNumber color="#e46262">{diaryCount}</StatNumber>
                         </StatCard>
                         {/* 완성된 소설 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '4 / 7' }}>
-                            <StatLabel style={{ color: '#1abc3b' }}>완성된 소설</StatLabel>
-                            <StatNumber style={{ color: '#1abc3b' }}>{novelCount}</StatNumber>
-                        </StatCard>
-                        {/* 연속일수 */}
-                        <StatCard style={{ gridColumn: 2, gridRow: '1 / 3' }}>
-                            <StatLabel style={{ color: '#a259d9' }}>연속일수</StatLabel>
-                            <StatNumber style={{ color: '#a259d9' }}>{maxStreak}</StatNumber>
-                        </StatCard>
-                        {/* 내 관심사 */}
-                        <StatCard style={{ gridColumn: 2, gridRow: '3 / 5' }}>
-                            <StatLabel style={{ color: '#e462a0' }}>내 관심사</StatLabel>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/내관심사.png'} alt="내 관심사" />
+                            <StatLabel color="#e462a0">내 관심사</StatLabel>
                             <Rank1>1위: {topWords[0]}</Rank1>
                             <Rank2>2위: {topWords[1]}</Rank2>
                             <Rank3>3위: {topWords[2]}</Rank3>
                         </StatCard>
+                        {/* 연속일수 */}
+                        <StatCard style={{ gridColumn: 2, gridRow: '1 / 3' }}>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/연속일수.png'} alt="연속일수" />
+                            <StatLabel color="#a259d9">연속일수</StatLabel>
+                            <StatNumber color="#a259d9">{maxStreak}</StatNumber>
+                        </StatCard>
+                        {/* 내 관심사 */}
+                        <StatCard style={{ gridColumn: 2, gridRow: '3 / 5' }}>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/완성된소설.png'} alt="완성된 소설" />
+                            <StatLabel color="#1abc3b">완성된 소설</StatLabel>
+                            <StatNumber color="#1abc3b">{novelCount}</StatNumber>
+
+                        </StatCard>
                         {/* Total Potion */}
                         <StatCard style={{ gridColumn: 2, gridRow: '5 / 7' }}>
-                            <StatLabel style={{ color: '#3498f3' }}>Total Potion</StatLabel>
-                            <StatNumber style={{ color: '#3498f3' }}>-</StatNumber>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt="Total Potion" />
+                            <StatLabel color="#3498f3">Total Potion</StatLabel>
+                            <StatNumber color="#3498f3">-</StatNumber>
                         </StatCard>
                     </StatsGrid>
                 )}
