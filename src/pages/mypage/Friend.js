@@ -340,7 +340,7 @@ function Friend({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const toast = useToast();
-    const [activeTab, setActiveTab] = useState('search');
+    const [activeTab, setActiveTab] = useState('friends');  // 기본 탭 설정
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -714,6 +714,13 @@ function Friend({ user }) {
             <TabContainer>
                 <TabHeader theme={theme}>
                     <Tab
+                        active={activeTab === 'friends'}
+                        onClick={() => setActiveTab('friends')}
+                        theme={theme}
+                    >
+                        친구
+                    </Tab>
+                    <Tab
                         active={activeTab === 'search'}
                         onClick={() => setActiveTab('search')}
                         theme={theme}
@@ -730,18 +737,11 @@ function Friend({ user }) {
                             <RequestCount>{receivedRequests.length}</RequestCount>
                         )}
                     </Tab>
-                    <Tab
-                        active={activeTab === 'friends'}
-                        onClick={() => setActiveTab('friends')}
-                        theme={theme}
-                    >
-                        친구
-                    </Tab>
                 </TabHeader>
                 <TabContent theme={theme}>
+                    {activeTab === 'friends' && renderFriendsTab()}
                     {activeTab === 'search' && renderSearchTab()}
                     {activeTab === 'requests' && renderRequestsTab()}
-                    {activeTab === 'friends' && renderFriendsTab()}
                 </TabContent>
             </TabContainer>
 
