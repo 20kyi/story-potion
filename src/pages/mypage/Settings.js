@@ -11,6 +11,14 @@ import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
 
+const FONT_OPTIONS = [
+    { label: '시스템 기본', value: 'system-ui, sans-serif' },
+    { label: '서울한강체', value: "'SeoulHangang', sans-serif" },
+    { label: '시네마', value: "'Cinema', sans-serif" },
+    { label: '엄마의편지', value: "'MomLetter', sans-serif" },
+    { label: '나눔고딕', value: 'NanumGothic, sans-serif' },
+];
+
 function Settings() {
     const navigate = useNavigate();
     const { theme, setThemeMode } = useTheme();
@@ -25,6 +33,12 @@ function Settings() {
         granted: false,
         message: '확인 중...'
     });
+    const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('fontFamily') || 'system-ui, sans-serif');
+
+    useEffect(() => {
+        document.body.style.fontFamily = fontFamily;
+        localStorage.setItem('fontFamily', fontFamily);
+    }, [fontFamily]);
 
     // 알림 상태 확인
     useEffect(() => {
@@ -164,6 +178,20 @@ function Settings() {
                         >
                             <option value="한국어">한국어</option>
                             <option value="English">English</option>
+                        </select>
+                    </li>
+                    {/* 폰트 선택 */}
+                    <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
+                        <span>글꼴</span>
+                        <select
+                            className="settings-select"
+                            value={fontFamily}
+                            onChange={e => setFontFamily(e.target.value)}
+                            style={{ marginLeft: 'auto', width: 200, fontSize: 18, padding: '6px 12px', borderRadius: 8 }}
+                        >
+                            {FONT_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
                         </select>
                     </li>
                 </ul>

@@ -114,16 +114,16 @@
 }
 
 .settings-select {
-    color: #585858;
+    border: 1px solid #e0e0e0;
     background: #fff;
-    border: 1px solid #747474;
+    color: #222;
+    font-size: 16px;
     border-radius: 8px;
-    font-size: 18px;
     padding: 6px 12px;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 18px 18px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.settings-select:focus {
+    border-color: #e46262;
 }

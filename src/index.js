@@ -8,4 +8,10 @@ root.render(
     <React.StrictMode>
         <App />
     </React.StrictMode>
-); 
+);
+
+// 앱 시작 시 저장된 폰트 적용
+const savedFont = localStorage.getItem('fontFamily');
+if (savedFont) {
+    document.body.style.fontFamily = savedFont;
+} 
