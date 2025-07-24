@@ -116,11 +116,11 @@ function PointHistory({ user }) {
                     포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다.<br />
                     내역이 실시간으로 반영됩니다.
                 </div>
-                
+
                 {/* 포인트 충전 버튼 */}
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
                     <button
-                        onClick={() => navigate('/my/premium/charge')}
+                        onClick={() => navigate('/my/shop/charge')}
                         style={{
                             background: '#3498f3',
                             color: 'white',

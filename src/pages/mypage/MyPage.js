@@ -732,11 +732,11 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>소셜</MenuLabel>
               </MenuButton>
-              <MenuButton onClick={() => navigate('/my/premium')}>
+              <MenuButton onClick={() => navigate('/my/shop')}>
                 <MenuIcon as="div">
                   <CrownIcon color={theme.theme === 'dark' ? '#fff' : '#181725'} />
                 </MenuIcon>
-                <MenuLabel>프리미엄</MenuLabel>
+                <MenuLabel>상점</MenuLabel>
               </MenuButton>
 
 

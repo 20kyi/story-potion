@@ -252,134 +252,134 @@ const premiumFeatures = [
   { id: 'report', title: 'AI 일기 분석 리포트', description: 'AI가 분석한 상세한 일기 리포트를 받아보세요' },
 ];
 
-function Premium({ user }) {
-    const navigate = useNavigate();
-    const toast = useToast();
-    const theme = useTheme();
-    const [currentPoints, setCurrentPoints] = useState(0);
-    const [selectedPackage, setSelectedPackage] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+function Shop({ user }) {
+  const navigate = useNavigate();
+  const toast = useToast();
+  const theme = useTheme();
+  const [currentPoints, setCurrentPoints] = useState(0);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-    // 현재 포인트 조회
-    useEffect(() => {
-        if (user?.uid) {
-            const fetchPoints = async () => {
-                try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    if (userDoc.exists()) {
-                        setCurrentPoints(userDoc.data().point || 0);
-                    }
-                } catch (error) {
-                    console.error('포인트 조회 실패:', error);
-                }
-            };
-            fetchPoints();
-        }
-    }, [user]);
-
-    const handlePurchase = async () => {
-        if (!selectedPackage) {
-            toast.showToast('포인트 패키지를 선택해주세요.', 'error');
-            return;
-        }
-
-        setIsLoading(true);
+  // 현재 포인트 조회
+  useEffect(() => {
+    if (user?.uid) {
+      const fetchPoints = async () => {
         try {
-            // 실제 결제 로직은 여기에 구현
-            // 현재는 시뮬레이션으로 포인트만 추가
-            const packageData = packages.find(p => p.id === selectedPackage);
-            const bonusPoints = packageData.bonus.includes('+') ? 
-                parseInt(packageData.bonus.match(/\d+/)[0]) : 0;
-            const totalPoints = packageData.points + bonusPoints;
-
-            // 포인트 추가
-            await updateDoc(doc(db, 'users', user.uid), {
-                point: increment(totalPoints)
-            });
-
-            // 포인트 히스토리 기록
-            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-                type: 'charge',
-                amount: totalPoints,
-                desc: `포인트 충전 (${packageData.points}p + ${bonusPoints}p 보너스)`,
-                createdAt: new Date()
-            });
-
-            // 현재 포인트 업데이트
-            setCurrentPoints(prev => prev + totalPoints);
-            
-            toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
-            setSelectedPackage(null);
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setCurrentPoints(userDoc.data().point || 0);
+          }
         } catch (error) {
-            console.error('포인트 충전 실패:', error);
-            toast.showToast('포인트 충전에 실패했습니다.', 'error');
-        } finally {
-            setIsLoading(false);
+          console.error('포인트 조회 실패:', error);
         }
-    };
+      };
+      fetchPoints();
+    }
+  }, [user]);
 
-    return (
-        <Container theme={theme}>
-            <Header user={user} title="프리미엄" />
-            
-            <PointDisplay theme={theme}>
-                <PointAmount>
-                    <PointIcon width={32} height={32} color="#3498f3" />
-                    {currentPoints.toLocaleString()}p
-                </PointAmount>
-                <PointLabel theme={theme}>현재 보유 포인트</PointLabel>
-            </PointDisplay>
+  const handlePurchase = async () => {
+    if (!selectedPackage) {
+      toast.showToast('포인트 패키지를 선택해주세요.', 'error');
+      return;
+    }
 
-            {/* 메뉴 그리드 */}
-            <MenuGrid>
-                <MenuButton onClick={() => navigate('/my/premium/charge')} theme={theme}>
-                    <MenuIcon>
-                        <PointIcon width={24} height={24} color="#3498f3" />
-                    </MenuIcon>
-                    <MenuContent>
-                        <MenuTitle theme={theme}>포인트 충전</MenuTitle>
-                        <MenuDescription theme={theme}>
-                            포인트를 충전하여 포션을 구매하거나 프리미엄 기능을 이용하세요
-                        </MenuDescription>
-                    </MenuContent>
-                </MenuButton>
+    setIsLoading(true);
+    try {
+      // 실제 결제 로직은 여기에 구현
+      // 현재는 시뮬레이션으로 포인트만 추가
+      const packageData = packages.find(p => p.id === selectedPackage);
+      const bonusPoints = packageData.bonus.includes('+') ?
+        parseInt(packageData.bonus.match(/\d+/)[0]) : 0;
+      const totalPoints = packageData.points + bonusPoints;
 
-                <MenuButton onClick={() => navigate('/my/potion-shop')} theme={theme}>
-                    <MenuIcon>
-                        <ShopIcon width={24} height={24} color="#e46262" />
-                    </MenuIcon>
-                    <MenuContent>
-                        <MenuTitle theme={theme}>포션 상점</MenuTitle>
-                        <MenuDescription theme={theme}>
-                            포인트로 포션을 구매하여 소설을 생성하세요
-                        </MenuDescription>
-                    </MenuContent>
-                </MenuButton>
-            </MenuGrid>
+      // 포인트 추가
+      await updateDoc(doc(db, 'users', user.uid), {
+        point: increment(totalPoints)
+      });
 
-            {/* 프리미엄 기능 섹션 */}
-            <PremiumSection theme={theme}>
-                <PremiumTitle theme={theme}>
-                    <span style={{ color: '#e46262' }}>👑</span>
-                    프리미엄 혜택
-                </PremiumTitle>
-                <FeatureList>
-                    {premiumFeatures.map((feature) => (
-                        <FeatureItem key={feature.id} theme={theme}>
-                            {feature.title}
-                        </FeatureItem>
-                    ))}
-                </FeatureList>
-            </PremiumSection>
+      // 포인트 히스토리 기록
+      await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+        type: 'charge',
+        amount: totalPoints,
+        desc: `포인트 충전 (${packageData.points}p + ${bonusPoints}p 보너스)`,
+        createdAt: new Date()
+      });
 
-            {/* 프리미엄 가입 버튼 */}
-            <PremiumButton>
-                프리미엄 가입하기
-            </PremiumButton>
+      // 현재 포인트 업데이트
+      setCurrentPoints(prev => prev + totalPoints);
 
-            <Navigation />
-        </Container>
-    );
+      toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
+      setSelectedPackage(null);
+    } catch (error) {
+      console.error('포인트 충전 실패:', error);
+      toast.showToast('포인트 충전에 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container theme={theme}>
+      <Header user={user} title="상점" />
+
+      <PointDisplay theme={theme}>
+        <PointAmount>
+          <PointIcon width={32} height={32} color="#3498f3" />
+          {currentPoints.toLocaleString()}p
+        </PointAmount>
+        <PointLabel theme={theme}>현재 보유 포인트</PointLabel>
+      </PointDisplay>
+
+      {/* 메뉴 그리드 */}
+      <MenuGrid>
+        <MenuButton onClick={() => navigate('/my/premium/charge')} theme={theme}>
+          <MenuIcon>
+            <PointIcon width={24} height={24} color="#3498f3" />
+          </MenuIcon>
+          <MenuContent>
+            <MenuTitle theme={theme}>포인트 충전</MenuTitle>
+            <MenuDescription theme={theme}>
+              포인트를 충전하여 포션을 구매하거나 프리미엄 기능을 이용하세요
+            </MenuDescription>
+          </MenuContent>
+        </MenuButton>
+
+        <MenuButton onClick={() => navigate('/my/potion-shop')} theme={theme}>
+          <MenuIcon>
+            <ShopIcon width={24} height={24} color="#e46262" />
+          </MenuIcon>
+          <MenuContent>
+            <MenuTitle theme={theme}>포션 상점</MenuTitle>
+            <MenuDescription theme={theme}>
+              포인트로 포션을 구매하여 소설을 생성하세요
+            </MenuDescription>
+          </MenuContent>
+        </MenuButton>
+      </MenuGrid>
+
+      {/* 프리미엄 기능 섹션 */}
+      <PremiumSection theme={theme}>
+        <PremiumTitle theme={theme}>
+          <span style={{ color: '#e46262' }}>👑</span>
+          상점 혜택
+        </PremiumTitle>
+        <FeatureList>
+          {premiumFeatures.map((feature) => (
+            <FeatureItem key={feature.id} theme={theme}>
+              {feature.title}
+            </FeatureItem>
+          ))}
+        </FeatureList>
+      </PremiumSection>
+
+      {/* 프리미엄 가입 버튼 */}
+      <PremiumButton>
+        상점 가입하기
+      </PremiumButton>
+
+      <Navigation />
+    </Container>
+  );
 }
 
-export default Premium; 
+export default Shop; 

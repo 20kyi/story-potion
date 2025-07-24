@@ -30,7 +30,7 @@ import Notice from './pages/mypage/Notice';
 import Support from './pages/mypage/Support';
 import Social from './pages/mypage/Social';
 import Friend from './pages/mypage/Friend';
-import Premium from './pages/mypage/Premium';
+import Shop from './pages/mypage/Shop';
 import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
 import { ThemeProvider, useTheme } from './ThemeContext';
@@ -81,11 +81,11 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/friend" element={user ? <Friend user={user} /> : <Navigate to="/login" />} />
-                <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/shop" element={user ? <Shop user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/shop/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
-                <Route path="/my/premium/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
