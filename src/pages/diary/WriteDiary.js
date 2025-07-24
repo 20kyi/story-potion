@@ -60,10 +60,10 @@ const DiaryDate = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   .date-number, .date-unit {
     color: ${({ theme }) => theme.text};
-    font-family: 'Inter', sans-serif;
+    font-family: inherit;
     font-size: 18px;
     font-weight: 500;
   }
@@ -84,6 +84,7 @@ const MetaLabel = styled.span`
   min-width: 140px;
   min-height: 44px;
   padding: 0;
+  font-family: inherit;
 `;
 
 const ImagePreviewContainer = styled.div`
@@ -296,6 +297,7 @@ const UploadLabel = styled.label`
   border: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: background 0.2s, box-shadow 0.2s;
+  font-family: inherit;
   &:hover {
     background: linear-gradient(135deg, #cccccc 0%, #e0e0e0 100%);
     box-shadow: 0 4px 16px rgba(0,0,0,0.10);

@@ -251,6 +251,7 @@ const CreateButton = styled.button`
   opacity: 1;
   transition: all 0.2s ease;
   font-weight: 700;
+  font-family: inherit;
   box-shadow: ${({ children }) =>
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {

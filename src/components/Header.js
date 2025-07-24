@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import BackIcon from './icons/BackIcon';
+import { useTheme } from '../ThemeContext';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -16,6 +18,7 @@ const HeaderContainer = styled.header`
   background-color: ${({ theme }) => theme.card};
   padding: 16px 20px 12px 20px;
   padding-top: calc(env(safe-area-inset-top, 24px) + 16px); /* 모바일 상단 safe area 대응 */
+  min-height: 56px;
   // padding-top: env(safe-area-inset-top, 24px);
 
   @media (min-width: 768px) {
@@ -71,19 +74,30 @@ const LogoText = styled.span`
 `;
 
 const CenterSection = styled.div`
-  flex: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 16px;
+  bottom: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  left: 0; right: 0; top: 0; bottom: 0;
   pointer-events: none;
+
+  @media (min-width: 768px) {
+    top: 12px;
+    bottom: 12px;
+  }
 `;
 
 const Header = ({ user, rightActions, title }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
+  const { theme: themeMode, actualTheme, setThemeMode, toggleTheme } = useTheme();
+  const theme = actualTheme === 'dark'
+    ? { text: '#fff' }
+    : { text: '#222' };
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
   const photoURL = user?.photoURL || '/profile-placeholder.jpg';
@@ -110,7 +124,9 @@ const Header = ({ user, rightActions, title }) => {
     <HeaderContainer>
       <LeftSection>
         {!isHome && (
-          <BackButton onClick={handleBack}>←</BackButton>
+          <BackButton onClick={handleBack}>
+            <BackIcon size={20} color={theme.text} />
+          </BackButton>
         )}
         {isHome && (
           <LogoText>STORYPOTION</LogoText>
@@ -118,7 +134,7 @@ const Header = ({ user, rightActions, title }) => {
       </LeftSection>
       {!isHome && title && (
         <CenterSection>
-          <span style={{ fontSize: 20, fontWeight: 700 }}>{title}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, lineHeight: '1' }}>{title}</span>
         </CenterSection>
       )}
       {rightActions && <RightSection>{rightActions}</RightSection>}

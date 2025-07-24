@@ -52,6 +52,7 @@ const NovelTitle = styled.h1`
   color: ${({ theme }) => theme.primary};
   margin: 0 0 8px 0;
   font-weight: 600;
+  font-family: inherit;
 
   /* 다크모드 대응 */
   body.dark & {
@@ -62,6 +63,7 @@ const NovelTitle = styled.h1`
 const NovelDate = styled.div`
   font-size: 14px;
   color: #999;
+  font-family: inherit;
 `;
 
 const NovelContent = styled.div`
@@ -72,6 +74,7 @@ const NovelContent = styled.div`
   padding: 20px;
   background: ${({ theme }) => theme.card};
   border-radius: 15px;
+  font-family: inherit;
 
   /* 다크모드 대응 */
   body.dark & {

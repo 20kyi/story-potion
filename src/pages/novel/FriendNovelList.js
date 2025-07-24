@@ -99,6 +99,7 @@ const ActionButton = styled.button`
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
   opacity: ${props => props.disabled ? 0.6 : 1};
+  font-family: inherit;
   &:active {
     background: #c13d3d;
   }
@@ -110,6 +111,7 @@ const ActionButtonView = styled(ActionButton)`
   font-weight: 700;
   box-shadow: none;
   border-radius: 0 0 12px 12px;
+  font-family: inherit;
   &:active, &:hover {
     background: transparent;
     text-decoration: underline;

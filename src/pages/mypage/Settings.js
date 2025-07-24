@@ -17,6 +17,9 @@ const FONT_OPTIONS = [
     { label: '시네마', value: "'Cinema', sans-serif" },
     { label: '엄마의편지', value: "'MomLetter', sans-serif" },
     { label: '나눔고딕', value: 'NanumGothic, sans-serif' },
+    { label: '휴먼범석네오', value: 'HumanBeomseokNeo, sans-serif' },
+    { label: '어른아이', value: 'Adultkid, sans-serif' },
+    { label: '사각사각', value: 'Sagak-sagak, sans-serif' },
 ];
 
 function Settings() {
