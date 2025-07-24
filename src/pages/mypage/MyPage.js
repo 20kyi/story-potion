@@ -696,7 +696,7 @@ function MyPage({ user }) {
                 <StatNumber>{friendCount}</StatNumber>
                 <StatLabel>친구</StatLabel>
               </StatItem>
-              <StatItem onClick={() => navigate('/my/statistics')}>
+              <StatItem onClick={() => navigate('/my/shop/charge')}>
                 <StatNumber>{point.toLocaleString()}</StatNumber>
                 <StatLabel>포인트</StatLabel>
               </StatItem>
