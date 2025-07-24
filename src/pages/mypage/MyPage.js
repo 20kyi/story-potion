@@ -46,6 +46,7 @@ import ShopIcon from '../../components/icons/ShopIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
+import { getFriendsList } from '../../utils/friendSystem';
 
 // 관리자 아이콘 추가
 const AdminIcon = ({ color = '#222' }) => (
@@ -355,6 +356,40 @@ const AdminButton = styled.div`
   }
 `;
 
+const StatsContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  margin: 16px 0 24px 0;
+  padding: 16px 0;
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const StatNumber = styled.span`
+  font-size: 18px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 4px;
+`;
+
+const StatLabel = styled.span`
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
+`;
+
 /**
  * 마이페이지 메인 컴포넌트
  * @param {Object} user - 현재 로그인한 사용자 정보
@@ -366,6 +401,7 @@ function MyPage({ user }) {
   const [newProfileImageFile, setNewProfileImageFile] = useState(null); // 새 프로필 이미지 파일
   const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
   const [point, setPoint] = useState(0); // 사용자 포인트
+  const [friendCount, setFriendCount] = useState(0); // 친구 수
 
   // 네비게이션 및 테마
   const navigate = useNavigate();
@@ -405,6 +441,22 @@ function MyPage({ user }) {
           setPoint(docSnap.data().point || 0);
         }
       });
+    }
+  }, [user]);
+
+  // 친구 수 정보를 가져오기
+  useEffect(() => {
+    if (user?.uid) {
+      const fetchFriendCount = async () => {
+        try {
+          const friends = await getFriendsList(user.uid);
+          setFriendCount(friends.length);
+        } catch (error) {
+          console.error('친구 수 조회 실패:', error);
+          setFriendCount(0);
+        }
+      };
+      fetchFriendCount();
     }
   }, [user]);
 
@@ -637,11 +689,18 @@ function MyPage({ user }) {
               </EditIconWrapper>
             </ProfileContainer>
             <Nickname>{displayName}님!</Nickname>
-            <div style={{ textAlign: "center", fontSize: 16, color: "#3498f3", fontWeight: 600, margin: '8px 0 16px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              onClick={() => navigate('/my/premium/charge')}>
-              <PointIcon width={20} height={20} color="#3498f3" />
-              {point.toLocaleString()}p
-            </div>
+
+            {/* 인스타그램 스타일 통계 섹션 */}
+            <StatsContainer>
+              <StatItem onClick={() => navigate('/my/friend')}>
+                <StatNumber>{friendCount}</StatNumber>
+                <StatLabel>친구</StatLabel>
+              </StatItem>
+              <StatItem onClick={() => navigate('/my/statistics')}>
+                <StatNumber>{point.toLocaleString()}</StatNumber>
+                <StatLabel>포인트</StatLabel>
+              </StatItem>
+            </StatsContainer>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">

@@ -63,6 +63,22 @@ const Tab = styled.button`
   }
 `;
 
+const RequestCount = styled.span`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff4757;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+`;
+
 const TabContent = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 0 0 15px 15px;
@@ -99,7 +115,6 @@ const SearchInput = styled.input`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   outline: none;
-  transition: border-color 0.2s;
 
   &:focus {
     border-color: #e46262;
@@ -109,19 +124,14 @@ const SearchInput = styled.input`
 const SearchButton = styled.button`
   position: absolute;
   right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
   background: #e46262;
   color: white;
   border: none;
   border-radius: 8px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 8px 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 14px;
+  transition: background 0.2s ease;
 
   &:hover {
     background: #d45555;
@@ -133,17 +143,26 @@ const SearchButton = styled.button`
   }
 `;
 
+const SectionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: ${({ theme }) => theme.text};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 const UserCard = styled(motion.div)`
-  background: ${({ theme }) => theme.background};
-  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
-  gap: 0;
+  background: ${({ theme }) => theme.background};
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 `;
 
 const UserInfo = styled.div`
@@ -151,8 +170,6 @@ const UserInfo = styled.div`
   align-items: center;
   gap: 12px;
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
 `;
 
 const UserAvatar = styled.img`
@@ -164,179 +181,89 @@ const UserAvatar = styled.img`
 
 const UserDetails = styled.div`
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
 `;
 
 const UserName = styled.div`
-  font-size: 16px;
   font-weight: 600;
+  font-size: 16px;
   color: ${({ theme }) => theme.text};
   margin-bottom: 4px;
 `;
 
 const UserEmail = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#666'};
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
+  color: ${({ theme }) => theme.textSecondary || '#666'};
 `;
 
 const ActionButton = styled.button`
   padding: 8px 16px;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
-  white-space: nowrap;
-  min-width: 64px;
-  height: 40px;
-  justify-content: center;
-  margin-left: auto;
-  box-sizing: border-box;
 
   &.primary {
     background: #e46262;
     color: white;
-    
-    &:hover {
-      background: #d45555;
-    }
-  }
-
-  &.success {
-    background: #27ae60;
-    color: white;
-    
-    &:hover {
-      background: #229954;
-    }
-  }
-
-  &.danger {
-    background: #e74c3c;
-    color: white;
-    
-    &:hover {
-      background: #c0392b;
-    }
   }
 
   &.secondary {
-    background: #95a5a6;
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #e0e0e0;
+  }
+
+  &.danger {
+    background: #ff4757;
     color: white;
-    
-    &:hover {
-      background: #7f8c8d;
-    }
+  }
+
+  &:hover {
+    transform: translateY(-1px);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
-`;
-
-const StatusBadge = styled.span`
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  margin-left: 8px;
-
-  &.pending {
-    background: #f39c12;
-    color: white;
-  }
-
-  &.accepted {
-    background: #27ae60;
-    color: white;
-  }
-
-  &.rejected {
-    background: #e74c3c;
-    color: white;
-  }
-`;
-
-const SectionTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  margin: 24px 0 16px 0;
-  color: ${({ theme }) => theme.text};
-  display: flex;
-  align-items: center;
-  gap: 8px;
 `;
 
 const EmptyState = styled.div`
   text-align: center;
   padding: 40px 20px;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme }) => theme.textSecondary || '#666'};
 `;
 
 const EmptyIcon = styled.div`
   font-size: 48px;
   margin-bottom: 16px;
-  opacity: 0.5;
 `;
 
 const EmptyText = styled.div`
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
   margin-bottom: 8px;
+  color: ${({ theme }) => theme.text};
 `;
 
 const EmptySubtext = styled.div`
   font-size: 14px;
-  opacity: 0.8;
+  color: ${({ theme }) => theme.textSecondary || '#666'};
 `;
 
-const RequestCount = styled.span`
-  background: #e74c3c;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-left: 8px;
+const LoadingText = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: ${({ theme }) => theme.textSecondary || '#666'};
 `;
 
-const ActionRow = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-`;
-
-const RejectButton = styled(ActionButton)`
-  flex: 0 0 64px;
-  height: 40px;
-  background: none !important;
-  color: #e74c3c !important;
-  border: none;
-  box-shadow: none;
-  &:hover {
-    background: none !important;
-  }
-`;
-
-const AcceptButton = styled(ActionButton)`
-  flex: 1 1 0;
-  height: 40px;
-  background: #e46262 !important;
-  color: #fff !important;
-  &:hover {
-    background: #d45555 !important;
-  }
-`;
-
-function FriendSearch({ user }) {
+function Friends({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const toast = useToast();
@@ -460,9 +387,11 @@ function FriendSearch({ user }) {
     };
 
     const handleRemoveFriend = async (friendshipId) => {
+        if (!window.confirm('정말로 이 친구를 삭제하시겠습니까?')) return;
+
         setIsLoading(true);
         try {
-            await removeFriend(friendshipId, user.uid);
+            await removeFriend(friendshipId);
             toast.showToast('친구를 삭제했습니다.', 'success');
             loadData();
         } catch (error) {
@@ -474,82 +403,89 @@ function FriendSearch({ user }) {
     };
 
     const renderSearchTab = () => (
-        <SearchSection theme={theme}>
-            <SearchTitle theme={theme}>사용자 검색</SearchTitle>
-            <SearchInputContainer>
-                <SearchInput
-                    type="text"
-                    placeholder="이메일로 사용자를 검색하세요"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    theme={theme}
-                />
-                <SearchButton
-                    onClick={handleSearch}
-                    disabled={isSearching || !searchQuery.trim()}
-                >
-                    <FaSearch />
-                </SearchButton>
-            </SearchInputContainer>
+        <div>
+            <SearchSection>
+                <SearchTitle theme={theme}>친구 찾기</SearchTitle>
+                <SearchInputContainer>
+                    <SearchInput
+                        type="text"
+                        placeholder="이메일 또는 닉네임으로 검색"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        theme={theme}
+                    />
+                    <SearchButton onClick={handleSearch} disabled={isSearching}>
+                        {isSearching ? '검색 중...' : <FaSearch />}
+                    </SearchButton>
+                </SearchInputContainer>
+            </SearchSection>
 
-            {searchResults.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                    <SectionTitle theme={theme}>검색 결과</SectionTitle>
-                    {searchResults.map((user) => (
-                        <UserCard
-                            key={user.uid}
-                            theme={theme}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
+            <SectionTitle theme={theme}>
+                <FaSearch />
+                검색 결과
+            </SectionTitle>
+
+            {searchResults.length === 0 ? (
+                <EmptyState theme={theme}>
+                    <EmptyIcon>🔍</EmptyIcon>
+                    <EmptyText>검색 결과가 없습니다</EmptyText>
+                    <EmptySubtext>다른 검색어를 시도해보세요</EmptySubtext>
+                </EmptyState>
+            ) : (
+                searchResults.map((result) => (
+                    <UserCard
+                        key={result.uid}
+                        theme={theme}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                    >
+                        <UserInfo>
+                            <UserAvatar
+                                src={
+                                    result.photoURL &&
+                                        typeof result.photoURL === 'string' &&
+                                        result.photoURL.trim() !== '' &&
+                                        result.photoURL !== 'null' &&
+                                        result.photoURL !== 'undefined'
+                                        ? result.photoURL
+                                        : '/default-profile.svg'
+                                }
+                                alt={result.displayName}
+                            />
+                            <UserDetails>
+                                <UserName theme={theme}>
+                                    {result.displayName || '사용자'}
+                                </UserName>
+                                <UserEmail theme={theme}>{result.email}</UserEmail>
+                            </UserDetails>
+                        </UserInfo>
+                        <ActionButton
+                            className="primary"
+                            onClick={() => handleSendFriendRequest(result.uid)}
+                            disabled={isLoading}
                         >
-                            <UserInfo>
-                                <UserAvatar
-                                    src={
-                                        user.photoURL &&
-                                            typeof user.photoURL === 'string' &&
-                                            user.photoURL.trim() !== '' &&
-                                            user.photoURL !== 'null' &&
-                                            user.photoURL !== 'undefined'
-                                            ? user.photoURL
-                                            : '/default-profile.svg'
-                                    }
-                                    alt={user.displayName}
-                                />
-                                <UserDetails>
-                                    <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
-                                    <UserEmail theme={theme}>{user.email}</UserEmail>
-                                </UserDetails>
-                            </UserInfo>
-                            <ActionButton
-                                className="primary"
-                                onClick={() => handleSendFriendRequest(user.uid)}
-                                disabled={isLoading}
-                            >
-                                <FaUserPlus />
-                                친구 요청
-                            </ActionButton>
-                        </UserCard>
-                    ))}
-                </div>
+                            <FaUserPlus />
+                            친구 요청
+                        </ActionButton>
+                    </UserCard>
+                ))
             )}
-        </SearchSection>
+        </div>
     );
 
     const renderRequestsTab = () => (
         <div>
             <SectionTitle theme={theme}>
+                <FaUserCheck />
                 받은 친구 요청
-                {receivedRequests.length > 0 && (
-                    <RequestCount>{receivedRequests.length}</RequestCount>
-                )}
             </SectionTitle>
 
             {receivedRequests.length === 0 ? (
                 <EmptyState theme={theme}>
-                    <EmptyIcon>📭</EmptyIcon>
+                    <EmptyIcon>📨</EmptyIcon>
                     <EmptyText>받은 친구 요청이 없습니다</EmptyText>
-                    <EmptySubtext>새로운 친구 요청이 오면 여기에 표시됩니다</EmptySubtext>
+                    <EmptySubtext>새로운 친구 요청을 기다려보세요</EmptySubtext>
                 </EmptyState>
             ) : (
                 receivedRequests.map((request) => (
@@ -579,32 +515,38 @@ function FriendSearch({ user }) {
                                 <UserEmail theme={theme}>{request.fromUser.email}</UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <ActionRow>
-                            <RejectButton
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <ActionButton
+                                className="primary"
+                                onClick={() => handleAcceptRequest(request.id, request.fromUserId, request.toUserId)}
+                                disabled={isLoading}
+                            >
+                                <FaUserCheck />
+                                수락
+                            </ActionButton>
+                            <ActionButton
                                 className="danger"
                                 onClick={() => handleRejectRequest(request.id)}
                                 disabled={isLoading}
                             >
+                                <FaUserTimes />
                                 거절
-                            </RejectButton>
-                            <AcceptButton
-                                className="success"
-                                onClick={() => handleAcceptRequest(request.id, request.fromUserId, user.uid)}
-                                disabled={isLoading}
-                            >
-                                수락
-                            </AcceptButton>
-                        </ActionRow>
+                            </ActionButton>
+                        </div>
                     </UserCard>
                 ))
             )}
 
-            <SectionTitle theme={theme}>보낸 친구 요청</SectionTitle>
+            <SectionTitle theme={theme} style={{ marginTop: '32px' }}>
+                <FaUserPlus />
+                보낸 친구 요청
+            </SectionTitle>
+
             {sentRequests.length === 0 ? (
                 <EmptyState theme={theme}>
                     <EmptyIcon>📤</EmptyIcon>
                     <EmptyText>보낸 친구 요청이 없습니다</EmptyText>
-                    <EmptySubtext>친구 요청을 보내면 여기에 표시됩니다</EmptySubtext>
+                    <EmptySubtext>친구를 찾아서 요청을 보내보세요</EmptySubtext>
                 </EmptyState>
             ) : (
                 sentRequests.map((request) => (
@@ -634,15 +576,9 @@ function FriendSearch({ user }) {
                                 <UserEmail theme={theme}>{request.toUser.email}</UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <ActionRow>
-                            <RejectButton
-                                className="danger"
-                                onClick={() => {/* 요청 취소 함수 구현 필요 */ }}
-                                disabled={isLoading}
-                            >
-                                요청 취소
-                            </RejectButton>
-                        </ActionRow>
+                        <ActionButton className="secondary" disabled>
+                            대기 중
+                        </ActionButton>
                     </UserCard>
                 ))
             )}
@@ -709,7 +645,7 @@ function FriendSearch({ user }) {
 
     return (
         <Container theme={theme}>
-            <Header user={user} title="친구 찾기" />
+            <Header user={user} title="내 친구" />
 
             <TabContainer>
                 <TabHeader theme={theme}>
@@ -750,4 +686,4 @@ function FriendSearch({ user }) {
     );
 }
 
-export default FriendSearch; 
+export default Friends; 

@@ -4,7 +4,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
-import { FaUserFriends, FaShare, FaUsers, FaQrcode } from 'react-icons/fa';
+import { FaShare, FaUsers, FaQrcode, FaHeart } from 'react-icons/fa';
 
 const MainContainer = styled.div`
   display: flex;
@@ -20,79 +20,129 @@ const MainContainer = styled.div`
   padding-bottom: 100px;
 `;
 
-const MenuList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
+const MenuGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 32px;
 `;
 
-const MenuItem = styled.li`
+const MenuCard = styled.div`
   background: ${({ theme }) => theme.card};
-//   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 16px;
-  padding: 14px;
-//   margin-bottom: 16px;
-  font-weight: 500;
-  font-size: 16px;
+  border-radius: 18px;
+  padding: 24px 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-//   box-shadow: ${({ theme }) => theme.cardShadow};
+  transition: all 0.2s ease;
+  box-shadow: ${({ theme }) => theme.cardShadow};
+  min-height: 120px;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   }
 
-  &:last-child {
-    margin-bottom: 0;
+  &:active {
+    transform: translateY(-2px);
   }
 `;
 
 const MenuIcon = styled.div`
-  color: #e46262;
-  font-size: 20px;
-  margin-right: 16px;
-  width: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e46262, #cb6565);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 12px;
+  color: white;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(228, 98, 98, 0.3);
 `;
 
-const MenuContent = styled.div`
-  display: flex;
-  align-items: center;
-  flex: 1;
-`;
-
-const MenuText = styled.span`
-  color: ${({ theme }) => theme.text};
-  font-weight: 500;
-`;
-
-const ArrowIcon = styled.div`
-  color: ${({ theme }) => theme.cardSubText};
+const MenuTitle = styled.div`
   font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+  margin-bottom: 4px;
+`;
+
+const MenuDescription = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  text-align: center;
+  line-height: 1.4;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 600;
-  margin: 32px 0 16px 0;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
   color: ${({ theme }) => theme.text};
-  padding-bottom: 8px;
-  border-bottom: 2px solid #e46262;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const FeatureCard = styled.div`
+  background: ${({ theme }) => theme.card};
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: ${({ theme }) => theme.cardShadow};
+  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
+`;
+
+const FeatureHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+`;
+
+const FeatureIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e46262, #cb6565);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+`;
+
+const FeatureTitle = styled.div`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const FeatureDescription = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.subText || '#666'};
+  line-height: 1.5;
+`;
+
+const ComingSoonBadge = styled.span`
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-left: auto;
 `;
 
 function Social() {
     const navigate = useNavigate();
     const theme = useTheme();
-
-    const handleFriendSearch = () => {
-        navigate('/my/friend-search');
-    };
 
     const handleShare = () => {
         if (navigator.share) {
@@ -108,77 +158,52 @@ function Social() {
         }
     };
 
-    const handleCommunity = () => {
-        alert('커뮤니티 기능은 준비 중입니다.');
-    };
-
     const handleQRCode = () => {
         alert('QR 코드 기능은 준비 중입니다.');
     };
 
+    const handleCommunity = () => {
+        alert('커뮤니티 기능은 준비 중입니다.');
+    };
+
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="소셜" />
+            <Header user={null} title="소셜" />
             <MainContainer theme={theme}>
-                <SectionTitle theme={theme} style={{ marginTop: '0px', marginBottom: '16px' }}>친구 관리</SectionTitle>
-                <MenuList>
-                    <MenuItem
-                        onClick={handleFriendSearch}
-                        theme={theme}
-                    >
-                        <MenuContent>
-                            <MenuIcon theme={theme}>
-                                <FaUserFriends />
-                            </MenuIcon>
-                            <MenuText theme={theme}>친구 찾기</MenuText>
-                        </MenuContent>
-                        <ArrowIcon theme={theme}>›</ArrowIcon>
-                    </MenuItem>
-                </MenuList>
+                <MenuGrid>
+                    <MenuCard onClick={handleShare} theme={theme}>
+                        <MenuIcon>
+                            <FaShare />
+                        </MenuIcon>
+                        <MenuTitle theme={theme}>앱 공유</MenuTitle>
+                        <MenuDescription theme={theme}>
+                            친구들과 스토리포션을 공유해보세요
+                        </MenuDescription>
+                    </MenuCard>
 
-                <SectionTitle theme={theme}>공유 및 초대</SectionTitle>
-                <MenuList>
-                    <MenuItem
-                        onClick={handleShare}
-                        theme={theme}
-                    >
-                        <MenuContent>
-                            <MenuIcon theme={theme}>
-                                <FaShare />
-                            </MenuIcon>
-                            <MenuText theme={theme}>앱 공유하기</MenuText>
-                        </MenuContent>
-                        <ArrowIcon theme={theme}>›</ArrowIcon>
-                    </MenuItem>
-                    <MenuItem
-                        onClick={handleQRCode}
-                        theme={theme}
-                    >
-                        <MenuContent>
-                            <MenuIcon theme={theme}>
-                                <FaQrcode />
-                            </MenuIcon>
-                            <MenuText theme={theme}>QR 코드로 초대</MenuText>
-                        </MenuContent>
-                        <ArrowIcon theme={theme}>›</ArrowIcon>
-                    </MenuItem>
-                </MenuList>
+                    <MenuCard onClick={handleQRCode} theme={theme}>
+                        <MenuIcon>
+                            <FaQrcode />
+                        </MenuIcon>
+                        <MenuTitle theme={theme}>QR 초대</MenuTitle>
+                        <MenuDescription theme={theme}>
+                            QR 코드로 쉽게 초대하세요
+                        </MenuDescription>
+                    </MenuCard>
+                </MenuGrid>
 
-                <SectionTitle theme={theme}>커뮤니티</SectionTitle>
-                <MenuList>
-                    <MenuItem
-                        onClick={handleCommunity}
-                        theme={theme}
-                    >
-                        <MenuContent>
-                            <MenuIcon theme={theme}>
-                                <FaUsers />
-                            </MenuIcon>
-                            <MenuText theme={theme}>커뮤니티</MenuText>
-                        </MenuContent>
-                        <ArrowIcon theme={theme}>›</ArrowIcon>
-                    </MenuItem>
-                </MenuList>
+                <FeatureCard theme={theme}>
+                    <FeatureHeader>
+                        <FeatureIcon>
+                            <FaUsers />
+                        </FeatureIcon>
+                        <FeatureTitle theme={theme}>커뮤니티</FeatureTitle>
+                        <ComingSoonBadge>준비중</ComingSoonBadge>
+                    </FeatureHeader>
+                    <FeatureDescription theme={theme}>
+                        다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.
+                    </FeatureDescription>
+                </FeatureCard>
 
                 <Navigation />
             </MainContainer>
