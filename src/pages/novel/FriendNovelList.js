@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, orderBy, doc, getDoc, runTransaction
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useTheme } from '../../ThemeContext';
 
 const Container = styled.div`
   display: flex;
@@ -22,6 +23,61 @@ const Container = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+`;
+
+// 친구 프로필 섹션 스타일
+const FriendProfileSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+//   background: ${({ theme }) => theme.card};
+//   border-radius: 16px;
+//   box-shadow: ${({ theme }) => theme.cardShadow};
+//   border: 1px solid ${({ theme }) => theme.border};
+`;
+
+const ProfileContainer = styled.div`
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const ProfileImage = styled.img`
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+const ProfileImagePlaceholder = styled.div`
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #fdd2d2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+`;
+
+const FriendNickname = styled.div`
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 8px;
+`;
+
+const FriendEmail = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.cardSubText || '#888'};
+  text-align: center;
 `;
 
 const Title = styled.h1`
@@ -125,6 +181,7 @@ const ActionButtonView = styled(ActionButton)`
 
 function FriendNovelList({ user }) {
     const navigate = useNavigate();
+    const theme = useTheme();
     const [searchParams] = useSearchParams();
     const userId = searchParams.get('userId');
     const [novels, setNovels] = useState([]);
@@ -133,21 +190,32 @@ function FriendNovelList({ user }) {
     const [loadingNovelId, setLoadingNovelId] = useState(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [pendingNovel, setPendingNovel] = useState(null);
+    const [friendInfo, setFriendInfo] = useState(null); // 친구 정보 상태 추가
 
     useEffect(() => {
         if (!userId) {
             setNovels([]);
+            setFriendInfo(null);
             setIsLoading(false);
             return;
         }
         setIsLoading(true);
-        const fetchNovels = async () => {
+        const fetchData = async () => {
             try {
+                // 친구 정보 가져오기
+                const friendRef = doc(db, 'users', userId);
+                const friendSnap = await getDoc(friendRef);
+                if (friendSnap.exists()) {
+                    setFriendInfo({ uid: friendSnap.id, ...friendSnap.data() });
+                }
+
+                // 소설 목록 가져오기
                 const novelsRef = collection(db, 'novels');
                 const q = query(novelsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
                 const querySnapshot = await getDocs(q);
                 const fetchedNovels = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setNovels(fetchedNovels);
+
                 // 구매 여부 확인
                 if (user) {
                     const purchasedObj = {};
@@ -161,12 +229,14 @@ function FriendNovelList({ user }) {
                     setPurchased(purchasedObj);
                 }
             } catch (error) {
+                console.error('데이터 가져오기 실패:', error);
                 setNovels([]);
+                setFriendInfo(null);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchNovels();
+        fetchData();
     }, [userId, user]);
 
     const formatDate = (dateOrTimestamp) => {
@@ -240,7 +310,7 @@ function FriendNovelList({ user }) {
     };
 
     return (
-        <Container>
+        <Container theme={theme}>
             <Header title="친구의 소설 목록" />
             <ConfirmModal
                 open={confirmOpen}
@@ -255,41 +325,58 @@ function FriendNovelList({ user }) {
             ) : isLoading ? (
                 <div style={{ textAlign: 'center', marginTop: 40 }}>로딩 중...</div>
             ) : (
-                <NovelListWrapper>
-                    {novels.length === 0 ? (
-                        <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>소설이 없습니다.</div>
-                    ) : (
-                        novels.map((novel) => (
-                            <NovelItem
-                                key={novel.id}
-                                style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', flexDirection: 'column', padding: 0 }}
-                            >
-                                <div style={{ display: 'flex', width: '100%', padding: 16 }}>
-                                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
-                                        <NovelTitle>{novel.title}</NovelTitle>
-                                        <NovelDate>{novel.month}월 {novel.weekNum}주차 소설</NovelDate>
-                                        <NovelContent>{novel.content}</NovelContent>
-                                    </div>
-                                </div>
-                                {purchased[novel.id] ? (
-                                    <ActionButtonView
-                                        onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}
-                                    >
-                                        보기
-                                    </ActionButtonView>
+                <>
+                    {/* 친구 프로필 섹션 */}
+                    {friendInfo && (
+                        <FriendProfileSection theme={theme}>
+                            <ProfileContainer>
+                                {friendInfo.photoURL ? (
+                                    <ProfileImage src={friendInfo.photoURL} alt="Friend Profile" />
                                 ) : (
-                                    <ActionButton
-                                        onClick={() => handlePurchaseClick(novel)}
-                                        disabled={loadingNovelId === novel.id}
-                                    >
-                                        {loadingNovelId === novel.id ? '구매 중...' : '30P로 구매'}
-                                    </ActionButton>
+                                    <ProfileImagePlaceholder>😊</ProfileImagePlaceholder>
                                 )}
-                            </NovelItem>
-                        ))
+                            </ProfileContainer>
+                            <FriendNickname theme={theme}>{friendInfo.displayName || '사용자'}님의 소설</FriendNickname>
+                            <FriendEmail theme={theme}>{friendInfo.email}</FriendEmail>
+                        </FriendProfileSection>
                     )}
-                </NovelListWrapper>
+
+                    <NovelListWrapper>
+                        {novels.length === 0 ? (
+                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>소설이 없습니다.</div>
+                        ) : (
+                            novels.map((novel) => (
+                                <NovelItem
+                                    key={novel.id}
+                                    style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', flexDirection: 'column', padding: 0 }}
+                                >
+                                    <div style={{ display: 'flex', width: '100%', padding: 16 }}>
+                                        <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
+                                            <NovelTitle>{novel.title}</NovelTitle>
+                                            <NovelDate>{novel.month}월 {novel.weekNum}주차 소설</NovelDate>
+                                            <NovelContent>{novel.content}</NovelContent>
+                                        </div>
+                                    </div>
+                                    {purchased[novel.id] ? (
+                                        <ActionButtonView
+                                            onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}
+                                        >
+                                            보기
+                                        </ActionButtonView>
+                                    ) : (
+                                        <ActionButton
+                                            onClick={() => handlePurchaseClick(novel)}
+                                            disabled={loadingNovelId === novel.id}
+                                        >
+                                            {loadingNovelId === novel.id ? '구매 중...' : '30P로 구매'}
+                                        </ActionButton>
+                                    )}
+                                </NovelItem>
+                            ))
+                        )}
+                    </NovelListWrapper>
+                </>
             )}
             <Navigation />
         </Container>
