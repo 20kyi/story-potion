@@ -80,7 +80,8 @@ function Settings() {
                         setPremiumStatus({
                             isMonthlyPremium: userData.isMonthlyPremium || false,
                             isYearlyPremium: userData.isYearlyPremium || false,
-                            premiumType: userData.premiumType || null
+                            premiumType: userData.premiumType || null,
+                            premiumRenewalDate: userData.premiumRenewalDate || null
                         });
                     }
                 }
@@ -289,6 +290,13 @@ function Settings() {
                                 </button>
                             )}
                         </div>
+                        {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) &&
+                            premiumStatus.premiumRenewalDate && (
+                                <div style={{ fontSize: '12px', color: '#888', marginBottom: 4 }}>
+                                    다음 구독 갱신일: {new Date(premiumStatus.premiumRenewalDate.seconds ? premiumStatus.premiumRenewalDate.seconds * 1000 : premiumStatus.premiumRenewalDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </div>
+                            )
+                        }
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
                             <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.4' }}>
                                 프리미엄 해지 시 즉시 모든 프리미엄 혜택이 중단됩니다.

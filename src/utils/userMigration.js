@@ -284,6 +284,31 @@ export const addPointHistory = async (uid, historyData) => {
   }
 };
 
+/**
+ * 기존 프리미엄 유저에게 premiumRenewalDate를 세팅하는 migration 함수
+ */
+export const migratePremiumRenewalDate = async () => {
+  const users = await getUsersByCondition('isMonthlyPremium', '==', true);
+  const yearlyUsers = await getUsersByCondition('isYearlyPremium', '==', true);
+  let updated = 0;
+  for (const user of users) {
+    const start = user.premiumStartDate?.seconds ? new Date(user.premiumStartDate.seconds * 1000) : new Date();
+    const renewal = new Date(start);
+    renewal.setMonth(start.getMonth() + 1);
+    const ok = await updateUserData(user.uid, { premiumRenewalDate: renewal });
+    if (ok) updated++;
+  }
+  for (const user of yearlyUsers) {
+    const start = user.premiumStartDate?.seconds ? new Date(user.premiumStartDate.seconds * 1000) : new Date();
+    const renewal = new Date(start);
+    renewal.setFullYear(start.getFullYear() + 1);
+    const ok = await updateUserData(user.uid, { premiumRenewalDate: renewal });
+    if (ok) updated++;
+  }
+  console.log(`프리미엄 갱신일 마이그레이션 완료: ${updated}명 적용됨`);
+  return updated;
+};
+
 // 사용 예시 함수들
 export const migrationExamples = {
   // 샘플 사용자 10명 생성 및 저장

@@ -176,34 +176,58 @@ function Shop({ user }) {
   const theme = useTheme();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [premiumStatus, setPremiumStatus] = useState({
+    isMonthlyPremium: false,
+    isYearlyPremium: false,
+    premiumType: null
+  });
 
-  // 현재 포인트 조회
+  // 현재 포인트 및 프리미엄 상태 조회
   useEffect(() => {
     if (user?.uid) {
-      const fetchPoints = async () => {
+      const fetchUser = async () => {
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
-            setCurrentPoints(userDoc.data().point || 0);
+            const data = userDoc.data();
+            setCurrentPoints(data.point || 0);
+            setPremiumStatus({
+              isMonthlyPremium: data.isMonthlyPremium || false,
+              isYearlyPremium: data.isYearlyPremium || false,
+              premiumType: data.premiumType || null
+            });
           }
         } catch (error) {
-          console.error('포인트 조회 실패:', error);
+          console.error('포인트/프리미엄 상태 조회 실패:', error);
         }
       };
-      fetchPoints();
+      fetchUser();
     }
   }, [user]);
 
   const handleMonthlyPremium = async () => {
+    if (premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) {
+      toast.showToast('이미 프리미엄 회원입니다.', 'error');
+      return;
+    }
     setIsLoading(true);
     try {
+      const now = new Date();
+      const renewalDate = new Date(now);
+      renewalDate.setMonth(now.getMonth() + 1);
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: true,
         isYearlyPremium: false,
         premiumType: 'monthly',
-        premiumStartDate: new Date()
+        premiumStartDate: now,
+        premiumRenewalDate: renewalDate
       });
       toast.showToast('월간 프리미엄 가입이 완료되었습니다!', 'success');
+      setPremiumStatus({
+        isMonthlyPremium: true,
+        isYearlyPremium: false,
+        premiumType: 'monthly'
+      });
     } catch (error) {
       console.error('월간 프리미엄 가입 실패:', error);
       toast.showToast('월간 프리미엄 가입에 실패했습니다.', 'error');
@@ -213,15 +237,57 @@ function Shop({ user }) {
   };
 
   const handleYearlyPremium = async () => {
+    if (premiumStatus.isYearlyPremium) {
+      toast.showToast('이미 연간 프리미엄 회원입니다.', 'error');
+      return;
+    }
+    // 월간 프리미엄이 남아있으면 남은 기간을 연간에 더해줌
+    let extraDays = 0;
+    if (premiumStatus.isMonthlyPremium) {
+      // premiumRenewalDate가 있으면 남은 일수 계산
+      const now = new Date();
+      let renewalDate = null;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          if (data.premiumRenewalDate) {
+            const renewal = data.premiumRenewalDate.seconds ? new Date(data.premiumRenewalDate.seconds * 1000) : new Date(data.premiumRenewalDate);
+            if (renewal > now) {
+              extraDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+            }
+          }
+        }
+      } catch (e) { }
+      if (extraDays > 0) {
+        if (!window.confirm(`월간 프리미엄 남은 기간(${extraDays}일)가 연간 구독에 더해집니다. 연간 구독으로 전환할까요?`)) {
+          return;
+        }
+      } else {
+        if (!window.confirm('연간 구독으로 전환할까요?')) return;
+      }
+    }
     setIsLoading(true);
     try {
+      const now = new Date();
+      let renewalDate = new Date(now);
+      renewalDate.setFullYear(now.getFullYear() + 1);
+      if (extraDays > 0) {
+        renewalDate.setDate(renewalDate.getDate() + extraDays);
+      }
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: false,
         isYearlyPremium: true,
         premiumType: 'yearly',
-        premiumStartDate: new Date()
+        premiumStartDate: now,
+        premiumRenewalDate: renewalDate
       });
       toast.showToast('연간 프리미엄 가입이 완료되었습니다!', 'success');
+      setPremiumStatus({
+        isMonthlyPremium: false,
+        isYearlyPremium: true,
+        premiumType: 'yearly'
+      });
     } catch (error) {
       console.error('연간 프리미엄 가입 실패:', error);
       toast.showToast('연간 프리미엄 가입에 실패했습니다.', 'error');
