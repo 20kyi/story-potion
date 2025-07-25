@@ -8,6 +8,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const Container = styled.div`
   display: flex;
@@ -304,6 +305,7 @@ function PointCharge({ user }) {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
+  const [modal, setModal] = useState(false);
 
   // 현재 포인트 조회
   useEffect(() => {
@@ -358,36 +360,29 @@ function PointCharge({ user }) {
       toast.showToast('포인트 패키지를 선택해주세요.', 'error');
       return;
     }
+    setModal(true);
+  };
 
+  // 실제 구매 로직 분리
+  const doPurchase = async () => {
     setIsLoading(true);
     try {
-      // 실제 결제 로직은 여기에 구현
-      // 현재는 시뮬레이션으로 포인트만 추가
       const packageData = packages.find(p => p.id === selectedPackage);
       const bonusPoints = packageData.bonus.includes('+') ?
         parseInt(packageData.bonus.match(/\d+/)[0]) : 0;
       const totalPoints = packageData.points + bonusPoints;
-
-      // 포인트 추가
       await updateDoc(doc(db, 'users', user.uid), {
         point: increment(totalPoints)
       });
-
-      // 포인트 히스토리 기록
       await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
         type: 'charge',
         amount: totalPoints,
         desc: `포인트 충전 (${packageData.points}p + ${bonusPoints}p 보너스)`,
         createdAt: new Date()
       });
-
-      // 현재 포인트 업데이트
       setCurrentPoints(prev => prev + totalPoints);
-
       toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
       setSelectedPackage(null);
-
-      // 히스토리 새로고침
       setTimeout(() => {
         window.location.reload();
       }, 1000);
@@ -396,6 +391,7 @@ function PointCharge({ user }) {
       toast.showToast('포인트 충전에 실패했습니다.', 'error');
     } finally {
       setIsLoading(false);
+      setModal(false);
     }
   };
 
@@ -527,6 +523,16 @@ function PointCharge({ user }) {
       >
         {isLoading ? '충전 중...' : '포인트 충전하기'}
       </PurchaseButton>
+
+      {/* 포인트 충전 확인 모달 */}
+      <ConfirmModal
+        open={modal}
+        title="포인트 충전"
+        description={selectedPackage ? `${packages.find(p => p.id === selectedPackage)?.points || ''}p를 구매하시겠습니까?` : ''}
+        onCancel={() => setModal(false)}
+        onConfirm={doPurchase}
+        confirmText="충전하기"
+      />
 
       {/* 포인트 내역 탭 */}
       <TabContainer>

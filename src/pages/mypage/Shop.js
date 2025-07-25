@@ -9,6 +9,7 @@ import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const Container = styled.div`
   display: flex;
@@ -181,6 +182,7 @@ function Shop({ user }) {
     isYearlyPremium: false,
     premiumType: null
   });
+  const [modal, setModal] = useState({ open: false, type: null });
 
   // 현재 포인트 및 프리미엄 상태 조회
   useEffect(() => {
@@ -210,6 +212,19 @@ function Shop({ user }) {
       toast.showToast('이미 프리미엄 회원입니다.', 'error');
       return;
     }
+    setModal({ open: true, type: 'monthly' });
+  };
+
+  const handleYearlyPremium = async () => {
+    if (premiumStatus.isYearlyPremium) {
+      toast.showToast('이미 연간 프리미엄 회원입니다.', 'error');
+      return;
+    }
+    setModal({ open: true, type: 'yearly' });
+  };
+
+  // 실제 결제 로직 분리
+  const doMonthlyPremium = async () => {
     setIsLoading(true);
     try {
       const now = new Date();
@@ -233,20 +248,15 @@ function Shop({ user }) {
       toast.showToast('월간 프리미엄 가입에 실패했습니다.', 'error');
     } finally {
       setIsLoading(false);
+      setModal({ open: false, type: null });
     }
   };
 
-  const handleYearlyPremium = async () => {
-    if (premiumStatus.isYearlyPremium) {
-      toast.showToast('이미 연간 프리미엄 회원입니다.', 'error');
-      return;
-    }
-    // 월간 프리미엄이 남아있으면 남은 기간을 연간에 더해줌
+  const doYearlyPremium = async () => {
+    setIsLoading(true);
     let extraDays = 0;
     if (premiumStatus.isMonthlyPremium) {
-      // premiumRenewalDate가 있으면 남은 일수 계산
       const now = new Date();
-      let renewalDate = null;
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
@@ -259,15 +269,7 @@ function Shop({ user }) {
           }
         }
       } catch (e) { }
-      if (extraDays > 0) {
-        if (!window.confirm(`월간 프리미엄 남은 기간(${extraDays}일)가 연간 구독에 더해집니다. 연간 구독으로 전환할까요?`)) {
-          return;
-        }
-      } else {
-        if (!window.confirm('연간 구독으로 전환할까요?')) return;
-      }
     }
-    setIsLoading(true);
     try {
       const now = new Date();
       let renewalDate = new Date(now);
@@ -293,6 +295,7 @@ function Shop({ user }) {
       toast.showToast('연간 프리미엄 가입에 실패했습니다.', 'error');
     } finally {
       setIsLoading(false);
+      setModal({ open: false, type: null });
     }
   };
 
@@ -386,6 +389,19 @@ function Shop({ user }) {
           </PremiumButton>
         </div>
       </div>
+
+      {/* 프리미엄 가입 확인 모달 */}
+      <ConfirmModal
+        open={modal.open}
+        title={modal.type === 'monthly' ? '월간 프리미엄 가입' : modal.type === 'yearly' ? '연간 프리미엄 가입' : ''}
+        description={modal.type === 'monthly' ? '월간 프리미엄에 가입하시겠습니까?' : modal.type === 'yearly' ? '연간 프리미엄에 가입하시겠습니까?' : ''}
+        onCancel={() => setModal({ open: false, type: null })}
+        onConfirm={() => {
+          if (modal.type === 'monthly') doMonthlyPremium();
+          else if (modal.type === 'yearly') doYearlyPremium();
+        }}
+        confirmText="가입하기"
+      />
 
       <Navigation />
     </Container>

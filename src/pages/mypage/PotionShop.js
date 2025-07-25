@@ -9,6 +9,7 @@ import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
 import { motion } from 'framer-motion';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const Container = styled.div`
   display: flex;
@@ -209,6 +210,7 @@ function PotionShop({ user }) {
   const [currentPoints, setCurrentPoints] = useState(0);
   const [ownedPotions, setOwnedPotions] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [modal, setModal] = useState({ open: false, potionId: null });
 
   // 현재 포인트와 보유 포션 조회
   useEffect(() => {
@@ -238,46 +240,47 @@ function PotionShop({ user }) {
       return;
     }
 
+    setModal({ open: true, potionId });
+  };
+
+  // 실제 구매 로직 분리
+  const doBuyPotion = async () => {
+    const potionId = modal.potionId;
+    const potion = potions.find(p => p.id === potionId);
+    if (!potion) return;
     setIsLoading(true);
     try {
       // 포인트 차감
       await updateDoc(doc(db, 'users', user.uid), {
         point: increment(-potion.price)
       });
-
       // 포션 추가
       const newPotions = { ...ownedPotions };
       if (potion.isSet) {
-        // 6종 세트: 각 포션 1개씩 지급
         ['romance', 'historical', 'mystery', 'horror', 'fairytale', 'fantasy'].forEach(type => {
           newPotions[type] = (newPotions[type] || 0) + 1;
         });
       } else {
         newPotions[potionId] = (newPotions[potionId] || 0) + 1;
       }
-
       await updateDoc(doc(db, 'users', user.uid), {
         potions: newPotions
       });
-
-      // 포인트 사용 내역 기록
       await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
         type: 'use',
         amount: -potion.price,
         desc: potion.isSet ? '포션 6종 세트 구매' : `${potion.name} 구매`,
         createdAt: new Date()
       });
-
-      // 상태 업데이트
       setCurrentPoints(prev => prev - potion.price);
       setOwnedPotions(newPotions);
-
       toast.showToast(potion.isSet ? '포션 6종 세트를 구매했습니다!' : `${potion.name}을 구매했습니다!`, 'success');
     } catch (error) {
       console.error('포션 구매 실패:', error);
       toast.showToast('포션 구매에 실패했습니다.', 'error');
     } finally {
       setIsLoading(false);
+      setModal({ open: false, potionId: null });
     }
   };
 
@@ -344,6 +347,8 @@ function PotionShop({ user }) {
             isSet={potion.isSet}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => handleBuyPotion(potion.id)}
+            style={{ cursor: currentPoints < potion.price || isLoading ? 'not-allowed' : 'pointer', opacity: currentPoints < potion.price || isLoading ? 0.5 : 1 }}
           >
             {potion.isSet ? (
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
@@ -414,16 +419,20 @@ function PotionShop({ user }) {
             }}>
               보유: {ownedPotions[potion.id] || 0}개
             </div>
-            <BuyButton
-              isSet={potion.isSet}
-              onClick={() => handleBuyPotion(potion.id)}
-              disabled={currentPoints < potion.price || isLoading}
-            >
-              {isLoading ? '구매 중...' : '구매하기'}
-            </BuyButton>
+            {/* BuyButton 제거됨 */}
           </PotionCard>
         ))}
       </PotionGrid>
+
+      {/* 포션 구매 확인 모달 */}
+      <ConfirmModal
+        open={modal.open}
+        title="포션 구매"
+        description={modal.potionId ? `${potions.find(p => p.id === modal.potionId)?.name || ''}을(를) 구매하시겠습니까?` : ''}
+        onCancel={() => setModal({ open: false, potionId: null })}
+        onConfirm={doBuyPotion}
+        confirmText="구매하기"
+      />
 
       <Navigation />
     </Container>

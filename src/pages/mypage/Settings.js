@@ -10,6 +10,7 @@ import { deleteUser } from 'firebase/auth';
 import { deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const FONT_OPTIONS = [
     { label: '시스템 기본', value: 'system-ui, sans-serif' },
@@ -43,6 +44,7 @@ function Settings() {
         premiumType: null
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [modal, setModal] = useState(false);
 
     useEffect(() => {
         document.body.style.fontFamily = fontFamily;
@@ -158,13 +160,11 @@ function Settings() {
     // 프리미엄 해지 함수
     const handleCancelPremium = async () => {
         if (!auth.currentUser?.uid) return;
+        setModal(true);
+    };
 
-        const confirmMessage = premiumStatus.isMonthlyPremium
-            ? '월간 프리미엄을 해지하시겠습니까?'
-            : '연간 프리미엄을 해지하시겠습니까?';
-
-        if (!window.confirm(confirmMessage)) return;
-
+    // 실제 해지 로직 분리
+    const doCancelPremium = async () => {
         setIsLoading(true);
         try {
             await updateDoc(doc(db, 'users', auth.currentUser.uid), {
@@ -184,6 +184,7 @@ function Settings() {
             alert('프리미엄 해지에 실패했습니다.');
         } finally {
             setIsLoading(false);
+            setModal(false);
         }
     };
 
@@ -272,22 +273,32 @@ function Settings() {
                                 </span>
                             </div>
                             {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
-                                <button
-                                    onClick={handleCancelPremium}
-                                    disabled={isLoading}
-                                    style={{
-                                        padding: '8px 16px',
-                                        backgroundColor: '#e46262',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                                        opacity: isLoading ? 0.6 : 1
-                                    }}
-                                >
-                                    {isLoading ? '처리중...' : '해지하기'}
-                                </button>
+                                <>
+                                    <button
+                                        onClick={handleCancelPremium}
+                                        disabled={isLoading}
+                                        style={{
+                                            padding: '8px 16px',
+                                            backgroundColor: '#e46262',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontSize: '14px',
+                                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                                            opacity: isLoading ? 0.6 : 1
+                                        }}
+                                    >
+                                        {isLoading ? '처리중...' : '해지하기'}
+                                    </button>
+                                    <ConfirmModal
+                                        open={modal}
+                                        title={premiumStatus.isMonthlyPremium ? '월간 프리미엄 해지' : '연간 프리미엄 해지'}
+                                        description={premiumStatus.isMonthlyPremium ? '월간 프리미엄을 해지하시겠습니까?' : '연간 프리미엄을 해지하시겠습니까?'}
+                                        onCancel={() => setModal(false)}
+                                        onConfirm={doCancelPremium}
+                                        confirmText="해지하기"
+                                    />
+                                </>
                             )}
                         </div>
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) &&
