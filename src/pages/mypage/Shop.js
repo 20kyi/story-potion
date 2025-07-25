@@ -83,7 +83,7 @@ const MenuIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(52, 152, 243, 0.1);
+  // background: rgba(52, 152, 243, 0.1);
   border-radius: 12px;
 `;
 
@@ -113,7 +113,7 @@ const PremiumSection = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 15px;
   padding: 20px;
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 `;
 
@@ -170,6 +170,27 @@ const premiumFeatures = [
   { id: 'free-potion-on-weekly-novel', title: '매주 소설 생성 1회 무료', description: '프리미엄 회원은 주간 소설 만들기 시 6개 장르 중 원하는 포션을 포인트 차감 없이 무료로 선택할 수 있습니다.' },
   { id: 'premium-sticker', title: '프리미엄 전용 스티커', description: '프리미엄 회원만 사용할 수 있는 특별한 스티커 제공' },
 ];
+
+const PremiumCard = styled.div`
+  flex: 1;
+  background: ${({ theme }) => theme.card};
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1.5px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  margin: 0;
+  height: 220px;
+  text-align: center;
+`;
+
+const YearlyPremiumCard = styled(PremiumCard)`
+  box-shadow: 0 4px 16px rgba(255,195,0,0.13);
+  border: 2.5px solid #FFC300;
+  position: relative;
+`;
 
 function Shop({ user }) {
   const navigate = useNavigate();
@@ -313,25 +334,25 @@ function Shop({ user }) {
 
       {/* 메뉴 그리드 */}
       <MenuGrid>
-        <MenuButton onClick={() => navigate('/my/shop/charge')} theme={theme}>
+        <MenuButton onClick={() => navigate('/my/shop/charge')}>
           <MenuIcon>
             <PointIcon width={24} height={24} color="#3498f3" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle theme={theme}>포인트 충전</MenuTitle>
-            <MenuDescription theme={theme}>
+            <MenuTitle>포인트 충전</MenuTitle>
+            <MenuDescription>
               포인트로 다양한 기능을 이용해보세요!
             </MenuDescription>
           </MenuContent>
         </MenuButton>
 
-        <MenuButton onClick={() => navigate('/my/potion-shop')} theme={theme}>
+        <MenuButton onClick={() => navigate('/my/potion-shop')}>
           <MenuIcon>
             <ShopIcon width={24} height={24} color="#e46262" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle theme={theme}>포션 상점</MenuTitle>
-            <MenuDescription theme={theme}>
+            <MenuTitle>포션 상점</MenuTitle>
+            <MenuDescription>
               포션을 구매하여 소설을 생성하세요
             </MenuDescription>
           </MenuContent>
@@ -356,7 +377,7 @@ function Shop({ user }) {
       {/* 프리미엄 결제 비교 카드 UI */}
       <div style={{ display: 'flex', gap: '6px', margin: '18px 0', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'stretch' }}>
         {/* 월간 결제 카드 */}
-        <div style={{ flex: 1, background: '#fff', borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1.5px solid #e0e0e0', margin: 0, height: 220, textAlign: 'center' }}>
+        <PremiumCard>
           <div style={{ color: '#e46262', fontWeight: 700, fontSize: 12, marginBottom: 6, textAlign: 'center' }}>월간 프리미엄</div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, textAlign: 'center' }}>월 5,900원</div>
@@ -369,14 +390,15 @@ function Shop({ user }) {
           >
             {isLoading ? '처리중...' : '월간 가입하기'}
           </PremiumButton>
-        </div>
+        </PremiumCard>
+
         {/* 연간 결제 카드 */}
-        <div style={{ flex: 1, background: '#fff', borderRadius: 14, boxShadow: '0 4px 16px rgba(255,195,0,0.13)', padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', border: '2.5px solid #FFC300', position: 'relative', margin: 0, height: 220, textAlign: 'center' }}>
+        <YearlyPremiumCard>
           <div style={{ position: 'absolute', top: -14, left: 12, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 7, padding: '3px 12px', boxShadow: '0 2px 8px rgba(255,195,0,0.13)', letterSpacing: 1 }}>추천</div>
-          <div style={{ color: '#FF9800', fontWeight: 800, fontSize: 13, marginBottom: 6, textAlign: 'center', zIndex: 1, textShadow: '0 1px 2px #fffde7' }}>연간 프리미엄</div>
+          <div style={{ color: '#FF9800', fontWeight: 800, fontSize: 13, marginBottom: 6, textAlign: 'center', zIndex: 1 }}>연간 프리미엄</div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 2, textAlign: 'center', color: '#FF6F00', textShadow: '0 1px 2px #fffde7' }}>연 49,560원</div>
-            <div style={{ color: '#FF9800', fontWeight: 700, fontSize: 12, marginBottom: 1, textAlign: 'center', textShadow: '0 1px 2px #fffde7' }}>30% 할인</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, textAlign: 'center', color: '#FF6F00' }}>연 49,560원</div>
+            <div style={{ color: '#FF9800', fontWeight: 700, fontSize: 12, marginBottom: 1, textAlign: 'center' }}>30% 할인</div>
             <div style={{ color: '#FFB300', fontSize: 11, marginBottom: 1, textDecoration: 'line-through', textAlign: 'center' }}>정가 70,800원</div>
             <div style={{ color: '#FF9800', fontSize: 13, marginBottom: 10, textAlign: 'center' }}>월 4,130원</div>
           </div>
@@ -387,7 +409,7 @@ function Shop({ user }) {
           >
             {isLoading ? '처리중...' : '연간 가입하기'}
           </PremiumButton>
-        </div>
+        </YearlyPremiumCard>
       </div>
 
       {/* 프리미엄 가입 확인 모달 */}

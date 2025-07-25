@@ -402,7 +402,6 @@ function PotionShop({ user }) {
         {potions.map((potion) => (
           <PotionCard
             key={potion.id}
-            theme={theme}
             isSet={potion.isSet}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -439,10 +438,8 @@ function PotionShop({ user }) {
             ) : (
               <PotionImage src={potion.image} alt={potion.name} />
             )}
-            <PotionName theme={theme} style={potion.isSet ? { color: '#e462a0', fontWeight: 600 } : {}}>{potion.name}</PotionName>
-            <PotionDescription theme={theme}>
-              {potion.description}
-            </PotionDescription>
+            <PotionName style={potion.isSet ? { color: '#e462a0', fontWeight: 600 } : {}}>{potion.name}</PotionName>
+            <PotionDescription>{potion.description}</PotionDescription>
             {potion.isSet ? (
               <div style={{ marginBottom: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -499,7 +496,7 @@ function PotionShop({ user }) {
               onClick={() => handleBuyThemeSet(set.id)}
               style={{
                 width: '100%',
-                background: '#fff',
+                background: theme.card,
                 borderRadius: 16,
                 boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
                 border: '2px solid #e462a0',
@@ -517,17 +514,17 @@ function PotionShop({ user }) {
                 <img
                   src={process.env.PUBLIC_URL + `/potion/${set.potions[0]}.png`}
                   alt={set.potions[0]}
-                  style={{ width: 38, height: 38, objectFit: 'contain', background: '#f8f8f8', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginRight: 2 }}
+                  style={{ width: 38, height: 38, objectFit: 'contain', background: theme.card, borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginRight: 2 }}
                 />
                 <PlusIcon />
                 <img
                   src={process.env.PUBLIC_URL + `/potion/${set.potions[1]}.png`}
                   alt={set.potions[1]}
-                  style={{ width: 38, height: 38, objectFit: 'contain', background: '#f8f8f8', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginLeft: 2 }}
+                  style={{ width: 38, height: 38, objectFit: 'contain', background: theme.card, borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginLeft: 2 }}
                 />
               </div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: '#e46262' }}>{set.name}</div>
-              <div style={{ fontSize: 13, color: '#888', marginBottom: 8, textAlign: 'center', wordBreak: 'keep-all', whiteSpace: 'normal' }}>{set.description}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: theme.text }}>{set.name}</div>
+              <div style={{ fontSize: 13, color: theme.subText || '#888', marginBottom: 8, textAlign: 'center', wordBreak: 'keep-all', whiteSpace: 'normal' }}>{set.description}</div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 'auto' }}>

@@ -56,9 +56,9 @@ const PackageGrid = styled.div`
 `;
 
 const PackageCard = styled.div`
-  background: ${({ theme, selected }) => selected ? '#3498f3' : theme.card};
-  color: ${({ selected }) => selected ? 'white' : 'inherit'};
-  border: 2px solid ${({ selected }) => selected ? '#3498f3' : '#e0e0e0'};
+  background: ${({ theme, selected }) => selected ? (theme.cardActive || theme.primary || '#3498f3') : theme.card};
+  color: ${({ theme, selected }) => selected ? (theme.cardActiveText || 'white') : theme.text};
+  border: 2px solid ${({ theme, selected }) => selected ? (theme.cardActiveBorder || theme.primary || '#3498f3') : (theme.border || '#e0e0e0')};
   border-radius: 15px;
   padding: 20px;
   text-align: center;
@@ -506,7 +506,6 @@ function PointCharge({ user }) {
         {packages.map((pkg) => (
           <PackageCard
             key={pkg.id}
-            theme={theme}
             selected={selectedPackage === pkg.id}
             onClick={() => setSelectedPackage(pkg.id)}
           >
