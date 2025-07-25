@@ -78,6 +78,11 @@ const Rank3 = styled.div`
   color: #e462a0;
 `;
 
+// 아래에만 적용되는 StatNumberSmall 추가
+const StatNumberSmall = styled(StatNumber)`
+  font-size: 1.1rem;
+`;
+
 function Statistics({ user }) {
     const navigate = useNavigate();
     const [diaryCount, setDiaryCount] = useState(0);
@@ -85,6 +90,8 @@ function Statistics({ user }) {
     const [maxStreak, setMaxStreak] = useState(0);
     const [topWords, setTopWords] = useState(['-', '-', '-']);
     const [loading, setLoading] = useState(true);
+    const [favoriteGenre, setFavoriteGenre] = useState('-');
+    const [favoriteGenreCount, setFavoriteGenreCount] = useState(0);
 
     useEffect(() => {
         if (!user) return;
@@ -131,8 +138,7 @@ function Statistics({ user }) {
                 '에서', '까지', '부터', '처럼', '보다', '하고', '거나', '라도', '마저', '조차',
                 '밖에', '만큼', '이나', '이며', '든지', '오늘', '오늘은', '했다', '너무', '갔다', '왔다', '왔어', '왔어요', '왔어요',
                 '하루', '하루는', '하루도', '그래', '진짜',
-                '나', '내', '나의', '내가', '내게', '내게는', '내게서', '내가서', '내가도', '내가만', '내가뿐', '내가처럼', '내가보다', '내가하고', '내가라도', '내가마저', '내가조차', '내가밖에', '내가만큼', '내가이나', '내가이며', '내가든지',
-                '저', '저의', '제가', '저는', '저도', '저만', '저뿐', '저처럼', '저보다', '저하고', '저라도', '저마저', '저조차', '저밖에', '저만큼', '저이나', '저이며', '저든지'];
+                '나', '내', '나의', '내가', '내게', '내게는', '내게서', '내가서', '내가도', '내가만', '내가뿐', '내가처럼', '내가보다', '내가하고', '내가라도', '내가마저', '내가조차', '내가밖에', '내가만큼', '내가이나', '내가이며', '내가든지'];
             const postpositions = [
                 '가', '은', '는', '을', '를', '도', '에', '와', '과', '로', '에서', '까지', '부터', '처럼', '보다',
                 '하고', '거나', '라도', '마저', '조차', '밖에', '만큼', '이나', '이며', '든지', '다', '요', '서', '죠', '네', '야'
@@ -158,6 +164,25 @@ function Statistics({ user }) {
             const top3 = sorted.slice(0, 3).map(([word, count]) => word ? `${word} (${count})` : '-');
             while (top3.length < 3) top3.push('-');
             setTopWords(top3);
+
+            // --- 장르별 집계 추가 ---
+            const genres = novelsSnap.docs.map(doc => doc.data().genre).filter(Boolean);
+            const genreCount = {};
+            genres.forEach(genre => {
+                genreCount[genre] = (genreCount[genre] || 0) + 1;
+            });
+            let maxGenre = '-';
+            let maxCount = 0;
+            Object.entries(genreCount).forEach(([genre, count]) => {
+                if (count > maxCount) {
+                    maxGenre = genre;
+                    maxCount = count;
+                }
+            });
+            setFavoriteGenre(maxGenre);
+            setFavoriteGenreCount(maxCount);
+            // --- 장르별 집계 끝 ---
+
             setLoading(false);
         };
         fetchData();
@@ -198,11 +223,11 @@ function Statistics({ user }) {
                             <StatNumber color="#1abc3b">{novelCount}</StatNumber>
 
                         </StatCard>
-                        {/* Total Potion */}
+                        {/* Total Potion -> 가장 많이 쓴 소설 장르*/}
                         <StatCard style={{ gridColumn: 2, gridRow: '5 / 7' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt="Total Potion" />
-                            <StatLabel color="#3498f3">Total Potion</StatLabel>
-                            <StatNumber color="#3498f3">-</StatNumber>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt="가장 많이 쓴 소설 장르" />
+                            <StatLabel color="#3498f3">최애 장르</StatLabel>
+                            <StatNumberSmall color="#3498f3">{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}편)` : '데이터 없음'}</StatNumberSmall>
                         </StatCard>
                     </StatsGrid>
                 )}
