@@ -454,6 +454,7 @@ const TabButton = styled.button`
   cursor: pointer;
   outline: none;
   transition: border-bottom 0.2s, color 0.2s;
+  font-family: inherit;
 `;
 
 function Home({ user }) {
