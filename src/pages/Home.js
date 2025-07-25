@@ -150,10 +150,12 @@ const DiaryPreviewContent = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: ${props => props.lineClamp || 3};
   -webkit-box-orient: vertical;
   line-height: 1.4;
   width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   // @media (min-width: 768px) {
   //   font-size: 16px;
   // }
@@ -366,6 +368,8 @@ const RecommendationIntro = styled.p`
   font-size: 12px;
   color: ${({ theme }) => theme.cardSubText};
   line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 `;
 
 const RecommendationTopic = styled.p`
@@ -374,6 +378,8 @@ const RecommendationTopic = styled.p`
   color: ${({ theme }) => theme.cardSubText};
   line-height: 1.4;
   margin-top: 4px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 `;
 
 const CarouselContainer = styled.div`
@@ -632,13 +638,13 @@ function Home({ user }) {
                 <DiaryPreviewTextContainer>
                   <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
                   <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent>{recentDiaries[0].content}</DiaryPreviewContent>
+                  <DiaryPreviewContent lineClamp={recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? 3 : 6}>{recentDiaries[0].content}</DiaryPreviewContent>
                 </DiaryPreviewTextContainer>
               </DiaryPreviewContainer>
             ) : (
               <DiaryPreviewContainer>
                 <DiaryPreviewTitle>아직 작성된 일기가 없어요</DiaryPreviewTitle>
-                <DiaryPreviewContent>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
+                <DiaryPreviewContent lineClamp={6}>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
               </DiaryPreviewContainer>
             )}
           </RecentDiaryCard>
