@@ -22,9 +22,9 @@ export const lightTheme = {
     menuText: '#222', // 메뉴 텍스트 색상 (라이트)
     menuHover: '#e0e0e0', // 메뉴 버튼 hover 배경색 (라이트)
     primaryBlue: '#4F8CFF', // 산뜻한 파랑(버튼)
-    primaryBlueHover: '#2563eb',
+    primaryBlueHover: '#2563eb', // 파랑 버튼 hover
     secondaryMint: '#E6F6F2', // 연민트(서브 버튼)
-    secondaryMintHover: '#B2E9DB',
+    secondaryMintHover: '#B2E9DB', // 민트 버튼 hover
     secondaryMintText: '#2DBD85', // 민트 텍스트/테두리
 };
 

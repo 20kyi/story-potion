@@ -87,21 +87,26 @@ const NovelContent = styled.div`
 // 버튼 스타일 개선: 카드 하단 전체 너비, 더 큼직하게
 const ActionButton = styled.button`
   width: 100%;
-  padding: 16px 0;
-//   margin-top: 20px;
-  background: #e46262;
+  padding: 12px 0;
+  background-color: rgba(201, 59, 59, 0.73);
   color: #fff;
   border: none;
-  border-radius: 0 0 12px 12px;
-  font-weight: 700;
-  font-size: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(190, 71, 71, 0.08);
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background-color 0.2s, opacity 0.15s;
   opacity: ${props => props.disabled ? 0.6 : 1};
-  font-family: inherit;
-  &:active {
-    background: #c13d3d;
+  font-family: 'Source Sans Pro', 'Inter', sans-serif;
+  &:hover, &:focus {
+    background-color: rgba(190, 71, 71, 0.82);
+  }
+  &:disabled {
+    background: #ccc;
+    color: #fff;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 `;
 

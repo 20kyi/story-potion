@@ -51,48 +51,45 @@ const PointLabel = styled.div`
 const PotionGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
 
 const PotionCard = styled(motion.div)`
   background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  padding: 20px;
+  border-radius: 13px;
+  padding: 12px 8px 14px 8px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border: 2px solid transparent;
-  
-  // 6종 세트는 가로로 꽉 차게
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1.5px solid transparent;
   ${({ isSet }) => isSet && `grid-column: span 2;`}
-
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
   }
 `;
 
 const PotionImage = styled.img`
-  width: 80px;
-  height: 80px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
-  margin: 0 auto 12px auto;
+  margin: 0 auto 8px auto;
 `;
 
 const PotionName = styled.div`
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: ${({ theme }) => theme.text};
 `;
 
 const PotionPrice = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #e46262;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,30 +103,26 @@ const PotionDescription = styled.div`
 `;
 
 const BuyButton = styled.button`
-  background: ${({ isSet }) => isSet ? 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)' : '#3498f3'};
-  color: ${({ isSet }) => isSet ? '#fff' : 'white'};
+  background-color: rgba(190, 71, 71, 0.62);
+  color: #fff;
   border: none;
-  border-radius: 24px;
-  padding: 12px 0;
+  border-radius: 14px;
+  padding: 8px 0;
   font-size: 16px;
-  font-weight: 700;
+  font-family: 'Source Sans Pro', 'Inter', sans-serif;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
-  box-shadow: 0 2px 8px rgba(52, 152, 243, 0.08);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  margin-top: 6px;
-
-  &:hover {
-    background: ${({ isSet }) => isSet ? 'linear-gradient(90deg, #FF9800 60%, #FFC300 100%)' : '#2176bd'};
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(52, 152, 243, 0.13);
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(190, 71, 71, 0.08);
+  margin-top: 4px;
+  &:hover, &:focus {
+    background-color: rgba(190, 71, 71, 0.82);
   }
-
   &:disabled {
     background: #ccc;
     color: #fff;
     cursor: not-allowed;
-    box-shadow: none;
     opacity: 0.7;
   }
 `;

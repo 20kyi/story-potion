@@ -18,6 +18,7 @@ import {
     subscribeToFriendRequests
 } from '../../utils/friendSystem';
 import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaTrash, FaUsers } from 'react-icons/fa';
+import { HiOutlineTrash } from 'react-icons/hi';
 import { collection, query, where, getDocs, or } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -333,6 +334,24 @@ const AcceptButton = styled(ActionButton)`
   color: #fff !important;
   &:hover {
     background: #d45555 !important;
+  }
+`;
+
+const TrashIconButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: rgba(209, 20, 20, 0.82);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 2;
+  &:hover, &:focus {
+    background: #fff0f0;
+    color: rgba(201, 59, 59, 1);
   }
 `;
 
@@ -669,6 +688,7 @@ function Friend({ user }) {
                         theme={theme}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
+                        style={{ position: 'relative' }}
                     >
                         <UserInfo
                             style={{ cursor: 'pointer' }}
@@ -693,14 +713,13 @@ function Friend({ user }) {
                                 <UserEmail theme={theme}>{friend.user.email}</UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <ActionButton
-                            className="danger"
+                        <TrashIconButton
                             onClick={() => handleRemoveFriend(friend.id)}
                             disabled={isLoading}
+                            title="친구 삭제"
                         >
-                            <FaTrash />
-                            삭제
-                        </ActionButton>
+                            <HiOutlineTrash />
+                        </TrashIconButton>
                     </UserCard>
                 ))
             )}
