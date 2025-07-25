@@ -110,7 +110,7 @@ const BuyButton = styled.button`
   border-radius: 14px;
   padding: 8px 0;
   font-size: 16px;
-  font-family: 'Source Sans Pro', 'Inter', sans-serif;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
@@ -213,7 +213,7 @@ const themeSets = [
 
 // + 아이콘: 단순 텍스트 +
 const PlusIcon = () => (
-  <span style={{ fontSize: 24, color: '#e46262', fontWeight: 700, margin: '0 2px', lineHeight: 1 }}>+</span>
+  <span style={{ fontSize: 24, color: '#e46262', fontWeight: 700, margin: '0 2px', lineHeight: 1, fontFamily: 'inherit' }}>+</span>
 );
 
 function PotionShop({ user }) {
@@ -480,7 +480,7 @@ function PotionShop({ user }) {
 
       {/* 테마 세트 UI */}
       <div style={{ margin: '32px 0 16px 0' }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.text }}>테마 세트</h3>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.text, fontFamily: 'inherit' }}>테마 세트</h3>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',

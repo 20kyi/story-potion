@@ -501,7 +501,7 @@ function Diary({ user }) {
                 {/* 감정 비율 막대(커스텀) */}
                 <div style={{ margin: '32px 0 0 0', width: '100%', maxWidth: 540, minHeight: 40, position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
                     {/* 상단 문구 */}
-                    <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 500, marginBottom: 18, color: '#7c6f6f', letterSpacing: '-1px' }}>
+                    <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 500, marginBottom: 18, color: '#7c6f6f', letterSpacing: '-1px', fontFamily: 'inherit' }}>
                         {getTopMessage()}
                     </div>
                     {/* 막대 */}

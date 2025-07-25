@@ -1334,7 +1334,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -1383,7 +1383,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{opt.label}</span>
                                 </button>
                             ))}
                         </div>

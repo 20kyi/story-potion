@@ -53,7 +53,6 @@ const ProfileImage = styled.img`
 const Nickname = styled.span`
   font-size: 18px;
   color: ${({ theme }) => theme.text};
-  font-family: 'Inter', sans-serif;
   font-weight: 500;
 `;
 
@@ -65,7 +64,6 @@ const RightSection = styled.div`
 `;
 
 const LogoText = styled.span`
-  font-family: 'Barlow Condensed', 'Inter', sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.02em;

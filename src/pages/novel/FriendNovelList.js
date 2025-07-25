@@ -98,7 +98,7 @@ const ActionButton = styled.button`
   cursor: pointer;
   transition: background-color 0.2s, opacity 0.15s;
   opacity: ${props => props.disabled ? 0.6 : 1};
-  font-family: 'Source Sans Pro', 'Inter', sans-serif;
+  font-family: inherit;
   &:hover, &:focus {
     background-color: rgba(190, 71, 71, 0.82);
   }

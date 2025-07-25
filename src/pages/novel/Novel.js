@@ -86,7 +86,7 @@ const MonthButton = styled.button`
 const CurrentMonth = styled.h2`
   color: #cb6565;
   font-size: 24px;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-weight: 600;
   margin: 0;
   cursor: pointer;

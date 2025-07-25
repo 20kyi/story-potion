@@ -306,12 +306,12 @@ function NovelCreate({ user }) {
 
         // 포션 체크
         const selectedPotionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
-                                potionImages[selectedPotion].genre === '역사' ? 'historical' :
-                                potionImages[selectedPotion].genre === '추리' ? 'mystery' :
-                                potionImages[selectedPotion].genre === '공포' ? 'horror' :
-                                potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
-                                potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
-        
+            potionImages[selectedPotion].genre === '역사' ? 'historical' :
+                potionImages[selectedPotion].genre === '추리' ? 'mystery' :
+                    potionImages[selectedPotion].genre === '공포' ? 'horror' :
+                        potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
+                            potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
+
         if (!selectedPotionId || !ownedPotions[selectedPotionId] || ownedPotions[selectedPotionId] <= 0) {
             toast.showToast('해당 포션이 부족합니다. 포션 상점에서 구매해주세요.', 'error');
             // 포션 상점으로 이동
@@ -356,11 +356,11 @@ function NovelCreate({ user }) {
                 console.log('포션 차감 시도:', user?.uid, selectedPotionId);
                 const newPotions = { ...ownedPotions };
                 newPotions[selectedPotionId] = Math.max(0, newPotions[selectedPotionId] - 1);
-                
+
                 await updateDoc(doc(db, "users", user.uid), {
                     potions: newPotions
                 });
-                
+
                 // 포인트 사용 내역 기록 (포션 사용)
                 await addDoc(collection(db, "users", user.uid, "pointHistory"), {
                     type: 'use',
@@ -368,7 +368,7 @@ function NovelCreate({ user }) {
                     desc: `${potionImages[selectedPotion].label} 포션 사용`,
                     createdAt: new Date()
                 });
-                
+
                 // 상태 업데이트
                 setOwnedPotions(newPotions);
                 console.log('포션 차감 성공');
@@ -468,7 +468,7 @@ function NovelCreate({ user }) {
                     }}
                 >
                     <img src="/app_logo/logo3.png" alt="로딩" style={{ width: 120, marginBottom: 32, animation: 'spin 1.5s linear infinite' }} />
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#e46262', marginBottom: 12 }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#e46262', marginBottom: 12, fontFamily: 'inherit' }}>
                         소설을 만드는 중입니다...
                     </div>
                     <div style={{ fontSize: 16, color: '#888' }}>{loadingMessage}</div>
@@ -485,17 +485,17 @@ function NovelCreate({ user }) {
                     <PotionGrid style={{ marginTop: 40, marginBottom: 0 }}>
                         {potionImages.slice(0, 3).map((potion, idx) => {
                             const potionId = potion.genre === '로맨스' ? 'romance' :
-                                           potion.genre === '역사' ? 'historical' :
-                                           potion.genre === '추리' ? 'mystery' :
-                                           potion.genre === '공포' ? 'horror' :
-                                           potion.genre === '동화' ? 'fairytale' :
-                                           potion.genre === '판타지' ? 'fantasy' : null;
-                            
+                                potion.genre === '역사' ? 'historical' :
+                                    potion.genre === '추리' ? 'mystery' :
+                                        potion.genre === '공포' ? 'horror' :
+                                            potion.genre === '동화' ? 'fairytale' :
+                                                potion.genre === '판타지' ? 'fantasy' : null;
+
                             // 보유한 포션이 없으면 표시하지 않음
                             if (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0) {
                                 return null;
                             }
-                            
+
                             return (
                                 <motion.div
                                     key={potion.genre}
@@ -551,17 +551,17 @@ function NovelCreate({ user }) {
                     <PotionGrid style={{ marginTop: 10, marginBottom: 0 }}>
                         {potionImages.slice(3, 6).map((potion, idx) => {
                             const potionId = potion.genre === '로맨스' ? 'romance' :
-                                           potion.genre === '역사' ? 'historical' :
-                                           potion.genre === '추리' ? 'mystery' :
-                                           potion.genre === '공포' ? 'horror' :
-                                           potion.genre === '동화' ? 'fairytale' :
-                                           potion.genre === '판타지' ? 'fantasy' : null;
-                            
+                                potion.genre === '역사' ? 'historical' :
+                                    potion.genre === '추리' ? 'mystery' :
+                                        potion.genre === '공포' ? 'horror' :
+                                            potion.genre === '동화' ? 'fairytale' :
+                                                potion.genre === '판타지' ? 'fantasy' : null;
+
                             // 보유한 포션이 없으면 표시하지 않음
                             if (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0) {
                                 return null;
                             }
-                            
+
                             return (
                                 <motion.div
                                     key={potion.genre}
@@ -613,7 +613,7 @@ function NovelCreate({ user }) {
                     </PotionGrid>
                     {/* 두 번째 선반 */}
                     <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 30, zIndex: 1, position: 'relative' }} />
-                    
+
                     {/* 포션이 없을 때 안내 */}
                     {!isNovelGenerated && Object.values(ownedPotions).every(count => !count || count <= 0) && (
                         <div style={{
@@ -654,7 +654,7 @@ function NovelCreate({ user }) {
                             </button>
                         </div>
                     )}
-                    
+
                     {/* 소설 생성 버튼 및 책 이미지 */}
                     {!isNovelGenerated && (
                         <div
@@ -665,8 +665,8 @@ function NovelCreate({ user }) {
                                 margin: '24px auto 0 auto',
                                 display: 'block',
                                 zIndex: 1,
-                                                            cursor: selectedPotion !== null && !isLoading ? 'pointer' : 'default',
-                            opacity: selectedPotion === null ? 0.5 : 1,
+                                cursor: selectedPotion !== null && !isLoading ? 'pointer' : 'default',
+                                opacity: selectedPotion === null ? 0.5 : 1,
                             }}
                             onClick={selectedPotion !== null && !isLoading ? handleGenerateNovel : undefined}
                             aria-disabled={selectedPotion === null || isLoading}
@@ -707,7 +707,7 @@ function NovelCreate({ user }) {
                         <img src={generatedImageUrl} alt="소설 표지" style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 16, marginBottom: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
                     )}
                     {/* 소설 제목 */}
-                    <h2 style={{ fontSize: 24, fontWeight: 700, color: '#e46262', marginBottom: 18, textAlign: 'center' }}>{title}</h2>
+                    <h2 style={{ fontSize: 24, fontWeight: 700, color: '#e46262', marginBottom: 18, textAlign: 'center', fontFamily: 'inherit' }}>{title}</h2>
                     {/* 소설 내용 */}
                     <div style={{ fontSize: 16, color: '#333', background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'left', whiteSpace: 'pre-line' }}>
                         {content}
