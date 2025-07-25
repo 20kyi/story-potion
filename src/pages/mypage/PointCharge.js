@@ -6,7 +6,8 @@ import { db } from '../../firebase';
 import { doc, getDoc, updateDoc, increment, addDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
-import { useTheme } from '../../ThemeContext';
+import { useTheme as useAppTheme } from '../../ThemeContext';
+import { useTheme } from 'styled-components';
 import PointIcon from '../../components/icons/PointIcon';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
@@ -129,7 +130,7 @@ const InfoTitle = styled.h3`
 const InfoText = styled.p`
   font-size: 14px;
   line-height: 1.6;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme }) => theme.text};
   margin-bottom: 8px;
 `;
 
@@ -159,14 +160,15 @@ const TabButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${({ active }) => active ? '#d45555' : 'rgba(228, 98, 98, 0.1)'};
+    background: ${({ active, theme }) => active ? '#d45555' : 'rgba(228, 98, 98, 0.1)'};
+    color: ${({ active, theme }) => active ? 'white' : theme.text};
   }
 `;
 
 const TabContent = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 0 0 15px 15px;
-  padding: 20px;
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   min-height: 300px;
 `;
@@ -205,9 +207,9 @@ const HistoryDate = styled.div`
 const HistoryAmount = styled.div`
   font-size: 16px;
   font-weight: 700;
-  color: ${({ type }) =>
-    type === 'charge' ? '#333333' :
-      type === 'earn' ? '#333333' :
+  color: ${({ type, theme }) =>
+    type === 'charge' ? theme.text :
+      type === 'earn' ? theme.text :
         type === 'use' ? '#e74c3c' : '#95a5a6'
   };
 `;
@@ -438,7 +440,7 @@ function PointCharge({ user }) {
                 <HistoryTitle theme={theme}>{item.desc}</HistoryTitle>
                 <HistoryDate theme={theme}>{formatDate(item.createdAt)}</HistoryDate>
               </HistoryInfo>
-              <HistoryAmount type={item.type}>
+              <HistoryAmount type={item.type} theme={theme}>
                 {item.type === 'use' ? '-' : '+'}{Math.abs(item.amount)}p
               </HistoryAmount>
             </HistoryItem>
@@ -492,13 +494,16 @@ function PointCharge({ user }) {
       <InfoSection theme={theme}>
         <InfoTitle theme={theme}>포인트 사용법</InfoTitle>
         <InfoText theme={theme}>
-          • 포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다
+          • 소설 생성 시 포션 1개당 80포인트가 차감됩니다
         </InfoText>
         <InfoText theme={theme}>
-          • 소설 생성 시 포션 1개당 50포인트가 차감됩니다
+          • 친구 소설 구매 시 포인트가 필요합니다
         </InfoText>
         <InfoText theme={theme}>
-          • 포인트는 소설 생성에만 사용됩니다
+          • 포인트는 충전하거나 일기 작성으로 얻을 수 있습니다
+        </InfoText>
+        <InfoText theme={theme}>
+          • 친구가 내 소설을 보면 포인트 일부가 적립됩니다
         </InfoText>
       </InfoSection>
 
@@ -508,6 +513,7 @@ function PointCharge({ user }) {
             key={pkg.id}
             selected={selectedPackage === pkg.id}
             onClick={() => setSelectedPackage(pkg.id)}
+            theme={theme}
           >
             <PackagePoints>{pkg.points}p</PackagePoints>
             <PackagePrice>{pkg.price}</PackagePrice>
