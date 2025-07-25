@@ -36,6 +36,7 @@ const PointDisplay = styled.div`
 const PointAmount = styled.div`
   font-size: 32px;
   font-weight: 700;
+  font-family: inherit;
   color: #3498f3;
   display: flex;
   align-items: center;
@@ -46,6 +47,7 @@ const PointAmount = styled.div`
 
 const PointLabel = styled.div`
   font-size: 14px;
+  font-family: inherit;
   color: ${({ theme }) => theme.subText || '#888'};
 `;
 
@@ -76,17 +78,20 @@ const PackageCard = styled.div`
 const PackagePoints = styled.div`
   font-size: 24px;
   font-weight: 700;
+  font-family: inherit;
   margin-bottom: 8px;
 `;
 
 const PackagePrice = styled.div`
   font-size: 16px;
   font-weight: 600;
+  font-family: inherit;
   margin-bottom: 4px;
 `;
 
 const PackageBonus = styled.div`
   font-size: 12px;
+  font-family: inherit;
   opacity: 0.8;
 `;
 
@@ -98,6 +103,7 @@ const PurchaseButton = styled.button`
   padding: 16px 32px;
   font-size: 18px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   width: 100%;
   transition: background 0.2s ease;
@@ -123,6 +129,7 @@ const InfoSection = styled.div`
 const InfoTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
+  font-family: inherit;
   margin-bottom: 12px;
   color: ${({ theme }) => theme.text};
 `;
@@ -130,6 +137,7 @@ const InfoTitle = styled.h3`
 const InfoText = styled.p`
   font-size: 14px;
   line-height: 1.6;
+  font-family: inherit;
   color: ${({ theme }) => theme.text};
   margin-bottom: 8px;
 `;
@@ -156,6 +164,7 @@ const TabButton = styled.button`
   color: ${({ active, theme }) => active ? 'white' : theme.text};
   font-size: 14px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -195,18 +204,21 @@ const HistoryInfo = styled.div`
 const HistoryTitle = styled.div`
   font-size: 14px;
   font-weight: 600;
+  font-family: inherit;
   color: ${({ theme }) => theme.text};
   margin-bottom: 4px;
 `;
 
 const HistoryDate = styled.div`
   font-size: 12px;
+  font-family: inherit;
   color: ${({ theme }) => theme.subText || '#888'};
 `;
 
 const HistoryAmount = styled.div`
   font-size: 16px;
   font-weight: 700;
+  font-family: inherit;
   color: ${({ type, theme }) =>
     type === 'charge' ? theme.text :
       type === 'earn' ? theme.text :
@@ -228,11 +240,13 @@ const EmptyIcon = styled.div`
 
 const EmptyText = styled.div`
   font-size: 16px;
+  font-family: inherit;
   margin-bottom: 8px;
 `;
 
 const EmptySubText = styled.div`
   font-size: 14px;
+  font-family: inherit;
   opacity: 0.7;
 `;
 
@@ -280,6 +294,7 @@ const PageButton = styled.button`
 
 const PageInfo = styled.div`
   font-size: 14px;
+  font-family: inherit;
   color: ${({ theme }) => theme.subText || '#888'};
   margin: 0 16px;
 `;
