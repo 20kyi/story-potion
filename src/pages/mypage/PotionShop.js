@@ -64,6 +64,9 @@ const PotionCard = styled(motion.div)`
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   border: 2px solid transparent;
+  
+  // 6종 세트는 가로로 꽉 차게
+  ${({ isSet }) => isSet && `grid-column: span 2;`}
 
   &:hover {
     transform: translateY(-2px);
@@ -103,24 +106,31 @@ const PotionDescription = styled.div`
 `;
 
 const BuyButton = styled.button`
-  background: #3498f3;
-  color: white;
+  background: ${({ isSet }) => isSet ? 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)' : '#3498f3'};
+  color: ${({ isSet }) => isSet ? '#fff' : 'white'};
   border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 24px;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s ease;
+  box-shadow: 0 2px 8px rgba(52, 152, 243, 0.08);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  margin-top: 6px;
 
   &:hover {
-    background: #2980b9;
+    background: ${({ isSet }) => isSet ? 'linear-gradient(90deg, #FF9800 60%, #FFC300 100%)' : '#2176bd'};
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(52, 152, 243, 0.13);
   }
 
   &:disabled {
     background: #ccc;
+    color: #fff;
     cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
   }
 `;
 
@@ -147,6 +157,14 @@ const InfoText = styled.p`
 `;
 
 const potions = [
+  {
+    id: 'set6',
+    name: '포션 6종 세트',
+    price: 400,
+    image: '/potion/set.png',
+    description: '로맨스/역사/추리/공포/동화/판타지 포션 각 1개씩!',
+    isSet: true
+  },
   {
     id: 'romance',
     name: '로맨스 포션',
@@ -236,7 +254,14 @@ function PotionShop({ user }) {
 
       // 포션 추가
       const newPotions = { ...ownedPotions };
-      newPotions[potionId] = (newPotions[potionId] || 0) + 1;
+      if (potion.isSet) {
+        // 6종 세트: 각 포션 1개씩 지급
+        ['romance', 'historical', 'mystery', 'horror', 'fairytale', 'fantasy'].forEach(type => {
+          newPotions[type] = (newPotions[type] || 0) + 1;
+        });
+      } else {
+        newPotions[potionId] = (newPotions[potionId] || 0) + 1;
+      }
 
       await updateDoc(doc(db, 'users', user.uid), {
         potions: newPotions
@@ -246,7 +271,7 @@ function PotionShop({ user }) {
       await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
         type: 'use',
         amount: -potion.price,
-        desc: `${potion.name} 구매`,
+        desc: potion.isSet ? '포션 6종 세트 구매' : `${potion.name} 구매`,
         createdAt: new Date()
       });
 
@@ -254,7 +279,7 @@ function PotionShop({ user }) {
       setCurrentPoints(prev => prev - potion.price);
       setOwnedPotions(newPotions);
 
-      toast.showToast(`${potion.name}을 구매했습니다!`, 'success');
+      toast.showToast(potion.isSet ? '포션 6종 세트를 구매했습니다!' : `${potion.name}을 구매했습니다!`, 'success');
     } catch (error) {
       console.error('포션 구매 실패:', error);
       toast.showToast('포션 구매에 실패했습니다.', 'error');
@@ -278,7 +303,7 @@ function PotionShop({ user }) {
       <InfoSection theme={theme}>
         <InfoTitle theme={theme}>포션 사용법</InfoTitle>
         <InfoText theme={theme}>
-          • 포션 1개당 50포인트로 구매할 수 있습니다
+          • 포션 1개당 80포인트로 구매할 수 있습니다
         </InfoText>
         <InfoText theme={theme}>
           • 소설 생성 시 보유한 포션을 사용합니다
@@ -323,18 +348,71 @@ function PotionShop({ user }) {
           <PotionCard
             key={potion.id}
             theme={theme}
+            isSet={potion.isSet}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <PotionImage src={potion.image} alt={potion.name} />
+            {potion.isSet ? (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                {['romance', 'historical', 'mystery', 'horror', 'fairytale', 'fantasy'].map((type, idx) => (
+                  <img
+                    key={type}
+                    src={`/potion/${type}.png`}
+                    alt={type}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      objectFit: 'contain',
+                      marginLeft: idx === 0 ? 0 : -12,
+                      zIndex: idx + 1,
+                      borderRadius: 8,
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <PotionImage src={potion.image} alt={potion.name} />
+            )}
             <PotionName theme={theme}>{potion.name}</PotionName>
             <PotionDescription theme={theme}>
               {potion.description}
             </PotionDescription>
-            <PotionPrice>
-              <PointIcon width={16} height={16} color="#e46262" />
-              {potion.price}p
-            </PotionPrice>
+            {potion.isSet ? (
+              <div style={{ marginBottom: 4 }}>
+                <span style={{
+                  textDecoration: 'line-through',
+                  color: '#aaa',
+                  fontSize: 15,
+                  marginRight: 8
+                }}>
+                  480p
+                </span>
+                <span style={{
+                  color: '#e46262',
+                  fontWeight: 700,
+                  fontSize: 20
+                }}>
+                  400p
+                </span>
+                <span style={{
+                  background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  borderRadius: 7,
+                  padding: '2px 8px',
+                  marginLeft: 8
+                }}>
+                  80p 할인
+                </span>
+              </div>
+            ) : (
+              <PotionPrice>
+                <PointIcon width={16} height={16} color="#e46262" />
+                {potion.price}p
+              </PotionPrice>
+            )}
             <div style={{
               fontSize: '12px',
               color: '#3498f3',
@@ -344,6 +422,7 @@ function PotionShop({ user }) {
               보유: {ownedPotions[potion.id] || 0}개
             </div>
             <BuyButton
+              isSet={potion.isSet}
               onClick={() => handleBuyPotion(potion.id)}
               disabled={currentPoints < potion.price || isLoading}
             >
