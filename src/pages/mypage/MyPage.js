@@ -140,10 +140,10 @@ const PremiumStatus = styled.div`
   // margin-bottom: 20px;
   padding: 8px 16px;
   // background: ${({ theme, isPremium }) => isPremium ? 'linear-gradient(135deg, #e46262, #cb6565)' : theme.card};
-  color: ${({ theme, isPremium }) => isPremium ? 'black' : theme.subText || '#666'};
+  color: ${({ theme, isPremium }) => isPremium ? theme.text : theme.subText || '#666'};
   border-radius: 20px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   // box-shadow: ${({ isPremium }) => isPremium ? '0 2px 8px rgba(228, 98, 98, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'};
 `;
 
@@ -415,6 +415,7 @@ function MyPage({ user }) {
   const [newDisplayName, setNewDisplayName] = useState(''); // 새로운 닉네임
   const [newProfileImageFile, setNewProfileImageFile] = useState(null); // 새 프로필 이미지 파일
   const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
+  const [removeProfileImage, setRemoveProfileImage] = useState(false); // 프로필 이미지 삭제 여부
   const [point, setPoint] = useState(0); // 사용자 포인트
   const [friendCount, setFriendCount] = useState(0); // 친구 수
   const [premiumStatus, setPremiumStatus] = useState({
@@ -450,6 +451,7 @@ function MyPage({ user }) {
     if (user) {
       setNewDisplayName(user.displayName || '');
       setNewProfileImageUrl(user.photoURL || '');
+      setRemoveProfileImage(false);
     }
   }, [user]);
 
@@ -531,7 +533,17 @@ function MyPage({ user }) {
     if (file) {
       setNewProfileImageFile(file);
       setNewProfileImageUrl(URL.createObjectURL(file));
+      setRemoveProfileImage(false); // 새 이미지 선택 시 삭제 상태 해제
     }
+  };
+
+  /**
+   * 프로필 이미지 삭제 처리
+   */
+  const handleRemoveProfileImage = () => {
+    setRemoveProfileImage(true);
+    setNewProfileImageFile(null);
+    setNewProfileImageUrl('');
   };
 
   /**
@@ -543,8 +555,13 @@ function MyPage({ user }) {
 
     try {
       let photoURL = user.photoURL;
+
+      // 프로필 이미지 삭제가 선택된 경우
+      if (removeProfileImage) {
+        photoURL = process.env.PUBLIC_URL + '/default-profile.svg'; // 기본 프로필 이미지 URL
+      }
       // 새 이미지가 선택된 경우 Firebase Storage에 업로드
-      if (newProfileImageFile) {
+      else if (newProfileImageFile) {
         const storageRef = ref(storage, `profile_images/${user.uid}`);
         await uploadBytes(storageRef, newProfileImageFile);
         photoURL = await getDownloadURL(storageRef);
@@ -579,14 +596,84 @@ function MyPage({ user }) {
       <MainContainer className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
         {isEditing ? (
           <EditProfileCard>
-            <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
-              {newProfileImageUrl ? (
-                <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
-              ) : (
-                <span role="img" aria-label="profile" style={{ fontSize: '64px', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#fdd2d2', margin: 0, padding: 0 }}>😊</span>
+            <div style={{ position: 'relative', marginBottom: '16px' }}>
+              <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', opacity: removeProfileImage ? 0.5 : 1 }}>
+                {newProfileImageUrl ? (
+                  <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
+                ) : (
+                  <img
+                    src={process.env.PUBLIC_URL + '/default-profile.svg'}
+                    alt="Default Profile"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      margin: 0,
+                      padding: 0
+                    }}
+                  />
+                )}
+                <EditImageInput id="profile-image-upload" type="file" accept="image/*" onChange={handleFileChange} />
+              </EditImageLabel>
+
+              {/* 프로필 이미지 삭제 버튼 */}
+              {(newProfileImageUrl || user?.photoURL) && !removeProfileImage && (
+                <button
+                  onClick={handleRemoveProfileImage}
+                  style={{
+                    position: 'absolute',
+                    top: '0',
+                    right: 'calc(50% - 60px)',
+                    background: '#e46262',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  title="프로필 이미지 삭제"
+                >
+                  ×
+                </button>
               )}
-              <EditImageInput id="profile-image-upload" type="file" accept="image/*" onChange={handleFileChange} />
-            </EditImageLabel>
+
+              {/* 삭제 취소 버튼 */}
+              {removeProfileImage && (
+                <button
+                  onClick={() => {
+                    setRemoveProfileImage(false);
+                    setNewProfileImageUrl(user?.photoURL || '');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '0',
+                    right: 'calc(50% - 60px)',
+                    background: '#27ae60',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  title="삭제 취소"
+                >
+                  ↺
+                </button>
+              )}
+            </div>
             <EditInputWrap>
               <EditLabel htmlFor="edit-nickname">닉네임</EditLabel>
               <EditInput
@@ -704,6 +791,24 @@ function MyPage({ user }) {
                 disabled={pwChangeLoading}
               >저장</EditSaveButton>
             </EditButtonRow>
+
+            {/* 구글 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
+            {user && user.providerData && user.providerData.some(p => p.providerId === 'google.com') && (
+              <div style={{
+                textAlign: 'center',
+                color: '#888',
+                fontSize: '14px',
+                marginTop: '16px',
+                padding: '12px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '8px',
+                border: '1px solid #e9ecef',
+                wordBreak: 'keep-all',
+                lineHeight: '1.5'
+              }}>
+                구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.
+              </div>
+            )}
           </EditProfileCard>
         ) : (
           <>
