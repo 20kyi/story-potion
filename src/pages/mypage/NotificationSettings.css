@@ -2,11 +2,11 @@
 
 .notification-settings-container {
     max-width: 600px;
-    margin: 40px auto;
-    padding: 24px;
-    padding-top: 40px;
-    min-height: 100vh;
-    padding-bottom: 120px;
+    margin: 60px auto;
+    padding: 20px;
+    /* padding-top: 40px; */
+    /* min-height: 100vh; */
+    /* padding-bottom: 120px; */
 }
 
 
@@ -76,9 +76,9 @@
 .notification-section {
     background: var(--bg-secondary);
     border-radius: 12px;
-    padding: 20px;
+    /* padding: 20px; */
     /* margin-bottom: 12px; */
-    border: 1px solid var(--border-color);
+    /* border: 1px solid var(--border-color); */
 }
 
 .notification-item {
@@ -102,12 +102,13 @@
 
 .notification-label {
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 400;
+    margin-bottom: 4px;
 }
 
 /* 알림 설정 페이지 타이틀 */
 .notification-description {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #888;
 }
 
@@ -195,6 +196,8 @@
     color: #666;
     background: #f8f8fa;
     border: 1px solid #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
 .notification-info h3 {
@@ -238,7 +241,7 @@ body.dark .message-input {
 /* 반응형 디자인 */
 @media (max-width: 600px) {
     .notification-card {
-        padding: 14px 8px;
+        /* padding: 14px 8px; */
     }
 
     .notification-settings-title {

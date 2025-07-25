@@ -5,6 +5,7 @@ import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 import { FaShare, FaUsers, FaQrcode, FaHeart } from 'react-icons/fa';
+import './Settings.css'; // 스타일 재사용
 
 const MainContainer = styled.div`
   display: flex;
@@ -20,12 +21,44 @@ const MainContainer = styled.div`
   // padding-bottom: 100px;
 `;
 
+// MyPage.js 스타일과 동일하게 MenuGrid, MenuButton, MenuIcon, MenuLabel 재정의
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 24px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  width: 100%;
+`;
+const MenuButton = styled.button`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: ${({ theme }) => theme.menuHover};
+  }
+`;
+const MenuIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+const MenuLabel = styled.span`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.menuText};
+  margin-top: 2px;
 `;
 
 const MenuCard = styled.div`
@@ -49,20 +82,6 @@ const MenuCard = styled.div`
   &:active {
     transform: translateY(-2px);
   }
-`;
-
-const MenuIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e46262, #cb6565);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  color: white;
-  font-size: 20px;
-  box-shadow: 0 4px 12px rgba(228, 98, 98, 0.3);
 `;
 
 const MenuTitle = styled.div`
@@ -152,7 +171,6 @@ function Social() {
         url: window.location.origin
       });
     } else {
-      // 클립보드에 복사
       navigator.clipboard.writeText(window.location.origin);
       alert('링크가 클립보드에 복사되었습니다!');
     }
@@ -169,44 +187,41 @@ function Social() {
   return (
     <>
       <Header user={null} title="소셜" />
-      <MainContainer theme={theme}>
-        <MenuGrid>
-          <MenuCard onClick={handleShare} theme={theme}>
-            <MenuIcon>
-              <FaShare />
-            </MenuIcon>
-            <MenuTitle theme={theme}>앱 공유</MenuTitle>
-            <MenuDescription theme={theme}>
-              친구들과 스토리포션을 공유해보세요
-            </MenuDescription>
-          </MenuCard>
-
-          <MenuCard onClick={handleQRCode} theme={theme}>
-            <MenuIcon>
-              <FaQrcode />
-            </MenuIcon>
-            <MenuTitle theme={theme}>QR 초대</MenuTitle>
-            <MenuDescription theme={theme}>
-              QR 코드로 쉽게 초대하세요
-            </MenuDescription>
-          </MenuCard>
-        </MenuGrid>
-
-        <FeatureCard theme={theme}>
-          <FeatureHeader>
-            <FeatureIcon>
-              <FaUsers />
-            </FeatureIcon>
-            <FeatureTitle theme={theme}>커뮤니티</FeatureTitle>
-            <ComingSoonBadge>준비중</ComingSoonBadge>
-          </FeatureHeader>
-          <FeatureDescription theme={theme}>
-            다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.
-          </FeatureDescription>
-        </FeatureCard>
-
-        <Navigation />
-      </MainContainer>
+      <div className="settings-container" style={{ minHeight: 500 }}>
+        <ul className="settings-list">
+          {/* 앱 공유 */}
+          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>앱 공유</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>친구들과 스토리포션을 공유해보세요</span>
+              <button style={{ padding: '6px 16px', background: '#e46262', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, marginLeft: 12, cursor: 'pointer', fontWeight: 400, fontFamily: 'inherit' }} onClick={handleShare}>공유</button>
+            </div>
+          </li>
+          {/* QR 초대 */}
+          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>QR 초대</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>QR 코드로 쉽게 초대하세요</span>
+              <button style={{ padding: '6px 16px', background: '#e46262', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, marginLeft: 12, cursor: 'pointer', fontWeight: 400, fontFamily: 'inherit' }} onClick={handleQRCode}>초대</button>
+            </div>
+          </li>
+          {/* 커뮤니티 */}
+          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'default', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>커뮤니티</span>
+              <span style={{ background: 'linear-gradient(135deg, #f39c12, #e67e22)', color: 'white', fontSize: 10, fontWeight: 600, padding: '4px 8px', borderRadius: 12, marginLeft: 8, fontFamily: 'inherit' }}>준비중</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: 6 }}>
+              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <Navigation />
     </>
   );
 }
