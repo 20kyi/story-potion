@@ -279,6 +279,8 @@ function Shop({ user }) {
   const doYearlyPremium = async () => {
     setIsLoading(true);
     let extraDays = 0;
+    
+    // 월간 프리미엄 회원인 경우 남은 기간 계산
     if (premiumStatus.isMonthlyPremium) {
       const now = new Date();
       try {
@@ -286,21 +288,41 @@ function Shop({ user }) {
         if (userDoc.exists()) {
           const data = userDoc.data();
           if (data.premiumRenewalDate) {
-            const renewal = data.premiumRenewalDate.seconds ? new Date(data.premiumRenewalDate.seconds * 1000) : new Date(data.premiumRenewalDate);
+            let renewal;
+            
+            // Firestore Timestamp 객체를 Date 객체로 변환
+            if (data.premiumRenewalDate.seconds) {
+              renewal = new Date(data.premiumRenewalDate.seconds * 1000);
+            } else if (data.premiumRenewalDate.toDate) {
+              renewal = data.premiumRenewalDate.toDate();
+            } else {
+              renewal = new Date(data.premiumRenewalDate);
+            }
+            
+            // 현재 시간보다 미래인 경우에만 추가 일수 계산
             if (renewal > now) {
               extraDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+              console.log(`월간 프리미엄 남은 기간: ${extraDays}일`);
             }
           }
         }
-      } catch (e) { }
+      } catch (error) {
+        console.error('월간 프리미엄 남은 기간 계산 실패:', error);
+        // 에러가 발생해도 연간 프리미엄 가입은 진행
+      }
     }
+    
     try {
       const now = new Date();
       let renewalDate = new Date(now);
       renewalDate.setFullYear(now.getFullYear() + 1);
+      
+      // 월간 프리미엄의 남은 기간을 연간 프리미엄에 추가
       if (extraDays > 0) {
         renewalDate.setDate(renewalDate.getDate() + extraDays);
+        console.log(`연간 프리미엄 갱신일: ${renewalDate.toLocaleDateString()}, 추가된 일수: ${extraDays}일`);
       }
+      
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: false,
         isYearlyPremium: true,
@@ -308,7 +330,12 @@ function Shop({ user }) {
         premiumStartDate: now,
         premiumRenewalDate: renewalDate
       });
-      toast.showToast('연간 프리미엄 가입이 완료되었습니다!', 'success');
+      
+      const successMessage = extraDays > 0 
+        ? `연간 프리미엄 가입이 완료되었습니다! (기존 월간 프리미엄 ${extraDays}일이 추가되었습니다)`
+        : '연간 프리미엄 가입이 완료되었습니다!';
+      
+      toast.showToast(successMessage, 'success');
       setPremiumStatus({
         isMonthlyPremium: false,
         isYearlyPremium: true,
