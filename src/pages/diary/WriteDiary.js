@@ -765,11 +765,11 @@ function WriteDiary({ user }) {
             toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다. (20포인트 필요)', 'error');
             return;
         }
-        
+
         setIsImageLimitExtended(true);
         setHasExtendedThisSession(true);
         toast.showToast('사진 한도가 확장되었습니다! 저장 시 20포인트가 차감됩니다.', 'success');
-        
+
         // 수정 모드라면 Firestore에도 반영
         if (isEditMode && existingDiaryId) {
             try {
@@ -778,7 +778,7 @@ function WriteDiary({ user }) {
                 toast.showToast('확장 상태 저장에 실패했습니다.', 'error');
             }
         }
-        
+
         // 확장 후 바로 파일 선택창 열기
         document.getElementById('image-upload').click();
     };
@@ -1154,24 +1154,30 @@ function WriteDiary({ user }) {
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
                 toast.showToast('일기가 저장되었습니다.', 'success');
-                // 포인트 적립: 일기 최초 저장 시 정책값 적용
+                // 포인트 적립: 일기 최초 저장 시 정책값 적용 (당일에만 지급)
                 try {
-                    const earnPoint = await getPointPolicy('diary_write_earn', 10);
-                    await updateDoc(doc(db, "users", user.uid), {
-                        point: increment(earnPoint)
-                    });
-                    await addDoc(collection(db, "users", user.uid, "pointHistory"), {
-                        type: 'earn',
-                        amount: earnPoint,
-                        desc: '일기 작성',
-                        createdAt: new Date()
-                    });
-
-                    // 일주일 연속 일기 작성 보너스 체크 (오늘 날짜인 경우에만)
                     const today = new Date();
                     const todayStr = formatDateToString(today);
-                    if (formatDateToString(selectedDate) === todayStr) {
+                    const selectedDateStr = formatDateToString(selectedDate);
+
+                    // 당일에 작성한 일기인 경우에만 포인트 지급
+                    if (selectedDateStr === todayStr) {
+                        const earnPoint = await getPointPolicy('diary_write_earn', 10);
+                        await updateDoc(doc(db, "users", user.uid), {
+                            point: increment(earnPoint)
+                        });
+                        await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                            type: 'earn',
+                            amount: earnPoint,
+                            desc: '일기 작성',
+                            createdAt: new Date()
+                        });
+
+                        // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
                         await checkWeeklyBonus(user.uid, today);
+                    } else {
+                        // 과거 날짜에 작성한 경우 안내 메시지
+                        toast.showToast('과거 날짜의 일기는 포인트가 지급되지 않습니다.', 'info');
                     }
                 } catch (pointError) {
                     toast.showToast('포인트 적립에 실패했습니다.', 'error');

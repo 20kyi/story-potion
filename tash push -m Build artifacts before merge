@@ -1,0 +1,31 @@
+warning: in the working copy of 'android/app/src/main/assets/public/asset-manifest.json', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/android/app/src/main/assets/public/asset-manifest.json b/android/app/src/main/assets/public/asset-manifest.json[m
+[1mindex 23eae06..2065b9b 100644[m
+[1m--- a/android/app/src/main/assets/public/asset-manifest.json[m
+[1m+++ b/android/app/src/main/assets/public/asset-manifest.json[m
+[36m@@ -1,7 +1,7 @@[m
+ {[m
+   "files": {[m
+     "main.css": "/static/css/main.7b32ae45.css",[m
+[31m-    "main.js": "/static/js/main.e90b4f16.js",[m
+[32m+[m[32m    "main.js": "/static/js/main.19b7979b.js",[m
+     "static/js/895.4df793a8.chunk.js": "/static/js/895.4df793a8.chunk.js",[m
+     "static/js/970.b360f142.chunk.js": "/static/js/970.b360f142.chunk.js",[m
+     "static/js/288.aaa616c9.chunk.js": "/static/js/288.aaa616c9.chunk.js",[m
+[36m@@ -11,13 +11,13 @@[m
+     "static/media/slick.ttf": "/static/media/slick.c94f7671dcc99dce43e2.ttf",[m
+     "static/media/slick.woff": "/static/media/slick.295183786cd8a1389865.woff",[m
+     "main.7b32ae45.css.map": "/static/css/main.7b32ae45.css.map",[m
+[31m-    "main.e90b4f16.js.map": "/static/js/main.e90b4f16.js.map",[m
+[32m+[m[32m    "main.19b7979b.js.map": "/static/js/main.19b7979b.js.map",[m
+     "895.4df793a8.chunk.js.map": "/static/js/895.4df793a8.chunk.js.map",[m
+     "970.b360f142.chunk.js.map": "/static/js/970.b360f142.chunk.js.map",[m
+     "288.aaa616c9.chunk.js.map": "/static/js/288.aaa616c9.chunk.js.map"[m
+   },[m
+   "entrypoints": [[m
+     "static/css/main.7b32ae45.css",[m
+[31m-    "static/js/main.e90b4f16.js"[m
+[32m+[m[32m    "static/js/main.19b7979b.js"[m
+   ][m
+ }[m
+\ No newline at end of file[m
