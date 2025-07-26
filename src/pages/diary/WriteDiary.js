@@ -1169,7 +1169,7 @@ function WriteDiary({ user }) {
                         await addDoc(collection(db, "users", user.uid, "pointHistory"), {
                             type: 'earn',
                             amount: earnPoint,
-                            desc: '일기 작성',
+                            desc: '오늘의 일기 작성',
                             createdAt: new Date()
                         });
 
