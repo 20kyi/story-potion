@@ -211,6 +211,23 @@ export const rejectFriendRequest = async (requestId) => {
 };
 
 /**
+ * 친구 요청 취소 (보낸 요청)
+ * @param {string} requestId - 요청 ID
+ * @returns {Promise<Object>} 취소 결과
+ */
+export const cancelFriendRequest = async (requestId) => {
+    try {
+        const requestRef = doc(db, 'friendRequests', requestId);
+        await deleteDoc(requestRef);
+
+        return { success: true, message: '친구 요청을 취소했습니다.' };
+    } catch (error) {
+        console.error('친구 요청 취소 실패:', error);
+        return { success: false, error: '친구 요청 취소에 실패했습니다.' };
+    }
+};
+
+/**
  * 친구 관계 생성
  * @param {string} userId1 - 사용자 1 ID
  * @param {string} userId2 - 사용자 2 ID
@@ -391,19 +408,27 @@ export const getSentFriendRequests = async (userId) => {
 
 /**
  * 친구 삭제
- * @param {string} userId1 - 사용자 1 ID
- * @param {string} userId2 - 사용자 2 ID
+ * @param {string} friendshipId - 친구 관계 ID
  * @returns {Promise<Object>} 삭제 결과
  */
-export const removeFriend = async (userId1, userId2) => {
+export const removeFriend = async (friendshipId) => {
     try {
-        const friendshipId = `${userId1}_${userId2}`.split('_').sort().join('_');
         const friendshipRef = doc(db, 'friendships', friendshipId);
+        const friendshipSnap = await getDoc(friendshipRef);
+        
+        if (!friendshipSnap.exists()) {
+            return { success: false, error: '친구 관계를 찾을 수 없습니다.' };
+        }
 
+        const friendshipData = friendshipSnap.data();
+        const users = friendshipData.users || [];
+        
         await deleteDoc(friendshipRef);
 
-        // 친구 삭제 알림 보내기
-        await sendFriendRemovedNotification(userId1, userId2);
+        // 친구 삭제 알림 보내기 (두 사용자 모두에게)
+        if (users.length >= 2) {
+            await sendFriendRemovedNotification(users[0], users[1]);
+        }
 
         return { success: true, message: '친구를 삭제했습니다.' };
     } catch (error) {

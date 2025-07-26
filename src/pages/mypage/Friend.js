@@ -5,6 +5,7 @@ import { useTheme } from '../../ThemeContext';
 import { useToast } from '../../components/ui/ToastProvider';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import { motion } from 'framer-motion';
 import {
     searchUsers,
@@ -13,6 +14,7 @@ import {
     getSentFriendRequests,
     acceptFriendRequest,
     rejectFriendRequest,
+    cancelFriendRequest,
     getFriendsList,
     removeFriend,
     subscribeToFriendRequests
@@ -488,6 +490,8 @@ function Friend({ user }) {
     const [sentRequests, setSentRequests] = useState([]);
     const [friends, setFriends] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [friendToDelete, setFriendToDelete] = useState(null);
 
     // 디바운싱을 위한 타이머
     const [searchTimeout, setSearchTimeout] = useState(null);
@@ -658,12 +662,61 @@ function Friend({ user }) {
     const handleRemoveFriend = async (friendshipId) => {
         setIsLoading(true);
         try {
-            await removeFriend(friendshipId, user.uid);
-            toast.showToast('친구를 삭제했습니다.', 'success');
-            loadData();
+            const result = await removeFriend(friendshipId);
+            if (result.success) {
+                toast.showToast('친구를 삭제했습니다.', 'success');
+                await loadData();
+                // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
+                if (searchQuery.trim() && searchQuery.trim().length >= 2) {
+                    const results = await searchUsers(searchQuery, user.uid);
+                    setSearchResults(results);
+                }
+            } else {
+                toast.showToast(result.error || '친구 삭제에 실패했습니다.', 'error');
+            }
         } catch (error) {
             console.error('친구 삭제 실패:', error);
             toast.showToast('친구 삭제에 실패했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const openDeleteModal = (friend) => {
+        console.log('친구 삭제 모달 열기:', friend);
+        const confirmed = window.confirm(`정말로 "${friend.user.displayName || '친구'}"님을 친구 목록에서 삭제하시겠습니까?`);
+        if (confirmed) {
+            handleRemoveFriend(friend.id);
+        }
+    };
+
+    const closeDeleteModal = () => {
+        console.log('친구 삭제 모달 닫기');
+        setShowDeleteModal(false);
+        setFriendToDelete(null);
+    };
+
+    const confirmDeleteFriend = async () => {
+        if (friendToDelete) {
+            await handleRemoveFriend(friendToDelete.id);
+            closeDeleteModal();
+        }
+    };
+
+    const handleCancelRequest = async (requestId) => {
+        setIsLoading(true);
+        try {
+            await cancelFriendRequest(requestId);
+            toast.showToast('친구 요청을 취소했습니다.', 'success');
+            await loadData();
+            // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
+            if (searchQuery.trim() && searchQuery.trim().length >= 2) {
+                const results = await searchUsers(searchQuery, user.uid);
+                setSearchResults(results);
+            }
+        } catch (error) {
+            console.error('친구 요청 취소 실패:', error);
+            toast.showToast('친구 요청 취소에 실패했습니다.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -871,7 +924,11 @@ function Friend({ user }) {
                             </UserDetails>
                         </UserInfo>
                         <TrashIconButton
-                            onClick={() => handleRemoveFriend(friend.id)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('휴지통 클릭됨:', friend);
+                                openDeleteModal(friend);
+                            }}
                             disabled={isLoading}
                             title="친구 삭제"
                         >
@@ -1003,7 +1060,7 @@ function Friend({ user }) {
                         </UserInfo>
                         <RejectButton
                             className="danger"
-                            onClick={() => {/* 요청 취소 함수 구현 필요 */ }}
+                            onClick={() => handleCancelRequest(request.id)}
                             disabled={isLoading}
                             style={{ marginLeft: 'auto' }}
                         >
@@ -1047,6 +1104,16 @@ function Friend({ user }) {
             </TabContainer>
 
             <Navigation />
+
+            {/* 친구 삭제 확인 모달 */}
+            <ConfirmModal
+                open={showDeleteModal}
+                onCancel={closeDeleteModal}
+                onConfirm={confirmDeleteFriend}
+                title="친구 삭제"
+                description={`정말로 "${friendToDelete?.user?.displayName || '친구'}"님을 친구 목록에서 삭제하시겠습니까?`}
+                confirmText="삭제"
+            />
         </Container>
     );
 }
