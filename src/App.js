@@ -182,6 +182,30 @@ function App() {
             }
         });
 
+        // 뒤로가기 버튼 처리 (모바일 환경에서만)
+        if (Capacitor.getPlatform() !== 'web') {
+            const backButtonListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+                // 현재 경로 확인
+                const currentPath = window.location.pathname;
+                
+                // 홈 화면에서 뒤로가기를 누르면 앱 종료 확인
+                if (currentPath === '/' || currentPath === '/home') {
+                    if (window.confirm('앱을 종료하시겠습니까?')) {
+                        CapacitorApp.exitApp();
+                    }
+                } else {
+                    // 다른 화면에서는 기본 뒤로가기 동작
+                    window.history.back();
+                }
+            });
+
+            // 컴포넌트 언마운트 시 리스너 제거
+            return () => {
+                unsubscribe();
+                backButtonListener.remove();
+            };
+        }
+
         // FCM 푸시 알림 수신 리스너 등록 (모바일 환경에서만)
         if (Capacitor.getPlatform() !== 'web') {
             PushNotifications.addListener('pushNotificationReceived', (notification) => {
