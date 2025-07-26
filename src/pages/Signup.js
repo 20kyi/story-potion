@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase';
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
@@ -221,6 +221,13 @@ function Signup() {
       // Firestore에 사용자 정보 + 기존 회원과 동일한 필드 저장
       const user = userCredential.user;
       const providerId = user.providerData[0]?.providerId || "password";
+      
+      // Firebase Auth의 displayName 설정
+      await updateProfile(user, {
+        displayName: formData.nickname,
+        photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
+      });
+      
       await setDoc(doc(db, "users", user.uid), {
         authProvider: providerId,
         createdAt: new Date(),
@@ -236,7 +243,7 @@ function Signup() {
         reminderEnabled: false,
         reminderTime: "",
         updatedAt: new Date(),
-        photoURL: user.photoURL || ""
+        photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
       });
       alert('회원가입이 완료되었습니다!');
       navigate('/login');

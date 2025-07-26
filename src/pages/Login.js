@@ -8,7 +8,8 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithCredential
+  signInWithCredential,
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -87,10 +88,19 @@ function Login() {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) {
+        // 기본 displayName 설정 (이메일에서 @ 앞부분 사용)
+        const defaultDisplayName = user.email?.split('@')[0] || '사용자';
+        
+        // Firebase Auth의 displayName 설정
+        await updateProfile(user, {
+          displayName: defaultDisplayName,
+          photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
+        });
+        
         await setDoc(userRef, {
           email: user.email || '',
-          displayName: user.displayName || '',
-          photoURL: user.photoURL || '',
+          displayName: defaultDisplayName,
+          photoURL: process.env.PUBLIC_URL + '/default-profile.svg',
           point: 0,
           createdAt: new Date()
         });
@@ -137,10 +147,19 @@ function Login() {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) {
+          // 기본 displayName 설정 (이메일에서 @ 앞부분 사용)
+          const defaultDisplayName = user.email?.split('@')[0] || '사용자';
+          
+          // Firebase Auth의 displayName 설정
+          await updateProfile(user, {
+            displayName: defaultDisplayName,
+            photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
+          });
+          
           await setDoc(userRef, {
             email: user.email || '',
-            displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
+            displayName: defaultDisplayName,
+            photoURL: process.env.PUBLIC_URL + '/default-profile.svg',
             point: 0,
             createdAt: new Date()
           });

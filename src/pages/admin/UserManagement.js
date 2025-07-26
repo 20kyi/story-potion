@@ -31,6 +31,12 @@ import {
   createManualUser
 } from '../../utils/syncAuthUsers';
 import {
+  updateEmptyProfileImages,
+  checkAndUpdateAllProfileImages,
+  updateEmptyDisplayNames,
+  checkAndUpdateAllUserProfiles
+} from '../../utils/updateDefaultProfile';
+import {
   getAllFirestoreUsers,
   compareAuthAndFirestore,
   diagnoseUserIssues,
@@ -582,6 +588,127 @@ function UserManagement({ user }) {
     }
   };
 
+  // 프로필 이미지 업데이트 핸들러
+  const handleUpdateEmptyProfileImages = async () => {
+    if (!window.confirm('빈 프로필 이미지를 가진 사용자들의 프로필을 기본 이미지로 업데이트하시겠습니까?')) {
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: 'info', message: '프로필 이미지 업데이트 중...' });
+
+    try {
+      const result = await updateEmptyProfileImages();
+      
+      if (result.success) {
+        setStatus({
+          type: 'success',
+          message: result.message
+        });
+        await loadUsersPage(); // 페이지 새로고침
+      } else {
+        setStatus({
+          type: 'error',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: '프로필 이미지 업데이트 실패: ' + error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckAndUpdateAllProfileImages = async () => {
+    if (!window.confirm('모든 사용자의 프로필 이미지를 확인하고 빈 값이 있으면 기본 이미지로 업데이트하시겠습니까?')) {
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: 'info', message: '프로필 이미지 확인 및 업데이트 중...' });
+
+    try {
+      const result = await checkAndUpdateAllProfileImages();
+      
+      if (result.success) {
+        setStatus({
+          type: 'success',
+          message: result.message
+        });
+        await loadUsersPage(); // 페이지 새로고침
+      } else {
+        setStatus({
+          type: 'error',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: '프로필 이미지 업데이트 실패: ' + error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateEmptyDisplayNames = async () => {
+    if (!window.confirm('빈 displayName을 가진 사용자들의 닉네임을 이메일의 앞부분으로 업데이트하시겠습니까?')) {
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: 'info', message: 'displayName 업데이트 중...' });
+
+    try {
+      const result = await updateEmptyDisplayNames();
+      
+      if (result.success) {
+        setStatus({
+          type: 'success',
+          message: result.message
+        });
+        await loadUsersPage(); // 페이지 새로고침
+      } else {
+        setStatus({
+          type: 'error',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: 'displayName 업데이트 실패: ' + error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckAndUpdateAllUserProfiles = async () => {
+    if (!window.confirm('모든 사용자의 프로필 정보(닉네임, 프로필 이미지)를 확인하고 빈 값이 있으면 기본값으로 업데이트하시겠습니까?')) {
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: 'info', message: '프로필 정보 확인 및 업데이트 중...' });
+
+    try {
+      const result = await checkAndUpdateAllUserProfiles();
+      
+      if (result.success) {
+        setStatus({
+          type: 'success',
+          message: result.message
+        });
+        await loadUsersPage(); // 페이지 새로고침
+      } else {
+        setStatus({
+          type: 'error',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: '프로필 정보 업데이트 실패: ' + error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 사용자 포인트 일괄 업데이트 (기존 함수)
   const handleBulkUpdatePoints = async () => {
     if (!window.confirm('모든 사용자의 포인트를 1000으로 설정하시겠습니까?')) {
@@ -910,6 +1037,36 @@ function UserManagement({ user }) {
           <Button onClick={handleNextPage} disabled={!lastDoc}>다음</Button>
         </div>
       </Section>
+
+      {/* 프로필 정보 업데이트 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>👤 프로필 정보 업데이트</SectionTitle>
+          <div style={{ marginBottom: '15px' }}>
+            <Button
+              onClick={handleUpdateEmptyProfileImages}
+              disabled={loading}
+              style={{ backgroundColor: '#9b59b6' }}
+            >
+              {loading ? '업데이트 중...' : '빈 프로필 이미지 업데이트'}
+            </Button>
+            <Button
+              onClick={handleUpdateEmptyDisplayNames}
+              disabled={loading}
+              style={{ backgroundColor: '#e67e22' }}
+            >
+              {loading ? '업데이트 중...' : '빈 닉네임 업데이트'}
+            </Button>
+            <Button
+              onClick={handleCheckAndUpdateAllUserProfiles}
+              disabled={loading}
+              style={{ backgroundColor: '#27ae60' }}
+            >
+              {loading ? '확인 중...' : '전체 프로필 정보 확인 및 업데이트'}
+            </Button>
+          </div>
+        </Section>
+      )}
 
       {/* 포인트 지급 - 메인 관리자만 */}
       {isMainAdmin(user) && (

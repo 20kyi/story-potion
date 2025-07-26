@@ -588,7 +588,7 @@ function MyPage({ user }) {
 
   // 프리미엄 해지 함수 제거
 
-  const displayName = user?.displayName || user?.email;
+  const displayName = user?.displayName || user?.email?.split('@')[0] || '사용자';
 
   return (
     <>
@@ -816,7 +816,7 @@ function MyPage({ user }) {
               {user?.photoURL ? (
                 <ProfileImage src={user.photoURL} alt="Profile" />
               ) : (
-                <ProfileImagePlaceholder>😊</ProfileImagePlaceholder>
+                <ProfileImage src={process.env.PUBLIC_URL + '/default-profile.svg'} alt="Default Profile" />
               )}
               <EditIconWrapper onClick={() => setIsEditing(true)}>
                 <EditIcon width="20" height="20" color="#555555" />
