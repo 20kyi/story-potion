@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
@@ -26,7 +26,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 20px;
+  padding: 16px;
   margin: 40px auto;
   margin-top: 50px;
   max-width: 600px;
@@ -36,44 +36,44 @@ const Container = styled.div`
 `;
 
 const TabContainer = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const TabHeader = styled.div`
   display: flex;
   background: ${({ theme }) => theme.card};
-  border-radius: 15px 15px 0 0;
+  border-radius: 12px 12px 0 0;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 `;
 
-const Tab = styled.button`
+const Tab = styled.button.attrs({
+  className: 'friend-tab'
+})`
   flex: 1;
-  padding: 16px;
+  padding: 14px 12px;
   border: none;
   background: ${({ active, theme }) => active ? '#e46262' : 'transparent'};
-  color: ${({ active, theme }) => active ? 'white' : theme.text};
-  font-size: 14px;
+  color: ${({ active, theme }) => active ? 'white' : (theme.mode === 'dark' ? '#fff' : theme.text)};
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-
-  &:hover {
-    background: ${({ active }) => active ? '#d45555' : 'rgba(228, 98, 98, 0.1)'};
-  }
 `;
 
 const TabContent = styled.div`
   background: ${({ theme }) => theme.card};
-  border-radius: 0 0 15px 15px;
+  border-radius: 0 0 12px 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  min-height: 400px;
+  min-height: 500px;
 `;
 
 const SearchSection = styled.div`
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
 `;
 
 const SearchTitle = styled.h3`
@@ -90,34 +90,89 @@ const SearchInputContainer = styled.div`
   margin-bottom: 16px;
 `;
 
-const SearchInput = styled.input`
+const SearchInput = styled.input.attrs({
+  className: 'friend-search-input'
+})`
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   padding-right: 50px;
   border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 16px;
-  background: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }) => theme.background} !important;
+  color: ${({ theme }) => theme.text} !important;
   outline: none;
   transition: border-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.subText || '#666'} !important;
+    opacity: 1;
+  }
 
   &:focus {
     border-color: #e46262;
+    box-shadow: 0 0 0 2px rgba(228, 98, 98, 0.1);
+    background-color: ${({ theme }) => theme.background} !important;
+    color: ${({ theme }) => theme.text} !important;
+  }
+
+  /* 다크모드에서 자동완성 배경색 방지 */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px ${({ theme }) => theme.background} inset !important;
+    -webkit-text-fill-color: ${({ theme }) => theme.text} !important;
+    background-color: ${({ theme }) => theme.background} !important;
+  }
+
+  /* 모든 상태에서 배경색 강제 적용 */
+  &:hover,
+  &:active,
+  &:focus,
+  &:visited {
+    background-color: ${({ theme }) => theme.background} !important;
+    color: ${({ theme }) => theme.text} !important;
+  }
+`;
+
+// 전역 스타일 추가
+const GlobalStyle = styled.div`
+  .friend-search-input {
+    background-color: ${({ theme }) => theme.background} !important;
+    color: ${({ theme }) => theme.text} !important;
+  }
+  
+  .friend-search-input::placeholder {
+    color: ${({ theme }) => theme.subText || '#666'} !important;
+  }
+  
+  .friend-search-input:focus {
+    background-color: ${({ theme }) => theme.background} !important;
+    color: ${({ theme }) => theme.text} !important;
+  }
+  
+  .friend-search-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px ${({ theme }) => theme.background} inset !important;
+    -webkit-text-fill-color: ${({ theme }) => theme.text} !important;
+    background-color: ${({ theme }) => theme.background} !important;
   }
 `;
 
 const SearchButton = styled.button`
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   background: #e46262;
   color: white;
   border: none;
   border-radius: 8px;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,34 +194,39 @@ const UserCard = styled(motion.div)`
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
-  gap: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
 `;
 
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
   min-width: 0;
   overflow: hidden;
 `;
 
 const UserAvatar = styled.img`
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid ${({ theme }) => theme.border || '#f0f0f0'};
 `;
 
 const UserDetails = styled.div`
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  max-width: calc(100% - 110px); // 버튼/배지 공간 조정 (90px + 여백)
 `;
 
 const UserName = styled.div`
@@ -174,6 +234,9 @@ const UserName = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const UserEmail = styled.div`
@@ -182,22 +245,42 @@ const UserEmail = styled.div`
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  max-width: 100%;
+  cursor: help;
+  position: relative;
+  
+  &:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    margin-bottom: 4px;
+  }
 `;
 
 const ActionButton = styled.button`
-  padding: 8px 16px;
+  padding: 8px;
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: system-ui, sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  min-width: 64px;
-  height: 40px;
+  width: 90px;
+  height: 42px;
   justify-content: center;
   margin-left: auto;
   box-sizing: border-box;
@@ -208,6 +291,7 @@ const ActionButton = styled.button`
     
     &:hover {
       background: #d45555;
+      transform: translateY(-1px);
     }
   }
 
@@ -245,11 +329,19 @@ const ActionButton = styled.button`
 `;
 
 const StatusBadge = styled.span`
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  margin-left: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: system-ui, sans-serif;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 90px;
+  height: 42px;
+  justify-content: center;
+  box-sizing: border-box;
 
   &.pending {
     background: #f39c12;
@@ -270,7 +362,7 @@ const StatusBadge = styled.span`
 const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
-  margin: 24px 0 16px 0;
+  margin-bottom: 16px;
   color: ${({ theme }) => theme.text};
   display: flex;
   align-items: center;
@@ -292,6 +384,7 @@ const EmptyIcon = styled.div`
 const EmptyText = styled.div`
   font-size: 16px;
   margin-bottom: 8px;
+  font-weight: 500;
 `;
 
 const EmptySubtext = styled.div`
@@ -307,29 +400,34 @@ const RequestCount = styled.span`
   font-size: 12px;
   font-weight: 600;
   margin-left: 8px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const ActionRow = styled.div`
   display: flex;
   gap: 12px;
-  margin-top: 12px;
+  margin-left: auto;
 `;
 
 const RejectButton = styled(ActionButton)`
-  flex: 0 0 64px;
-  height: 40px;
+  width: 50px;
+  height: 42px;
   background: none !important;
   color: #e74c3c !important;
-  border: none;
+  border: 1px solid #e74c3c !important;
   box-shadow: none;
   &:hover {
-    background: none !important;
+    background: #fff0f0 !important;
   }
 `;
 
 const AcceptButton = styled(ActionButton)`
   flex: 1 1 0;
-  height: 40px;
+  height: 42px;
   background: #e46262 !important;
   color: #fff !important;
   &:hover {
@@ -343,12 +441,14 @@ const TrashIconButton = styled.button`
   right: 12px;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 6px;
   color: rgba(209, 20, 20, 0.82);
   font-size: 18px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.15s;
   z-index: 2;
+  border-radius: 6px;
+  
   &:hover, &:focus {
     background: #fff0f0;
     color: rgba(201, 59, 59, 1);
@@ -359,7 +459,7 @@ function Friend({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const toast = useToast();
-    const [activeTab, setActiveTab] = useState('friends');  // 기본 탭 설정
+    const [activeTab, setActiveTab] = useState('friends');  // 기본 탭을 친구로 변경
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -367,6 +467,9 @@ function Friend({ user }) {
     const [sentRequests, setSentRequests] = useState([]);
     const [friends, setFriends] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // 디바운싱을 위한 타이머
+    const [searchTimeout, setSearchTimeout] = useState(null);
 
     useEffect(() => {
         if (user?.uid) {
@@ -418,10 +521,54 @@ function Friend({ user }) {
         }
     };
 
-    const handleSearch = async () => {
+    // 디바운싱된 검색 함수
+    const debouncedSearch = useCallback(async (query) => {
+        if (!query.trim() || query.trim().length < 2) {
+            setSearchResults([]);
+            setIsSearching(false);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const results = await searchUsers(query, user.uid);
+            setSearchResults(results);
+        } catch (error) {
+            console.error('사용자 검색 실패:', error);
+            toast.showToast('사용자 검색에 실패했습니다.', 'error');
+        } finally {
+            setIsSearching(false);
+        }
+    }, [user.uid, toast]);
+
+    // 검색어 변경 핸들러
+    const handleSearchInputChange = (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+
+        // 이전 타이머 클리어
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        // 새로운 타이머 설정 (500ms 후 검색 실행)
+        const newTimeout = setTimeout(() => {
+            debouncedSearch(value);
+        }, 500);
+
+        setSearchTimeout(newTimeout);
+    };
+
+    // 수동 검색 함수 (검색 버튼 클릭 시)
+    const handleManualSearch = async () => {
         if (!searchQuery.trim()) {
             toast.showToast('검색어를 입력해주세요.', 'error');
             return;
+        }
+
+        // 타이머 클리어
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
         }
 
         setIsSearching(true);
@@ -435,6 +582,15 @@ function Friend({ user }) {
             setIsSearching(false);
         }
     };
+
+    // 컴포넌트 언마운트 시 타이머 클리어
+    useEffect(() => {
+        return () => {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+        };
+    }, [searchTimeout]);
 
     const handleSendFriendRequest = async (targetUserId) => {
         setIsLoading(true);
@@ -492,67 +648,208 @@ function Friend({ user }) {
         }
     };
 
-    const renderSearchTab = () => (
-        <SearchSection theme={theme}>
-            <SearchTitle theme={theme}>사용자 검색</SearchTitle>
-            <SearchInputContainer>
-                <SearchInput
-                    type="text"
-                    placeholder="이메일로 사용자를 검색하세요"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    theme={theme}
-                />
-                <SearchButton
-                    onClick={handleSearch}
-                    disabled={isSearching || !searchQuery.trim()}
-                >
-                    <FaSearch />
-                </SearchButton>
-            </SearchInputContainer>
+    const renderFriendsTab = () => (
+        <div>
+            <SearchSection theme={theme}>
+                <SearchTitle theme={theme}>친구 찾기</SearchTitle>
+                <SearchInputContainer>
+                    <SearchInput
+                        type="text"
+                        placeholder="이름 또는 이메일로 검색"
+                        value={searchQuery}
+                        onChange={handleSearchInputChange}
+                        onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
+                        theme={theme}
+                        style={{
+                            backgroundColor: theme.background,
+                            color: theme.text
+                        }}
+                    />
+                    <SearchButton
+                        onClick={handleManualSearch}
+                        disabled={isSearching || !searchQuery.trim()}
+                    >
+                        <FaSearch />
+                    </SearchButton>
+                </SearchInputContainer>
 
-            {searchResults.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                    <SectionTitle theme={theme}>검색 결과</SectionTitle>
-                    {searchResults.map((user) => (
-                        <UserCard
-                            key={user.uid}
-                            theme={theme}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
+                {searchResults.length > 0 && (
+                    <div style={{ marginTop: '20px' }}>
+                        <SectionTitle theme={theme}>검색 결과 ({searchResults.length}명)</SectionTitle>
+                        {searchResults.map((user) => {
+                            // 사용자 상태 확인
+                            const isFriend = friends.some(friend => friend.user.uid === user.uid);
+                            const hasSentRequest = sentRequests.some(req => req.toUserId === user.uid);
+                            const hasReceivedRequest = receivedRequests.some(req => req.fromUserId === user.uid);
+                            
+                            return (
+                                <UserCard
+                                    key={user.uid}
+                                    theme={theme}
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
+                                >
+                                    <UserInfo>
+                                        <UserAvatar
+                                            src={
+                                                user.photoURL &&
+                                                    typeof user.photoURL === 'string' &&
+                                                    user.photoURL.trim() !== '' &&
+                                                    user.photoURL !== 'null' &&
+                                                    user.photoURL !== 'undefined'
+                                                    ? user.photoURL
+                                                    : '/default-profile.svg'
+                                            }
+                                            alt={user.displayName}
+                                        />
+                                        <UserDetails>
+                                            <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
+                                            <UserEmail 
+                                                theme={theme} 
+                                                title={user.email}
+                                            >
+                                                {user.email}
+                                            </UserEmail>
+                                        </UserDetails>
+                                    </UserInfo>
+                                    {!isFriend && !hasSentRequest && !hasReceivedRequest && (
+                                        <ActionButton
+                                            className="primary"
+                                            onClick={() => handleSendFriendRequest(user.uid)}
+                                            disabled={isLoading}
+                                        >
+                                            <FaUserPlus />
+                                            친구 요청
+                                        </ActionButton>
+                                    )}
+                                    {isFriend && (
+                                        <StatusBadge className="accepted" style={{ marginLeft: 'auto'}}>
+                                            <FaUserCheck style={{ marginRight: '6px' }} />
+                                            친구
+                                        </StatusBadge>
+                                    )}
+                                    {hasSentRequest && (
+                                        <StatusBadge className="pending" style={{ marginLeft: 'auto'}}>
+                                            <FaUserTimes style={{ marginRight: '6px' }} />
+                                            요청중
+                                        </StatusBadge>
+                                    )}
+                                    {hasReceivedRequest && (
+                                        <ActionRow>
+                                            <RejectButton
+                                                className="danger"
+                                                onClick={() => handleRejectRequest(
+                                                    receivedRequests.find(req => req.fromUserId === user.uid)?.id
+                                                )}
+                                                disabled={isLoading}
+                                            >
+                                                거절
+                                            </RejectButton>
+                                            <AcceptButton
+                                                className="success"
+                                                onClick={() => handleAcceptRequest(
+                                                    receivedRequests.find(req => req.fromUserId === user.uid)?.id,
+                                                    user.uid,
+                                                    user.uid
+                                                )}
+                                                disabled={isLoading}
+                                            >
+                                                수락
+                                            </AcceptButton>
+                                        </ActionRow>
+                                    )}
+                                </UserCard>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {isSearching && (
+                    <div style={{ marginTop: '20px', textAlign: 'center', padding: '40px 20px' }}>
+                        <div style={{ fontSize: '16px', color: theme.subText || '#666' }}>
+                            검색 중...
+                        </div>
+                    </div>
+                )}
+
+                {!isSearching && searchQuery.trim() && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                    <div style={{ marginTop: '20px' }}>
+                        <EmptyState theme={theme}>
+                            <EmptyIcon>🔍</EmptyIcon>
+                            <EmptyText>검색 결과가 없습니다</EmptyText>
+                            <EmptySubtext>다른 검색어를 시도해보세요</EmptySubtext>
+                        </EmptyState>
+                    </div>
+                )}
+
+                {searchQuery.trim() && searchQuery.trim().length < 2 && (
+                    <div style={{ marginTop: '20px', textAlign: 'center', padding: '20px' }}>
+                        <div style={{ fontSize: '14px', color: theme.subText || '#666' }}>
+                            2글자 이상 입력해주세요
+                        </div>
+                    </div>
+                )}
+            </SearchSection>
+
+            <SectionTitle theme={theme}>
+                <FaUsers />
+                내 친구 목록 ({friends.length}명)
+            </SectionTitle>
+
+            {friends.length === 0 ? (
+                <EmptyState theme={theme}>
+                    <EmptyIcon>👥</EmptyIcon>
+                    <EmptyText>친구가 없습니다</EmptyText>
+                    <EmptySubtext>위에서 친구를 찾아서 요청을 보내보세요</EmptySubtext>
+                </EmptyState>
+            ) : (
+                friends.map((friend) => (
+                    <UserCard
+                        key={friend.id}
+                        theme={theme}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        style={{ position: 'relative' }}
+                    >
+                        <UserInfo
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => navigate(`/friend-novels?userId=${friend.user.uid}`)}
                         >
-                            <UserInfo>
-                                <UserAvatar
-                                    src={
-                                        user.photoURL &&
-                                            typeof user.photoURL === 'string' &&
-                                            user.photoURL.trim() !== '' &&
-                                            user.photoURL !== 'null' &&
-                                            user.photoURL !== 'undefined'
-                                            ? user.photoURL
-                                            : '/default-profile.svg'
-                                    }
-                                    alt={user.displayName}
-                                />
-                                <UserDetails>
-                                    <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
-                                    <UserEmail theme={theme}>{user.email}</UserEmail>
-                                </UserDetails>
-                            </UserInfo>
-                            <ActionButton
-                                className="primary"
-                                onClick={() => handleSendFriendRequest(user.uid)}
-                                disabled={isLoading}
-                            >
-                                <FaUserPlus />
-                                친구 요청
-                            </ActionButton>
-                        </UserCard>
-                    ))}
-                </div>
+                            <UserAvatar
+                                src={
+                                    friend.user.photoURL &&
+                                        typeof friend.user.photoURL === 'string' &&
+                                        friend.user.photoURL.trim() !== '' &&
+                                        friend.user.photoURL !== 'null' &&
+                                        friend.user.photoURL !== 'undefined'
+                                        ? friend.user.photoURL
+                                        : '/default-profile.svg'
+                                }
+                                alt={friend.user.displayName}
+                            />
+                            <UserDetails>
+                                <UserName theme={theme}>
+                                    {friend.user.displayName || '사용자'}
+                                </UserName>
+                                <UserEmail 
+                                    theme={theme} 
+                                    title={friend.user.email}
+                                >
+                                    {friend.user.email}
+                                </UserEmail>
+                            </UserDetails>
+                        </UserInfo>
+                        <TrashIconButton
+                            onClick={() => handleRemoveFriend(friend.id)}
+                            disabled={isLoading}
+                            title="친구 삭제"
+                        >
+                            <HiOutlineTrash />
+                        </TrashIconButton>
+                    </UserCard>
+                ))
             )}
-        </SearchSection>
+        </div>
     );
 
     const renderRequestsTab = () => (
@@ -595,7 +892,12 @@ function Friend({ user }) {
                                 <UserName theme={theme}>
                                     {request.fromUser.displayName || '사용자'}
                                 </UserName>
-                                <UserEmail theme={theme}>{request.fromUser.email}</UserEmail>
+                                <UserEmail 
+                                    theme={theme} 
+                                    title={request.fromUser.email}
+                                >
+                                    {request.fromUser.email}
+                                </UserEmail>
                             </UserDetails>
                         </UserInfo>
                         <ActionRow>
@@ -650,7 +952,12 @@ function Friend({ user }) {
                                 <UserName theme={theme}>
                                     {request.toUser.displayName || '사용자'}
                                 </UserName>
-                                <UserEmail theme={theme}>{request.toUser.email}</UserEmail>
+                                <UserEmail 
+                                    theme={theme} 
+                                    title={request.toUser.email}
+                                >
+                                    {request.toUser.email}
+                                </UserEmail>
                             </UserDetails>
                         </UserInfo>
                         <ActionRow>
@@ -668,66 +975,9 @@ function Friend({ user }) {
         </div>
     );
 
-    const renderFriendsTab = () => (
-        <div>
-            <SectionTitle theme={theme}>
-                <FaUsers />
-                내 친구 목록
-            </SectionTitle>
-
-            {friends.length === 0 ? (
-                <EmptyState theme={theme}>
-                    <EmptyIcon>👥</EmptyIcon>
-                    <EmptyText>친구가 없습니다</EmptyText>
-                    <EmptySubtext>친구를 찾아서 요청을 보내보세요</EmptySubtext>
-                </EmptyState>
-            ) : (
-                friends.map((friend) => (
-                    <UserCard
-                        key={friend.id}
-                        theme={theme}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        style={{ position: 'relative' }}
-                    >
-                        <UserInfo
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => navigate(`/friend-novels?userId=${friend.user.uid}`)}
-                        >
-                            <UserAvatar
-                                src={
-                                    friend.user.photoURL &&
-                                        typeof friend.user.photoURL === 'string' &&
-                                        friend.user.photoURL.trim() !== '' &&
-                                        friend.user.photoURL !== 'null' &&
-                                        friend.user.photoURL !== 'undefined'
-                                        ? friend.user.photoURL
-                                        : '/default-profile.svg'
-                                }
-                                alt={friend.user.displayName}
-                            />
-                            <UserDetails>
-                                <UserName theme={theme}>
-                                    {friend.user.displayName || '사용자'}
-                                </UserName>
-                                <UserEmail theme={theme}>{friend.user.email}</UserEmail>
-                            </UserDetails>
-                        </UserInfo>
-                        <TrashIconButton
-                            onClick={() => handleRemoveFriend(friend.id)}
-                            disabled={isLoading}
-                            title="친구 삭제"
-                        >
-                            <HiOutlineTrash />
-                        </TrashIconButton>
-                    </UserCard>
-                ))
-            )}
-        </div>
-    );
-
     return (
         <Container theme={theme}>
+            <GlobalStyle theme={theme} />
             <Header user={user} title="친구" />
 
             <TabContainer>
@@ -738,13 +988,6 @@ function Friend({ user }) {
                         theme={theme}
                     >
                         친구
-                    </Tab>
-                    <Tab
-                        active={activeTab === 'search'}
-                        onClick={() => setActiveTab('search')}
-                        theme={theme}
-                    >
-                        검색
                     </Tab>
                     <Tab
                         active={activeTab === 'requests'}
@@ -759,7 +1002,6 @@ function Friend({ user }) {
                 </TabHeader>
                 <TabContent theme={theme}>
                     {activeTab === 'friends' && renderFriendsTab()}
-                    {activeTab === 'search' && renderSearchTab()}
                     {activeTab === 'requests' && renderRequestsTab()}
                 </TabContent>
             </TabContainer>

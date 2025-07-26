@@ -8,13 +8,14 @@
 // 관리자 이메일 목록 (firestore.rules와 동일하게 유지)
 const ADMIN_EMAILS = [
   '0521kimyi@gmail.com',  // 메인 관리자
-  'acho1821@gmail.com',   // 서브 관리자
+  'acho1821@gmail.com',   // 메인 관리자
   '20kyi@naver.com'       // 서브 관리자
 ];
 
 // 메인 관리자 이메일 목록 (전체 권한)
 const MAIN_ADMIN_EMAILS = [
-  '0521kimyi@gmail.com'  // 메인 관리자만
+  '0521kimyi@gmail.com',  // 메인 관리자
+  'acho1821@gmail.com'    // 메인 관리자
 ];
 
 /**

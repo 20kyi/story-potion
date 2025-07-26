@@ -21,6 +21,36 @@ body.dark {
     color: #f1f1f1;
 }
 
+/* 친구 검색 입력창 다크모드 스타일 */
+body.dark .friend-search-input {
+    background-color: #202020 !important;
+    color: #f1f1f1 !important;
+    border-color: #404040 !important;
+}
+
+body.dark .friend-search-input::placeholder {
+    color: #bfc3c9 !important;
+}
+
+body.dark .friend-search-input:focus {
+    background-color: #202020 !important;
+    color: #f1f1f1 !important;
+    border-color: #e46262 !important;
+}
+
+body.dark .friend-search-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #202020 inset !important;
+    -webkit-text-fill-color: #f1f1f1 !important;
+    background-color: #202020 !important;
+}
+
+/* 탭 다크모드 스타일 */
+body.dark .friend-tab {
+    color: #fff !important;
+}
+
+/* 활성 탭은 styled-components에서 처리되므로 기본 스타일만 유지 */
+
 /* 주요 컨테이너, 카드 등에 적용할 수 있는 예시 */
 
 /* 스티커 패널 애니메이션 */
