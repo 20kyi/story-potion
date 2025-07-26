@@ -717,11 +717,16 @@ function Friend({ user }) {
                                                     typeof user.photoURL === 'string' &&
                                                     user.photoURL.trim() !== '' &&
                                                     user.photoURL !== 'null' &&
-                                                    user.photoURL !== 'undefined'
+                                                    user.photoURL !== 'undefined' &&
+                                                    !user.photoURL.includes('default-profile.svg')
                                                     ? user.photoURL
                                                     : '/default-profile.svg'
                                             }
                                             alt={user.displayName}
+                                            onError={(e) => {
+                                                console.log('프로필 이미지 로드 실패:', user.photoURL);
+                                                e.target.src = '/default-profile.svg';
+                                            }}
                                         />
                                         <UserDetails>
                                             <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
@@ -842,11 +847,16 @@ function Friend({ user }) {
                                         typeof friend.user.photoURL === 'string' &&
                                         friend.user.photoURL.trim() !== '' &&
                                         friend.user.photoURL !== 'null' &&
-                                        friend.user.photoURL !== 'undefined'
+                                        friend.user.photoURL !== 'undefined' &&
+                                        !friend.user.photoURL.includes('default-profile.svg')
                                         ? friend.user.photoURL
                                         : '/default-profile.svg'
                                 }
                                 alt={friend.user.displayName}
+                                onError={(e) => {
+                                    console.log('친구 프로필 이미지 로드 실패:', friend.user.photoURL);
+                                    e.target.src = '/default-profile.svg';
+                                }}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
@@ -903,11 +913,16 @@ function Friend({ user }) {
                                         typeof request.fromUser.photoURL === 'string' &&
                                         request.fromUser.photoURL.trim() !== '' &&
                                         request.fromUser.photoURL !== 'null' &&
-                                        request.fromUser.photoURL !== 'undefined'
+                                        request.fromUser.photoURL !== 'undefined' &&
+                                        !request.fromUser.photoURL.includes('default-profile.svg')
                                         ? request.fromUser.photoURL
                                         : '/default-profile.svg'
                                 }
                                 alt={request.fromUser?.displayName || '사용자'}
+                                onError={(e) => {
+                                    console.log('받은 요청 프로필 이미지 로드 실패:', request.fromUser?.photoURL);
+                                    e.target.src = '/default-profile.svg';
+                                }}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
@@ -963,11 +978,16 @@ function Friend({ user }) {
                                         typeof request.toUser.photoURL === 'string' &&
                                         request.toUser.photoURL.trim() !== '' &&
                                         request.toUser.photoURL !== 'null' &&
-                                        request.toUser.photoURL !== 'undefined'
+                                        request.toUser.photoURL !== 'undefined' &&
+                                        !request.toUser.photoURL.includes('default-profile.svg')
                                         ? request.toUser.photoURL
                                         : '/default-profile.svg'
                                 }
                                 alt={request.toUser?.displayName || '사용자'}
+                                onError={(e) => {
+                                    console.log('보낸 요청 프로필 이미지 로드 실패:', request.toUser?.photoURL);
+                                    e.target.src = '/default-profile.svg';
+                                }}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>

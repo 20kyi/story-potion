@@ -43,6 +43,7 @@ import PointHistory from './pages/mypage/PointHistory';
 import PotionShop from './pages/mypage/PotionShop';
 import PointCharge from './pages/mypage/PointCharge';
 import UserManagement from './pages/admin/UserManagement';
+import ProfileFix from './pages/mypage/ProfileFix';
 import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
 import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
 import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
@@ -89,6 +90,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/profile-fix" element={user ? <ProfileFix user={user} /> : <Navigate to="/login" />} />
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
@@ -127,7 +129,7 @@ function App() {
                         if (!userSnap.exists()) {
                             // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
                             const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-                            const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                            const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
                             
                             // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
                             await updateProfile(user, {
@@ -157,7 +159,7 @@ function App() {
                             
                             // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
                             if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-                                const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                                const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
                                 await updateDoc(userRef, {
                                     photoURL: googlePhotoURL,
                                     authProvider: 'google.com',

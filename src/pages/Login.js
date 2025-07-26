@@ -68,7 +68,7 @@ function Login() {
               if (!userSnap.exists()) {
                 // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
                 const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-                const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
                 
                 // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
                 await updateProfile(user, {
@@ -98,7 +98,7 @@ function Login() {
                 
                 // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
                 if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-                  const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                  const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
                   await updateDoc(userRef, {
                     photoURL: googlePhotoURL,
                     authProvider: 'google.com',
@@ -203,7 +203,7 @@ function Login() {
         if (!userSnap.exists()) {
           // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
           const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-          const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+          const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
           
           // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
           await updateProfile(user, {
@@ -233,7 +233,7 @@ function Login() {
           
           // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
           if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-            const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+            const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
             await updateDoc(userRef, {
               photoURL: googlePhotoURL,
               authProvider: 'google.com',

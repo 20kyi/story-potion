@@ -9,6 +9,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
+import { useToast } from '../../components/ui/ToastProvider';
+import Header from '../../components/Header';
+import Navigation from '../../components/Navigation';
 import {
   generateSampleUsers,
   batchSaveUsers,
@@ -43,6 +46,11 @@ import {
 } from '../../utils/debugUsers';
 import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
 import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc } from 'firebase/firestore';
+import {
+    checkGoogleUserProfiles, 
+    forceUpdateGoogleUserProfiles, 
+    updateGoogleProfilesByEmail 
+} from '../../utils/fixGoogleProfiles';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -55,7 +63,8 @@ const Container = styled.div`
   min-height: 100vh;
 `;
 
-const Header = styled.h1`
+// 기존 Header 스타일 컴포넌트 이름을 PageTitle로 변경
+const PageTitle = styled.h1`
   color: ${({ theme }) => theme.text};
   text-align: center;
   margin-bottom: 30px;
@@ -90,11 +99,32 @@ const Button = styled.button`
   &:hover {
     background: ${props => props.variant === 'danger' ? '#c0392b' : '#2980b9'};
   }
-  
-  &:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-  }
+`;
+
+const InfoText = styled.div`
+  color: ${({ theme }) => theme.subText || '#666'};
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+`;
+
+const LoadingText = styled.div`
+  color: #e46262;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+`;
+
+const StatusText = styled.div`
+  color: ${({ theme }) => theme.text};
+  font-size: 14px;
+  margin-top: 12px;
+  padding: 12px;
+  background: ${({ theme }) => theme.background};
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  max-height: 300px;
+  overflow-y: auto;
 `;
 
 const Input = styled.input`
@@ -191,6 +221,7 @@ const UserPoints = styled.div`
 function UserManagement({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
+  const toast = useToast();
 
   // 관리자 권한 체크
   useEffect(() => {
@@ -835,15 +866,113 @@ function UserManagement({ user }) {
     }
   };
 
+  const handleCheckGoogleProfiles = async () => {
+    setLoading(true);
+    setStatus('구글 사용자 프로필 상태를 확인하는 중...');
+    
+    try {
+        const result = await checkGoogleUserProfiles();
+        if (result.success) {
+            setStatus(`✅ 확인 완료!\n\n📊 구글 사용자 현황:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 프로필 사진 있음: ${result.hasProfileImage}명\n- 기본 이미지: ${result.hasDefaultImage}명\n- 이미지 없음: ${result.noImage}명\n\n⚠️ 문제가 있는 사용자: ${result.problematicUsers}명`);
+            toast.showToast('구글 사용자 프로필 상태 확인 완료', 'success');
+        } else {
+            setStatus(`❌ 확인 실패: ${result.message}`);
+            toast.showToast('확인에 실패했습니다', 'error');
+        }
+    } catch (error) {
+        setStatus(`❌ 오류 발생: ${error.message}`);
+        toast.showToast('오류가 발생했습니다', 'error');
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleForceUpdateProfiles = async () => {
+    setLoading(true);
+    setStatus('구글 사용자 프로필을 강제로 업데이트하는 중...');
+    
+    try {
+        const result = await forceUpdateGoogleUserProfiles();
+        if (result.success) {
+            setStatus(`✅ 강제 업데이트 완료!\n\n📊 결과:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`);
+            toast.showToast('프로필 강제 업데이트 완료', 'success');
+        } else {
+            setStatus(`❌ 업데이트 실패: ${result.message}`);
+            toast.showToast('업데이트에 실패했습니다', 'error');
+        }
+    } catch (error) {
+        setStatus(`❌ 오류 발생: ${error.message}`);
+        toast.showToast('오류가 발생했습니다', 'error');
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleUpdateByEmail = async () => {
+    setLoading(true);
+    setStatus('이메일 기반으로 구글 사용자 프로필을 업데이트하는 중...');
+    
+    try {
+        const result = await updateGoogleProfilesByEmail();
+        if (result.success) {
+            setStatus(`✅ 이메일 기반 업데이트 완료!\n\n📊 결과:\n- 총 구글 이메일 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`);
+            toast.showToast('이메일 기반 프로필 업데이트 완료', 'success');
+        } else {
+            setStatus(`❌ 업데이트 실패: ${result.message}`);
+            toast.showToast('업데이트에 실패했습니다', 'error');
+        }
+    } catch (error) {
+        setStatus(`❌ 오류 발생: ${error.message}`);
+        toast.showToast('오류가 발생했습니다', 'error');
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
     <Container theme={theme}>
-      <Header theme={theme}>🔧 사용자 데이터 관리</Header>
-
-      {status && (
-        <Status type={status.type}>
-          {status.message}
-        </Status>
-      )}
+      <PageTitle>사용자 관리</PageTitle>
+      
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>구글 사용자 프로필 관리</SectionTitle>
+        <InfoText theme={theme}>
+            구글 연동 회원들의 프로필 이미지가 기본 이미지로 표시되는 문제를 해결할 수 있습니다.
+            아래 버튼들을 순서대로 실행해보세요.
+        </InfoText>
+        
+        <Button 
+            onClick={handleCheckGoogleProfiles}
+            disabled={loading}
+        >
+            1. 구글 사용자 프로필 상태 확인
+        </Button>
+        
+        <Button 
+            onClick={handleForceUpdateProfiles}
+            disabled={loading}
+        >
+            2. 구글 사용자 프로필 강제 업데이트
+        </Button>
+        
+        <Button 
+            onClick={handleUpdateByEmail}
+            disabled={loading}
+        >
+            3. 이메일 기반 프로필 업데이트
+        </Button>
+        
+        {loading && (
+            <LoadingText>처리 중...</LoadingText>
+        )}
+        
+        {status && (
+            <StatusText theme={theme}>
+                <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
+                    {status}
+                </pre>
+            </StatusText>
+        )}
+      </Section>
 
       {/* 사용자 동기화 */}
       <Section theme={theme}>
