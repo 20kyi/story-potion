@@ -496,7 +496,7 @@ function NovelCreate({ user }) {
                     potions: newPotions
                 });
 
-                // 포션 사용은 포인트를 차감하지 않으므로 포인트 내역에 기록하지 않음
+                 // 포션 사용은 포인트를 차감하지 않으므로 포인트 내역에 기록하지 않음
 
                 // 상태 업데이트
                 setOwnedPotions(newPotions);

@@ -23,6 +23,7 @@ import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaTrash, FaUsers } from
 import { HiOutlineTrash } from 'react-icons/hi';
 import { collection, query, where, getDocs, or } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 
 const Container = styled.div`
   display: flex;
@@ -620,9 +621,18 @@ function Friend({ user }) {
     const handleSendFriendRequest = async (targetUserId) => {
         setIsLoading(true);
         try {
-            await sendFriendRequest(user.uid, targetUserId);
-            toast.showToast('친구 요청을 보냈습니다.', 'success');
-            loadData();
+            const result = await sendFriendRequest(user.uid, targetUserId);
+            if (result.success) {
+                toast.showToast(result.message || '친구 요청을 보냈습니다.', 'success');
+                await loadData();
+                // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
+                if (searchQuery.trim() && searchQuery.trim().length >= 2) {
+                    const results = await searchUsers(searchQuery, user.uid);
+                    setSearchResults(results);
+                }
+            } else {
+                toast.showToast(result.error || '친구 요청에 실패했습니다.', 'error');
+            }
         } catch (error) {
             console.error('친구 요청 실패:', error);
             toast.showToast('친구 요청에 실패했습니다.', 'error');
@@ -634,9 +644,18 @@ function Friend({ user }) {
     const handleAcceptRequest = async (requestId, fromUserId, toUserId) => {
         setIsLoading(true);
         try {
-            await acceptFriendRequest(requestId, fromUserId, toUserId);
-            toast.showToast('친구 요청을 수락했습니다.', 'success');
-            loadData();
+            const result = await acceptFriendRequest(requestId, fromUserId, toUserId);
+            if (result.success) {
+                toast.showToast(result.message || '친구 요청을 수락했습니다.', 'success');
+                await loadData();
+                // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
+                if (searchQuery.trim() && searchQuery.trim().length >= 2) {
+                    const results = await searchUsers(searchQuery, user.uid);
+                    setSearchResults(results);
+                }
+            } else {
+                toast.showToast(result.error || '친구 요청 수락에 실패했습니다.', 'error');
+            }
         } catch (error) {
             console.error('친구 요청 수락 실패:', error);
             toast.showToast('친구 요청 수락에 실패했습니다.', 'error');
@@ -648,9 +667,18 @@ function Friend({ user }) {
     const handleRejectRequest = async (requestId) => {
         setIsLoading(true);
         try {
-            await rejectFriendRequest(requestId);
-            toast.showToast('친구 요청을 거절했습니다.', 'success');
-            loadData();
+            const result = await rejectFriendRequest(requestId);
+            if (result.success) {
+                toast.showToast(result.message || '친구 요청을 거절했습니다.', 'success');
+                await loadData();
+                // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
+                if (searchQuery.trim() && searchQuery.trim().length >= 2) {
+                    const results = await searchUsers(searchQuery, user.uid);
+                    setSearchResults(results);
+                }
+            } else {
+                toast.showToast(result.error || '친구 요청 거절에 실패했습니다.', 'error');
+            }
         } catch (error) {
             console.error('친구 요청 거절 실패:', error);
             toast.showToast('친구 요청 거절에 실패했습니다.', 'error');
@@ -764,23 +792,11 @@ function Friend({ user }) {
                                     whileTap={{ scale: 0.99 }}
                                 >
                                     <UserInfo>
-                                        <UserAvatar
-                                            src={
-                                                user.photoURL &&
-                                                    typeof user.photoURL === 'string' &&
-                                                    user.photoURL.trim() !== '' &&
-                                                    user.photoURL !== 'null' &&
-                                                    user.photoURL !== 'undefined' &&
-                                                    !user.photoURL.includes('default-profile.svg')
-                                                    ? user.photoURL
-                                                    : '/default-profile.svg'
-                                            }
-                                            alt={user.displayName}
-                                            onError={(e) => {
-                                                console.log('프로필 이미지 로드 실패:', user.photoURL);
-                                                e.target.src = '/default-profile.svg';
-                                            }}
-                                        />
+                                                                    <UserAvatar
+                                src={getSafeProfileImageUrl(user.photoURL)}
+                                alt={user.displayName}
+                                onError={(e) => handleImageError(e)}
+                            />
                                         <UserDetails>
                                             <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
                                             <UserEmail 
@@ -895,21 +911,9 @@ function Friend({ user }) {
                             onClick={() => navigate(`/friend-novels?userId=${friend.user.uid}`)}
                         >
                             <UserAvatar
-                                src={
-                                    friend.user.photoURL &&
-                                        typeof friend.user.photoURL === 'string' &&
-                                        friend.user.photoURL.trim() !== '' &&
-                                        friend.user.photoURL !== 'null' &&
-                                        friend.user.photoURL !== 'undefined' &&
-                                        !friend.user.photoURL.includes('default-profile.svg')
-                                        ? friend.user.photoURL
-                                        : '/default-profile.svg'
-                                }
+                                src={getSafeProfileImageUrl(friend.user.photoURL)}
                                 alt={friend.user.displayName}
-                                onError={(e) => {
-                                    console.log('친구 프로필 이미지 로드 실패:', friend.user.photoURL);
-                                    e.target.src = '/default-profile.svg';
-                                }}
+                                onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
@@ -965,21 +969,9 @@ function Friend({ user }) {
                     >
                         <UserInfo>
                             <UserAvatar
-                                src={
-                                    request.fromUser?.photoURL &&
-                                        typeof request.fromUser.photoURL === 'string' &&
-                                        request.fromUser.photoURL.trim() !== '' &&
-                                        request.fromUser.photoURL !== 'null' &&
-                                        request.fromUser.photoURL !== 'undefined' &&
-                                        !request.fromUser.photoURL.includes('default-profile.svg')
-                                        ? request.fromUser.photoURL
-                                        : '/default-profile.svg'
-                                }
+                                src={getSafeProfileImageUrl(request.fromUser?.photoURL)}
                                 alt={request.fromUser?.displayName || '사용자'}
-                                onError={(e) => {
-                                    console.log('받은 요청 프로필 이미지 로드 실패:', request.fromUser?.photoURL);
-                                    e.target.src = '/default-profile.svg';
-                                }}
+                                onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
@@ -1030,21 +1022,9 @@ function Friend({ user }) {
                     >
                         <UserInfo>
                             <UserAvatar
-                                src={
-                                    request.toUser?.photoURL &&
-                                        typeof request.toUser.photoURL === 'string' &&
-                                        request.toUser.photoURL.trim() !== '' &&
-                                        request.toUser.photoURL !== 'null' &&
-                                        request.toUser.photoURL !== 'undefined' &&
-                                        !request.toUser.photoURL.includes('default-profile.svg')
-                                        ? request.toUser.photoURL
-                                        : '/default-profile.svg'
-                                }
+                                src={getSafeProfileImageUrl(request.toUser?.photoURL)}
                                 alt={request.toUser?.displayName || '사용자'}
-                                onError={(e) => {
-                                    console.log('보낸 요청 프로필 이미지 로드 실패:', request.toUser?.photoURL);
-                                    e.target.src = '/default-profile.svg';
-                                }}
+                                onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>

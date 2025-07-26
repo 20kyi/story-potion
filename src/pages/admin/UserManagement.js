@@ -56,6 +56,13 @@ import {
     cleanupPotionUsageHistory,
     runFullCleanup
 } from '../../utils/runPotionHistoryCleanup';
+import {
+    getPasswordResetRequests,
+    approvePasswordResetRequest,
+    rejectPasswordResetRequest,
+    setTemporaryPassword,
+    resetUserPasswordByAdmin
+} from '../../utils/adminPasswordResetUtils';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -263,6 +270,13 @@ function UserManagement({ user }) {
   const [pointActionStatus, setPointActionStatus] = useState(null);
   const [statusActionLoading, setStatusActionLoading] = useState(false);
   const [statusActionStatus, setStatusActionStatus] = useState(null);
+  
+  // 비밀번호 재설정 요청 관련 상태
+  const [passwordResetRequests, setPasswordResetRequests] = useState([]);
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [adminNote, setAdminNote] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   // 페이지네이션/정렬 상태
   const [pageLimit] = useState(10);
@@ -943,6 +957,107 @@ function UserManagement({ user }) {
     }
   };
 
+  // 비밀번호 재설정 요청 관리 함수들
+  const handleLoadPasswordResetRequests = async () => {
+    setPasswordResetLoading(true);
+    try {
+      const result = await getPasswordResetRequests();
+      if (result.success) {
+        setPasswordResetRequests(result.requests);
+        setStatus({ type: 'success', message: `비밀번호 재설정 요청 ${result.requests.length}개를 불러왔습니다.` });
+      } else {
+        setStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: `비밀번호 재설정 요청 불러오기 실패: ${error.message}` });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId) => {
+    setPasswordResetLoading(true);
+    try {
+      const result = await approvePasswordResetRequest(requestId, adminNote);
+      if (result.success) {
+        setStatus({ 
+          type: 'success', 
+          message: `요청이 승인되었습니다. 임시 비밀번호: ${result.temporaryPassword}` 
+        });
+        // 요청 목록 새로고침
+        await handleLoadPasswordResetRequests();
+      } else {
+        setStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: `요청 승인 실패: ${error.message}` });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    setPasswordResetLoading(true);
+    try {
+      const result = await rejectPasswordResetRequest(requestId, adminNote);
+      if (result.success) {
+        setStatus({ type: 'success', message: '요청이 거부되었습니다.' });
+        // 요청 목록 새로고침
+        await handleLoadPasswordResetRequests();
+      } else {
+        setStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: `요청 거부 실패: ${error.message}` });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const handleSetTemporaryPassword = async (email) => {
+    setPasswordResetLoading(true);
+    try {
+      const result = await setTemporaryPassword(email);
+      if (result.success) {
+        setStatus({ 
+          type: 'success', 
+          message: `임시 비밀번호가 설정되었습니다: ${result.temporaryPassword}` 
+        });
+      } else {
+        setStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: `임시 비밀번호 설정 실패: ${error.message}` });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const handleResetUserPassword = async (email) => {
+    if (!newPassword.trim()) {
+      setStatus({ type: 'error', message: '새 비밀번호를 입력해주세요.' });
+      return;
+    }
+
+    setPasswordResetLoading(true);
+    try {
+      const result = await resetUserPasswordByAdmin(email, newPassword);
+      if (result.success) {
+        setStatus({ 
+          type: 'success', 
+          message: `비밀번호가 재설정되었습니다: ${result.newPassword}` 
+        });
+        setNewPassword('');
+      } else {
+        setStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: `비밀번호 재설정 실패: ${error.message}` });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
   return (
     <Container theme={theme}>
       <PageTitle>사용자 관리</PageTitle>
@@ -1430,6 +1545,194 @@ function UserManagement({ user }) {
           </div>
         </Section>
       )}
+
+      {/* 비밀번호 재설정 요청 관리 */}
+      <Section theme={theme}>
+        <SectionTitle theme={theme}>🔐 비밀번호 재설정 요청 관리</SectionTitle>
+        <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
+          사용자가 관리자 문의로 요청한 비밀번호 재설정을 처리합니다.
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <Button
+            onClick={handleLoadPasswordResetRequests}
+            disabled={passwordResetLoading}
+            style={{ backgroundColor: '#3498db' }}
+          >
+            {passwordResetLoading ? '불러오는 중...' : '비밀번호 재설정 요청 목록'}
+          </Button>
+        </div>
+
+        {/* 요청 목록 */}
+        {passwordResetRequests.length > 0 && (
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: theme.text, marginBottom: '10px' }}>요청 목록 ({passwordResetRequests.length}개)</h4>
+            {passwordResetRequests.map((request, index) => (
+              <div
+                key={request.id}
+                style={{
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  marginBottom: '10px',
+                  backgroundColor: theme.theme === 'dark' ? '#34495e' : '#f8f9fa'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div>
+                    <strong style={{ color: theme.text }}>{request.displayName}</strong>
+                    <div style={{ color: theme.subText || '#666', fontSize: '12px' }}>{request.email}</div>
+                    <div style={{ color: theme.subText || '#666', fontSize: '12px' }}>요청 ID: {request.requestId}</div>
+                  </div>
+                  <span style={{
+                    background: request.status === 'pending' ? '#f39c12' : 
+                               request.status === 'approved' ? '#27ae60' : '#e74c3c',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    {request.status === 'pending' ? '대기중' : 
+                     request.status === 'approved' ? '승인됨' : '거부됨'}
+                  </span>
+                </div>
+                
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ color: theme.text, marginBottom: '5px' }}><strong>사유:</strong></div>
+                  <div style={{ color: theme.subText || '#666', fontSize: '14px' }}>{request.reason}</div>
+                </div>
+
+                {request.additionalInfo && (
+                  <div style={{ marginBottom: '10px' }}>
+                    <div style={{ color: theme.text, marginBottom: '5px' }}><strong>추가 정보:</strong></div>
+                    <div style={{ color: theme.subText || '#666', fontSize: '14px' }}>{request.additionalInfo}</div>
+                  </div>
+                )}
+
+                <div style={{ color: theme.subText || '#666', fontSize: '12px', marginBottom: '10px' }}>
+                  요청일: {request.createdAt?.toDate?.()?.toLocaleString() || '알 수 없음'}
+                </div>
+
+                {request.status === 'pending' && (
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      placeholder="관리자 메모 (선택사항)"
+                      value={adminNote}
+                      onChange={(e) => setAdminNote(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                )}
+
+                {request.status === 'pending' && (
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <Button
+                      onClick={() => handleApproveRequest(request.requestId)}
+                      disabled={passwordResetLoading}
+                      style={{ backgroundColor: '#27ae60', flex: 1 }}
+                    >
+                      {passwordResetLoading ? '처리 중...' : '승인'}
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectRequest(request.requestId)}
+                      disabled={passwordResetLoading}
+                      style={{ backgroundColor: '#e74c3c', flex: 1 }}
+                    >
+                      {passwordResetLoading ? '처리 중...' : '거부'}
+                    </Button>
+                  </div>
+                )}
+
+                {request.status === 'approved' && (
+                  <div style={{
+                    background: '#d4edda',
+                    border: '1px solid #c3e6cb',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    marginTop: '10px'
+                  }}>
+                    <div style={{ color: '#155724', fontSize: '14px' }}>
+                      <strong>승인됨</strong> - 사용자에게 임시 비밀번호를 안전하게 전달해주세요.
+                    </div>
+                  </div>
+                )}
+
+                {request.status === 'rejected' && request.adminNote && (
+                  <div style={{
+                    background: '#f8d7da',
+                    border: '1px solid #f5c6cb',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    marginTop: '10px'
+                  }}>
+                    <div style={{ color: '#721c24', fontSize: '14px' }}>
+                      <strong>거부 사유:</strong> {request.adminNote}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 직접 비밀번호 재설정 */}
+        <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h4 style={{ color: theme.text, marginBottom: '10px' }}>직접 비밀번호 재설정</h4>
+          <div style={{ marginBottom: '10px' }}>
+            <input
+              type="email"
+              placeholder="사용자 이메일"
+              value={selectedRequest?.email || ''}
+              onChange={(e) => setSelectedRequest({ email: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '10px',
+                fontSize: '14px'
+              }}
+            />
+            <input
+              type="password"
+              placeholder="새 비밀번호"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '10px',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Button
+              onClick={() => handleSetTemporaryPassword(selectedRequest?.email)}
+              disabled={passwordResetLoading || !selectedRequest?.email}
+              style={{ backgroundColor: '#f39c12', flex: 1 }}
+            >
+              {passwordResetLoading ? '처리 중...' : '임시 비밀번호 생성'}
+            </Button>
+            <Button
+              onClick={() => handleResetUserPassword(selectedRequest?.email)}
+              disabled={passwordResetLoading || !selectedRequest?.email || !newPassword}
+              style={{ backgroundColor: '#9b59b6', flex: 1 }}
+            >
+              {passwordResetLoading ? '처리 중...' : '비밀번호 직접 설정'}
+            </Button>
+          </div>
+        </div>
+      </Section>
 
       {/* 포션 사용 내역 정리 - 메인 관리자만 */}
       {isMainAdmin(user) && (

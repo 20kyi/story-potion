@@ -41,6 +41,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import EyeIcon from '../../components/icons/EyeIcon';
 import EyeOffIcon from '../../components/icons/EyeOffIcon';
+import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
 import { Keyboard } from '@capacitor/keyboard';
@@ -813,11 +814,11 @@ function MyPage({ user }) {
         ) : (
           <>
             <ProfileContainer>
-              {user?.photoURL ? (
-                <ProfileImage src={user.photoURL} alt="Profile" />
-              ) : (
-                <ProfileImage src={process.env.PUBLIC_URL + '/default-profile.svg'} alt="Default Profile" />
-              )}
+              <ProfileImage 
+                src={getSafeProfileImageUrl(user?.photoURL)} 
+                alt="Profile"
+                onError={(e) => handleImageError(e)}
+              />
               <EditIconWrapper onClick={() => setIsEditing(true)}>
                 <EditIcon width="20" height="20" color="#555555" />
               </EditIconWrapper>

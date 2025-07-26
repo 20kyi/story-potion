@@ -100,16 +100,21 @@ export const searchUsers = async (searchTerm, currentUserId) => {
  */
 export const sendFriendRequest = async (fromUserId, toUserId) => {
     try {
-        // 이미 친구 요청이 있는지 확인
-        const existingRequest = await getFriendRequest(fromUserId, toUserId);
-        if (existingRequest) {
-            return { success: false, error: '이미 친구 요청을 보냈습니다.' };
-        }
-
         // 이미 친구인지 확인
         const isFriend = await checkFriendship(fromUserId, toUserId);
         if (isFriend) {
             return { success: false, error: '이미 친구입니다.' };
+        }
+
+        // 기존 친구 요청 확인 (pending 상태만 체크)
+        const existingRequest = await getFriendRequest(fromUserId, toUserId);
+        if (existingRequest && existingRequest.status === 'pending') {
+            return { success: false, error: '이미 친구 요청을 보냈습니다.' };
+        }
+
+        // 거절된 요청이 있다면 삭제하고 새로 생성
+        if (existingRequest && existingRequest.status === 'rejected') {
+            await deleteDoc(doc(db, 'friendRequests', existingRequest.id));
         }
 
         // 친구 요청 생성
@@ -134,7 +139,7 @@ export const sendFriendRequest = async (fromUserId, toUserId) => {
 };
 
 /**
- * 친구 요청 조회
+ * 친구 요청 조회 (양방향 확인)
  * @param {string} fromUserId - 요청을 보낸 사용자 ID
  * @param {string} toUserId - 요청을 받은 사용자 ID
  * @returns {Promise<Object|null>} 친구 요청 정보
@@ -142,17 +147,36 @@ export const sendFriendRequest = async (fromUserId, toUserId) => {
 export const getFriendRequest = async (fromUserId, toUserId) => {
     try {
         const requestsRef = collection(db, 'friendRequests');
-        const q = query(
+        
+        // 양방향 요청 확인 (A→B, B→A 모두 체크)
+        const q1 = query(
             requestsRef,
             where('fromUserId', '==', fromUserId),
             where('toUserId', '==', toUserId)
         );
+        const q2 = query(
+            requestsRef,
+            where('fromUserId', '==', toUserId),
+            where('toUserId', '==', fromUserId)
+        );
 
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
+        const [snapshot1, snapshot2] = await Promise.all([
+            getDocs(q1),
+            getDocs(q2)
+        ]);
+
+        // 첫 번째 방향의 요청이 있으면 반환
+        if (!snapshot1.empty) {
+            const doc = snapshot1.docs[0];
             return { id: doc.id, ...doc.data() };
         }
+        
+        // 두 번째 방향의 요청이 있으면 반환
+        if (!snapshot2.empty) {
+            const doc = snapshot2.docs[0];
+            return { id: doc.id, ...doc.data() };
+        }
+        
         return null;
     } catch (error) {
         console.error('친구 요청 조회 실패:', error);
@@ -170,15 +194,35 @@ export const getFriendRequest = async (fromUserId, toUserId) => {
 export const acceptFriendRequest = async (requestId, fromUserId, toUserId) => {
     console.log('acceptFriendRequest 호출:', requestId, fromUserId, toUserId);
     try {
-        // 친구 요청 상태 업데이트
-        const requestRef = doc(db, 'friendRequests', requestId);
-        await updateDoc(requestRef, {
-            status: 'accepted',
-            updatedAt: Timestamp.now()
-        });
-
         // 친구 관계 생성
         await createFriendship(fromUserId, toUserId);
+
+        // 두 사용자 간의 모든 친구 요청 삭제 (수락된 요청 포함)
+        const requestsRef = collection(db, 'friendRequests');
+        const q1 = query(
+            requestsRef,
+            where('fromUserId', '==', fromUserId),
+            where('toUserId', '==', toUserId)
+        );
+        const q2 = query(
+            requestsRef,
+            where('fromUserId', '==', toUserId),
+            where('toUserId', '==', fromUserId)
+        );
+
+        const [snapshot1, snapshot2] = await Promise.all([
+            getDocs(q1),
+            getDocs(q2)
+        ]);
+
+        // 모든 관련 요청 삭제
+        const deletePromises = [];
+        snapshot1.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+        snapshot2.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+        
+        if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+        }
 
         // 친구 요청 수락 알림 보내기
         await sendFriendRequestAcceptedNotification(toUserId, fromUserId);
@@ -198,10 +242,7 @@ export const acceptFriendRequest = async (requestId, fromUserId, toUserId) => {
 export const rejectFriendRequest = async (requestId) => {
     try {
         const requestRef = doc(db, 'friendRequests', requestId);
-        await updateDoc(requestRef, {
-            status: 'rejected',
-            updatedAt: Timestamp.now()
-        });
+        await deleteDoc(requestRef); // 거절된 요청은 완전히 삭제
 
         return { success: true, message: '친구 요청을 거절했습니다.' };
     } catch (error) {
@@ -425,9 +466,39 @@ export const removeFriend = async (friendshipId) => {
         
         await deleteDoc(friendshipRef);
 
-        // 친구 삭제 알림 보내기 (두 사용자 모두에게)
+        // 친구 관계 삭제 시 관련된 모든 친구 요청도 정리
         if (users.length >= 2) {
-            await sendFriendRemovedNotification(users[0], users[1]);
+            const [user1, user2] = users;
+            
+            // 두 사용자 간의 모든 친구 요청 삭제
+            const requestsRef = collection(db, 'friendRequests');
+            const q1 = query(
+                requestsRef,
+                where('fromUserId', '==', user1),
+                where('toUserId', '==', user2)
+            );
+            const q2 = query(
+                requestsRef,
+                where('fromUserId', '==', user2),
+                where('toUserId', '==', user1)
+            );
+
+            const [snapshot1, snapshot2] = await Promise.all([
+                getDocs(q1),
+                getDocs(q2)
+            ]);
+
+            // 모든 관련 요청 삭제
+            const deletePromises = [];
+            snapshot1.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+            snapshot2.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+            
+            if (deletePromises.length > 0) {
+                await Promise.all(deletePromises);
+            }
+
+            // 친구 삭제 알림 보내기 (두 사용자 모두에게)
+            await sendFriendRemovedNotification(user1, user2);
         }
 
         return { success: true, message: '친구를 삭제했습니다.' };

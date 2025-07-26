@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useTheme } from '../../ThemeContext';
+import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 
 const Container = styled.div`
   display: flex;
@@ -330,11 +331,11 @@ function FriendNovelList({ user }) {
                     {friendInfo && (
                         <FriendProfileSection theme={theme}>
                             <ProfileContainer>
-                                {friendInfo.photoURL ? (
-                                    <ProfileImage src={friendInfo.photoURL} alt="Friend Profile" />
-                                ) : (
-                                    <ProfileImagePlaceholder>😊</ProfileImagePlaceholder>
-                                )}
+                                <ProfileImage 
+                                    src={getSafeProfileImageUrl(friendInfo.photoURL)} 
+                                    alt="Friend Profile"
+                                    onError={(e) => handleImageError(e)}
+                                />
                             </ProfileContainer>
                             <FriendNickname theme={theme}>{friendInfo.displayName || '사용자'}님의 소설</FriendNickname>
                             <FriendEmail theme={theme}>{friendInfo.email}</FriendEmail>

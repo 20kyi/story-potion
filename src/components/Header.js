@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import BackIcon from './icons/BackIcon';
 import { useTheme } from '../ThemeContext';
+import { getSafeProfileImageUrl, handleImageError } from '../utils/profileImageUtils';
 
 const HeaderContainer = styled.header`
   display: flex;
