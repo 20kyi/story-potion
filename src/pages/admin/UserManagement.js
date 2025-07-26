@@ -51,6 +51,11 @@ import {
     forceUpdateGoogleUserProfiles, 
     updateGoogleProfilesByEmail 
 } from '../../utils/fixGoogleProfiles';
+import {
+    checkPotionUsageStats,
+    cleanupPotionUsageHistory,
+    runFullCleanup
+} from '../../utils/runPotionHistoryCleanup';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -868,19 +873,22 @@ function UserManagement({ user }) {
 
   const handleCheckGoogleProfiles = async () => {
     setLoading(true);
-    setStatus('구글 사용자 프로필 상태를 확인하는 중...');
+    setStatus({ type: 'info', message: '구글 사용자 프로필 상태를 확인하는 중...' });
     
     try {
         const result = await checkGoogleUserProfiles();
         if (result.success) {
-            setStatus(`✅ 확인 완료!\n\n📊 구글 사용자 현황:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 프로필 사진 있음: ${result.hasProfileImage}명\n- 기본 이미지: ${result.hasDefaultImage}명\n- 이미지 없음: ${result.noImage}명\n\n⚠️ 문제가 있는 사용자: ${result.problematicUsers}명`);
+            setStatus({ 
+                type: 'success', 
+                message: `✅ 확인 완료!\n\n📊 구글 사용자 현황:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 프로필 사진 있음: ${result.hasProfileImage}명\n- 기본 이미지: ${result.hasDefaultImage}명\n- 이미지 없음: ${result.noImage}명\n\n⚠️ 문제가 있는 사용자: ${result.problematicUsers}명`
+            });
             toast.showToast('구글 사용자 프로필 상태 확인 완료', 'success');
         } else {
-            setStatus(`❌ 확인 실패: ${result.message}`);
+            setStatus({ type: 'error', message: `❌ 확인 실패: ${result.message}` });
             toast.showToast('확인에 실패했습니다', 'error');
         }
     } catch (error) {
-        setStatus(`❌ 오류 발생: ${error.message}`);
+        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
         toast.showToast('오류가 발생했습니다', 'error');
     } finally {
         setLoading(false);
@@ -889,19 +897,22 @@ function UserManagement({ user }) {
 
   const handleForceUpdateProfiles = async () => {
     setLoading(true);
-    setStatus('구글 사용자 프로필을 강제로 업데이트하는 중...');
+    setStatus({ type: 'info', message: '구글 사용자 프로필을 강제로 업데이트하는 중...' });
     
     try {
         const result = await forceUpdateGoogleUserProfiles();
         if (result.success) {
-            setStatus(`✅ 강제 업데이트 완료!\n\n📊 결과:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`);
+            setStatus({ 
+                type: 'success', 
+                message: `✅ 강제 업데이트 완료!\n\n📊 결과:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`
+            });
             toast.showToast('프로필 강제 업데이트 완료', 'success');
         } else {
-            setStatus(`❌ 업데이트 실패: ${result.message}`);
+            setStatus({ type: 'error', message: `❌ 업데이트 실패: ${result.message}` });
             toast.showToast('업데이트에 실패했습니다', 'error');
         }
     } catch (error) {
-        setStatus(`❌ 오류 발생: ${error.message}`);
+        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
         toast.showToast('오류가 발생했습니다', 'error');
     } finally {
         setLoading(false);
@@ -910,19 +921,22 @@ function UserManagement({ user }) {
 
   const handleUpdateByEmail = async () => {
     setLoading(true);
-    setStatus('이메일 기반으로 구글 사용자 프로필을 업데이트하는 중...');
+    setStatus({ type: 'info', message: '이메일 기반으로 구글 사용자 프로필을 업데이트하는 중...' });
     
     try {
         const result = await updateGoogleProfilesByEmail();
         if (result.success) {
-            setStatus(`✅ 이메일 기반 업데이트 완료!\n\n📊 결과:\n- 총 구글 이메일 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`);
+            setStatus({ 
+                type: 'success', 
+                message: `✅ 이메일 기반 업데이트 완료!\n\n📊 결과:\n- 총 구글 이메일 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`
+            });
             toast.showToast('이메일 기반 프로필 업데이트 완료', 'success');
         } else {
-            setStatus(`❌ 업데이트 실패: ${result.message}`);
+            setStatus({ type: 'error', message: `❌ 업데이트 실패: ${result.message}` });
             toast.showToast('업데이트에 실패했습니다', 'error');
         }
     } catch (error) {
-        setStatus(`❌ 오류 발생: ${error.message}`);
+        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
         toast.showToast('오류가 발생했습니다', 'error');
     } finally {
         setLoading(false);
@@ -968,7 +982,7 @@ function UserManagement({ user }) {
         {status && (
             <StatusText theme={theme}>
                 <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
-                    {status}
+                    {typeof status === 'string' ? status : status.message}
                 </pre>
             </StatusText>
         )}
@@ -1412,6 +1426,80 @@ function UserManagement({ user }) {
               style={{ backgroundColor: '#e74c3c' }}
             >
               500p 즉시 지급
+            </Button>
+          </div>
+        </Section>
+      )}
+
+      {/* 포션 사용 내역 정리 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>🧹 포션 사용 내역 정리</SectionTitle>
+          <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
+            포션 사용은 포인트를 차감하지 않으므로 포인트 내역에서 제거합니다.
+          </div>
+          <div>
+            <Button
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const stats = await checkPotionUsageStats();
+                  setStatus({ 
+                    type: 'success', 
+                    message: `포션 사용 내역 통계: ${stats.usersWithPotionUsage}명의 사용자, 총 ${stats.totalPotionUsage}개 내역` 
+                  });
+                } catch (error) {
+                  setStatus({ type: 'error', message: `통계 조회 실패: ${error.message}` });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              style={{ backgroundColor: '#3498db' }}
+            >
+              {loading ? '통계 확인 중...' : '포션 사용 내역 통계'}
+            </Button>
+
+            <Button
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const result = await cleanupPotionUsageHistory();
+                  setStatus({ 
+                    type: 'success', 
+                    message: `포션 사용 내역 삭제 완료: ${result.processedUsers}명 처리, ${result.totalDeleted}개 삭제` 
+                  });
+                } catch (error) {
+                  setStatus({ type: 'error', message: `삭제 실패: ${error.message}` });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              style={{ backgroundColor: '#e74c3c' }}
+            >
+              {loading ? '삭제 중...' : '포션 사용 내역 삭제'}
+            </Button>
+
+            <Button
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const result = await runFullCleanup();
+                  setStatus({ 
+                    type: 'success', 
+                    message: `전체 정리 완료: 삭제 전 ${result.stats.totalPotionUsage}개 → 삭제 후 ${result.afterStats.totalPotionUsage}개 (${result.deleted.totalDeleted}개 삭제)` 
+                  });
+                } catch (error) {
+                  setStatus({ type: 'error', message: `전체 정리 실패: ${error.message}` });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              style={{ backgroundColor: '#9b59b6' }}
+            >
+              {loading ? '전체 정리 중...' : '전체 정리 (통계+삭제)'}
             </Button>
           </div>
         </Section>

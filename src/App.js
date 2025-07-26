@@ -50,6 +50,7 @@ import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
 import './utils/adminAuth'; // 관리자 권한 체크 스크립트 로드
 import './utils/updateGoogleProfileImages'; // 구글 프로필 이미지 업데이트 스크립트 로드
 import './utils/fixGoogleProfiles'; // 구글 프로필 문제 해결 스크립트 로드
+import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';
 
 const AppLayout = ({ user, isLoading }) => {
