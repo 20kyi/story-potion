@@ -23,21 +23,17 @@ import {
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import './Login.css';
-import { 
-  initializeRecaptcha, 
-  sendSMSCode, 
-  verifySMSCodeAndResetPassword 
+import {
+  initializeRecaptcha,
+  sendSMSCode,
+  verifySMSCodeAndResetPassword
 } from '../utils/passwordResetUtils';
-import { 
-  getUserSecurityQuestions, 
-  verifySecurityAnswers, 
+import {
+  getUserSecurityQuestions,
+  verifySecurityAnswers,
   resetPasswordWithSecurityQuestions,
-  SECURITY_QUESTIONS 
+  SECURITY_QUESTIONS
 } from '../utils/securityQuestionUtils';
-import { 
-  createPasswordResetRequest, 
-  checkRequestStatus 
-} from '../utils/adminPasswordResetUtils';
 
 const isMobile = Capacitor.getPlatform() !== 'web';
 
@@ -51,36 +47,24 @@ function Login() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-  
+
   // 비밀번호 찾기 방법 선택
-  const [resetMethod, setResetMethod] = useState('email'); // 'email', 'sms', 'security', 'admin'
-  
+  const [resetMethod, setResetMethod] = useState('email'); // 'email', 'sms', 'security'
+
   // SMS 인증 관련 상태
   const [smsPhone, setSmsPhone] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [smsSent, setSmsSent] = useState(false);
   const [smsLoading, setSmsLoading] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
-  
+
   // 보안 질문 관련 상태
   const [securityEmail, setSecurityEmail] = useState('');
   const [securityQuestions, setSecurityQuestions] = useState([]);
   const [securityAnswers, setSecurityAnswers] = useState([]);
   const [securityVerified, setSecurityVerified] = useState(false);
   const [securityLoading, setSecurityLoading] = useState(false);
-  
-  // 관리자 문의 관련 상태
-  const [adminRequest, setAdminRequest] = useState({
-    email: '',
-    displayName: '',
-    phoneNumber: '',
-    reason: '',
-    additionalInfo: ''
-  });
-  const [adminRequestId, setAdminRequestId] = useState('');
-  const [adminRequestStatus, setAdminRequestStatus] = useState('');
-  const [adminLoading, setAdminLoading] = useState(false);
-  
+
   // 새 비밀번호 설정
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -112,23 +96,23 @@ function Login() {
             try {
               const credential = GoogleAuthProvider.credential(idToken);
               const result = await signInWithCredential(auth, credential);
-              
+
               // 구글 로그인 성공 후 사용자 정보 처리
               const user = result.user;
               const userRef = doc(db, 'users', user.uid);
               const userSnap = await getDoc(userRef);
-              
+
               if (!userSnap.exists()) {
                 // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
                 const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
                 const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-                
+
                 // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
                 await updateProfile(user, {
                   displayName: googleDisplayName,
                   photoURL: googlePhotoURL
                 });
-                
+
                 await setDoc(userRef, {
                   email: user.email || '',
                   displayName: googleDisplayName,
@@ -148,7 +132,7 @@ function Login() {
                   await auth.signOut();
                   return;
                 }
-                
+
                 // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
                 if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
                   const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
@@ -158,14 +142,14 @@ function Login() {
                     lastLoginAt: new Date(),
                     updatedAt: new Date()
                   });
-                  
+
                   // Firebase Auth도 업데이트
                   await updateProfile(user, {
                     photoURL: googlePhotoURL
                   });
                 }
               }
-              
+
               navigate('/');
             } catch (e) {
               console.error('Firebase 로그인 실패:', e);
@@ -197,13 +181,13 @@ function Login() {
       if (!userSnap.exists()) {
         // 기본 displayName 설정 (이메일에서 @ 앞부분 사용)
         const defaultDisplayName = user.email?.split('@')[0] || '사용자';
-        
+
         // Firebase Auth의 displayName 설정
         await updateProfile(user, {
           displayName: defaultDisplayName,
           photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
         });
-        
+
         await setDoc(userRef, {
           email: user.email || '',
           displayName: defaultDisplayName,
@@ -218,7 +202,7 @@ function Login() {
           await auth.signOut();
           return;
         }
-        
+
         // 임시 비밀번호로 로그인한 경우 처리
         if (userData.temporaryPassword && userData.passwordResetBy === 'admin') {
           // 임시 비밀번호 정보 삭제 (보안상)
@@ -229,13 +213,13 @@ function Login() {
             lastLoginAt: new Date(),
             updatedAt: new Date()
           });
-          
+
           // 사용자에게 비밀번호 변경 안내
           setError('임시 비밀번호로 로그인되었습니다. 보안을 위해 비밀번호를 변경해주세요.');
           // TODO: 비밀번호 변경 페이지로 리다이렉트
           return;
         }
-        
+
         // 마지막 로그인 시간 업데이트
         await updateDoc(userRef, {
           lastLoginAt: new Date(),
@@ -280,13 +264,13 @@ function Login() {
           // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
           const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
           const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-          
+
           // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
           await updateProfile(user, {
             displayName: googleDisplayName,
             photoURL: googlePhotoURL
           });
-          
+
           await setDoc(userRef, {
             email: user.email || '',
             displayName: googleDisplayName,
@@ -306,7 +290,7 @@ function Login() {
             await auth.signOut();
             return;
           }
-          
+
           // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
           if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
             const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
@@ -316,7 +300,7 @@ function Login() {
               lastLoginAt: new Date(),
               updatedAt: new Date()
             });
-            
+
             // Firebase Auth도 업데이트
             await updateProfile(user, {
               photoURL: googlePhotoURL
@@ -380,7 +364,7 @@ function Login() {
     try {
       // reCAPTCHA 초기화
       initializeRecaptcha('recaptcha-container');
-      
+
       const result = await sendSMSCode(smsPhone);
       if (result.success) {
         setConfirmationResult(result.confirmationResult);
@@ -529,60 +513,6 @@ function Login() {
     }
   };
 
-  // 관리자 문의 요청
-  const handleAdminRequest = async (e) => {
-    e.preventDefault();
-    if (!adminRequest.email.trim() || !adminRequest.displayName.trim() || !adminRequest.reason.trim()) {
-      setResetMessage('필수 정보를 모두 입력해주세요.');
-      return;
-    }
-
-    setAdminLoading(true);
-    setResetMessage('');
-
-    try {
-      const result = await createPasswordResetRequest(adminRequest);
-      if (result.success) {
-        setAdminRequestId(result.requestId);
-        setAdminRequestStatus('pending');
-        setResetMessage('비밀번호 재설정 요청이 접수되었습니다. 관리자 검토 후 연락드리겠습니다.');
-      } else {
-        setResetMessage(result.message);
-      }
-    } catch (error) {
-      console.error('관리자 요청 실패:', error);
-      setResetMessage('요청 접수에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setAdminLoading(false);
-    }
-  };
-
-  // 요청 상태 확인
-  const handleCheckRequestStatus = async () => {
-    if (!adminRequestId) {
-      setResetMessage('요청 ID가 없습니다.');
-      return;
-    }
-
-    setAdminLoading(true);
-    setResetMessage('');
-
-    try {
-      const result = await checkRequestStatus(adminRequestId);
-      if (result.success) {
-        setAdminRequestStatus(result.request.status);
-        setResetMessage(`요청 상태: ${result.request.status}`);
-      } else {
-        setResetMessage(result.message);
-      }
-    } catch (error) {
-      console.error('요청 상태 확인 실패:', error);
-      setResetMessage('요청 상태 확인에 실패했습니다.');
-    } finally {
-      setAdminLoading(false);
-    }
-  };
-
   return (
     <div ref={mainRef} style={{ paddingBottom: keyboardHeight }}>
       <Container>
@@ -616,10 +546,10 @@ function Login() {
               </PasswordContainer>
               {error && <ErrorMessage>{error}</ErrorMessage>}
               <Button type="submit">로그인 하세요</Button>
-              
+
               {/* 비밀번호 찾기 링크 */}
-              <div style={{ 
-                textAlign: 'center', 
+              <div style={{
+                textAlign: 'center',
                 marginTop: '15px',
                 fontSize: '14px'
               }}>
@@ -678,8 +608,8 @@ function Login() {
             overflowY: 'auto',
             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
           }}>
-            <h3 style={{ 
-              margin: '0 0 20px 0', 
+            <h3 style={{
+              margin: '0 0 20px 0',
               textAlign: 'center',
               color: '#333',
               fontSize: '18px',
@@ -689,16 +619,15 @@ function Login() {
             </h3>
 
             {/* 방법 선택 탭 */}
-            <div style={{ 
-              display: 'flex', 
+            <div style={{
+              display: 'flex',
               marginBottom: '20px',
               borderBottom: '1px solid #eee'
             }}>
               {[
                 { key: 'email', label: '이메일' },
                 { key: 'sms', label: 'SMS' },
-                { key: 'security', label: '보안질문' },
-                { key: 'admin', label: '관리자문의' }
+                { key: 'security', label: '보안질문' }
               ].map(method => (
                 <button
                   key={method.key}
@@ -723,9 +652,9 @@ function Login() {
             {/* 이메일 방법 */}
             {resetMethod === 'email' && (
               <div>
-                <p style={{ 
-                  margin: '0 0 20px 0', 
-                  fontSize: '14px', 
+                <p style={{
+                  margin: '0 0 20px 0',
+                  fontSize: '14px',
                   color: '#666',
                   lineHeight: '1.5',
                   textAlign: 'center'
@@ -742,7 +671,7 @@ function Login() {
                     onChange={(e) => setResetEmail(e.target.value)}
                     style={{ marginBottom: '15px' }}
                   />
-                  
+
                   {resetMessage && (
                     <div style={{
                       padding: '10px',
@@ -804,9 +733,9 @@ function Login() {
             {/* SMS 방법 */}
             {resetMethod === 'sms' && (
               <div>
-                <p style={{ 
-                  margin: '0 0 20px 0', 
-                  fontSize: '14px', 
+                <p style={{
+                  margin: '0 0 20px 0',
+                  fontSize: '14px',
                   color: '#666',
                   lineHeight: '1.5',
                   textAlign: 'center'
@@ -825,7 +754,7 @@ function Login() {
                       style={{ marginBottom: '15px' }}
                     />
                     <div id="recaptcha-container"></div>
-                    
+
                     {resetMessage && (
                       <div style={{
                         padding: '10px',
@@ -904,7 +833,7 @@ function Login() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       style={{ marginBottom: '15px' }}
                     />
-                    
+
                     {resetMessage && (
                       <div style={{
                         padding: '10px',
@@ -969,9 +898,9 @@ function Login() {
             {/* 보안 질문 방법 */}
             {resetMethod === 'security' && (
               <div>
-                <p style={{ 
-                  margin: '0 0 20px 0', 
-                  fontSize: '14px', 
+                <p style={{
+                  margin: '0 0 20px 0',
+                  fontSize: '14px',
                   color: '#666',
                   lineHeight: '1.5',
                   textAlign: 'center'
@@ -989,7 +918,7 @@ function Login() {
                       onChange={(e) => setSecurityEmail(e.target.value)}
                       style={{ marginBottom: '15px' }}
                     />
-                    
+
                     {resetMessage && (
                       <div style={{
                         padding: '10px',
@@ -1049,10 +978,10 @@ function Login() {
                   <form onSubmit={handleVerifySecurityAnswers}>
                     {securityQuestions.map((question, index) => (
                       <div key={index} style={{ marginBottom: '15px' }}>
-                        <label style={{ 
-                          display: 'block', 
-                          marginBottom: '5px', 
-                          fontSize: '14px', 
+                        <label style={{
+                          display: 'block',
+                          marginBottom: '5px',
+                          fontSize: '14px',
                           color: '#333',
                           fontWeight: '500'
                         }}>
@@ -1070,7 +999,7 @@ function Login() {
                         />
                       </div>
                     ))}
-                    
+
                     {resetMessage && (
                       <div style={{
                         padding: '10px',
@@ -1143,7 +1072,7 @@ function Login() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       style={{ marginBottom: '15px' }}
                     />
-                    
+
                     {resetMessage && (
                       <div style={{
                         padding: '10px',
@@ -1200,236 +1129,6 @@ function Login() {
                       </button>
                     </div>
                   </form>
-                )}
-              </div>
-            )}
-
-            {/* 관리자 문의 방법 */}
-            {resetMethod === 'admin' && (
-              <div>
-                <p style={{ 
-                  margin: '0 0 20px 0', 
-                  fontSize: '14px', 
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  관리자에게 직접 문의하여<br />
-                  비밀번호를 재설정합니다.
-                </p>
-
-                {!adminRequestId ? (
-                  <form onSubmit={handleAdminRequest}>
-                    <Input
-                      type="email"
-                      placeholder="이메일 주소"
-                      value={adminRequest.email}
-                      onChange={(e) => setAdminRequest({...adminRequest, email: e.target.value})}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <Input
-                      type="text"
-                      placeholder="사용자 이름"
-                      value={adminRequest.displayName}
-                      onChange={(e) => setAdminRequest({...adminRequest, displayName: e.target.value})}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <Input
-                      type="tel"
-                      placeholder="휴대폰 번호 (선택사항)"
-                      value={adminRequest.phoneNumber}
-                      onChange={(e) => setAdminRequest({...adminRequest, phoneNumber: e.target.value})}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <textarea
-                      placeholder="비밀번호를 잊어버린 이유"
-                      value={adminRequest.reason}
-                      onChange={(e) => setAdminRequest({...adminRequest, reason: e.target.value})}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        marginBottom: '15px',
-                        minHeight: '80px',
-                        resize: 'vertical'
-                      }}
-                    />
-                    <textarea
-                      placeholder="추가 정보 (선택사항)"
-                      value={adminRequest.additionalInfo}
-                      onChange={(e) => setAdminRequest({...adminRequest, additionalInfo: e.target.value})}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        marginBottom: '15px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
-                    
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('접수') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('접수') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('접수') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowForgotPassword(false);
-                          setAdminRequest({
-                            email: '',
-                            displayName: '',
-                            phoneNumber: '',
-                            reason: '',
-                            additionalInfo: ''
-                          });
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        취소
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={adminLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: adminLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: adminLoading ? 0.7 : 1
-                        }}
-                      >
-                        {adminLoading ? '접수 중...' : '문의 접수'}
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div>
-                    <div style={{
-                      padding: '15px',
-                      marginBottom: '20px',
-                      borderRadius: '8px',
-                      backgroundColor: '#e3f2fd',
-                      border: '1px solid #bbdefb'
-                    }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: '#1976d2' }}>요청 접수 완료</h4>
-                      <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#333' }}>
-                        요청 ID: <strong>{adminRequestId}</strong>
-                      </p>
-                      <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
-                        관리자 검토 후 연락드리겠습니다.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleCheckRequestStatus}
-                      disabled={adminLoading}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        background: 'white',
-                        color: '#666',
-                        cursor: adminLoading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        marginBottom: '15px',
-                        opacity: adminLoading ? 0.7 : 1
-                      }}
-                    >
-                      {adminLoading ? '확인 중...' : '요청 상태 확인'}
-                    </button>
-
-                    {adminRequestStatus && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: '#fff3cd',
-                        color: '#856404',
-                        border: '1px solid #ffeaa7'
-                      }}>
-                        상태: {adminRequestStatus}
-                      </div>
-                    )}
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('상태') ? '#fff3cd' : '#f8d7da',
-                        color: resetMessage.includes('상태') ? '#856404' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('상태') ? '#ffeaa7' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setAdminRequestId('');
-                        setAdminRequestStatus('');
-                        setAdminRequest({
-                          email: '',
-                          displayName: '',
-                          phoneNumber: '',
-                          reason: '',
-                          additionalInfo: ''
-                        });
-                        setResetMessage('');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: '#e46262',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                    >
-                      닫기
-                    </button>
-                  </div>
                 )}
               </div>
             )}

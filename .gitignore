@@ -19,6 +19,7 @@ android/app/build/
 android/.gradle/
 android/.idea/
 android/build/
+android/app/src/main/assets/public/
 
 # Firebase cache
 .firebase/
