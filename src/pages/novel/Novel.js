@@ -227,20 +227,20 @@ const ProgressBar = styled.div`
 const CreateButton = styled.button`
   width: 100%;
   background-color: ${({ children, completed, theme }) => {
-        if (children === '일기 채우기') return '#F5F6FA'; // 연회색
-        if (children === '소설 만들기') return '#f5f5f5';
+        if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
+        if (children === '소설 만들기') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
   color: ${({ children, completed, theme }) => {
-        if (children === '일기 채우기') return '#868E96';
-        if (children === '소설 만들기') return '#e07e7e';
+        if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
+        if (children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
   border: ${({ children, theme }) => {
-        if (children === '일기 채우기') return '2px solid #868E96';
-        if (children === '소설 만들기') return '2px solid #e07e7e';
+        if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
+        if (children === '소설 만들기') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
         return 'none';
     }};
@@ -256,12 +256,15 @@ const CreateButton = styled.button`
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
     background-color: ${({ children, theme }) => {
-        if (children === '일기 채우기') return '#E9ECEF';
-        if (children === '소설 만들기') return '#C3CAD6'; // hover 저채도 블루
+        if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
+        if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
-    color: #fff;
+    color: ${({ children, theme }) => {
+        if (children === '일기 채우기' || children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
+        return '#fff';
+    }};
     opacity: 0.96;
   }
 `;
