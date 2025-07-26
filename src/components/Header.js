@@ -102,8 +102,23 @@ const Header = ({ user, rightActions, title }) => {
       navigate('/diaries');
     } else if (location.pathname === '/write' || location.pathname.startsWith('/write')) {
       navigate('/diaries');
+    } else if (location.pathname === '/novel/create') {
+      navigate('/novel');
+    } else if (location.pathname.startsWith('/novel/') && location.pathname !== '/novel') {
+      // URL에 userId 쿼리 파라미터가 있으면 친구 소설 목록으로 이동
+      const urlParams = new URLSearchParams(location.search);
+      const userId = urlParams.get('userId');
+      if (userId) {
+        navigate(`/friend-novels?userId=${userId}`);
+      } else {
+        // 소설 보기 페이지에서 뒤로가기 시 소설 홈으로 이동
+        navigate('/novel');
+      }
     } else if (location.pathname === '/novel') {
       navigate('/');
+    } else if (location.pathname === '/friend-novels') {
+      // 친구 소설 목록에서 뒤로가기 시 친구 페이지로 이동
+      navigate('/my/friend');
     } else if (location.pathname === '/my') {
       navigate('/');
     } else if (location.pathname === '/novels') {
