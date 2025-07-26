@@ -60,6 +60,10 @@ const Tab = styled.button.attrs({
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 `;
 
 const TabContent = styled.div`
@@ -188,15 +192,15 @@ const SearchButton = styled.button`
     cursor: not-allowed;
   }
 `;
-
+/* 유저카드 */
 const UserCard = styled(motion.div)`
   background: ${({ theme }) => theme.background};
   border-radius: 12px;
   padding: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
   transition: all 0.2s ease;
 
@@ -270,8 +274,8 @@ const ActionButton = styled.button`
   padding: 8px;
   border: none;
   border-radius: 10px;
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 600;
   font-family: system-ui, sans-serif;
   cursor: pointer;
   transition: all 0.2s;
@@ -282,7 +286,7 @@ const ActionButton = styled.button`
   width: 90px;
   height: 42px;
   justify-content: center;
-  margin-left: auto;
+//   margin-left: auto;
   box-sizing: border-box;
 
   &.primary {
@@ -331,8 +335,8 @@ const ActionButton = styled.button`
 const StatusBadge = styled.span`
   padding: 8px;
   border-radius: 10px;
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 600;
   font-family: system-ui, sans-serif;
   margin-left: auto;
   display: flex;
@@ -396,42 +400,61 @@ const RequestCount = styled.span`
   background: #e74c3c;
   color: white;
   border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 12px;
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
   font-weight: 600;
-  margin-left: 8px;
-  min-width: 18px;
-  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 `;
 
 const ActionRow = styled.div`
   display: flex;
-  gap: 12px;
-  margin-left: auto;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
 `;
 
 const RejectButton = styled(ActionButton)`
-  width: 50px;
-  height: 42px;
   background: none !important;
   color: #e74c3c !important;
-  border: 1px solid #e74c3c !important;
-  box-shadow: none;
+  border: none !important;
+  box-shadow: none !important;
+  width: 60px !important;
+  padding: 8px 12px !important;
   &:hover {
-    background: #fff0f0 !important;
+    background: none !important;
+    color: #c0392b !important;
   }
 `;
 
-const AcceptButton = styled(ActionButton)`
-  flex: 1 1 0;
+const AcceptButton = styled.button`
+  background: #e46262;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  width: 150px;
   height: 42px;
-  background: #e46262 !important;
-  color: #fff !important;
+  box-sizing: border-box;
+  
   &:hover {
-    background: #d45555 !important;
+    background: #d45555;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
@@ -878,7 +901,7 @@ function Friend({ user }) {
                         <UserInfo>
                             <UserAvatar
                                 src={
-                                    request.fromUser.photoURL &&
+                                    request.fromUser?.photoURL &&
                                         typeof request.fromUser.photoURL === 'string' &&
                                         request.fromUser.photoURL.trim() !== '' &&
                                         request.fromUser.photoURL !== 'null' &&
@@ -886,17 +909,17 @@ function Friend({ user }) {
                                         ? request.fromUser.photoURL
                                         : '/default-profile.svg'
                                 }
-                                alt={request.fromUser.displayName}
+                                alt={request.fromUser?.displayName || '사용자'}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
-                                    {request.fromUser.displayName || '사용자'}
+                                    {request.fromUser?.displayName || '사용자'}
                                 </UserName>
                                 <UserEmail 
                                     theme={theme} 
-                                    title={request.fromUser.email}
+                                    title={request.fromUser?.email || ''}
                                 >
-                                    {request.fromUser.email}
+                                    {request.fromUser?.email || ''}
                                 </UserEmail>
                             </UserDetails>
                         </UserInfo>
@@ -938,7 +961,7 @@ function Friend({ user }) {
                         <UserInfo>
                             <UserAvatar
                                 src={
-                                    request.toUser.photoURL &&
+                                    request.toUser?.photoURL &&
                                         typeof request.toUser.photoURL === 'string' &&
                                         request.toUser.photoURL.trim() !== '' &&
                                         request.toUser.photoURL !== 'null' &&
@@ -946,17 +969,17 @@ function Friend({ user }) {
                                         ? request.toUser.photoURL
                                         : '/default-profile.svg'
                                 }
-                                alt={request.toUser.displayName}
+                                alt={request.toUser?.displayName || '사용자'}
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
-                                    {request.toUser.displayName || '사용자'}
+                                    {request.toUser?.displayName || '사용자'}
                                 </UserName>
                                 <UserEmail 
                                     theme={theme} 
-                                    title={request.toUser.email}
+                                    title={request.toUser?.email || ''}
                                 >
-                                    {request.toUser.email}
+                                    {request.toUser?.email || ''}
                                 </UserEmail>
                             </UserDetails>
                         </UserInfo>

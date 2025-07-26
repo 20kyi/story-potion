@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth } from './firebase';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
+import { auth, db } from './firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -46,6 +47,8 @@ import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
 import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
 import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
 import './utils/adminAuth'; // 관리자 권한 체크 스크립트 로드
+import './utils/updateGoogleProfileImages'; // 구글 프로필 이미지 업데이트 스크립트 로드
+import './utils/fixGoogleProfiles'; // 구글 프로필 문제 해결 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';
 
 const AppLayout = ({ user, isLoading }) => {
@@ -114,7 +117,54 @@ function App() {
                 if (idToken) {
                     try {
                         const credential = GoogleAuthProvider.credential(idToken);
-                        await signInWithCredential(auth, credential);
+                        const result = await signInWithCredential(auth, credential);
+                        
+                        // 구글 로그인 성공 후 사용자 정보 처리
+                        const user = result.user;
+                        const userRef = doc(db, 'users', user.uid);
+                        const userSnap = await getDoc(userRef);
+                        
+                        if (!userSnap.exists()) {
+                            // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
+                            const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
+                            const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                            
+                            // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
+                            await updateProfile(user, {
+                                displayName: googleDisplayName,
+                                photoURL: googlePhotoURL
+                            });
+                            
+                            await setDoc(userRef, {
+                                email: user.email || '',
+                                displayName: googleDisplayName,
+                                photoURL: googlePhotoURL,
+                                point: 0,
+                                createdAt: new Date()
+                            });
+                        } else {
+                            const userData = userSnap.data();
+                            if (userData.status === '정지') {
+                                console.error('❌ 정지된 계정입니다.');
+                                await auth.signOut();
+                                return;
+                            }
+                            
+                            // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
+                            if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
+                                const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                                await updateDoc(userRef, {
+                                    photoURL: googlePhotoURL,
+                                    updatedAt: new Date()
+                                });
+                                
+                                // Firebase Auth도 업데이트
+                                await updateProfile(user, {
+                                    photoURL: googlePhotoURL
+                                });
+                            }
+                        }
+                        
                         console.log('✅ Firebase 로그인 성공');
                     } catch (error) {
                         console.error('❌ Firebase 로그인 실패:', error);

@@ -11,7 +11,7 @@ import {
   signInWithCredential,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import {
   Container, ContentWrapper, FormSection, LogoSection, Logo, Title,
@@ -58,7 +58,54 @@ function Login() {
             console.log('id_token 추출 성공:', idToken);
             try {
               const credential = GoogleAuthProvider.credential(idToken);
-              await signInWithCredential(auth, credential);
+              const result = await signInWithCredential(auth, credential);
+              
+              // 구글 로그인 성공 후 사용자 정보 처리
+              const user = result.user;
+              const userRef = doc(db, 'users', user.uid);
+              const userSnap = await getDoc(userRef);
+              
+              if (!userSnap.exists()) {
+                // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
+                const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
+                const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                
+                // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
+                await updateProfile(user, {
+                  displayName: googleDisplayName,
+                  photoURL: googlePhotoURL
+                });
+                
+                await setDoc(userRef, {
+                  email: user.email || '',
+                  displayName: googleDisplayName,
+                  photoURL: googlePhotoURL,
+                  point: 0,
+                  createdAt: new Date()
+                });
+              } else {
+                const userData = userSnap.data();
+                if (userData.status === '정지') {
+                  setError('정지된 계정입니다. 관리자에게 문의하세요.');
+                  await auth.signOut();
+                  return;
+                }
+                
+                // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
+                if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
+                  const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+                  await updateDoc(userRef, {
+                    photoURL: googlePhotoURL,
+                    updatedAt: new Date()
+                  });
+                  
+                  // Firebase Auth도 업데이트
+                  await updateProfile(user, {
+                    photoURL: googlePhotoURL
+                  });
+                }
+              }
+              
               navigate('/');
             } catch (e) {
               console.error('Firebase 로그인 실패:', e);
@@ -147,19 +194,20 @@ function Login() {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) {
-          // 기본 displayName 설정 (이메일에서 @ 앞부분 사용)
-          const defaultDisplayName = user.email?.split('@')[0] || '사용자';
+          // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
+          const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
+          const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
           
-          // Firebase Auth의 displayName 설정
+          // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
           await updateProfile(user, {
-            displayName: defaultDisplayName,
-            photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
+            displayName: googleDisplayName,
+            photoURL: googlePhotoURL
           });
           
           await setDoc(userRef, {
             email: user.email || '',
-            displayName: defaultDisplayName,
-            photoURL: process.env.PUBLIC_URL + '/default-profile.svg',
+            displayName: googleDisplayName,
+            photoURL: googlePhotoURL,
             point: 0,
             createdAt: new Date()
           });
@@ -169,6 +217,20 @@ function Login() {
             setError('정지된 계정입니다. 관리자에게 문의하세요.');
             await auth.signOut();
             return;
+          }
+          
+          // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
+          if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
+            const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
+            await updateDoc(userRef, {
+              photoURL: googlePhotoURL,
+              updatedAt: new Date()
+            });
+            
+            // Firebase Auth도 업데이트
+            await updateProfile(user, {
+              photoURL: googlePhotoURL
+            });
           }
         }
         navigate('/');
