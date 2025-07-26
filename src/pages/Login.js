@@ -81,7 +81,12 @@ function Login() {
                   displayName: googleDisplayName,
                   photoURL: googlePhotoURL,
                   point: 0,
-                  createdAt: new Date()
+                  createdAt: new Date(),
+                  authProvider: 'google.com',
+                  emailVerified: user.emailVerified || false,
+                  isActive: true,
+                  lastLoginAt: new Date(),
+                  updatedAt: new Date()
                 });
               } else {
                 const userData = userSnap.data();
@@ -96,6 +101,8 @@ function Login() {
                   const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
                   await updateDoc(userRef, {
                     photoURL: googlePhotoURL,
+                    authProvider: 'google.com',
+                    lastLoginAt: new Date(),
                     updatedAt: new Date()
                   });
                   
@@ -209,7 +216,12 @@ function Login() {
             displayName: googleDisplayName,
             photoURL: googlePhotoURL,
             point: 0,
-            createdAt: new Date()
+            createdAt: new Date(),
+            authProvider: 'google.com',
+            emailVerified: user.emailVerified || false,
+            isActive: true,
+            lastLoginAt: new Date(),
+            updatedAt: new Date()
           });
         } else {
           const userData = userSnap.data();
@@ -224,6 +236,8 @@ function Login() {
             const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
             await updateDoc(userRef, {
               photoURL: googlePhotoURL,
+              authProvider: 'google.com',
+              lastLoginAt: new Date(),
               updatedAt: new Date()
             });
             

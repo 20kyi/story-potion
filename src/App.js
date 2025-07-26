@@ -140,7 +140,12 @@ function App() {
                                 displayName: googleDisplayName,
                                 photoURL: googlePhotoURL,
                                 point: 0,
-                                createdAt: new Date()
+                                createdAt: new Date(),
+                                authProvider: 'google.com',
+                                emailVerified: user.emailVerified || false,
+                                isActive: true,
+                                lastLoginAt: new Date(),
+                                updatedAt: new Date()
                             });
                         } else {
                             const userData = userSnap.data();
@@ -155,6 +160,8 @@ function App() {
                                 const googlePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
                                 await updateDoc(userRef, {
                                     photoURL: googlePhotoURL,
+                                    authProvider: 'google.com',
+                                    lastLoginAt: new Date(),
                                     updatedAt: new Date()
                                 });
                                 
@@ -173,12 +180,14 @@ function App() {
             }
         });
 
-        // FCM 푸시 알림 수신 리스너 등록
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-            console.log('푸시 알림 수신:', notification);
-            // TODO: 필요시 Toast 등으로 표시
-            alert(notification.title + '\n' + notification.body);
-        });
+        // FCM 푸시 알림 수신 리스너 등록 (모바일 환경에서만)
+        if (Capacitor.getPlatform() !== 'web') {
+            PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                console.log('푸시 알림 수신:', notification);
+                // TODO: 필요시 Toast 등으로 표시
+                alert(notification.title + '\n' + notification.body);
+            });
+        }
 
         return () => unsubscribe();
     }, []);

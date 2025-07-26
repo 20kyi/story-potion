@@ -38,9 +38,8 @@ import {
 } from '../../utils/updateDefaultProfile';
 import {
   getAllFirestoreUsers,
-  compareAuthAndFirestore,
-  diagnoseUserIssues,
-  findUserByEmail
+  checkAllUserProfiles,
+  fixGoogleUserProfiles
 } from '../../utils/debugUsers';
 import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
 import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc } from 'firebase/firestore';
@@ -531,39 +530,39 @@ function UserManagement({ user }) {
     }
   };
 
-  // 디버깅: Auth와 Firestore 비교
-  const handleCompareAuthAndFirestore = async () => {
+  // 디버깅: 사용자 프로필 상태 확인
+  const handleCheckAllUserProfiles = async () => {
     setLoading(true);
-    setStatus({ type: 'info', message: 'Auth와 Firestore 비교 중...' });
+    setStatus({ type: 'info', message: '사용자 프로필 상태 확인 중...' });
 
     try {
-      const comparison = await compareAuthAndFirestore();
-      setDebugInfo(comparison);
+      const result = await checkAllUserProfiles();
+      setDebugInfo(result);
       setStatus({
         type: 'success',
-        message: `비교 완료: Auth ${comparison.authUsers.length}명, Firestore ${comparison.firestoreUsers.length}명, 누락 ${comparison.missingUsers.length}명`
+        message: result.message
       });
     } catch (error) {
-      setStatus({ type: 'error', message: '비교 실패: ' + error.message });
+      setStatus({ type: 'error', message: '프로필 상태 확인 실패: ' + error.message });
     } finally {
       setLoading(false);
     }
   };
 
-  // 디버깅: 문제 진단
-  const handleDiagnoseIssues = async () => {
+  // 디버깅: 구글 사용자 프로필 복구
+  const handleFixGoogleUserProfiles = async () => {
     setLoading(true);
-    setStatus({ type: 'info', message: '문제 진단 중...' });
+    setStatus({ type: 'info', message: '구글 사용자 프로필 복구 중...' });
 
     try {
-      const diagnosis = await diagnoseUserIssues();
-      setDebugInfo(diagnosis);
+      const result = await fixGoogleUserProfiles();
+      setDebugInfo(result);
       setStatus({
         type: 'success',
-        message: `진단 완료: ${diagnosis.issues.length}개 문제점 발견`
+        message: result.message
       });
     } catch (error) {
-      setStatus({ type: 'error', message: '진단 실패: ' + error.message });
+      setStatus({ type: 'error', message: '구글 사용자 프로필 복구 실패: ' + error.message });
     } finally {
       setLoading(false);
     }
@@ -1151,19 +1150,19 @@ function UserManagement({ user }) {
         <SectionTitle theme={theme}>🔧 디버깅</SectionTitle>
         <div>
           <Button
-            onClick={handleCompareAuthAndFirestore}
+            onClick={handleCheckAllUserProfiles}
             disabled={loading}
             style={{ backgroundColor: '#34495e' }}
           >
-            {loading ? '비교 중...' : 'Auth vs Firestore 비교'}
+            {loading ? '확인 중...' : '사용자 프로필 상태 확인'}
           </Button>
 
           <Button
-            onClick={handleDiagnoseIssues}
+            onClick={handleFixGoogleUserProfiles}
             disabled={loading}
             style={{ backgroundColor: '#8e44ad' }}
           >
-            {loading ? '진단 중...' : '문제 진단'}
+            {loading ? '복구 중...' : '구글 사용자 프로필 복구'}
           </Button>
 
           <Button

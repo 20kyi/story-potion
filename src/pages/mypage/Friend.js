@@ -283,10 +283,9 @@ const ActionButton = styled.button`
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  width: 90px;
   height: 42px;
   justify-content: center;
-//   margin-left: auto;
+  margin-left: auto;
   box-sizing: border-box;
 
   &.primary {
@@ -342,7 +341,6 @@ const StatusBadge = styled.span`
   display: flex;
   align-items: center;
   gap: 6px;
-  width: 90px;
   height: 42px;
   justify-content: center;
   box-sizing: border-box;
@@ -414,7 +412,7 @@ const ActionRow = styled.div`
   display: flex;
   gap: 8px;
   margin-top: 12px;
-  justify-content: flex-end;
+  width: 100%;
 `;
 
 const RejectButton = styled(ActionButton)`
@@ -422,7 +420,7 @@ const RejectButton = styled(ActionButton)`
   color: #e74c3c !important;
   border: none !important;
   box-shadow: none !important;
-  width: 60px !important;
+  flex: 1 !important;
   padding: 8px 12px !important;
   &:hover {
     background: none !important;
@@ -444,7 +442,7 @@ const AcceptButton = styled.button`
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  width: 150px;
+  flex: 4;
   height: 42px;
   box-sizing: border-box;
   
@@ -983,15 +981,14 @@ function Friend({ user }) {
                                 </UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <ActionRow>
-                            <RejectButton
-                                className="danger"
-                                onClick={() => {/* 요청 취소 함수 구현 필요 */ }}
-                                disabled={isLoading}
-                            >
-                                요청 취소
-                            </RejectButton>
-                        </ActionRow>
+                        <RejectButton
+                            className="danger"
+                            onClick={() => {/* 요청 취소 함수 구현 필요 */ }}
+                            disabled={isLoading}
+                            style={{ marginLeft: 'auto' }}
+                        >
+                            요청 취소
+                        </RejectButton>
                     </UserCard>
                 ))
             )}
