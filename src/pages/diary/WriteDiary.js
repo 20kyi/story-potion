@@ -415,6 +415,7 @@ function WriteDiary({ user }) {
     const containerRef = useRef();
     const [currentPoints, setCurrentPoints] = useState(0);
     const [isImageLimitExtended, setIsImageLimitExtended] = useState(false);
+    const [hasExtendedThisSession, setHasExtendedThisSession] = useState(false);
 
     // 스티커 관련 state
     const [stickers, setStickers] = useState([]);
@@ -573,6 +574,17 @@ function WriteDiary({ user }) {
         }
     }, [user]);
 
+    // 페이지를 나갈 때 확장 상태 초기화
+    usePrompt(
+        hasExtendedThisSession && !isEditMode,
+        (location, callback) => {
+            // 확장 상태를 초기화하고 페이지 이동 허용
+            setIsImageLimitExtended(false);
+            setHasExtendedThisSession(false);
+            callback();
+        }
+    );
+
     // 스티커 드래그 앤 드롭 기능
     useEffect(() => {
         const handleMouseMove = (e) => {
@@ -625,6 +637,7 @@ function WriteDiary({ user }) {
             setIsEditMode(true);
             setExistingDiaryId(diaryId);
             setIsImageLimitExtended(!!existingDiary.imageLimitExtended); // 필드 없으면 false
+            setHasExtendedThisSession(false); // 기존 일기 불러올 때는 세션 확장 상태 초기화
         } else {
             // Reset form if no diary exists for the new date
             setDiary({
@@ -642,6 +655,7 @@ function WriteDiary({ user }) {
             setIsEditMode(false);
             setExistingDiaryId(null);
             setIsImageLimitExtended(false);
+            setHasExtendedThisSession(false);
         }
     };
 
@@ -745,10 +759,17 @@ function WriteDiary({ user }) {
         }
     };
 
-    // 사진 한도 확장 함수 (포인트 차감 X, 한도만 확장, 수정 모드면 Firestore에도 반영)
+    // 사진 한도 확장 함수 (포인트 차감 없이 확장만)
     const handleExtendAndEnableImageUpload = async () => {
+        if (currentPoints < 20) {
+            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다. (20포인트 필요)', 'error');
+            return;
+        }
+        
         setIsImageLimitExtended(true);
-        toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
+        setHasExtendedThisSession(true);
+        toast.showToast('사진 한도가 확장되었습니다! 저장 시 20포인트가 차감됩니다.', 'success');
+        
         // 수정 모드라면 Firestore에도 반영
         if (isEditMode && existingDiaryId) {
             try {
@@ -757,6 +778,7 @@ function WriteDiary({ user }) {
                 toast.showToast('확장 상태 저장에 실패했습니다.', 'error');
             }
         }
+        
         // 확장 후 바로 파일 선택창 열기
         document.getElementById('image-upload').click();
     };
@@ -1103,7 +1125,7 @@ function WriteDiary({ user }) {
             return;
         }
         // 사진 한도 확장 시 저장 시점에만 포인트 차감
-        if (isImageLimitExtended) {
+        if (hasExtendedThisSession && !isEditMode) {
             if (currentPoints < 20) {
                 toast.showToast('포인트가 부족하여 사진이 포함된 일기를 저장할 수 없습니다. (사진 한도 확장 20포인트 필요)', 'error');
                 return;
@@ -1171,8 +1193,8 @@ function WriteDiary({ user }) {
                 updatedAt: new Date(),
                 imageLimitExtended: isImageLimitExtended, // 필드 추가
             });
-            // 4. 사진 한도 확장 시 포인트 차감(저장 시점)
-            if (isImageLimitExtended) {
+            // 4. 사진 한도 확장 시 포인트 차감(저장 시점, 새로 작성하는 경우에만)
+            if (hasExtendedThisSession && !isEditMode) {
                 await updateDoc(doc(db, 'users', user.uid), {
                     point: increment(-20)
                 });
