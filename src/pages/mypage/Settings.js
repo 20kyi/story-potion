@@ -3,11 +3,9 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
-import { signOut } from 'firebase/auth';
 import { useTheme } from '../../ThemeContext';
 import notificationTest from '../../utils/notificationTest';
-import { deleteUser } from 'firebase/auth';
-import { deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -25,7 +23,7 @@ const FONT_OPTIONS = [
 
 function Settings() {
     const navigate = useNavigate();
-    const { theme, setThemeMode } = useTheme();
+    const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily } = useTheme();
     const [open, setOpen] = useState({
         notification: false,
         theme: false,
@@ -37,7 +35,6 @@ function Settings() {
         granted: false,
         message: '확인 중...'
     });
-    const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('fontFamily') || 'system-ui, sans-serif');
     const [premiumStatus, setPremiumStatus] = useState({
         isMonthlyPremium: false,
         isYearlyPremium: false,
@@ -46,10 +43,7 @@ function Settings() {
     const [isLoading, setIsLoading] = useState(false);
     const [modal, setModal] = useState(false);
 
-    useEffect(() => {
-        document.body.style.fontFamily = fontFamily;
-        localStorage.setItem('fontFamily', fontFamily);
-    }, [fontFamily]);
+
 
     // 알림 상태 확인
     useEffect(() => {
@@ -228,9 +222,39 @@ function Settings() {
                     </li>
 
                     {/* 테마 */}
-                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/theme-settings')}>
-                            <span>테마</span>
+                    <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
+                        <span>테마</span>
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '14px', color: '#666' }}>
+                                {theme === 'light' ? '라이트' : theme === 'dark' ? '다크' : '시스템'}
+                            </span>
+                            <div
+                                onClick={toggleTheme}
+                                style={{
+                                    width: '50px',
+                                    height: '28px',
+                                    backgroundColor: theme === 'dark' ? '#e46262' : '#ccc',
+                                    borderRadius: '14px',
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.3s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '2px'
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        backgroundColor: 'white',
+                                        borderRadius: '50%',
+                                        transform: theme === 'dark' ? 'translateX(22px)' : 'translateX(0px)',
+                                        transition: 'transform 0.3s ease',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                />
+                            </div>
                         </div>
                     </li>
                     {/* 언어 */}
@@ -315,44 +339,6 @@ function Settings() {
                         )}
                     </li>
                 </ul>
-                <button
-                    className="logout-button"
-                    onClick={async () => {
-                        try {
-                            await signOut(auth);
-                            alert('로그아웃 되었습니다.');
-                        } catch (error) {
-                            alert('로그아웃에 실패했습니다.');
-                        }
-                    }}
-                >
-                    로그아웃
-                </button>
-                <div className="withdraw-link">
-                    <span
-                        onClick={async () => {
-                            if (!window.confirm('정말로 회원 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.')) return;
-                            try {
-                                const user = auth.currentUser;
-                                if (!user) throw new Error('로그인이 필요합니다.');
-                                // Firestore user document 삭제
-                                await deleteDoc(doc(db, 'users', user.uid));
-                                // Firebase Auth 계정 삭제
-                                await deleteUser(user);
-                                alert('회원 탈퇴가 완료되었습니다.');
-                                navigate('/');
-                            } catch (error) {
-                                if (error.code === 'auth/requires-recent-login') {
-                                    alert('보안을 위해 다시 로그인 후 탈퇴를 시도해 주세요.');
-                                } else {
-                                    alert('회원 탈퇴에 실패했습니다: ' + error.message);
-                                }
-                            }
-                        }}
-                    >
-                        탈퇴하기
-                    </span>
-                </div>
             </div>
             <Navigation />
         </>
