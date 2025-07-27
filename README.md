@@ -47,6 +47,87 @@ Story Potion은 사용자가 개인적인 일기와 창작 소설을 작성하�
 - npm 또는 yarn
 - Firebase 프로젝트
 
+### 📱 Android 앱 빌드 (선택사항)
+Android 앱을 빌드하려면 다음이 필요합니다:
+
+#### 필수 요구사항
+- **Java JDK 17** (권장) 또는 Java 11
+- **Android Studio** 또는 **Android SDK**
+- **Node.js** 및 **npm**
+
+#### 각 컴퓨터별 설정
+
+##### Windows 환경
+1. **Java 설치 확인**
+   ```bash
+   java -version
+   ```
+
+2. **Android Studio 설치**
+   - [Android Studio 다운로드](https://developer.android.com/studio)
+   - 설치 시 Android SDK 포함하여 설치
+
+3. **환경 변수 설정** (권장)
+   ```powershell
+   # 시스템 환경 변수 설정
+   JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+   ANDROID_HOME = "C:\Users\[사용자명]\AppData\Local\Android\Sdk"
+   ```
+
+##### macOS 환경
+1. **Java 설치**
+   ```bash
+   brew install openjdk@17
+   ```
+
+2. **Android Studio 설치**
+   ```bash
+   brew install --cask android-studio
+   ```
+
+3. **환경 변수 설정**
+   ```bash
+   export JAVA_HOME=/opt/homebrew/opt/openjdk@17
+   export ANDROID_HOME=$HOME/Library/Android/sdk
+   ```
+
+##### Linux 환경
+1. **Java 설치**
+   ```bash
+   sudo apt update
+   sudo apt install openjdk-17-jdk
+   ```
+
+2. **Android Studio 설치**
+   - [Android Studio 다운로드](https://developer.android.com/studio)
+   - 또는 snap 사용: `sudo snap install android-studio --classic`
+
+3. **환경 변수 설정**
+   ```bash
+   export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+   export ANDROID_HOME=$HOME/Android/Sdk
+   ```
+
+#### APK 빌드 명령어
+```bash
+# 기본 APK 빌드
+npm run build:apk
+
+# Firebase 배포 포함
+npm run build:apk:firebase
+
+# 디버그 빌드만
+npm run build:android
+
+# 릴리즈 빌드
+npm run build:android:release
+```
+
+#### 문제 해결
+- **Java 경로를 찾을 수 없는 경우**: `where java` (Windows) 또는 `which java` (macOS/Linux) 명령어로 Java 설치 경로 확인
+- **Android SDK 경로를 찾을 수 없는 경우**: Android Studio에서 SDK Manager 확인
+- **빌드 오류 발생 시**: `npm run build:apk` 명령어가 자동으로 Java 경로를 탐지하고 설정합니다
+
 ### 설치 방법
 
 1. **저장소 클론**
