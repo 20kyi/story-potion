@@ -6,7 +6,6 @@ import { useTheme } from '../../ThemeContext';
 import { auth, storage } from '../../firebase';
 import { ref, listAll, getMetadata, deleteObject } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const Container = styled.div`
   display: flex;
@@ -105,403 +104,245 @@ function AppInfo({ user }) {
   const [storageUsed, setStorageUsed] = useState('0 MB');
   const [cacheSize, setCacheSize] = useState('0 MB');
 
+  // 저장공간 사용량 계산 (localStorage, sessionStorage, IndexedDB, Firebase 캐시 포함)
+  const calculateStorage = async () => {
+    let totalSize = 0;
+    
+    // Capacitor 앱 환경인지 확인
+    const isApp = Capacitor.getPlatform() !== 'web';
+    
+    // 1. localStorage 크기 계산
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        totalSize += localStorage[key].length * 2; // UTF-16 characters
+      }
+    }
+    
+    // 2. sessionStorage 크기 계산
+    for (let key in sessionStorage) {
+      if (sessionStorage.hasOwnProperty(key)) {
+        totalSize += sessionStorage[key].length * 2;
+      }
+    }
+    
+    // 3. IndexedDB 크기 계산 (가능한 경우)
+    try {
+      if ('indexedDB' in window) {
+        const db = await indexedDB.open('firebaseLocalStorageDb');
+        if (db.result) {
+          // IndexedDB 크기는 정확히 측정하기 어려우므로 추정값 사용
+          totalSize += 1024 * 1024; // 1MB 추정
+        }
+      }
+    } catch (error) {
+      console.log('IndexedDB 크기 계산 실패:', error);
+    }
+    
+    // 4. Firebase Storage 사용량 계산 (사용자가 업로드한 파일들)
+    try {
+      if (user?.uid) {
+        // 사용자의 일기 이미지들
+        const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
+        const diaryImages = await listAll(diaryImagesRef);
+        
+        for (const item of diaryImages.items) {
+          try {
+            const metadata = await getMetadata(item);
+            totalSize += metadata.size || 0;
+          } catch (error) {
+            console.log('이미지 메타데이터 조회 실패:', error);
+          }
+        }
+        
+        // 사용자의 프로필 이미지
+        const profileImageRef = ref(storage, `profile-images/${user.uid}`);
+        try {
+          const profileImages = await listAll(profileImageRef);
+          for (const item of profileImages.items) {
+            try {
+              const metadata = await getMetadata(item);
+              totalSize += metadata.size || 0;
+            } catch (error) {
+              console.log('프로필 이미지 메타데이터 조회 실패:', error);
+            }
+          }
+        } catch (error) {
+          console.log('프로필 이미지 폴더 조회 실패:', error);
+        }
+      }
+    } catch (error) {
+      console.log('Firebase Storage 크기 계산 실패:', error);
+    }
+    
+    // 5. Firebase 캐시 크기 추정
+    try {
+      // Firebase 캐시는 보통 몇 MB 정도
+      totalSize += 2 * 1024 * 1024; // 2MB 추정
+    } catch (error) {
+      console.log('Firebase 캐시 크기 계산 실패:', error);
+    }
+    
+    // 6. 브라우저 캐시 크기 추정
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        let cacheSize = 0;
+        for (const cacheName of cacheNames) {
+          const cache = await caches.open(cacheName);
+          const requests = await cache.keys();
+          // 각 캐시된 리소스의 크기를 추정 (평균 50KB)
+          cacheSize += requests.length * 50 * 1024;
+        }
+        totalSize += cacheSize;
+      }
+    } catch (error) {
+      console.log('브라우저 캐시 크기 계산 실패:', error);
+    }
+    
+    // 7. 앱 환경에서 추가 크기 추정
+    if (isApp) {
+      totalSize += 3 * 1024 * 1024; // 앱 환경에서 추가 3MB 추정
+    }
+    
+    setStorageUsed(`${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+  };
+
+  // 캐시 크기 계산
+  const calculateCacheSize = async () => {
+    let cacheSize = 0;
+    
+    // Capacitor 앱 환경인지 확인
+    const isApp = Capacitor.getPlatform() !== 'web';
+    
+    if (isApp) {
+      // 앱 환경에서는 추정값 사용
+      cacheSize = 1.5 * 1024 * 1024; // 1.5MB 추정
+    } else {
+      // 웹 환경 캐시 크기 계산
+      try {
+        // 브라우저 캐시 크기 계산
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            const cache = await caches.open(cacheName);
+            const requests = await cache.keys();
+            // 각 캐시된 리소스의 크기를 추정 (평균 50KB)
+            cacheSize += requests.length * 50 * 1024;
+          }
+        }
+        
+        // Firebase 캐시 크기 추정
+        cacheSize += 1.5 * 1024 * 1024; // 1.5MB 추정
+        
+      } catch (error) {
+        console.log('캐시 크기 계산 실패:', error);
+        cacheSize = 1.5 * 1024 * 1024; // 기본값
+      }
+    }
+    
+    setCacheSize(`${(cacheSize / 1024 / 1024).toFixed(2)} MB`);
+  };
+
   useEffect(() => {
     // 앱 버전 정보 가져오기 (실제로는 package.json에서 가져올 수 있음)
     setAppVersion('1.0.0');
     
-    // 저장공간 사용량 계산 (localStorage, sessionStorage, IndexedDB, Firebase 캐시 포함)
-    const calculateStorage = async () => {
-      let totalSize = 0;
-      
-      // Capacitor 앱 환경인지 확인
-      const isApp = Capacitor.getPlatform() !== 'web';
-      
-      if (isApp) {
-        // 안드로이드/iOS 앱 환경
-        try {
-          // 1. 앱 데이터 디렉토리 크기 계산
-          const dataDir = await Filesystem.getUri({
-            directory: Directory.Data
-          });
-          
-          // 2. 캐시 디렉토리 크기 계산
-          const cacheDir = await Filesystem.getUri({
-            directory: Directory.Cache
-          });
-          
-          // 3. 문서 디렉토리 크기 계산
-          const documentsDir = await Filesystem.getUri({
-            directory: Directory.Documents
-          });
-          
-          // 각 디렉토리의 파일들을 읽어서 크기 계산
-          const directories = [
-            { path: dataDir.uri, name: 'Data' },
-            { path: cacheDir.uri, name: 'Cache' },
-            { path: documentsDir.uri, name: 'Documents' }
-          ];
-          
-          for (const dir of directories) {
-            try {
-              const files = await Filesystem.readdir({
-                path: dir.path,
-                directory: Directory.Data
-              });
-              
-              for (const file of files.files) {
-                try {
-                  const stat = await Filesystem.stat({
-                    path: file,
-                    directory: Directory.Data
-                  });
-                  totalSize += stat.size || 0;
-                } catch (error) {
-                  console.log(`${dir.name} 디렉토리 파일 크기 계산 실패:`, error);
-                }
-              }
-            } catch (error) {
-              console.log(`${dir.name} 디렉토리 읽기 실패:`, error);
-            }
-          }
-          
-          // 4. Firebase Storage 사용량 계산 (앱에서도 동일)
-          if (user?.uid) {
-            try {
-              // 사용자의 일기 이미지들
-              const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
-              const diaryImages = await listAll(diaryImagesRef);
-              
-              for (const item of diaryImages.items) {
-                try {
-                  const metadata = await getMetadata(item);
-                  totalSize += metadata.size || 0;
-                } catch (error) {
-                  console.log('이미지 메타데이터 조회 실패:', error);
-                }
-              }
-              
-              // 사용자의 프로필 이미지
-              const profileImageRef = ref(storage, `profile-images/${user.uid}`);
-              try {
-                const profileImages = await listAll(profileImageRef);
-                for (const item of profileImages.items) {
-                  try {
-                    const metadata = await getMetadata(item);
-                    totalSize += metadata.size || 0;
-                  } catch (error) {
-                    console.log('프로필 이미지 메타데이터 조회 실패:', error);
-                  }
-                }
-              } catch (error) {
-                console.log('프로필 이미지 폴더 조회 실패:', error);
-              }
-            } catch (error) {
-              console.log('Firebase Storage 크기 계산 실패:', error);
-            }
-          }
-          
-          // 5. 앱 캐시 크기 추정
-          totalSize += 3 * 1024 * 1024; // 3MB 추정
-          
-        } catch (error) {
-          console.log('앱 저장공간 계산 실패:', error);
-          // 실패 시 기본값 설정
-          totalSize = 5 * 1024 * 1024; // 5MB 기본값
-        }
-        
-      } else {
-        // 웹 환경 (기존 로직)
-        // 1. localStorage 크기 계산
-        for (let key in localStorage) {
-          if (localStorage.hasOwnProperty(key)) {
-            totalSize += localStorage[key].length * 2; // UTF-16 characters
-          }
-        }
-        
-        // 2. sessionStorage 크기 계산
-        for (let key in sessionStorage) {
-          if (sessionStorage.hasOwnProperty(key)) {
-            totalSize += sessionStorage[key].length * 2;
-          }
-        }
-        
-        // 3. IndexedDB 크기 계산 (가능한 경우)
-        try {
-          if ('indexedDB' in window) {
-            const db = await indexedDB.open('firebaseLocalStorageDb');
-            if (db.result) {
-              // IndexedDB 크기는 정확히 측정하기 어려우므로 추정값 사용
-              totalSize += 1024 * 1024; // 1MB 추정
-            }
-          }
-        } catch (error) {
-          console.log('IndexedDB 크기 계산 실패:', error);
-        }
-        
-        // 4. Firebase Storage 사용량 계산 (사용자가 업로드한 파일들)
-        try {
-          if (user?.uid) {
-            // 사용자의 일기 이미지들
-            const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
-            const diaryImages = await listAll(diaryImagesRef);
-            
-            for (const item of diaryImages.items) {
-              try {
-                const metadata = await getMetadata(item);
-                totalSize += metadata.size || 0;
-              } catch (error) {
-                console.log('이미지 메타데이터 조회 실패:', error);
-              }
-            }
-            
-            // 사용자의 프로필 이미지
-            const profileImageRef = ref(storage, `profile-images/${user.uid}`);
-            try {
-              const profileImages = await listAll(profileImageRef);
-              for (const item of profileImages.items) {
-                try {
-                  const metadata = await getMetadata(item);
-                  totalSize += metadata.size || 0;
-                } catch (error) {
-                  console.log('프로필 이미지 메타데이터 조회 실패:', error);
-                }
-              }
-            } catch (error) {
-              console.log('프로필 이미지 폴더 조회 실패:', error);
-            }
-          }
-        } catch (error) {
-          console.log('Firebase Storage 크기 계산 실패:', error);
-        }
-        
-        // 5. Firebase 캐시 크기 추정
-        try {
-          // Firebase 캐시는 보통 몇 MB 정도
-          totalSize += 2 * 1024 * 1024; // 2MB 추정
-        } catch (error) {
-          console.log('Firebase 캐시 크기 계산 실패:', error);
-        }
-        
-        // 6. 브라우저 캐시 크기 추정
-        try {
-          if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            let cacheSize = 0;
-            for (const cacheName of cacheNames) {
-              const cache = await caches.open(cacheName);
-              const requests = await cache.keys();
-              // 각 캐시된 리소스의 크기를 추정 (평균 50KB)
-              cacheSize += requests.length * 50 * 1024;
-            }
-            totalSize += cacheSize;
-          }
-        } catch (error) {
-          console.log('브라우저 캐시 크기 계산 실패:', error);
-        }
-      }
-      
-      setStorageUsed(`${(totalSize / 1024 / 1024).toFixed(2)} MB`);
-    };
-    
-    // 6. 캐시 크기 계산 (실제 캐시 크기)
-    const calculateCacheSize = async () => {
-      let cacheSize = 0;
-      
-      // Capacitor 앱 환경인지 확인
-      const isApp = Capacitor.getPlatform() !== 'web';
-      
-      if (isApp) {
-        // 안드로이드/iOS 앱 환경
-        try {
-          // 앱 캐시 디렉토리 크기 계산
-          const cacheDir = await Filesystem.getUri({
-            directory: Directory.Cache
-          });
-          
-          try {
-            const files = await Filesystem.readdir({
-              path: cacheDir.uri,
-              directory: Directory.Cache
-            });
-            
-            for (const file of files.files) {
-              try {
-                const stat = await Filesystem.stat({
-                  path: file,
-                  directory: Directory.Cache
-                });
-                cacheSize += stat.size || 0;
-              } catch (error) {
-                console.log('캐시 파일 크기 계산 실패:', error);
-              }
-            }
-          } catch (error) {
-            console.log('캐시 디렉토리 읽기 실패:', error);
-          }
-          
-          // Firebase 캐시 크기 추정
-          cacheSize += 1.5 * 1024 * 1024; // 1.5MB 추정
-          
-          setCacheSize(`${(cacheSize / 1024 / 1024).toFixed(2)} MB`);
-        } catch (error) {
-          console.log('앱 캐시 크기 계산 실패:', error);
-          setCacheSize('3.0 MB'); // 기본값
-        }
-      } else {
-        // 웹 환경 (기존 로직)
-        try {
-          // 브라우저 캐시 크기
-          if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            for (const cacheName of cacheNames) {
-              const cache = await caches.open(cacheName);
-              const requests = await cache.keys();
-              // 각 캐시된 리소스의 크기를 추정
-              cacheSize += requests.length * 50 * 1024; // 평균 50KB
-            }
-          }
-          
-          // Firebase 캐시 크기 추정
-          cacheSize += 1.5 * 1024 * 1024; // 1.5MB 추정
-          
-          setCacheSize(`${(cacheSize / 1024 / 1024).toFixed(2)} MB`);
-        } catch (error) {
-          console.log('캐시 크기 계산 실패:', error);
-          setCacheSize('2.5 MB'); // 기본값
-        }
-      }
-    };
-    
+    // 저장공간 사용량과 캐시 크기 계산
     calculateStorage();
     calculateCacheSize();
-  }, []);
+  }, [user?.uid]);
 
+  // 캐시 삭제
   const handleClearCache = async () => {
-    if (window.confirm('캐시를 삭제하시겠습니까?')) {
-      const deleteStorageFiles = window.confirm('업로드된 이미지 파일들도 함께 삭제하시겠습니까?\n(이 작업은 되돌릴 수 없습니다)');
-      
+    try {
       // Capacitor 앱 환경인지 확인
       const isApp = Capacitor.getPlatform() !== 'web';
       
-      try {
-        if (isApp) {
-          // 안드로이드/iOS 앱 환경
-          // 1. 앱 캐시 디렉토리 삭제
-          try {
-            const cacheDir = await Filesystem.getUri({
-              directory: Directory.Cache
-            });
-            
-            const files = await Filesystem.readdir({
-              path: cacheDir.uri,
-              directory: Directory.Cache
-            });
-            
-            for (const file of files.files) {
-              try {
-                await Filesystem.deleteFile({
-                  path: file,
-                  directory: Directory.Cache
-                });
-              } catch (error) {
-                console.log('캐시 파일 삭제 실패:', error);
-              }
-            }
-          } catch (error) {
-            console.log('앱 캐시 삭제 실패:', error);
-          }
-          
-          // 2. 앱 데이터 디렉토리 정리 (선택적)
-          try {
-            const dataDir = await Filesystem.getUri({
-              directory: Directory.Data
-            });
-            
-            const files = await Filesystem.readdir({
-              path: dataDir.uri,
-              directory: Directory.Data
-            });
-            
-            for (const file of files.files) {
-              // 임시 파일이나 캐시 파일만 삭제
-              if (file.includes('temp') || file.includes('cache')) {
-                try {
-                  await Filesystem.deleteFile({
-                    path: file,
-                    directory: Directory.Data
-                  });
-                } catch (error) {
-                  console.log('데이터 파일 삭제 실패:', error);
-                }
-              }
-            }
-          } catch (error) {
-            console.log('앱 데이터 정리 실패:', error);
-          }
-          
-        } else {
-          // 웹 환경 (기존 로직)
-          // 1. localStorage 삭제
-          localStorage.clear();
-          
-          // 2. sessionStorage 삭제
-          sessionStorage.clear();
-          
-          // 3. 브라우저 캐시 삭제
-          if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            await Promise.all(
-              cacheNames.map(cacheName => caches.delete(cacheName))
-            );
-          }
-          
-          // 4. IndexedDB 삭제 (Firebase 관련)
-          if ('indexedDB' in window) {
-            try {
-              indexedDB.deleteDatabase('firebaseLocalStorageDb');
-            } catch (error) {
-              console.log('IndexedDB 삭제 실패:', error);
-            }
-          }
-        }
-        
-        // 5. Firebase Storage 파일 삭제 (선택적)
-        if (deleteStorageFiles && user?.uid) {
-          try {
-            // 일기 이미지들 삭제
-            const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
-            const diaryImages = await listAll(diaryImagesRef);
-            await Promise.all(
-              diaryImages.items.map(item => deleteObject(item))
-            );
-            
-            // 프로필 이미지 삭제
-            const profileImageRef = ref(storage, `profile-images/${user.uid}`);
-            try {
-              const profileImages = await listAll(profileImageRef);
-              await Promise.all(
-                profileImages.items.map(item => deleteObject(item))
-              );
-            } catch (error) {
-              console.log('프로필 이미지 삭제 실패:', error);
-            }
-          } catch (error) {
-            console.log('Firebase Storage 파일 삭제 실패:', error);
-          }
-        }
-        
-        // 6. 상태 업데이트
-        setCacheSize('0 MB');
-        setStorageUsed('0 MB');
-        
-        const message = deleteStorageFiles 
-          ? '캐시와 업로드된 파일들이 성공적으로 삭제되었습니다.'
-          : '캐시가 성공적으로 삭제되었습니다.';
-        alert(message);
-      } catch (error) {
-        console.error('캐시 삭제 실패:', error);
-        alert('캐시 삭제 중 오류가 발생했습니다.');
+      if (isApp) {
+        // 앱 환경에서는 기본적인 캐시만 삭제
+        console.log('앱 환경에서 캐시 삭제');
+        // 앱 환경에서는 제한적인 캐시 삭제만 가능
+        alert('앱 환경에서는 캐시 삭제가 제한적입니다. 앱을 재시작하거나 앱 설정에서 캐시를 삭제해주세요.');
+        return;
       }
+      
+      // 웹 환경 캐시 삭제
+      // 1. localStorage 삭제
+      localStorage.clear();
+      
+      // 2. sessionStorage 삭제
+      sessionStorage.clear();
+      
+      // 3. 브라우저 캐시 삭제
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          await caches.delete(cacheName);
+        }
+      }
+      
+      // 4. IndexedDB 삭제 (Firebase 관련)
+      try {
+        if ('indexedDB' in window) {
+          indexedDB.deleteDatabase('firebaseLocalStorageDb');
+        }
+      } catch (error) {
+        console.log('IndexedDB 삭제 실패:', error);
+      }
+      
+      // 5. Firebase Storage 파일 삭제 (선택사항)
+      const deleteStorageFiles = window.confirm(
+        'Firebase Storage에 업로드된 이미지 파일들도 함께 삭제하시겠습니까?\n\n' +
+        '⚠️ 주의: 이 작업은 되돌릴 수 없습니다!'
+      );
+      
+      if (deleteStorageFiles && user?.uid) {
+        try {
+          // 일기 이미지들 삭제
+          const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
+          const diaryImages = await listAll(diaryImagesRef);
+          
+          for (const item of diaryImages.items) {
+            try {
+              await deleteObject(item);
+              console.log('일기 이미지 삭제 완료:', item.fullPath);
+            } catch (error) {
+              console.log('일기 이미지 삭제 실패:', error);
+            }
+          }
+          
+          // 프로필 이미지들 삭제
+          const profileImageRef = ref(storage, `profile-images/${user.uid}`);
+          try {
+            const profileImages = await listAll(profileImageRef);
+            for (const item of profileImages.items) {
+              try {
+                await deleteObject(item);
+                console.log('프로필 이미지 삭제 완료:', item.fullPath);
+              } catch (error) {
+                console.log('프로필 이미지 삭제 실패:', error);
+              }
+            }
+          } catch (error) {
+            console.log('프로필 이미지 폴더 조회 실패:', error);
+          }
+          
+          alert('Firebase Storage 파일들도 삭제되었습니다.');
+        } catch (error) {
+          console.log('Firebase Storage 파일 삭제 실패:', error);
+          alert('Firebase Storage 파일 삭제 중 오류가 발생했습니다.');
+        }
+      }
+      
+      // 6. 저장공간 사용량 다시 계산
+      await calculateStorage();
+      await calculateCacheSize();
+      
+      alert('캐시가 성공적으로 삭제되었습니다!');
+      
+    } catch (error) {
+      console.error('캐시 삭제 중 오류 발생:', error);
+      alert('캐시 삭제 중 오류가 발생했습니다.');
     }
   };
 
