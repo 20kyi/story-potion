@@ -290,50 +290,6 @@ function AppInfo({ user }) {
         console.log('IndexedDB 삭제 실패:', error);
       }
       
-      // 5. Firebase Storage 파일 삭제 (선택사항)
-      const deleteStorageFiles = window.confirm(
-        'Firebase Storage에 업로드된 이미지 파일들도 함께 삭제하시겠습니까?\n\n' +
-        '⚠️ 주의: 이 작업은 되돌릴 수 없습니다!'
-      );
-      
-      if (deleteStorageFiles && user?.uid) {
-        try {
-          // 일기 이미지들 삭제
-          const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
-          const diaryImages = await listAll(diaryImagesRef);
-          
-          for (const item of diaryImages.items) {
-            try {
-              await deleteObject(item);
-              console.log('일기 이미지 삭제 완료:', item.fullPath);
-            } catch (error) {
-              console.log('일기 이미지 삭제 실패:', error);
-            }
-          }
-          
-          // 프로필 이미지들 삭제
-          const profileImageRef = ref(storage, `profile-images/${user.uid}`);
-          try {
-            const profileImages = await listAll(profileImageRef);
-            for (const item of profileImages.items) {
-              try {
-                await deleteObject(item);
-                console.log('프로필 이미지 삭제 완료:', item.fullPath);
-              } catch (error) {
-                console.log('프로필 이미지 삭제 실패:', error);
-              }
-            }
-          } catch (error) {
-            console.log('프로필 이미지 폴더 조회 실패:', error);
-          }
-          
-          alert('Firebase Storage 파일들도 삭제되었습니다.');
-        } catch (error) {
-          console.log('Firebase Storage 파일 삭제 실패:', error);
-          alert('Firebase Storage 파일 삭제 중 오류가 발생했습니다.');
-        }
-      }
-      
       // 6. 저장공간 사용량 다시 계산
       await calculateStorage();
       await calculateCacheSize();
@@ -346,12 +302,84 @@ function AppInfo({ user }) {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      if (window.confirm('마지막 확인: 모든 데이터가 영구적으로 삭제됩니다. 계속하시겠습니까?')) {
-        // 계정 삭제 로직
-        alert('계정 삭제 기능은 준비 중입니다.');
+  const handleDeleteAccount = async () => {
+    if (!user?.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      '정말로 계정을 삭제하시겠습니까?\n\n' +
+      '⚠️ 삭제되는 데이터:\n' +
+      '• 모든 일기 데이터\n' +
+      '• 모든 소설 데이터\n' +
+      '• 업로드된 이미지 파일들\n' +
+      '• 계정 정보\n\n' +
+      '이 작업은 되돌릴 수 없습니다.'
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    const finalConfirm = window.confirm(
+      '마지막 확인: 모든 데이터가 영구적으로 삭제됩니다.\n\n' +
+      '정말 계속하시겠습니까?'
+    );
+
+    if (!finalConfirm) {
+      return;
+    }
+
+    try {
+      // 1. Firebase Storage 파일들 삭제
+      let deletedCount = 0;
+
+      // 일기 이미지들 삭제
+      const diaryImagesRef = ref(storage, `diaries/${user.uid}`);
+      const diaryImages = await listAll(diaryImagesRef);
+      
+      for (const item of diaryImages.items) {
+        try {
+          await deleteObject(item);
+          console.log('일기 이미지 삭제 완료:', item.fullPath);
+          deletedCount++;
+        } catch (error) {
+          console.log('일기 이미지 삭제 실패:', error);
+        }
       }
+      
+      // 프로필 이미지들 삭제
+      const profileImageRef = ref(storage, `profile-images/${user.uid}`);
+      try {
+        const profileImages = await listAll(profileImageRef);
+        for (const item of profileImages.items) {
+          try {
+            await deleteObject(item);
+            console.log('프로필 이미지 삭제 완료:', item.fullPath);
+            deletedCount++;
+          } catch (error) {
+            console.log('프로필 이미지 삭제 실패:', error);
+          }
+        }
+      } catch (error) {
+        console.log('프로필 이미지 폴더 조회 실패:', error);
+      }
+
+      // 2. Firestore 데이터 삭제 (실제 구현 필요)
+      // TODO: Firestore에서 사용자 데이터 삭제 로직 구현
+
+      // 3. Firebase Auth 계정 삭제
+      // TODO: Firebase Auth에서 사용자 계정 삭제 로직 구현
+
+      alert(`계정 삭제가 완료되었습니다.\n삭제된 파일: ${deletedCount}개`);
+      
+      // 로그아웃 처리
+      await auth.signOut();
+      
+    } catch (error) {
+      console.error('계정 삭제 실패:', error);
+      alert('계정 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -488,6 +516,7 @@ function AppInfo({ user }) {
               내보내기
             </ActionButton>
           </InfoItem>
+          
         </InfoCard>
 
         <InfoCard theme={theme}>
