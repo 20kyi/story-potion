@@ -10,19 +10,263 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 import { getWeeklyDiaryStatus } from '../../utils/weeklyBonus';
 
-
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   padding: 20px;
-//   padding-top: 50px;
   margin: 60px auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
 `;
 
+const Content = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const MonthText = styled.span`
+  font-size: 24px;
+  color: #e46262;
+  font-weight: 500;
+`;
+
+const MonthButton = styled.button`
+  background: none;
+  border: none;
+  color: #df9696;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+`;
+
+const Calendar = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const DayHeader = styled.th`
+  padding: 10px;
+  padding-bottom: 20px;
+  text-align: center;
+  color: #888;
+  font-size: 16px;
+  font-weight: 500;
+`;
+
+const DateCell = styled.td`
+  padding: 0;
+  text-align: center;
+  position: relative;
+  height: 90px;
+  width: 45px;
+`;
+
+const DateButton = styled.button`
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  color: #000;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 14px;
+  
+  &.today {
+    color: #fff;
+    position: relative;
+    z-index: 1;
+  }
+  
+  &.future {
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  
+  &.prev-month {
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+const TodayCircle = styled.div`
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e46262;
+  z-index: -1;
+`;
+
+const ImageContainer = styled.div`
+  margin-top: 2px;
+  line-height: 1;
+  min-height: 28px;
+  min-width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+`;
+
+const DisplayImage = styled.img`
+  width: 24px;
+  height: 24px;
+  margin-bottom: 2px;
+`;
+
+const EmotionStatsContainer = styled.div`
+  margin: 32px 0 20px 0;
+  width: 100%;
+  max-width: 540px;
+  min-height: 40px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+`;
+
+const TopMessage = styled.div`
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  color: #7c6f6f;
+  letter-spacing: -1px;
+  font-family: inherit;
+`;
+
+const EmotionBar = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 38px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #f6f6f6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+`;
+
+const EmotionSegment = styled.div`
+  flex: ${props => props.value} 0 0;
+  background: ${props => props.color};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-top-left-radius: ${props => props.isFirst ? '22px' : '0'};
+  border-bottom-left-radius: ${props => props.isFirst ? '22px' : '0'};
+  border-top-right-radius: ${props => props.isLast ? '22px' : '0'};
+  border-bottom-right-radius: ${props => props.isLast ? '22px' : '0'};
+`;
+
+const EmotionIcon = styled.img`
+  width: 28px;
+  height: 28px;
+  opacity: 0.85;
+`;
+
+const PercentContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-top: 8px;
+`;
+
+const PercentItem = styled.div`
+  flex: ${props => props.value} 0 0;
+  text-align: center;
+  color: ${props => props.color};
+  font-weight: 600;
+  font-size: 17px;
+  opacity: 0.6;
+`;
+
+const PreviewPopup = styled.div`
+  position: fixed;
+  left: ${props => props.left}px;
+  top: ${props => props.top}px;
+  z-index: 2000;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  padding: 16px;
+  min-width: 180px;
+  max-width: 260px;
+  font-size: 13px;
+  width: ${props => props.width}px;
+  max-height: ${props => props.height}px;
+  overflow: auto;
+  transform: none;
+`;
+
+const PreviewHeader = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+`;
+
+const PreviewImage = styled.img`
+  width: 28px;
+  height: 28px;
+`;
+
+const PreviewDiaryImage = styled.img`
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+`;
+
+const PreviewTitle = styled.div`
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 15px;
+`;
+
+const PreviewDate = styled.div`
+  font-weight: 500;
+  color: #888;
+  font-size: 12px;
+  margin-bottom: 4px;
+`;
+
+const PreviewCloseButton = styled.button`
+  margin-top: 6px;
+  font-size: 13px;
+  color: #e46262;
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
 
 
 function Diary({ user }) {
@@ -84,102 +328,7 @@ function Diary({ user }) {
         fetchWeeklyStatus();
     }, [user, currentDate]);
 
-    const styles = {
-        content: {
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            paddingBottom: '80px',
-        },
-        calendarHeader: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            // marginTop: '20px',
-            marginBottom: '20px'
-        },
-        monthText: {
-            fontSize: '24px',
-            color: '#e46262',
-            fontWeight: '500'
-        },
-        monthButton: {
-            background: 'none',
-            border: 'none',
-            color: '#df9696',
-            fontSize: '20px',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '50%',
-            width: '36px',
-            height: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease'
-        },
-        calendar: {
-            width: '100%',
-            borderCollapse: 'collapse'
-        },
-        dayHeader: {
-            padding: '10px',
-            paddingBottom: '20px',
-            textAlign: 'center',
-            color: '#888',
-            fontSize: '16px',
-            fontWeight: '500'
-        },
-        dateCell: {
-            padding: '0',
-            textAlign: 'center',
-            position: 'relative',
-            height: '90px',
-            width: '45px'
-        },
-        dateButton: {
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            position: 'relative',
-            color: '#000',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            fontSize: '14px'
-        },
-        todayButton: {
-            color: '#fff',
-            position: 'relative',
-            zIndex: 1
-        },
-        todayCircle: {
-            content: '""',
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: '#e46262',
-            zIndex: -1
-        },
-        hasDiary: {
-            position: 'absolute',
-            bottom: '4px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '4px',
-            height: '4px',
-            borderRadius: '50%',
-            backgroundColor: '#e46262'
-        }
-    };
+
 
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -252,16 +401,6 @@ function Diary({ user }) {
         angry: '/emotions/angry.png',
         cry: '/emotions/cry.png',
     };
-
-    // // 감정 값 매핑 (그래프용, 값이 클수록 긍정)
-    // const emotionValues = {
-    //     love: 6,
-    //     good: 5,
-    //     normal: 4,
-    //     surprised: 3,
-    //     angry: 2,
-    //     cry: 1
-    // };
 
     // 감정별 색상 매핑
     const emotionBarColors = {
@@ -388,15 +527,15 @@ function Diary({ user }) {
             const date = new Date(year, month - 1, prevMonthDay);
 
             days.push(
-                <td key={`prev-${prevMonthDay}`} style={styles.dateCell}>
-                    <button
-                        style={{ ...styles.dateButton, color: '#ccc', cursor: 'not-allowed', opacity: 0.5 }}
+                <DateCell key={`prev-${prevMonthDay}`}>
+                    <DateButton
+                        className="prev-month"
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
                         <span style={{ color: '#ccc' }}>{prevMonthDay}</span>
-                    </button>
-                </td>
+                    </DateButton>
+                </DateCell>
             );
         }
 
@@ -422,13 +561,9 @@ function Diary({ user }) {
             }
 
             days.push(
-                <td key={`current-${day}`} style={styles.dateCell}>
-                    <button
-                        style={{
-                            ...styles.dateButton,
-                            ...(isToday && styles.todayButton),
-                            ...(future && { color: '#ccc', cursor: 'not-allowed', opacity: 0.5 })
-                        }}
+                <DateCell key={`current-${day}`}>
+                    <DateButton
+                        className={`${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
                         disabled={future}
                         onTouchStart={e => handleDateLongPressStart(date, e)}
@@ -436,13 +571,13 @@ function Diary({ user }) {
                         onTouchCancel={handleDateLongPressEnd}
                     >
                         <span style={{ color: document.body.classList.contains('dark') ? '#fff' : '#000' }}>{day}</span>
-                        {isToday && <div style={styles.todayCircle} />}
+                        {isToday && <TodayCircle />}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
-                        <div style={{ marginTop: '2px', lineHeight: 1, minHeight: '28px', minWidth: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                            {displayImg && <img src={displayImg} alt="대표 이미지" style={{ width: 24, height: 24, marginBottom: 2 }} />}
-                        </div>
-                    </button>
-                </td>
+                        <ImageContainer>
+                            {displayImg && <DisplayImage src={displayImg} alt="대표 이미지" />}
+                        </ImageContainer>
+                    </DateButton>
+                </DateCell>
             );
 
             if (days.length === 7) {
@@ -456,15 +591,15 @@ function Diary({ user }) {
             const date = new Date(year, month + 1, nextMonthDay);
 
             days.push(
-                <td key={`next-${nextMonthDay}`} style={styles.dateCell}>
-                    <button
-                        style={{ ...styles.dateButton, color: '#ccc', cursor: 'not-allowed', opacity: 0.5 }}
+                <DateCell key={`next-${nextMonthDay}`}>
+                    <DateButton
+                        className="prev-month"
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
                         <span style={{ color: '#ccc' }}>{nextMonthDay}</span>
-                    </button>
-                </td>
+                    </DateButton>
+                </DateCell>
             );
             nextMonthDay++;
         }
@@ -479,33 +614,33 @@ function Diary({ user }) {
     return (
         <Container>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="일기" />
-            <div style={styles.content}>
-                <div style={styles.calendarHeader}>
-                    <button style={styles.monthButton} onClick={handlePrevMonth}>&lt;</button>
-                    <span style={styles.monthText}>{formatMonth(currentDate)}</span>
-                    <button style={styles.monthButton} onClick={handleNextMonth}>&gt;</button>
-                </div>
-                <table style={styles.calendar}>
+            <Content>
+                <CalendarHeader>
+                    <MonthButton onClick={handlePrevMonth}>&lt;</MonthButton>
+                    <MonthText>{formatMonth(currentDate)}</MonthText>
+                    <MonthButton onClick={handleNextMonth}>&gt;</MonthButton>
+                </CalendarHeader>
+                <Calendar>
                     <thead>
                         <tr>
                             {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                                <th key={day} style={styles.dayHeader}>{day}</th>
+                                <DayHeader key={day}>{day}</DayHeader>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {renderCalendar()}
                     </tbody>
-                </table>
+                </Calendar>
 
                 {/* 감정 비율 막대(커스텀) */}
-                <div style={{ margin: '32px 0 0 0', width: '100%', maxWidth: 540, minHeight: 40, position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
+                <EmotionStatsContainer>
                     {/* 상단 문구 */}
-                    <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 500, marginBottom: 18, color: '#7c6f6f', letterSpacing: '-1px', fontFamily: 'inherit' }}>
+                    <TopMessage>
                         {getTopMessage()}
-                    </div>
+                    </TopMessage>
                     {/* 막대 */}
-                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: 38, borderRadius: 22, overflow: 'hidden', background: '#f6f6f6', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                    <EmotionBar>
                         {Object.entries(emotionBarData.percent).map(([emotion, value], idx, arr) => {
                             if (isNaN(value) || value === 0) return null; // 0%는 렌더링하지 않음
                             const emotionKeys = Object.keys(emotionBarData.percent).filter(
@@ -514,42 +649,36 @@ function Diary({ user }) {
                             const isFirst = emotion === emotionKeys[0];
                             const isLast = emotion === emotionKeys[emotionKeys.length - 1];
                             return (
-                                <div key={emotion} style={{
-                                    flex: value + ' 0 0',
-                                    background: emotionBarColors[emotion],
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    position: 'relative',
-                                    borderTopLeftRadius: isFirst ? 22 : 0,
-                                    borderBottomLeftRadius: isFirst ? 22 : 0,
-                                    borderTopRightRadius: isLast ? 22 : 0,
-                                    borderBottomRightRadius: isLast ? 22 : 0
-                                }}>
+                                <EmotionSegment
+                                    key={emotion}
+                                    value={value}
+                                    color={emotionBarColors[emotion]}
+                                    isFirst={isFirst}
+                                    isLast={isLast}
+                                >
                                     {emotion !== 'empty' && value >= 10 && (
-                                        <img src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} style={{ width: 28, height: 28, opacity: 0.85 }} />
+                                        <EmotionIcon src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} />
                                     )}
-                                </div>
+                                </EmotionSegment>
                             );
                         })}
-                    </div>
+                    </EmotionBar>
                     {/* 퍼센트/개수 */}
-                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%', marginTop: 8 }}>
+                    <PercentContainer>
                         {Object.entries(emotionBarData.percent).map(([emotion, value]) => {
                             if (isNaN(value) || value === 0) return null;
                             return (
-                                <div key={emotion} style={{
-                                    flex: value + ' 0 0',
-                                    textAlign: 'center',
-                                    color: emotionBarColors[emotion],
-                                    fontWeight: 600,
-                                    fontSize: 17,
-                                    opacity: 0.6
-                                }}>
+                                <PercentItem
+                                    key={emotion}
+                                    value={value}
+                                    color={emotionBarColors[emotion]}
+                                >
                                     {value}%
-                                </div>
+                                </PercentItem>
                             );
                         })}
-                    </div>
-                </div>
+                    </PercentContainer>
+                </EmotionStatsContainer>
                 {/* 미리보기 팝업은 달력 아래에 그대로 유지 */}
                 {previewDiary && (() => {
                     const popupWidth = 260, popupHeight = 220;
@@ -559,48 +688,32 @@ function Diary({ user }) {
                     if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - 8;
                     if (top < 8) top = 8;
                     return (
-                        <div
-                            style={{
-                                position: 'fixed',
-                                left,
-                                top,
-                                zIndex: 2000,
-                                background: '#fff',
-                                border: '1px solid #eee',
-                                borderRadius: 10,
-                                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-                                padding: 16,
-                                minWidth: 180,
-                                maxWidth: 260,
-                                fontSize: 13,
-                                width: popupWidth,
-                                maxHeight: popupHeight,
-                                overflow: 'auto',
-                                transform: 'none'
-                            }}
+                        <PreviewPopup
+                            left={left}
+                            top={top}
+                            width={popupWidth}
+                            height={popupHeight}
                             onClick={e => e.stopPropagation()}
                         >
                             {/* 감정/날씨 이모티콘 */}
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <PreviewHeader>
                                 {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
-                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" style={{ width: 28, height: 28 }} />
+                                    <PreviewImage src={emotionImageMap[previewDiary.emotion]} alt="감정" />
                                 )}
                                 {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
-                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" style={{ width: 28, height: 28 }} />
+                                    <PreviewImage src={weatherImageMap[previewDiary.weather]} alt="날씨" />
                                 )}
-                            </div>
+                            </PreviewHeader>
                             {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                <img src={previewDiary.imageUrls[0]} alt="일기 이미지" style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                                <PreviewDiaryImage src={previewDiary.imageUrls[0]} alt="일기 이미지" />
                             )}
-                            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 15 }}>{previewDiary.title}</div>
-                            <div style={{ fontWeight: 500, color: '#888', fontSize: 12, marginBottom: 4 }}>
-                                {previewDiary.date}
-                            </div>
-                            <button style={{ marginTop: 6, fontSize: 13, color: '#e46262', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPreviewDiary(null)}>닫기</button>
-                        </div>
+                            <PreviewTitle>{previewDiary.title}</PreviewTitle>
+                            <PreviewDate>{previewDiary.date}</PreviewDate>
+                            <PreviewCloseButton onClick={() => setPreviewDiary(null)}>닫기</PreviewCloseButton>
+                        </PreviewPopup>
                     );
                 })()}
-            </div>
+            </Content>
             <Navigation />
         </Container>
     );
