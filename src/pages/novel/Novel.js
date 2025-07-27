@@ -9,12 +9,12 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+//   min-height: 100vh;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
 //   padding-top: 40px;
-  padding-bottom: 100px;
+//   padding-bottom: 100px;
   margin: 60px auto;
   max-width: 600px;
   overflow-y: auto;
@@ -28,19 +28,13 @@ const Container = styled.div`
 
 const GenreGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
   margin-bottom: 20px;
   gap: 0;
-  max-width: 300px;
+  max-width: 450px;
   margin-left: auto;
   margin-right: auto;
-
-  @media (orientation: landscape) {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    max-width: 450px;
-  }
 `;
 
 const GenreCard = styled.div`
