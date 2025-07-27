@@ -12,6 +12,12 @@ export function ThemeProvider({ children }) {
     // 실제 적용될 테마 (시스템 설정일 때는 시스템 테마를 감지)
     const [actualTheme, setActualTheme] = useState('light');
 
+    // 폰트 패밀리 상태 추가
+    const [fontFamily, setFontFamily] = useState(() => {
+        const saved = localStorage.getItem('fontFamily');
+        return saved ? saved : 'system-ui, sans-serif';
+    });
+
     // 시스템 테마 감지
     const getSystemTheme = () => {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -46,6 +52,11 @@ export function ThemeProvider({ children }) {
         localStorage.setItem('theme', theme);
     }, [actualTheme, theme]);
 
+    // 폰트 패밀리가 변경될 때 localStorage에 저장
+    useEffect(() => {
+        localStorage.setItem('fontFamily', fontFamily);
+    }, [fontFamily]);
+
     const setThemeMode = (mode) => {
         setTheme(mode);
     };
@@ -55,7 +66,9 @@ export function ThemeProvider({ children }) {
             theme, 
             actualTheme, 
             setThemeMode,
-            toggleTheme: () => setThemeMode(theme === 'light' ? 'dark' : 'light')
+            toggleTheme: () => setThemeMode(theme === 'light' ? 'dark' : 'light'),
+            fontFamily,
+            setFontFamily
         }}>
             {children}
         </ThemeContext.Provider>

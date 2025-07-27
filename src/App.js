@@ -35,7 +35,7 @@ import Shop from './pages/mypage/Shop';
 import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
 import { ThemeProvider, useTheme } from './ThemeContext';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
+import { ThemeProvider as StyledThemeProvider, createGlobalStyle } from 'styled-components';
 import { lightTheme, darkTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
@@ -241,10 +241,17 @@ function App() {
     );
 }
 
+const GlobalStyle = createGlobalStyle`
+    * {
+        font-family: ${props => props.fontFamily} !important;
+    }
+`;
+
 function ThemeConsumerWrapper({ children }) {
-    const { actualTheme } = useTheme();
+    const { actualTheme, fontFamily } = useTheme();
     return (
         <StyledThemeProvider theme={actualTheme === 'dark' ? darkTheme : lightTheme}>
+            <GlobalStyle fontFamily={fontFamily} />
             {children}
         </StyledThemeProvider>
     );
