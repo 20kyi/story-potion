@@ -15,6 +15,51 @@ try {
 
     // 3. Android APK 빌드
     console.log('🤖 Android APK 빌드 중...');
+    
+    // JAVA_HOME 설정 - 환경 변수 우선, 없으면 자동 탐지
+    let javaHome = process.env.JAVA_HOME;
+    
+    if (!javaHome) {
+        console.log('🔍 JAVA_HOME 환경 변수가 설정되지 않았습니다. 자동으로 탐지합니다...');
+        
+        // 일반적인 Java 설치 경로들 시도
+        const possiblePaths = [
+            // Android Studio JDK 경로들
+            'C:\\Program Files\\Android\\Android Studio\\jbr',
+            'C:\\Program Files\\Android\\Android Studio\\jre',
+            'C:\\Program Files\\Android\\Android Studio\\jbr\\bin\\java.exe',
+            // 다른 일반적인 Java 경로들
+            'C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.28.6-hotspot',
+            'C:\\Program Files\\Java\\jdk-11',
+            'C:\\Program Files\\Java\\jdk-17',
+            'C:\\Program Files\\Java\\jdk-21',
+            // 사용자별 경로 (현재 사용자)
+            `${process.env.USERPROFILE}\\AppData\\Local\\Android\\Sdk\\jbr`,
+            `${process.env.USERPROFILE}\\AppData\\Local\\Android\\Sdk\\jre`
+        ];
+        
+        for (const path of possiblePaths) {
+            if (require('fs').existsSync(path)) {
+                javaHome = path;
+                console.log(`✅ Java 경로 발견: ${path}`);
+                break;
+            }
+        }
+        
+        if (!javaHome) {
+            console.log('❌ Java 설치 경로를 찾을 수 없습니다.');
+            console.log('💡 해결 방법:');
+            console.log('   1. JAVA_HOME 환경 변수를 설정하세요');
+            console.log('   2. Android Studio 또는 JDK를 설치하세요');
+            console.log('   3. 또는 다음 명령어로 Java 경로를 확인하세요: where java');
+            process.exit(1);
+        }
+    }
+    
+    process.env.JAVA_HOME = javaHome;
+    process.env.PATH = `${javaHome}\\bin;${process.env.PATH}`;
+    console.log(`🔧 JAVA_HOME 설정: ${javaHome}`);
+    
     execSync('cd android && gradlew.bat assembleDebug', { stdio: 'inherit' });
 
     // 4. APK 파일 경로 확인

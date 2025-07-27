@@ -1,0 +1,14 @@
+{
+  "javaPaths": [
+    "C:\\Program Files\\Android\\Android Studio\\jbr",
+    "C:\\Program Files\\Android\\Android Studio\\jre",
+    "C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.28.6-hotspot",
+    "C:\\Program Files\\Java\\jdk-11",
+    "C:\\Program Files\\Java\\jdk-17",
+    "C:\\Program Files\\Java\\jdk-21"
+  ],
+  "androidSdkPaths": [
+    "%USERPROFILE%\\AppData\\Local\\Android\\Sdk",
+    "C:\\Users\\%USERNAME%\\AppData\\Local\\Android\\Sdk"
+  ]
+} 
