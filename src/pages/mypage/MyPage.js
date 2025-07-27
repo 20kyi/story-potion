@@ -44,6 +44,7 @@ import EyeOffIcon from '../../components/icons/EyeOffIcon';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
+import AppInfoIcon from '../../components/icons/AppInfoIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
@@ -880,12 +881,13 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>개인설정</MenuLabel>
               </MenuButton>
-              <MenuButton onClick={() => navigate('/my/notice')}>
+              <MenuButton onClick={() => navigate('/my/shop')}>
                 <MenuIcon as="div">
-                  <NotificationIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>공지사항</MenuLabel>
+                <MenuLabel>상점</MenuLabel>
               </MenuButton>
+
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
                   <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
@@ -898,11 +900,11 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>소셜</MenuLabel>
               </MenuButton>
-              <MenuButton onClick={() => navigate('/my/shop')}>
+              <MenuButton onClick={() => navigate('/my/app-info')}>
                 <MenuIcon as="div">
-                  <CrownIcon color={theme.theme === 'dark' ? '#fff' : '#181725'} />
+                  <AppInfoIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>상점</MenuLabel>
+                <MenuLabel>앱 정보</MenuLabel>
               </MenuButton>
 
 

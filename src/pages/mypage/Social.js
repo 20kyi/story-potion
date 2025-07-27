@@ -4,13 +4,12 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
+import { lightTheme, darkTheme } from '../../theme';
 import { FaShare, FaUsers, FaQrcode, FaHeart } from 'react-icons/fa';
-import './Settings.css'; // 스타일 재사용
 
 const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
-  // min-height: 100vh;
   padding: 20px;
   margin: 60px auto;
   max-width: 600px;
@@ -18,135 +17,68 @@ const MainContainer = styled.div`
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
-  // padding-bottom: 100px;
 `;
 
-// MyPage.js 스타일과 동일하게 MenuGrid, MenuButton, MenuIcon, MenuLabel 재정의
-const MenuGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0px;
-  margin-top: 30px;
-  margin-bottom: 30px;
-  width: 100%;
+const SettingsContainer = styled.div`
+  max-width: 600px;
+  margin: 60px auto;
+  padding: 20px;
+  background: ${({ theme }) => theme.background};
+  min-height: 500px;
 `;
-const MenuButton = styled.button`
+
+const SettingsList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const SettingsItem = styled.li`
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  padding: 18px 0;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  background-color: transparent;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.text};
+  flex-direction: ${props => props.expanded ? 'column' : 'row'};
+  align-items: ${props => props.expanded ? 'stretch' : 'center'};
+  cursor: ${props => props.clickable ? 'pointer' : 'default'};
+  padding-bottom: 18px;
+  font-family: inherit;
+`;
+
+const ItemTitle = styled.span`
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.text};
+  font-family: inherit;
+`;
+
+const ItemDescription = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  font-weight: 400;
+  font-family: inherit;
+`;
+
+const ActionButton = styled.button`
+  padding: 6px 16px;
+  background: #e46262;
+  color: white;
   border: none;
-  border-radius: 12px;
-  padding: 15px 10px;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-left: 12px;
   cursor: pointer;
+  font-weight: 400;
   font-family: inherit;
   transition: background-color 0.2s;
-  &:hover {
-    background-color: ${({ theme }) => theme.menuHover};
-  }
-`;
-const MenuIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-const MenuLabel = styled.span`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.menuText};
-  margin-top: 2px;
-`;
-
-const MenuCard = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 18px;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: ${({ theme }) => theme.cardShadow};
-  min-height: 120px;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    background: #cb6565;
   }
-
-  &:active {
-    transform: translateY(-2px);
-  }
-`;
-
-const MenuTitle = styled.div`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  text-align: center;
-  margin-bottom: 4px;
-`;
-
-const MenuDescription = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  text-align: center;
-  line-height: 1.4;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: ${({ theme }) => theme.text};
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const FeatureCard = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: ${({ theme }) => theme.cardShadow};
-  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
-`;
-
-const FeatureHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-`;
-
-const FeatureIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e46262, #cb6565);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
-`;
-
-const FeatureTitle = styled.div`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-`;
-
-const FeatureDescription = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#666'};
-  line-height: 1.5;
 `;
 
 const ComingSoonBadge = styled.span`
@@ -156,29 +88,48 @@ const ComingSoonBadge = styled.span`
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 12px;
-  margin-left: auto;
+  margin-left: 8px;
+  font-family: inherit;
+`;
+
+const ItemContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const ItemDetails = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+`;
+
+const ItemDetailsDescription = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
 `;
 
 function Social() {
   const navigate = useNavigate();
-  const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
         title: 'Story Potion',
         text: '당신의 이야기를 담는 마법의 포션',
-        url: window.location.origin
+        url: 'https://story-potion.web.app'
       });
     } else {
-      navigator.clipboard.writeText(window.location.origin);
+      navigator.clipboard.writeText('https://story-potion.web.app');
       alert('링크가 클립보드에 복사되었습니다!');
     }
   };
 
-  const handleQRCode = () => {
-    alert('QR 코드 기능은 준비 중입니다.');
-  };
+
 
   const handleCommunity = () => {
     alert('커뮤니티 기능은 준비 중입니다.');
@@ -187,40 +138,33 @@ function Social() {
   return (
     <>
       <Header user={null} title="소셜" />
-      <div className="settings-container" style={{ minHeight: 500 }}>
-        <ul className="settings-list">
+      <SettingsContainer theme={theme}>
+        <SettingsList>
           {/* 앱 공유 */}
-          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>앱 공유</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>친구들과 스토리포션을 공유해보세요</span>
-              <button style={{ padding: '6px 16px', background: '#e46262', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, marginLeft: 12, cursor: 'pointer', fontWeight: 400, fontFamily: 'inherit' }} onClick={handleShare}>공유</button>
-            </div>
-          </li>
-          {/* QR 초대 */}
-          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>QR 초대</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>QR 코드로 쉽게 초대하세요</span>
-              <button style={{ padding: '6px 16px', background: '#e46262', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, marginLeft: 12, cursor: 'pointer', fontWeight: 400, fontFamily: 'inherit' }} onClick={handleQRCode}>초대</button>
-            </div>
-          </li>
+          <SettingsItem theme={theme} expanded clickable>
+            <ItemContent>
+              <ItemTitle theme={theme}>앱 공유</ItemTitle>
+            </ItemContent>
+            <ItemDetails>
+              <ItemDescription theme={theme}>친구들과 스토리포션을 공유해보세요</ItemDescription>
+              <ActionButton theme={theme} onClick={handleShare}>공유</ActionButton>
+            </ItemDetails>
+          </SettingsItem>
+          
+
+          
           {/* 커뮤니티 */}
-          <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'default', paddingBottom: 18, fontFamily: 'inherit', fontWeight: 400, fontSize: '1.1rem', color: '#222' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontWeight: 400, fontSize: '1.1rem', color: '#222', fontFamily: 'inherit' }}>커뮤니티</span>
-              <span style={{ background: 'linear-gradient(135deg, #f39c12, #e67e22)', color: 'white', fontSize: 10, fontWeight: 600, padding: '4px 8px', borderRadius: 12, marginLeft: 8, fontFamily: 'inherit' }}>준비중</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', marginTop: 6 }}>
-              <span style={{ fontSize: 13, color: '#888', fontWeight: 400, fontFamily: 'inherit' }}>다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.</span>
-            </div>
-          </li>
-        </ul>
-      </div>
+          <SettingsItem theme={theme} expanded>
+            <ItemContent>
+              <ItemTitle theme={theme}>커뮤니티</ItemTitle>
+              <ComingSoonBadge>준비중</ComingSoonBadge>
+            </ItemContent>
+            <ItemDetailsDescription>
+              <ItemDescription theme={theme}>다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.</ItemDescription>
+            </ItemDetailsDescription>
+          </SettingsItem>
+        </SettingsList>
+      </SettingsContainer>
       <Navigation />
     </>
   );

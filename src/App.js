@@ -52,6 +52,7 @@ import './utils/updateGoogleProfileImages'; // 구글 프로필 이미지 업데
 import './utils/fixGoogleProfiles'; // 구글 프로필 문제 해결 스크립트 로드
 import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';
+import AppInfo from './pages/mypage/AppInfo';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -79,6 +80,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/app-info" element={user ? <AppInfo user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notification-settings" element={user ? <NotificationSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />
