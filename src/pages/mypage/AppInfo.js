@@ -18,7 +18,7 @@ const Container = styled.div`
 const InfoCard = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 16px;
-  padding: 20px;
+  padding: 10px;
   margin-bottom: 16px;
   box-shadow: ${({ theme }) => theme.cardShadow};
 `;
@@ -90,8 +90,8 @@ const DangerButton = styled.button`
 
 const WarningText = styled.p`
   color: #e46262;
-  font-size: 14px;
-  margin: 8px 0 0 0;
+  font-size: 10px;
+  margin: 12px 0 0 0;
   text-align: center;
 `;
 
