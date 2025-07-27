@@ -19,6 +19,12 @@ try {
     // JAVA_HOME 설정 - 환경 변수 우선, 없으면 자동 탐지
     let javaHome = process.env.JAVA_HOME;
     
+    // 잘못된 경로가 설정되어 있으면 초기화
+    if (javaHome && javaHome.includes('jdk-11.0.28.6-hotspot\\jdk-11.0.28.6-hotspot')) {
+        console.log('⚠️  잘못된 JAVA_HOME 경로 감지, 자동 탐지로 재설정합니다...');
+        javaHome = null;
+    }
+    
     if (!javaHome) {
         console.log('🔍 JAVA_HOME 환경 변수가 설정되지 않았습니다. 자동으로 탐지합니다...');
         
@@ -27,7 +33,6 @@ try {
             // Android Studio JDK 경로들
             'C:\\Program Files\\Android\\Android Studio\\jbr',
             'C:\\Program Files\\Android\\Android Studio\\jre',
-            'C:\\Program Files\\Android\\Android Studio\\jbr\\bin\\java.exe',
             // 다른 일반적인 Java 경로들
             'C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.28.6-hotspot',
             'C:\\Program Files\\Java\\jdk-11',
