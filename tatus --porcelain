@@ -1,0 +1,10 @@
+[33m029e785[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m Merge branch 'main' of https://github.com/20kyi/story-potion
+[33m7c11867[m[33m ([m[1;31morigin/main[m[33m)[m Fix Google login for Android: Use signInWithRedirect and getRedirectResult to handle sessionStorage issues
+[33m570b28e[m Fix Google OAuth 2.0 policy violation and update Android build configuration
+[33m5c8dc13[m ai 모델 변경
+[33m410f959[m refactor: 업로드된 파일 삭제 기능 제거 및 계정 삭제 기능 개선 - 별도 파일 삭제 버튼 제거로 사용자 실수 방지 - 계정 탈퇴 시에만 Firebase Storage 파일들 삭제 - 이중 확인으로 안전성 강화 - 삭제되는 데이터 목록 명시
+[33mec2723e[m fix: Java 버전 호환성 문제 완전 해결 - Filesystem 플러그인 제거로 Kotlin 컴파일러 충돌 해결 - 함수 정의 문제 수정으로 빌드 오류 해결 - 저장공간 계산 로직 개선 (웹/앱 환경 모두 지원) - APK 빌드 성공 (56.91MB) - 다른 컴퓨터에서도 안정적 빌드 가능
+[33m392fc09[m fix: Java 버전 호환성 문제 해결 - Java 17로 통일하여 다른 컴퓨터에서도 안정적 빌드 - 빌드 스크립트에 자동 Java 경로 탐지 및 버전 확인 추가 - README에 각 OS별 Android 빌드 설정 가이드 추가
+[33mdc43525[m feat: 저장공간 사용량 계산 개선 - 웹/앱 환경별 정확한 저장공간 계산 로직 추가 - Firebase Storage 사용량 포함 - Capacitor Filesystem 플러그인 추가 - 안드로이드 앱에서 실제 저장공간 사용량 표시 - 캐시 삭제 기능 강화
+[33m3da94da[m Improve APK build script for multi-computer setup: Add auto-detection for Java paths and build configuration
+[33mcd02cb6[m refactor: 일기 페이지 CSS를 styled-components로 분리 및 스타일 개선

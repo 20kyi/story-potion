@@ -53,6 +53,7 @@ import './utils/fixGoogleProfiles'; // 구글 프로필 문제 해결 스크립�
 import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';
 import AppInfo from './pages/mypage/AppInfo';
+import { inAppPurchaseService } from './utils/inAppPurchase';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -123,23 +124,23 @@ function App() {
                     try {
                         const credential = GoogleAuthProvider.credential(idToken);
                         const result = await signInWithCredential(auth, credential);
-                        
+
                         // 구글 로그인 성공 후 사용자 정보 처리
                         const user = result.user;
                         const userRef = doc(db, 'users', user.uid);
                         const userSnap = await getDoc(userRef);
-                        
+
                         if (!userSnap.exists()) {
                             // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
                             const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
                             const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-                            
+
                             // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
                             await updateProfile(user, {
                                 displayName: googleDisplayName,
                                 photoURL: googlePhotoURL
                             });
-                            
+
                             await setDoc(userRef, {
                                 email: user.email || '',
                                 displayName: googleDisplayName,
@@ -159,7 +160,7 @@ function App() {
                                 await auth.signOut();
                                 return;
                             }
-                            
+
                             // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
                             if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
                                 const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
@@ -169,14 +170,14 @@ function App() {
                                     lastLoginAt: new Date(),
                                     updatedAt: new Date()
                                 });
-                                
+
                                 // Firebase Auth도 업데이트
                                 await updateProfile(user, {
                                     photoURL: googlePhotoURL
                                 });
                             }
                         }
-                        
+
                         console.log('✅ Firebase 로그인 성공');
                     } catch (error) {
                         console.error('❌ Firebase 로그인 실패:', error);
@@ -190,7 +191,7 @@ function App() {
             const backButtonListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
                 // 현재 경로 확인
                 const currentPath = window.location.pathname;
-                
+
                 // 홈 화면에서 뒤로가기를 누르면 앱 종료 확인
                 if (currentPath === '/' || currentPath === '/home') {
                     if (window.confirm('앱을 종료하시겠습니까?')) {
@@ -215,6 +216,17 @@ function App() {
                 console.log('푸시 알림 수신:', notification);
                 // TODO: 필요시 Toast 등으로 표시
                 alert(notification.title + '\n' + notification.body);
+            });
+        }
+
+        // 인앱 결제 초기화 (모바일 환경에서만)
+        if (Capacitor.getPlatform() !== 'web') {
+            inAppPurchaseService.initialize().then(success => {
+                if (success) {
+                    console.log('✅ 인앱 결제 초기화 완료');
+                } else {
+                    console.log('⚠️ 인앱 결제 초기화 실패');
+                }
             });
         }
 

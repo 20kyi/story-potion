@@ -10,6 +10,7 @@ import { useTheme as useAppTheme } from '../../ThemeContext';
 import { useTheme } from 'styled-components';
 import PointIcon from '../../components/icons/PointIcon';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { inAppPurchaseService, PRODUCT_IDS, PRODUCT_INFO } from '../../utils/inAppPurchase';
 
 const Container = styled.div`
   display: flex;
@@ -300,10 +301,10 @@ const PageInfo = styled.div`
 `;
 
 const packages = [
-  { id: 1, points: 100, price: '1,000원', bonus: '' },
-  { id: 2, points: 250, price: '2,500원', bonus: '+30 보너스' },
-  { id: 3, points: 550, price: '5,500원', bonus: '+100 보너스' },
-  { id: 4, points: 1000, price: '9,900원', bonus: '+200 보너스' },
+  { id: PRODUCT_IDS.POINTS_100, points: 100, price: '1,000원', bonus: '', productId: PRODUCT_IDS.POINTS_100 },
+  { id: PRODUCT_IDS.POINTS_500, points: 500, price: '5,000원', bonus: '+50 보너스', productId: PRODUCT_IDS.POINTS_500 },
+  { id: PRODUCT_IDS.POINTS_1000, points: 1000, price: '9,900원', bonus: '+150 보너스', productId: PRODUCT_IDS.POINTS_1000 },
+  { id: PRODUCT_IDS.POINTS_2000, points: 2000, price: '19,800원', bonus: '+400 보너스', productId: PRODUCT_IDS.POINTS_2000 },
 ];
 
 function PointCharge({ user }) {
@@ -385,24 +386,60 @@ function PointCharge({ user }) {
     setIsLoading(true);
     try {
       const packageData = packages.find(p => p.id === selectedPackage);
+      
+      // 인앱 결제 시도
+      if (inAppPurchaseService.isAvailable) {
+        try {
+          const purchase = await inAppPurchaseService.purchaseProduct(packageData.productId);
+          if (purchase) {
+            // 인앱 결제 성공 시 포인트 지급
+            const bonusPoints = packageData.bonus.includes('+') ?
+              parseInt(packageData.bonus.match(/\d+/)[0]) : 0;
+            const totalPoints = packageData.points + bonusPoints;
+            
+            await updateDoc(doc(db, 'users', user.uid), {
+              point: increment(totalPoints)
+            });
+            
+            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+              type: 'charge',
+              amount: totalPoints,
+              desc: `인앱 결제 - ${packageData.points}p + ${bonusPoints}p 보너스`,
+              purchaseToken: purchase.purchaseToken,
+              createdAt: new Date()
+            });
+            
+            setCurrentPoints(prev => prev + totalPoints);
+            toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
+            setSelectedPackage(null);
+            return;
+          }
+        } catch (error) {
+          console.error('인앱 결제 실패:', error);
+          toast.showToast('인앱 결제에 실패했습니다. 다시 시도해주세요.', 'error');
+        }
+      }
+      
+      // 인앱 결제가 불가능하거나 실패한 경우 기존 로직 사용 (테스트용)
       const bonusPoints = packageData.bonus.includes('+') ?
         parseInt(packageData.bonus.match(/\d+/)[0]) : 0;
       const totalPoints = packageData.points + bonusPoints;
+      
       await updateDoc(doc(db, 'users', user.uid), {
         point: increment(totalPoints)
       });
+      
       await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
         type: 'charge',
         amount: totalPoints,
         desc: `포인트 충전 (${packageData.points}p + ${bonusPoints}p 보너스)`,
         createdAt: new Date()
       });
+      
       setCurrentPoints(prev => prev + totalPoints);
       toast.showToast(`${totalPoints}포인트가 충전되었습니다!`, 'success');
       setSelectedPackage(null);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      
     } catch (error) {
       console.error('포인트 충전 실패:', error);
       toast.showToast('포인트 충전에 실패했습니다.', 'error');

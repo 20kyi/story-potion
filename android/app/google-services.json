@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:607033226027:android:0090a554ad21bf47370b6e",
         "android_client_info": {
-          "package_name": "com.example.storypotion"
+          "package_name": "com.storypotion.app"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "607033226027-srdkp30ievjn5kjms4ds25n727muanh9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.storypotion",
+            "package_name": "com.storypotion.app",
             "certificate_hash": "03042d2a6fba58fdb814970fd9627fd23e83ded1"
           }
         },
