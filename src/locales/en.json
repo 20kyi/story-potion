@@ -286,37 +286,30 @@
     "diary_no_more": "No more diaries.",
     "diary_swipe_back": "(Swipe left to go back to the previous diary)",
     "confirm": "Confirm",
-
     "notification_settings": "Notification Settings",
     "notification_test": "Notification Test",
     "notification_test_button": "Test",
     "notification_status_unsupported": "Not supported",
     "notification_status_granted": "Permission granted",
     "notification_status_required": "Permission required",
-
     "theme": "Theme",
     "theme_light": "Light",
     "theme_dark": "Dark",
     "theme_system": "System",
-
     "font": "Font",
-
     "subscription_manage": "Subscription Management",
     "subscription_next_renewal_date": "Next renewal date:",
     "premium_cancel_notice": "All premium benefits will stop immediately after cancellation.",
-    "premium_cancel_button": "Cancel subscription",
+    "premium_cancel_button": "Unsubscribe",
     "premium_cancel_monthly_title": "Cancel Monthly Premium",
     "premium_cancel_yearly_title": "Cancel Yearly Premium",
     "premium_cancel_monthly_desc": "Do you want to cancel your monthly premium subscription?",
     "premium_cancel_yearly_desc": "Do you want to cancel your yearly premium subscription?",
     "premium_cancel_success": "Premium subscription has been cancelled.",
     "premium_cancel_failed": "Failed to cancel premium subscription.",
-
     "processing": "Processing...",
     "user_nim_suffix": "!",
-
     "point_charge_desc": "Use points to enjoy various features!",
-
     "premium_feature_ads_title": "Remove ads",
     "premium_feature_ads_desc": "Remove all ads for a clean experience.",
     "premium_feature_theme_title": "Premium themes",
@@ -327,65 +320,53 @@
     "premium_feature_free_potion_desc": "Premium members can choose one potion for weekly novel creation without spending points.",
     "premium_feature_sticker_title": "Premium stickers",
     "premium_feature_sticker_desc": "Special stickers only for premium members.",
-
     "premium_already_member": "You are already a premium member.",
     "premium_already_yearly": "You are already a yearly premium member.",
-
     "premium_monthly_success": "Monthly premium subscription completed!",
     "premium_monthly_failed": "Failed to subscribe to monthly premium.",
     "premium_yearly_success": "Yearly premium subscription completed!",
     "premium_yearly_success_with_extra": "Yearly premium subscription completed! (Existing monthly premium {{days}} days added)",
     "premium_yearly_failed": "Failed to subscribe to yearly premium.",
-
     "premium_monthly_price": "₩5,900 / month",
     "premium_monthly_desc": "Billed monthly, cancel anytime.",
     "premium_monthly_subscribe_button": "Subscribe monthly",
-
     "premium_recommended": "Recommended",
     "premium_yearly_price": "₩49,560 / year",
     "premium_yearly_discount": "30% OFF",
     "premium_yearly_original_price": "Original ₩70,800",
     "premium_yearly_monthly_equiv": "₩4,130 / month",
     "premium_yearly_subscribe_button": "Subscribe yearly",
-
     "premium_monthly_modal_title": "Subscribe to Monthly Premium",
     "premium_yearly_modal_title": "Subscribe to Yearly Premium",
     "premium_monthly_modal_desc": "Do you want to subscribe to Monthly Premium?",
     "premium_yearly_modal_desc": "Do you want to subscribe to Yearly Premium?",
     "premium_subscribe_confirm_button": "Subscribe",
-
     "point_usage_guide_item1": "• 80 points are used per potion when generating a novel.",
     "point_usage_guide_item2": "• You need points to purchase your friends' novels.",
     "point_usage_guide_item3": "• You can get points by charging or writing diaries.",
     "point_usage_guide_item4": "• When friends read your novel, you earn some points.",
-
     "point_charge_select_package": "Please select a point package.",
     "point_charge_success": "{{amount}} points have been charged!",
     "point_charge_inapp_failed": "In-app purchase failed. Please try again.",
     "point_charge_failed": "Failed to charge points.",
     "point_charge_bonus": "+{{bonus}} bonus",
     "point_charge_confirm_desc": "Do you want to buy {{points}}p?",
-
     "point_history_charge_title": "Point charge",
     "point_history_earn_title": "Point earned",
     "point_history_use_title": "Point used",
-
     "point_history": "Point history",
     "point_history_intro_line1": "Points are earned/used/charged through activities such as writing diaries, generating novels, and charging.",
     "point_history_intro_line2": "History is updated in real time.",
     "point_history_charge_button": "Charge points",
-
     "potion_guide_title": "How to use potions",
     "potion_guide_item1": "• Each potion costs 80 points.",
     "potion_guide_item2": "• Potions are consumed when generating a novel.",
     "potion_guide_item3": "• Without potions, you cannot create novels in that genre.",
-
     "potion_set6_buy_success": "You purchased the 6-potion set!",
     "potion_buy_success": "You purchased {{name}}!",
     "potion_buy_failed": "Failed to purchase potion.",
     "potion_theme_buy_success": "You purchased {{name}}!",
     "potion_theme_buy_failed": "Failed to purchase theme set.",
-
     "potion_owned_count": "Owned: {{count}}",
     "potion_theme_title": "Theme sets",
     "potion_theme_buy_title": "Buy theme set",
@@ -393,7 +374,6 @@
     "potion_buy_title": "Buy potion",
     "potion_buy_confirm_desc": "Do you want to buy {{name}}?",
     "potion_buy_confirm": "Buy",
-
     "friend_search_failed": "Failed to search users.",
     "friend_search_input_required": "Please enter a search term.",
     "friend_search_title": "Find friends",
@@ -403,7 +383,6 @@
     "friend_search_min_length": "Please enter at least 2 characters.",
     "friend_search_no_results": "No search results",
     "friend_search_no_results_sub": "Please try a different search term",
-
     "friend_request_sent": "Friend request sent.",
     "friend_request_failed": "Failed to send friend request.",
     "friend_request_accept_success": "Friend request accepted.",
@@ -412,32 +391,25 @@
     "friend_request_reject_failed": "Failed to reject friend request.",
     "friend_request_cancel_success": "Friend request cancelled.",
     "friend_request_cancel_failed": "Failed to cancel friend request.",
-
     "friend_remove_success": "Friend removed.",
     "friend_remove_failed": "Failed to remove friend.",
     "friend_remove_title": "Remove friend",
     "friend_remove_confirm": "Are you sure you want to remove \"{{name}}\" from your friends?",
     "friend_default_name": "Friend",
-
     "friend_request_button": "Add friend",
     "friend_request_pending": "Pending",
     "friend_request_accept": "Accept",
     "friend_request_reject": "Reject",
     "friend_request_cancel": "Cancel request",
-
     "default_user_name": "User",
-
     "friend_list_title": "My friends ({{count}})",
     "friend_list_empty": "You have no friends yet.",
     "friend_list_empty_sub": "Search above and send a friend request.",
-
     "friend_received_requests": "Received friend requests",
     "friend_received_empty": "No received friend requests.",
     "friend_received_empty_sub": "New friend requests will appear here.",
-
     "friend_sent_requests": "Sent friend requests",
     "friend_sent_empty": "No sent friend requests.",
     "friend_sent_empty_sub": "When you send a friend request, it will appear here.",
-
     "friend_requests_tab": "Requests"
 }

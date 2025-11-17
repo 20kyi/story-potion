@@ -534,45 +534,68 @@ function NovelCreate({ user }) {
                 navigate(`/novel/${dateKey}`, { replace: true });
             }, 1000);
         } catch (error) {
-            console.error('소설 생성 실패:', error);
-            console.error('에러 전체 객체:', JSON.stringify(error, null, 2));
-            console.error('에러 상세:', {
-                code: error.code,
-                message: error.message,
-                details: error.details,
-                stack: error.stack,
-                customData: error.customData,
-                toString: error.toString()
-            });
+            console.error('=== 소설 생성 실패 ===');
+            console.error('에러 코드:', error.code);
+            console.error('에러 메시지:', error.message);
+            console.error('에러 details:', error.details);
+            console.error('에러 전체 객체:', error);
+            
+            // 에러 상세 정보 추출
+            let errorMessage = t('unknown_error');
+            let shouldShowToast = true;
+
+            // Firebase Functions 에러 메시지 추출
+            if (error.message && error.message !== 'INTERNAL') {
+                // HttpsError의 message는 직접 사용 가능
+                errorMessage = error.message;
+            } else if (error.details) {
+                // details가 객체인 경우
+                if (typeof error.details === 'object' && error.details.message) {
+                    errorMessage = error.details.message;
+                } else if (typeof error.details === 'string') {
+                    errorMessage = error.details;
+                }
+            }
 
             // Rate limit 에러 확인
-            if (error.details?.status === 429 || error.message?.includes('요청 한도')) {
-                toast.showToast(t('openai_rate_limit_exceeded'), 'error');
+            if (error.details?.statusCode === 429 || 
+                error.details?.status === 429 || 
+                error.message?.includes('요청 한도') ||
+                error.message?.includes('rate limit')) {
+                errorMessage = t('openai_rate_limit_exceeded');
+                toast.showToast(errorMessage, 'error');
                 return;
             }
 
-            // 네트워크 에러인지 확인
-            if (error.code === 'functions/unknown' || error.code === 'internal') {
+            // API 키 관련 에러
+            if (error.message?.includes('API 키') || error.details?.message?.includes('API 키')) {
+                errorMessage = 'OpenAI API 키 설정에 문제가 있습니다. 관리자에게 문의하세요.';
+            }
+
+            // 서버 내부 에러인 경우
+            if (error.code === 'functions/internal' || error.code === 'functions/unknown') {
                 console.error('서버 내부 에러 발생. Firebase 콘솔에서 Functions 로그를 확인하세요.');
-            }
-
-            // Firebase Functions 에러 메시지 추출
-            let errorMessage = t('unknown_error');
-
-            // 서버에서 전달한 details에 메시지가 있는 경우 우선 사용
-            if (error.details && typeof error.details === 'object') {
-                if (error.details.message) {
-                    errorMessage = error.details.message;
+                console.error('에러 원인 파악을 위한 추가 정보:');
+                console.error('- 에러 코드:', error.code);
+                console.error('- 에러 메시지:', error.message);
+                console.error('- 에러 details:', error.details);
+                console.error('- 에러 전체:', error);
+                
+                // 에러 메시지가 'INTERNAL'만 있는 경우 더 자세한 메시지로 교체
+                if (errorMessage === t('unknown_error') || errorMessage === 'INTERNAL' || !errorMessage || errorMessage.trim() === '') {
+                    errorMessage = '서버에서 오류가 발생했습니다. 잠시 후 다시 시도해주세요. 문제가 계속되면 관리자에게 문의하세요.';
                 }
-            } else if (typeof error.details === 'string') {
-                errorMessage = error.details;
-            } else if (error.message) {
-                errorMessage = error.message;
-            } else if (error.toString) {
-                errorMessage = error.toString();
+                
+                // 에러 메시지에 원인 정보가 포함되어 있으면 그대로 사용
+                if (error.message && error.message.includes('원인:')) {
+                    errorMessage = error.message;
+                }
             }
 
-            toast.showToast(`${t('novel_creation_fail')}: ${errorMessage}`, 'error');
+            // 최종 에러 메시지 표시
+            if (shouldShowToast) {
+                toast.showToast(`${t('novel_creation_fail')}: ${errorMessage}`, 'error');
+            }
         } finally {
             console.log('소설 생성 프로세스 종료, 로딩 상태 해제');
             setIsLoading(false);

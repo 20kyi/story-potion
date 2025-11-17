@@ -5,36 +5,79 @@ const { DateTime } = require('luxon');
 
 admin.initializeApp();
 
-const openai = new OpenAI({
-    apiKey: functions.config().openai.key,
-});
+// OpenAI 클라이언트 초기화 (에러 처리 포함)
+let openai;
+try {
+    const apiKey = functions.config().openai?.key;
+    if (!apiKey) {
+        console.error("⚠️ OpenAI API 키가 설정되지 않았습니다.");
+    } else {
+        openai = new OpenAI({
+            apiKey: apiKey,
+        });
+        console.log("✅ OpenAI 클라이언트 초기화 완료");
+    }
+} catch (error) {
+    console.error("❌ OpenAI 클라이언트 초기화 실패:", error);
+}
 
-exports.generateNovel = functions.https.onCall({
+exports.generateNovel = functions.runWith({
     timeoutSeconds: 540, // 9분 (최대값)
     memory: '1GB'
-}, async (data, context) => {
-    if (!context.auth) {
-        throw new functions.https.HttpsError(
-            "unauthenticated",
-            "소설을 생성하려면 로그인이 필요합니다。",
-        );
-    }
-
-    const { diaryContents, genre, userName, language } = data;
-    if (!diaryContents || !genre || !userName) {
-        throw new functions.https.HttpsError(
-            "invalid-argument",
-            "일기 내용, 장르, 사용자 이름 정보가 필요합니다。",
-        );
-    }
-
+}).https.onCall(async (data, context) => {
+    // 최상위 레벨에서 모든 에러를 잡아서 명확한 메시지로 전달
     try {
-        // OpenAI API 키 확인
+        console.log("=== generateNovel 함수 호출 시작 ===");
+        console.log("요청 시간:", new Date().toISOString());
+        console.log("사용자 ID:", context.auth?.uid || "인증되지 않음");
+        
+        if (!context.auth) {
+            console.error("❌ 인증되지 않은 사용자");
+            throw new functions.https.HttpsError(
+                "unauthenticated",
+                "소설을 생성하려면 로그인이 필요합니다。",
+            );
+        }
+
+        const { diaryContents, genre, userName, language } = data;
+        console.log("요청 데이터:", {
+            diaryContentsLength: diaryContents?.length || 0,
+            genre: genre,
+            userName: userName,
+            language: language
+        });
+        
+        if (!diaryContents || !genre || !userName) {
+            console.error("❌ 필수 파라미터 누락:", { diaryContents: !!diaryContents, genre: !!genre, userName: !!userName });
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "일기 내용, 장르, 사용자 이름 정보가 필요합니다。",
+            );
+        }
+
+        try {
+        // OpenAI 클라이언트 확인
+        if (!openai) {
+            const apiKey = functions.config().openai?.key;
+            console.error("❌ OpenAI 클라이언트가 초기화되지 않았습니다.");
+            console.error("API 키 상태:", apiKey ? "설정됨" : "설정되지 않음");
+            throw new functions.https.HttpsError(
+                "failed-precondition",
+                "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
+                { message: "OpenAI API 키가 설정되지 않았습니다." }
+            );
+        }
+
+        // OpenAI API 키 재확인
         const apiKey = functions.config().openai?.key;
-        console.log("OpenAI API 키 확인:", apiKey ? "설정됨" : "설정되지 않음");
+        console.log("✅ OpenAI API 키 확인:", apiKey ? "설정됨" : "설정되지 않음");
         if (!apiKey) {
-            console.error("OpenAI API 키가 설정되지 않았습니다. firebase functions:config:set openai.key=YOUR_KEY 로 설정하세요.");
-            throw new Error("OpenAI API 키가 설정되지 않았습니다.");
+            console.error("❌ OpenAI API 키가 설정되지 않았습니다.");
+            throw new functions.https.HttpsError(
+                "failed-precondition",
+                "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
+                { message: "OpenAI API 키가 설정되지 않았습니다." }
+            );
         }
 
         const targetLanguage = language === 'en' ? 'en' : 'ko';
@@ -412,29 +455,98 @@ ${diaryContents}`;
             throw new Error(`Storage 업로드 실패: ${error.message}`);
         }
     } catch (error) {
-        console.error("OpenAI API 호출 중 오류 발생:", error);
-        console.error("에러 상세:", {
-            message: error.message,
-            stack: error.stack,
-            code: error.code,
-            statusCode: error.statusCode,
-            status: error.status,
-            response: error.response,
-            errorType: error.constructor?.name
-        });
+        console.error("=== 소설 생성 함수 에러 발생 ===");
+        console.error("에러 타입:", error.constructor?.name);
+        console.error("에러 메시지:", error.message);
+        console.error("에러 스택:", error.stack);
+        console.error("에러 코드:", error.code);
+        console.error("상태 코드:", error.statusCode || error.status || error.response?.status);
+        console.error("전체 에러 객체:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
 
-        // 클라이언트로 전달 가능한 형태로만 상세 정보를 보냄
+        // 에러 메시지 구성
+        let errorMessage = "AI 소설 생성에 실패했습니다.";
+        let errorCode = "internal";
+
+        // OpenAI API 키 관련 에러
+        if (error.message?.includes("OpenAI API 키")) {
+            errorMessage = "OpenAI API 키가 설정되지 않았거나 유효하지 않습니다. 관리자에게 문의하세요.";
+            errorCode = "failed-precondition";
+        }
+        // Rate limit 에러
+        else if (error.statusCode === 429 || error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
+            errorMessage = "OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
+            errorCode = "resource-exhausted";
+        }
+        // 인증 에러
+        else if (error.statusCode === 401 || error.status === 401) {
+            errorMessage = "OpenAI API 인증에 실패했습니다. API 키를 확인해주세요.";
+            errorCode = "unauthenticated";
+        }
+        // 서버 에러
+        else if (error.statusCode === 500 || error.status === 500 || error.statusCode === 503 || error.status === 503) {
+            errorMessage = "OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            errorCode = "unavailable";
+        }
+        // Storage 에러
+        else if (error.message?.includes("Storage")) {
+            errorMessage = `이미지 저장에 실패했습니다: ${error.message}`;
+        }
+        // 기타 에러
+        else if (error.message) {
+            errorMessage = `소설 생성 중 오류가 발생했습니다: ${error.message}`;
+        }
+
+        // 클라이언트로 전달할 상세 정보 (직렬화 가능한 형태로만)
         const safeDetails = {
-            message: error.message,
-            code: error.code,
-            statusCode: error.statusCode,
-            status: error.status,
+            message: error.message || "알 수 없는 오류",
+            code: error.code || null,
+            statusCode: error.statusCode || error.status || error.response?.status || null,
+            errorType: error.constructor?.name || "Error",
+            originalMessage: error.message || "알 수 없는 오류",
         };
 
+        // 에러 메시지에 상세 정보 포함 (details가 전달되지 않을 경우 대비)
+        // 원본 에러 메시지가 있으면 포함, 없으면 간단한 메시지만
+        const fullErrorMessage = error.message && error.message !== errorMessage 
+            ? `${errorMessage} (원인: ${error.message})` 
+            : errorMessage;
+
+        console.error("클라이언트로 전달할 에러 메시지:", fullErrorMessage);
+        console.error("클라이언트로 전달할 상세 정보:", JSON.stringify(safeDetails, null, 2));
+        console.error("에러 코드:", errorCode);
+
+        // HttpsError 던지기
+        throw new functions.https.HttpsError(
+            errorCode,
+            fullErrorMessage,
+            safeDetails,
+        );
+        }
+    } catch (outerError) {
+        // 최상위 레벨에서 모든 예상치 못한 에러를 잡음
+        console.error("=== 최상위 레벨 에러 발생 ===");
+        console.error("에러 타입:", outerError.constructor?.name);
+        console.error("에러 메시지:", outerError.message);
+        console.error("에러 스택:", outerError.stack);
+        
+        // 이미 HttpsError인 경우 그대로 던지기
+        if (outerError instanceof functions.https.HttpsError) {
+            console.error("HttpsError로 전달:", outerError.message);
+            throw outerError;
+        }
+        
+        // 그 외의 에러는 HttpsError로 변환
+        const errorMessage = outerError.message || "알 수 없는 오류가 발생했습니다.";
+        console.error("일반 에러를 HttpsError로 변환:", errorMessage);
+        
         throw new functions.https.HttpsError(
             "internal",
-            `AI 소설 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`,
-            safeDetails,
+            `소설 생성 중 오류가 발생했습니다: ${errorMessage}`,
+            {
+                message: errorMessage,
+                errorType: outerError.constructor?.name || "Error",
+                originalError: outerError.toString()
+            }
         );
     }
 });
