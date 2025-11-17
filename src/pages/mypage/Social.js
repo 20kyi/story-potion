@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 import { lightTheme, darkTheme } from '../../theme';
 import { FaShare, FaUsers, FaQrcode, FaHeart } from 'react-icons/fa';
+import { useTranslation } from '../../LanguageContext';
 
 const MainContainer = styled.div`
   display: flex;
@@ -115,6 +116,7 @@ function Social() {
   const navigate = useNavigate();
   const { actualTheme } = useTheme();
   const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
+  const { t } = useTranslation();
 
   const handleShare = () => {
     if (navigator.share) {
@@ -137,17 +139,17 @@ function Social() {
 
   return (
     <>
-      <Header user={null} title="소셜" />
+      <Header user={null} title={t('social_title')} />
       <SettingsContainer theme={theme}>
         <SettingsList>
           {/* 앱 공유 */}
           <SettingsItem theme={theme} expanded clickable>
             <ItemContent>
-              <ItemTitle theme={theme}>앱 공유</ItemTitle>
+              <ItemTitle theme={theme}>{t('share_app')}</ItemTitle>
             </ItemContent>
             <ItemDetails>
-              <ItemDescription theme={theme}>친구들과 스토리포션을 공유해보세요</ItemDescription>
-              <ActionButton theme={theme} onClick={handleShare}>공유</ActionButton>
+              <ItemDescription theme={theme}>{t('share_app_desc')}</ItemDescription>
+              <ActionButton theme={theme} onClick={handleShare}>{t('share')}</ActionButton>
             </ItemDetails>
           </SettingsItem>
           
@@ -156,11 +158,11 @@ function Social() {
           {/* 커뮤니티 */}
           <SettingsItem theme={theme} expanded>
             <ItemContent>
-              <ItemTitle theme={theme}>커뮤니티</ItemTitle>
-              <ComingSoonBadge>준비중</ComingSoonBadge>
+              <ItemTitle theme={theme}>{t('community')}</ItemTitle>
+              <ComingSoonBadge>{t('coming_soon')}</ComingSoonBadge>
             </ItemContent>
             <ItemDetailsDescription>
-              <ItemDescription theme={theme}>다른 사용자들과 이야기를 나누고 소통할 수 있는 커뮤니티 기능이 곧 출시됩니다.</ItemDescription>
+              <ItemDescription theme={theme}>{t('community_desc')}</ItemDescription>
             </ItemDetailsDescription>
           </SettingsItem>
         </SettingsList>

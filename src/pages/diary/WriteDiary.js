@@ -15,6 +15,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { getPointPolicy } from '../../utils/appConfig';
 import { checkWeeklyBonus } from '../../utils/weeklyBonus';
+import { useTranslation } from '../../LanguageContext';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -33,11 +34,26 @@ const formatDateToString = (date) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
-// formatDate 함수 추가 (DiaryView와 동일하게)
+// formatDate 함수 추가 (언어에 따라 다른 표기)
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date)) return '';
+
+    // LanguageContext 훅을 여기서 쓸 수 없으므로, localStorage에 저장된 언어 값을 사용
+    const lang =
+        typeof window !== 'undefined'
+            ? (localStorage.getItem('language') || 'ko')
+            : 'ko';
+
+    if (lang === 'en') {
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    }
+
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 };
 
@@ -416,6 +432,7 @@ function WriteDiary({ user }) {
     const [currentPoints, setCurrentPoints] = useState(0);
     const [isImageLimitExtended, setIsImageLimitExtended] = useState(false);
     const [hasExtendedThisSession, setHasExtendedThisSession] = useState(false);
+    const { t } = useTranslation();
 
     // 스티커 관련 state
     const [stickers, setStickers] = useState([]);
@@ -677,7 +694,7 @@ function WriteDiary({ user }) {
     // 사진 한도 확장 함수
     const handleExtendImageLimit = async () => {
         if (currentPoints < 20) {
-            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다. (20포인트 필요)', 'error');
+            toast.showToast(t('image_limit_insufficient_point'), 'error');
             return;
         }
         try {
@@ -692,9 +709,9 @@ function WriteDiary({ user }) {
             });
             setCurrentPoints(prev => prev - 20);
             setIsImageLimitExtended(true);
-            toast.showToast('사진 한도가 확장되었습니다! 이제 최대 4장까지 업로드할 수 있습니다.', 'success');
+            toast.showToast(t('diary_image_limit_extended_now'), 'success');
         } catch (error) {
-            toast.showToast('사진 한도 확장에 실패했습니다.', 'error');
+            toast.showToast(t('diary_image_limit_extend_failed'), 'error');
         }
     };
 
@@ -703,11 +720,11 @@ function WriteDiary({ user }) {
         const totalImages = imagePreview.length + newFiles.length;
         // 한도 미확장 시 1장까지만 허용
         if (!isImageLimitExtended && totalImages > 1) {
-            toast.showToast('사진 한도를 확장해야 2장 이상 업로드할 수 있습니다.', 'info');
+            toast.showToast(t('image_limit_not_extended'), 'info');
             return;
         }
         if (totalImages > 4) {
-            toast.showToast('사진은 최대 4장까지 등록할 수 있습니다.', 'error');
+            toast.showToast(t('image_limit_max'), 'error');
             return;
         }
         // 이미지 압축 및 리사이즈
@@ -745,15 +762,15 @@ function WriteDiary({ user }) {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('정말 일기를 삭제하시겠습니까?\n삭제된 일기는 복구할 수 없습니다.')) {
+        if (window.confirm(t('diary_delete_confirm'))) {
             if (existingDiaryId) {
                 try {
                     const diaryRef = doc(db, 'diaries', existingDiaryId);
                     await deleteDoc(diaryRef);
-                    alert('일기가 삭제되었습니다.');
+                    alert(t('diary_deleted'));
                     navigate('/diaries');
                 } catch (error) {
-                    alert('일기 삭제에 실패했습니다.');
+                    alert(t('diary_delete_failed'));
                 }
             }
         }
@@ -762,20 +779,20 @@ function WriteDiary({ user }) {
     // 사진 한도 확장 함수 (포인트 차감 없이 확장만)
     const handleExtendAndEnableImageUpload = async () => {
         if (currentPoints < 20) {
-            toast.showToast('포인트가 부족하여 사진 한도 확장이 불가합니다. (20포인트 필요)', 'error');
+            toast.showToast(t('image_limit_insufficient_point'), 'error');
             return;
         }
 
         setIsImageLimitExtended(true);
         setHasExtendedThisSession(true);
-        toast.showToast('사진 한도가 확장되었습니다! 저장 시 20포인트가 차감됩니다.', 'success');
+        toast.showToast(t('diary_image_limit_extended'), 'success');
 
         // 수정 모드라면 Firestore에도 반영
         if (isEditMode && existingDiaryId) {
             try {
                 await updateDoc(doc(db, 'diaries', existingDiaryId), { imageLimitExtended: true });
             } catch (e) {
-                toast.showToast('확장 상태 저장에 실패했습니다.', 'error');
+                toast.showToast(t('diary_image_limit_extend_failed'), 'error');
             }
         }
 
@@ -1121,13 +1138,13 @@ function WriteDiary({ user }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!diary.content || diary.content.trim().length < 50) {
-            toast.showToast('더 풍부한 소설 내용을 위해\n50자 이상 작성해 주세요!', 'info');
+            toast.showToast(t('diary_need_more_content'), 'info');
             return;
         }
         // 사진 한도 확장 시 저장 시점에만 포인트 차감
-        if (hasExtendedThisSession && !isEditMode) {
-            if (currentPoints < 20) {
-                toast.showToast('포인트가 부족하여 사진이 포함된 일기를 저장할 수 없습니다. (사진 한도 확장 20포인트 필요)', 'error');
+            if (hasExtendedThisSession && !isEditMode) {
+                if (currentPoints < 20) {
+                    toast.showToast(t('image_limit_insufficient_point'), 'error');
                 return;
             }
         }
@@ -1150,10 +1167,10 @@ function WriteDiary({ user }) {
             if (isEditMode && existingDiaryId) {
                 diaryRef = doc(db, 'diaries', existingDiaryId);
                 await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
-                toast.showToast('일기가 수정되었습니다.', 'success');
+                toast.showToast(t('diary_updated'), 'success');
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
-                toast.showToast('일기가 저장되었습니다.', 'success');
+                toast.showToast(t('diary_saved'), 'success');
                 // 포인트 적립: 일기 최초 저장 시 정책값 적용 (당일에만 지급)
                 try {
                     const today = new Date();
@@ -1169,7 +1186,7 @@ function WriteDiary({ user }) {
                         await addDoc(collection(db, "users", user.uid, "pointHistory"), {
                             type: 'earn',
                             amount: earnPoint,
-                            desc: '오늘의 일기 작성',
+                            desc: t('today_diary'),
                             createdAt: new Date()
                         });
 
@@ -1177,10 +1194,10 @@ function WriteDiary({ user }) {
                         await checkWeeklyBonus(user.uid, today);
                     } else {
                         // 과거 날짜에 작성한 경우 안내 메시지
-                        toast.showToast('과거 날짜의 일기는 포인트가 지급되지 않습니다.', 'info');
+                        toast.showToast(t('diary_point_not_today'), 'info');
                     }
                 } catch (pointError) {
-                    toast.showToast('포인트 적립에 실패했습니다.', 'error');
+                    toast.showToast(t('diary_point_earn_failed'), 'error');
                 }
             }
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
@@ -1207,14 +1224,14 @@ function WriteDiary({ user }) {
                 await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                     type: 'use',
                     amount: -20,
-                    desc: '일기 사진 한도 확장',
+                    desc: t('image_limit_extend_button'),
                     createdAt: new Date()
                 });
-                toast.showToast('사진 한도 확장으로 20포인트가 차감되었습니다.', 'info');
+                toast.showToast(t('diary_image_limit_extended'), 'info');
             }
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
-            toast.showToast('저장에 실패했습니다.', 'error');
+            toast.showToast(t('diary_save_failed'), 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -1230,7 +1247,7 @@ function WriteDiary({ user }) {
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? '저장 중...' : (isEditMode ? '수정' : '저장')}
+                        {isSubmitting ? t('diary_saving') : (isEditMode ? t('diary_update') : t('diary_save'))}
                     </button>
                 }
             />
@@ -1241,7 +1258,7 @@ function WriteDiary({ user }) {
 
                 <DiaryMeta>
                     <MetaLabel>
-                        {!diary.weather ? (
+                                {!diary.weather ? (
                             <Button
                                 onClick={(e) => {
                                     setIsWeatherSheetOpen(true);
@@ -1259,11 +1276,11 @@ function WriteDiary({ user }) {
                                     padding: '0 0'
                                 }}
                             >
-                                오늘의 날씨
+                                {t('today_weather')}
                             </Button>
                         ) : (
                             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
-                                오늘의 날씨
+                                {t('today_weather')}
                                 <img
                                     src={weatherImageMap[diary.weather]}
                                     alt={diary.weather}
@@ -1277,7 +1294,7 @@ function WriteDiary({ user }) {
                         )}
                     </MetaLabel>
                     <MetaLabel>
-                        {!diary.emotion ? (
+                                {!diary.emotion ? (
                             <Button
                                 onClick={(e) => {
                                     setIsEmotionSheetOpen(true);
@@ -1295,11 +1312,11 @@ function WriteDiary({ user }) {
                                     padding: '0 0'
                                 }}
                             >
-                                내 기분
+                                {t('today_mood')}
                             </Button>
                         ) : (
                             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
-                                내 기분
+                                {t('today_mood')}
                                 <img
                                     src={emotionImageMap[diary.emotion]}
                                     alt={diary.emotion}
@@ -1335,7 +1352,7 @@ function WriteDiary({ user }) {
                         animation: 'slideUp 0.2s ease',
                         color: isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>오늘의 날씨를 선택하세요</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>{t('today_weather_select')}</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1362,7 +1379,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`weather_${opt.value}`)}</span>
                                 </button>
                             ))}
                         </div>
@@ -1370,7 +1387,7 @@ function WriteDiary({ user }) {
                             type="button"
                             onClick={() => setIsWeatherSheetOpen(false)}
                             style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
-                        >닫기</button>
+                            >{t('close')}</button>
                     </div>
                 )}
                 {isEmotionSheetOpen && (
@@ -1384,7 +1401,7 @@ function WriteDiary({ user }) {
                         animation: 'slideUp 0.2s ease',
                         color: isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>오늘의 기분을 선택하세요</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>{t('today_mood_select')}</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1411,7 +1428,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{opt.label}</span>
+                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`emotion_${opt.value}`)}</span>
                                 </button>
                             ))}
                         </div>
@@ -1419,7 +1436,7 @@ function WriteDiary({ user }) {
                             type="button"
                             onClick={() => setIsEmotionSheetOpen(false)}
                             style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
-                        >닫기</button>
+                            >{t('close')}</button>
                     </div>
                 )}
 
@@ -1439,7 +1456,7 @@ function WriteDiary({ user }) {
                     <ImagePreviewContainer style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {imagePreview.map((src, index) => (
                             <ImagePreviewBox key={index}>
-                                <PreviewImg src={src} alt={`업로드 이미지 ${index + 1}`} />
+                                <PreviewImg src={src} alt={`upload ${index + 1}`} />
                                 <RemoveButton type="button" onClick={(e) => removeImage(index)}>
                                     ×
                                 </RemoveButton>
@@ -1472,7 +1489,7 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <span className="icon" style={{ fontSize: 24, marginBottom: 4 }}>📸</span>
-                                    사진 추가 저장 (20P)
+                                    {t('image_limit_extend_button')}
                                 </button>
                                 <span style={{
                                     marginLeft: 6,
@@ -1497,7 +1514,7 @@ function WriteDiary({ user }) {
                                     position: 'relative',
                                 }}>
                                     <span className="icon">📸</span>
-                                    사진 추가
+                                    {t('image_add')}
                                 </UploadLabel>
                                 <span style={{
                                     marginLeft: 6,
@@ -1522,7 +1539,7 @@ function WriteDiary({ user }) {
                                     position: 'relative',
                                 }}>
                                     <span className="icon">📸</span>
-                                    사진 추가
+                                    {t('image_add')}
                                 </UploadLabel>
                                 <span style={{
                                     marginLeft: 6,
@@ -1540,11 +1557,11 @@ function WriteDiary({ user }) {
                         )}
                     </ImagePreviewContainer>
                     {/* 안내 메시지 */}
-                    {imagePreview.length >= 4 && (
-                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>사진은 최대 4장까지 등록할 수 있습니다.</div>
+                        {imagePreview.length >= 4 && (
+                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>{t('image_limit_max')}</div>
                     )}
                     {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 20 && (
-                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>포인트가 부족하여 사진 한도 확장이 불가합니다.<br />20포인트 필요</div>
+                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>{t('image_limit_insufficient_point')}</div>
                     )}
                 </div>
 
@@ -1553,7 +1570,7 @@ function WriteDiary({ user }) {
                 <TitleInput
                     type="text"
                     name="title"
-                    placeholder="일기 제목"
+                    placeholder={t('diary_title_placeholder')}
                     value={diary.title}
                     onChange={handleChange}
                     required
@@ -1572,7 +1589,7 @@ function WriteDiary({ user }) {
                     <ContentTextarea
                         ref={textareaRef}
                         name="content"
-                        placeholder="일기 내용을 작성하세요..."
+                        placeholder={t('diary_content_placeholder')}
                         value={diary.content}
                         onChange={handleChange}
                         onFocus={e => {

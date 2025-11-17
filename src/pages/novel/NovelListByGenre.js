@@ -5,6 +5,7 @@ import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -133,6 +134,8 @@ const genreMap = {
 
 const NovelListByGenre = ({ user }) => {
   const { genre: genreParam } = useParams();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
   const genre = (genreMap[genreParam] || genreParam).trim(); // 한글로 변환 후 trim
   const navigate = useNavigate();
   const [novels, setNovels] = useState([]);
@@ -179,28 +182,45 @@ const NovelListByGenre = ({ user }) => {
 
   const bannerImage = genreBanners[genre];
 
+  const getDisplayGenre = () => {
+    // route param 기준으로 장르 번역 (novel_genre_* 키 사용)
+    const key = `novel_genre_${genreParam}`;
+    const translated = t(key);
+    return translated !== key ? translated : genre;
+  };
+
+  const formatWeekLabel = (novel) => {
+    if (!novel) return '';
+    if (language === 'en') {
+      const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
+      const monthName = d.toLocaleDateString('en-US', { month: 'long' });
+      return `${monthName} ${t('week_num', { num: novel.weekNum })}`;
+    }
+    return novel.week || `${novel.month}월 ${novel.weekNum}주차`;
+  };
+
   return (
     <Container>
       <Header user={user} />
-      <Title>{genre} 소설 목록</Title>
+      <Title>{t('novel_list_by_genre_title', { genre: getDisplayGenre() })}</Title>
 
       {/* {bannerImage && <BannerImage src={bannerImage} alt={`${genre} 배너`} />} */}
 
       <Content>
         {isLoading ? (
-          <LoadingContainer>로딩 중...</LoadingContainer>
+          <LoadingContainer>{t('novel_loading')}</LoadingContainer>
         ) : novels.length > 0 ? (
           <NovelGrid>
             {novels.map(novel => (
               <NovelItem key={novel.id || novel.title} onClick={() => handleNovelClick(novel)}>
-                <WeekTitle>{novel.week}</WeekTitle>
+                <WeekTitle>{formatWeekLabel(novel)}</WeekTitle>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelTitle>{novel.title}</NovelTitle>
               </NovelItem>
             ))}
           </NovelGrid>
         ) : (
-          <NoNovelsMessage>이 장르의 소설이 아직 없습니다.</NoNovelsMessage>
+          <NoNovelsMessage>{t('novel_no_novel_genre')}</NoNovelsMessage>
         )}
       </Content>
 

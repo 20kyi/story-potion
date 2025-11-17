@@ -5,6 +5,7 @@ import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -264,17 +265,18 @@ const CreateButton = styled.button`
 `;
 
 const bannerData = [
-    { genre: '로맨스', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
-    { genre: '추리', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
-    { genre: '역사', src: process.env.PUBLIC_URL + '/novel_banner/historical.png' },
-    { genre: '동화', src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png' },
-    { genre: '판타지', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
-    { genre: '공포', src: process.env.PUBLIC_URL + '/novel_banner/horror.png' },
-
+    { genre: '로맨스', genreKey: 'romance', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
+    { genre: '추리', genreKey: 'mystery', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
+    { genre: '역사', genreKey: 'historical', src: process.env.PUBLIC_URL + '/novel_banner/historical.png' },
+    { genre: '동화', genreKey: 'fairytale', src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png' },
+    { genre: '판타지', genreKey: 'fantasy', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
+    { genre: '공포', genreKey: 'horror', src: process.env.PUBLIC_URL + '/novel_banner/horror.png' },
 ];
 
 const Novel = ({ user }) => {
     const navigate = useNavigate();
+    const { language } = useLanguage();
+    const { t } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [weeks, setWeeks] = useState([]);
     const [weeklyProgress, setWeeklyProgress] = useState({});
@@ -465,13 +467,15 @@ const Novel = ({ user }) => {
     const handleCreateNovel = (week) => {
         const weekProgress = weeklyProgress[week.weekNum] || 0;
         if (weekProgress < 100) {
-            alert('일기를 모두 작성해야 소설을 만들 수 있어요!');
+            alert(t('novel_all_diaries_needed'));
             return;
         }
 
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
-        const novelTitle = `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+        const novelTitle = language === 'en'
+            ? t('novel_list_by_genre_title', { genre: t('novel_title') }) // simple fallback
+            : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
         const weekStartDate = new Date(week.start);
         const weekEndDate = new Date(week.end);
@@ -551,13 +555,16 @@ const Novel = ({ user }) => {
 
     return (
         <Container>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="소설" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('novel_title')} />
             {/* <Title>Novel</Title> */}
 
             <GenreGrid>
                 {bannerData.map((banner, idx) => (
-                    <GenreCard key={idx} onClick={() => navigate(`/novels/genre/${banner.genre}`)}>
-                        <img src={banner.src} alt={`${banner.genre} 장르`} />
+                    <GenreCard key={idx} onClick={() => navigate(`/novels/genre/${banner.genreKey}`)}>
+                        <img
+                            src={banner.src}
+                            alt={t(`novel_genre_${banner.genreKey}`)}
+                        />
                     </GenreCard>
                 ))}
             </GenreGrid>
@@ -565,7 +572,9 @@ const Novel = ({ user }) => {
                 <MonthSelector>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
                     <CurrentMonth onClick={() => setIsPickerOpen(true)}>
-                        {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+                        {language === 'en'
+                            ? currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                            : `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}
                     </CurrentMonth>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
                 </MonthSelector>
@@ -573,10 +582,10 @@ const Novel = ({ user }) => {
                     <DatePickerModal onClick={() => setIsPickerOpen(false)}>
                         <DatePickerContent onClick={(e) => e.stopPropagation()}>
                             <DatePickerHeader>
-                                <DatePickerTitle>날짜 선택</DatePickerTitle>
+                                <DatePickerTitle>{t('novel_month_label')}</DatePickerTitle>
                                 <DatePickerClose onClick={() => setIsPickerOpen(false)}>×</DatePickerClose>
                             </DatePickerHeader>
-                            <DatePickerTitle>년도</DatePickerTitle>
+                            <DatePickerTitle>{t('year')}</DatePickerTitle>
                             <DatePickerGrid>
                                 {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map((year) => (
                                     <DatePickerButton
@@ -588,7 +597,7 @@ const Novel = ({ user }) => {
                                     </DatePickerButton>
                                 ))}
                             </DatePickerGrid>
-                            <DatePickerTitle>월</DatePickerTitle>
+                            <DatePickerTitle>{t('month')}</DatePickerTitle>
                             <DatePickerGrid>
                                 {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
                                     <DatePickerButton
@@ -596,7 +605,7 @@ const Novel = ({ user }) => {
                                         selected={month === currentDate.getMonth() + 1}
                                         onClick={() => handleMonthChange(month)}
                                     >
-                                        {month}월
+                                        {language === 'en' ? month : `${month}월`}
                                     </DatePickerButton>
                                 ))}
                             </DatePickerGrid>
@@ -612,18 +621,18 @@ const Novel = ({ user }) => {
 
                         return (
                             <WeeklyCard key={week.weekNum}>
-                                <WeekTitle>{week.weekNum}주차</WeekTitle>
+                                <WeekTitle>{t('week_num', { num: week.weekNum })}</WeekTitle>
                                 <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
                                 <ProgressBar progress={progress}>
                                     <div />
                                 </ProgressBar>
                                 {novelId ? (
                                     <CreateButton completed={true} onClick={() => navigate(`/novel/${novelKey}`)}>
-                                        소설 보기
+                                        {t('novel_view')}
                                     </CreateButton>
                                 ) : (
                                     <CreateButton completed={false} onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}>
-                                        {isCompleted ? '소설 만들기' : '일기 채우기'}
+                                        {isCompleted ? t('novel_create') : t('novel_fill_diary')}
                                     </CreateButton>
                                 )}
                             </WeeklyCard>

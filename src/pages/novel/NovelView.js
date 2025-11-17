@@ -6,6 +6,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../firebase';
 import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -95,6 +96,8 @@ function NovelView({ user }) {
     const [error, setError] = useState('');
     const [accessGranted, setAccessGranted] = useState(false);
     const navigate = useNavigate();
+    const { language } = useLanguage();
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!user || !id) {
@@ -133,7 +136,7 @@ function NovelView({ user }) {
                 }
                 if (!fetchedNovel) {
                     setNovel(null);
-                    setError('소설을 찾을 수 없거나 접근 권한이 없습니다.');
+                    setError(t('novel_not_found_or_forbidden'));
                     return;
                 }
                 setNovel(fetchedNovel);
@@ -147,7 +150,7 @@ function NovelView({ user }) {
                 const friendshipRef = fsDoc(db, 'friendships', friendshipId);
                 const friendshipSnap = await getFsDoc(friendshipRef);
                 if (!friendshipSnap.exists()) {
-                    setError('친구만 열람할 수 있습니다.');
+                    setError(t('friend_only'));
                     return;
                 }
                 // 친구 소설: 결제 기록 확인
@@ -188,11 +191,11 @@ function NovelView({ user }) {
                         createdAt: Timestamp.now(),
                     });
                 } catch (e) {
-                    setError(e.message || '포인트 결제에 실패했습니다.');
+                    setError(e.message || t('friend_novel_buy_failed'));
                 }
             } catch (error) {
                 setNovel(null);
-                setError('소설을 찾을 수 없거나 접근 권한이 없습니다.');
+                setError(t('novel_not_found_or_forbidden'));
             } finally {
                 setLoading(false);
             }
@@ -202,23 +205,31 @@ function NovelView({ user }) {
     }, [id, user, targetUserId]);
 
     const formatDate = (timestamp) => {
-        if (!timestamp) return '날짜 정보 없음';
-        return timestamp.toDate().toLocaleDateString('ko-KR', {
+        if (!timestamp) return t('no_data');
+        const date = timestamp.toDate();
+        if (language === 'en') {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+        }
+        return date.toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
         });
     };
 
     const handleDelete = async () => {
         if (!novel || !novel.id) return;
-        if (!window.confirm('정말 이 소설을 삭제하시겠습니까?')) return;
+        if (!window.confirm(t('novel_delete_confirm'))) return;
         try {
             await deleteDoc(doc(db, 'novels', novel.id));
-            alert('소설이 삭제되었습니다.');
+            alert(t('novel_deleted'));
             navigate('/novel');
         } catch (error) {
-            alert('삭제에 실패했습니다.');
+            alert(t('novel_delete_failed'));
         }
     };
 
@@ -226,7 +237,7 @@ function NovelView({ user }) {
         return (
             <Container>
                 <Header user={user} />
-                <div>소설을 불러오는 중...</div>
+                <div>{t('novel_loading')}</div>
                 <Navigation />
             </Container>
         );
@@ -236,7 +247,7 @@ function NovelView({ user }) {
         return (
             <Container>
                 <Header user={user} />
-                <div>{error || '소설을 찾을 수 없거나 접근 권한이 없습니다.'}</div>
+                <div>{error || t('novel_not_found_or_forbidden')}</div>
                 <Navigation />
             </Container>
         );

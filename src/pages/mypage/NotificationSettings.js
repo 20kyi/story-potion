@@ -31,6 +31,7 @@ import './NotificationSettings.css';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { useTranslation } from '../../LanguageContext';
 
 /**
  * 알림 설정 페이지 컴포넌트
@@ -38,6 +39,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
  */
 function NotificationSettings({ user }) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // 알림 설정 상태
     const [settings, setSettings] = useState({
@@ -295,9 +297,9 @@ function NotificationSettings({ user }) {
     if (loading) {
         return (
             <>
-                <Header leftAction={() => navigate(-1)} leftIconType="back" />
+                <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('notification')} />
                 <div className="notification-settings-container">
-                    <div>로딩 중...</div>
+                    <div>{t('loading')}</div>
                 </div>
                 <Navigation />
             </>
@@ -306,7 +308,7 @@ function NotificationSettings({ user }) {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="알림 설정" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('notification')} />
             <div className="notification-settings-container">
                 <div className="notification-card notification-section">
                     <div className="notification-item notification-toggle-row">

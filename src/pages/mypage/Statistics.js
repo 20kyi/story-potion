@@ -4,6 +4,7 @@ import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useTranslation } from '../../LanguageContext';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
@@ -85,6 +86,7 @@ const StatNumberSmall = styled(StatNumber)`
 
 function Statistics({ user }) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [diaryCount, setDiaryCount] = useState(0);
     const [novelCount, setNovelCount] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
@@ -191,44 +193,44 @@ function Statistics({ user }) {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="내 통계" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('stats_title')} />
             <div style={{ maxWidth: 600, margin: '60px auto', marginTop: 50, padding: 24, paddingTop: 40, paddingBottom: 20 }}>
                 {loading ? (
-                    <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>로딩 중...</div>
+                    <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{t('loading')}</div>
                 ) : (
                     <StatsGrid>
                         {/* 작성한 일기 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '1 / 4' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성된일기.png'} alt="작성된 일기" />
-                            <StatLabel color="#ff8800">작성한 일기</StatLabel>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성된일기.png'} alt={t('stat_diary_count')} />
+                            <StatLabel color="#ff8800">{t('stat_diary_count')}</StatLabel>
                             <StatNumber color="#e46262">{diaryCount}</StatNumber>
                         </StatCard>
                         {/* 완성된 소설 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '4 / 7' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/내관심사.png'} alt="내 관심사" />
-                            <StatLabel color="#e462a0">내 관심사</StatLabel>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/내관심사.png'} alt={t('stat_interest')} />
+                            <StatLabel color="#e462a0">{t('stat_interest')}</StatLabel>
                             <Rank1>1위: {topWords[0]}</Rank1>
                             <Rank2>2위: {topWords[1]}</Rank2>
                             <Rank3>3위: {topWords[2]}</Rank3>
                         </StatCard>
                         {/* 연속일수 */}
                         <StatCard style={{ gridColumn: 2, gridRow: '1 / 3' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/연속일수.png'} alt="연속일수" />
-                            <StatLabel color="#a259d9">연속일수</StatLabel>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/연속일수.png'} alt={t('stat_streak')} />
+                            <StatLabel color="#a259d9">{t('stat_streak')}</StatLabel>
                             <StatNumber color="#a259d9">{maxStreak}</StatNumber>
                         </StatCard>
                         {/* 내 관심사 */}
                         <StatCard style={{ gridColumn: 2, gridRow: '3 / 5' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/완성된소설.png'} alt="완성된 소설" />
-                            <StatLabel color="#1abc3b">완성된 소설</StatLabel>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/완성된소설.png'} alt={t('stat_novel_count')} />
+                            <StatLabel color="#1abc3b">{t('stat_novel_count')}</StatLabel>
                             <StatNumber color="#1abc3b">{novelCount}</StatNumber>
 
                         </StatCard>
                         {/* Total Potion -> 가장 많이 쓴 소설 장르*/}
                         <StatCard style={{ gridColumn: 2, gridRow: '5 / 7' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt="가장 많이 쓴 소설 장르" />
-                            <StatLabel color="#3498f3">최애 장르</StatLabel>
-                            <StatNumberSmall color="#3498f3">{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}편)` : '데이터 없음'}</StatNumberSmall>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt={t('stat_favorite_genre')} />
+                            <StatLabel color="#3498f3">{t('stat_favorite_genre')}</StatLabel>
+                            <StatNumberSmall color="#3498f3">{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}${t('unit_count') || '편'})` : t('no_data') || '데이터 없음'}</StatNumberSmall>
                         </StatCard>
                     </StatsGrid>
                 )}

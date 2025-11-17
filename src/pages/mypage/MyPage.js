@@ -49,6 +49,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
 import { getFriendsList } from '../../utils/friendSystem';
+import { useTranslation } from '../../LanguageContext';
 
 // 관리자 아이콘 추가
 const AdminIcon = ({ color = '#222' }) => (
@@ -430,6 +431,7 @@ function MyPage({ user }) {
   // 네비게이션 및 테마
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
 
   // 비밀번호 변경 관련 상태
   const [currentPassword, setCurrentPassword] = useState(''); // 현재 비밀번호
@@ -518,11 +520,9 @@ function MyPage({ user }) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // 로그아웃 성공 시 App.js의 onAuthStateChanged가 감지하여
-      // 자동으로 로그인 페이지로 리디렉션합니다.
-      alert('로그아웃 되었습니다.');
+      alert(t('logout'));
     } catch (error) {
-      alert('로그아웃에 실패했습니다.');
+      alert(t('logout_failed') || '로그아웃에 실패했습니다.');
     }
   };
 
@@ -594,7 +594,7 @@ function MyPage({ user }) {
 
   return (
     <>
-      <Header user={user} title="마이페이지" />
+      <Header user={user} title={t('mypage')} />
       <MainContainer className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
         {isEditing ? (
           <EditProfileCard>
@@ -677,7 +677,7 @@ function MyPage({ user }) {
               )}
             </div>
             <EditInputWrap>
-              <EditLabel htmlFor="edit-nickname">닉네임</EditLabel>
+              <EditLabel htmlFor="edit-nickname">{t('nickname') || '닉네임'}</EditLabel>
               <EditInput
                 id="edit-nickname"
                 type="text"
@@ -748,7 +748,7 @@ function MyPage({ user }) {
               </>
             )}
             <EditButtonRow>
-              <EditCancelTextButton onClick={() => setIsEditing(false)}>취소</EditCancelTextButton>
+              <EditCancelTextButton onClick={() => setIsEditing(false)}>{t('cancel')}</EditCancelTextButton>
               <EditSaveButton
                 onClick={async () => {
                   setPwChangeError('');
@@ -791,7 +791,7 @@ function MyPage({ user }) {
                   await handleProfileUpdate();
                 }}
                 disabled={pwChangeLoading}
-              >저장</EditSaveButton>
+              >{t('save')}</EditSaveButton>
             </EditButtonRow>
 
             {/* 구글 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
@@ -808,7 +808,7 @@ function MyPage({ user }) {
                 wordBreak: 'keep-all',
                 lineHeight: '1.5'
               }}>
-                구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.
+                {t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.'}
               </div>
             )}
           </EditProfileCard>
@@ -824,7 +824,7 @@ function MyPage({ user }) {
                 <EditIcon width="20" height="20" color="#555555" />
               </EditIconWrapper>
             </ProfileContainer>
-            <Nickname>{displayName}님!</Nickname>
+            <Nickname>{displayName}{t('user_nim_suffix')}</Nickname>
 
             {/* 프리미엄 상태 표시 */}
             <PremiumStatus
@@ -834,21 +834,21 @@ function MyPage({ user }) {
               {premiumStatus.isMonthlyPremium && (
                 <>
                   <span>💎</span>
-                  월간 프리미엄 회원
+                  {t('premium_monthly')}
                   <span>💎</span>
                 </>
               )}
               {premiumStatus.isYearlyPremium && (
                 <>
                   <span>👑</span>
-                  연간 프리미엄 회원
+                  {t('premium_yearly')}
                   <span>👑</span>
                 </>
               )}
               {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
                 <>
                   <span>⭐</span>
-                  일반 회원
+                  {t('premium_basic')}
                   <span>⭐</span>
                 </>
               )}
@@ -860,11 +860,11 @@ function MyPage({ user }) {
             <StatsContainer>
               <StatItem onClick={() => navigate('/my/shop/charge')}>
                 <StatNumber>{point.toLocaleString()}</StatNumber>
-                <StatLabel>포인트</StatLabel>
+                <StatLabel>{t('points')}</StatLabel>
               </StatItem>
               <StatItem onClick={() => navigate('/my/friend')}>
                 <StatNumber>{friendCount}</StatNumber>
-                <StatLabel>친구</StatLabel>
+                <StatLabel>{t('friends')}</StatLabel>
               </StatItem>
 
             </StatsContainer>
@@ -873,38 +873,38 @@ function MyPage({ user }) {
                 <MenuIcon as="div">
                   <RecentActivityIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>내 통계</MenuLabel>
+                <MenuLabel>{t('stats')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
                   <GearIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>개인설정</MenuLabel>
+                <MenuLabel>{t('personal_settings')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/shop')}>
                 <MenuIcon as="div">
                   <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>상점</MenuLabel>
+                <MenuLabel>{t('shop')}</MenuLabel>
               </MenuButton>
 
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
                   <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>고객지원</MenuLabel>
+                <MenuLabel>{t('support')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/social')}>
                 <MenuIcon as="div">
                   <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>소셜</MenuLabel>
+                <MenuLabel>{t('social')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/app-info')}>
                 <MenuIcon as="div">
                   <AppInfoIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
-                <MenuLabel>앱 정보</MenuLabel>
+                <MenuLabel>{t('app_info')}</MenuLabel>
               </MenuButton>
 
 
@@ -918,7 +918,7 @@ function MyPage({ user }) {
         {isAdmin(user) && (
           <AdminButton onClick={() => navigate('/admin/users')}>
             <AdminIcon color="#3498db" width={14} height={14} />
-            관리자
+            {t('admin')}
           </AdminButton>
         )}
       </MainContainer>

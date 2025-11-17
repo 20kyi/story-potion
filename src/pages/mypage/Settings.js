@@ -9,6 +9,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useLanguage } from '../../LanguageContext';
 
 const FONT_OPTIONS = [
     { label: '시스템 기본', value: 'system-ui, sans-serif' },
@@ -24,12 +25,12 @@ const FONT_OPTIONS = [
 function Settings() {
     const navigate = useNavigate();
     const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily } = useTheme();
+    const { language, setLanguage, t } = useLanguage();
     const [open, setOpen] = useState({
         notification: false,
         theme: false,
         language: false,
     });
-    const [language, setLanguage] = useState('한국어');
     const [notificationStatus, setNotificationStatus] = useState({
         supported: false,
         granted: false,
@@ -108,13 +109,13 @@ function Settings() {
     // 알림 상태 텍스트 반환
     const getStatusText = () => {
         if (!notificationStatus.supported) {
-            return '지원 안됨';
+            return t('notification_status_unsupported');
         }
 
         if (notificationStatus.granted) {
-            return '권한 허용됨';
+            return t('notification_status_granted');
         } else {
-            return '권한 필요';
+            return t('notification_status_required');
         }
     };
 
@@ -173,9 +174,9 @@ function Settings() {
                 premiumType: null
             });
             alert('프리미엄이 해지되었습니다.');
-        } catch (error) {
+            } catch (error) {
             console.error('프리미엄 해지 실패:', error);
-            alert('프리미엄 해지에 실패했습니다.');
+                alert(t('premium_cancel_failed'));
         } finally {
             setIsLoading(false);
             setModal(false);
@@ -184,13 +185,13 @@ function Settings() {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="개인설정" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('personal_settings')} />
             <div className="settings-container">
                 <ul className="settings-list">
                     {/* 알림설정 */}
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/notification-settings')}>
-                            <span>알림 설정</span>
+                            <span>{t('notification_settings')}</span>
                         </div>
                     </li>
 
@@ -198,7 +199,7 @@ function Settings() {
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span>알림 테스트</span>
+                                <span>{t('notification_test')}</span>
                                 <span style={getStatusStyle()}>
                                     {getStatusText()}
                                 </span>
@@ -216,17 +217,21 @@ function Settings() {
                                     cursor: notificationStatus.supported ? 'pointer' : 'not-allowed'
                                 }}
                             >
-                                테스트
+                                {t('notification_test_button')}
                             </button>
                         </div>
                     </li>
 
                     {/* 테마 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
-                        <span>테마</span>
+                        <span>{t('theme')}</span>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{ fontSize: '14px', color: '#666' }}>
-                                {theme === 'light' ? '라이트' : theme === 'dark' ? '다크' : '시스템'}
+                                {theme === 'light'
+                                    ? t('theme_light')
+                                    : theme === 'dark'
+                                        ? t('theme_dark')
+                                        : t('theme_system')}
                             </span>
                             <div
                                 onClick={toggleTheme}
@@ -259,20 +264,20 @@ function Settings() {
                     </li>
                     {/* 언어 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
-                        <span>언어</span>
+                        <span>{t('language')}</span>
                         <select
                             className="settings-select"
                             value={language}
                             onChange={e => setLanguage(e.target.value)}
                             style={{ marginLeft: 'auto', width: 160, fontSize: 18, padding: '6px 12px', borderRadius: 8 }}
                         >
-                            <option value="한국어">한국어</option>
-                            <option value="English">English</option>
+                            <option value="ko">한국어</option>
+                            <option value="en">English</option>
                         </select>
                     </li>
                     {/* 폰트 선택 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
-                        <span>글꼴</span>
+                        <span>{t('font')}</span>
                         <select
                             className="settings-select"
                             value={fontFamily}
@@ -289,11 +294,11 @@ function Settings() {
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span>구독 관리</span>
+                                <span>{t('subscription_manage')}</span>
                                 <span style={{ fontSize: '12px', color: '#666' }}>
-                                    {premiumStatus.isMonthlyPremium && '💎 월간 프리미엄 회원'}
-                                    {premiumStatus.isYearlyPremium && '👑 연간 프리미엄 회원'}
-                                    {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && '⭐ 일반 회원'}
+                                    {premiumStatus.isMonthlyPremium && `💎 ${t('premium_monthly')}`}
+                                    {premiumStatus.isYearlyPremium && `👑 ${t('premium_yearly')}`}
+                                    {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && `⭐ ${t('premium_basic')}`}
                                 </span>
                             </div>
                             {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
@@ -312,15 +317,15 @@ function Settings() {
                                             opacity: isLoading ? 0.6 : 1
                                         }}
                                     >
-                                        {isLoading ? '처리중...' : '해지하기'}
+                                        {isLoading ? t('processing') : t('premium_cancel_button')}
                                     </button>
                                     <ConfirmModal
                                         open={modal}
-                                        title={premiumStatus.isMonthlyPremium ? '월간 프리미엄 해지' : '연간 프리미엄 해지'}
-                                        description={premiumStatus.isMonthlyPremium ? '월간 프리미엄을 해지하시겠습니까?' : '연간 프리미엄을 해지하시겠습니까?'}
+                                        title={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_title') : t('premium_cancel_yearly_title')}
+                                        description={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_desc') : t('premium_cancel_yearly_desc')}
                                         onCancel={() => setModal(false)}
                                         onConfirm={doCancelPremium}
-                                        confirmText="해지하기"
+                                        confirmText={t('premium_cancel_button')}
                                     />
                                 </>
                             )}
@@ -328,13 +333,22 @@ function Settings() {
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) &&
                             premiumStatus.premiumRenewalDate && (
                                 <div style={{ fontSize: '12px', color: '#888', marginBottom: 4 }}>
-                                    다음 구독 갱신일: {new Date(premiumStatus.premiumRenewalDate.seconds ? premiumStatus.premiumRenewalDate.seconds * 1000 : premiumStatus.premiumRenewalDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    {t('subscription_next_renewal_date')}{' '}
+                                    {new Date(
+                                        premiumStatus.premiumRenewalDate.seconds
+                                            ? premiumStatus.premiumRenewalDate.seconds * 1000
+                                            : premiumStatus.premiumRenewalDate
+                                    ).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                    })}
                                 </div>
                             )
                         }
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
                             <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.4' }}>
-                                프리미엄 해지 시 즉시 모든 프리미엄 혜택이 중단됩니다.
+                                {t('premium_cancel_notice')}
                             </div>
                         )}
                     </li>

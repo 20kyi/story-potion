@@ -8,6 +8,7 @@ import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useTheme } from '../../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -183,6 +184,8 @@ const ActionButtonView = styled(ActionButton)`
 function FriendNovelList({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { language } = useLanguage();
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const userId = searchParams.get('userId');
     const [novels, setNovels] = useState([]);
@@ -248,6 +251,15 @@ function FriendNovelList({ user }) {
         } else {
             dateObj = new Date(dateOrTimestamp);
         }
+
+        if (language === 'en') {
+            return dateObj.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+        }
+
         return `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
     };
 
@@ -260,7 +272,7 @@ function FriendNovelList({ user }) {
     const handlePurchase = async (novel) => {
         setConfirmOpen(false);
         if (!user) {
-            alert('로그인이 필요합니다.');
+            alert(t('friend_novel_login_required'));
             return;
         }
         setLoadingNovelId(novel.id);
@@ -272,10 +284,10 @@ function FriendNovelList({ user }) {
                 const userSnap = await transaction.get(userRef);
                 const ownerSnap = await transaction.get(ownerRef);
                 const viewedSnapTx = await transaction.get(viewedRef);
-                if (!userSnap.exists()) throw new Error('내 계정 정보를 찾을 수 없습니다.');
+                if (!userSnap.exists()) throw new Error(t('user_info_not_found') || 'User info not found.');
                 if (viewedSnapTx.exists()) return; // 이미 결제됨
                 const myPoint = userSnap.data().point || 0;
-                if (myPoint < 30) throw new Error('포인트가 부족합니다. (30포인트 필요)');
+                if (myPoint < 30) throw new Error(t('friend_novel_point_not_enough'));
                 // 차감/지급
                 transaction.update(userRef, { point: myPoint - 30 });
                 if (ownerSnap.exists()) {
@@ -302,9 +314,9 @@ function FriendNovelList({ user }) {
                 createdAt: Timestamp.now(),
             });
             setPurchased((prev) => ({ ...prev, [novel.id]: true }));
-            alert('구매가 완료되었습니다!');
+            alert(t('friend_novel_buy_success'));
         } catch (e) {
-            alert(e.message || '포인트 결제에 실패했습니다.');
+            alert(e.message || t('friend_novel_buy_failed'));
         } finally {
             setLoadingNovelId(null);
         }
@@ -312,19 +324,19 @@ function FriendNovelList({ user }) {
 
     return (
         <Container theme={theme}>
-            <Header title="친구의 소설 목록" />
+            <Header title={t('friend_novel_list_title')} />
             <ConfirmModal
                 open={confirmOpen}
-                title="소설 구매"
-                description="이 소설을 30포인트로 구매하시겠습니까? 포인트가 차감됩니다."
+                title={t('friend_novel_buy_confirm_title')}
+                description={t('friend_novel_buy_confirm_desc')}
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={() => handlePurchase(pendingNovel)}
-                confirmText="확인"
+                confirmText={t('confirm')}
             />
             {(!userId) ? (
-                <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>userId가 없습니다.</div>
+                <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
             ) : isLoading ? (
-                <div style={{ textAlign: 'center', marginTop: 40 }}>로딩 중...</div>
+                <div style={{ textAlign: 'center', marginTop: 40 }}>{t('friend_novel_loading')}</div>
             ) : (
                 <>
                     {/* 친구 프로필 섹션 */}
@@ -337,14 +349,16 @@ function FriendNovelList({ user }) {
                                     onError={(e) => handleImageError(e)}
                                 />
                             </ProfileContainer>
-                            <FriendNickname theme={theme}>{friendInfo.displayName || '사용자'}님의 소설</FriendNickname>
+                            <FriendNickname theme={theme}>
+                                {t('friend_novel_owner_title', { name: friendInfo.displayName || 'User' })}
+                            </FriendNickname>
                             <FriendEmail theme={theme}>{friendInfo.email}</FriendEmail>
                         </FriendProfileSection>
                     )}
 
                     <NovelListWrapper>
                         {novels.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>소설이 없습니다.</div>
+                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>{t('friend_novel_empty')}</div>
                         ) : (
                             novels.map((novel) => (
                                 <NovelItem
@@ -355,22 +369,30 @@ function FriendNovelList({ user }) {
                                         <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
                                             <NovelTitle>{novel.title}</NovelTitle>
-                                            <NovelDate>{novel.month}월 {novel.weekNum}주차 소설</NovelDate>
+                                            <NovelDate>
+                                                {language === 'en'
+                                                    ? (() => {
+                                                        const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
+                                                        const monthName = d.toLocaleDateString('en-US', { month: 'long' });
+                                                        return `${monthName} ${t('week_num', { num: novel.weekNum })}`;
+                                                    })()
+                                                    : `${novel.month}월 ${novel.weekNum}주차 소설`}
+                                            </NovelDate>
                                             <NovelContent>{novel.content}</NovelContent>
                                         </div>
                                     </div>
-                                    {purchased[novel.id] ? (
+                                        {purchased[novel.id] ? (
                                         <ActionButtonView
                                             onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}
                                         >
-                                            보기
+                                            {t('friend_novel_view')}
                                         </ActionButtonView>
                                     ) : (
                                         <ActionButton
                                             onClick={() => handlePurchaseClick(novel)}
                                             disabled={loadingNovelId === novel.id}
-                                        >
-                                            {loadingNovelId === novel.id ? '구매 중...' : '30P로 구매'}
+                                            >
+                                            {loadingNovelId === novel.id ? t('friend_novel_buying') : t('friend_novel_buy')}
                                         </ActionButton>
                                     )}
                                 </NovelItem>

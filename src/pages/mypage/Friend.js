@@ -6,6 +6,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useTranslation } from '../../LanguageContext';
 import { motion } from 'framer-motion';
 import {
     searchUsers,
@@ -51,7 +52,7 @@ const TabHeader = styled.div`
 `;
 
 const Tab = styled.button.attrs({
-  className: 'friend-tab'
+    className: 'friend-tab'
 })`
   flex: 1;
   padding: 14px 12px;
@@ -98,7 +99,7 @@ const SearchInputContainer = styled.div`
 `;
 
 const SearchInput = styled.input.attrs({
-  className: 'friend-search-input'
+    className: 'friend-search-input'
 })`
   width: 100%;
   padding: 14px 16px;
@@ -483,6 +484,7 @@ function Friend({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const toast = useToast();
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('friends');  // 기본 탭을 친구로 변경
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -561,7 +563,7 @@ function Friend({ user }) {
             setSearchResults(results);
         } catch (error) {
             console.error('사용자 검색 실패:', error);
-            toast.showToast('사용자 검색에 실패했습니다.', 'error');
+            toast.showToast(t('friend_search_failed'), 'error');
         } finally {
             setIsSearching(false);
         }
@@ -588,7 +590,7 @@ function Friend({ user }) {
     // 수동 검색 함수 (검색 버튼 클릭 시)
     const handleManualSearch = async () => {
         if (!searchQuery.trim()) {
-            toast.showToast('검색어를 입력해주세요.', 'error');
+            toast.showToast(t('friend_search_input_required'), 'error');
             return;
         }
 
@@ -623,7 +625,7 @@ function Friend({ user }) {
         try {
             const result = await sendFriendRequest(user.uid, targetUserId);
             if (result.success) {
-                toast.showToast(result.message || '친구 요청을 보냈습니다.', 'success');
+                toast.showToast(result.message || t('friend_request_sent'), 'success');
                 await loadData();
                 // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
                 if (searchQuery.trim() && searchQuery.trim().length >= 2) {
@@ -631,11 +633,11 @@ function Friend({ user }) {
                     setSearchResults(results);
                 }
             } else {
-                toast.showToast(result.error || '친구 요청에 실패했습니다.', 'error');
+                toast.showToast(result.error || t('friend_request_failed'), 'error');
             }
         } catch (error) {
             console.error('친구 요청 실패:', error);
-            toast.showToast('친구 요청에 실패했습니다.', 'error');
+            toast.showToast(t('friend_request_failed'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -646,7 +648,7 @@ function Friend({ user }) {
         try {
             const result = await acceptFriendRequest(requestId, fromUserId, toUserId);
             if (result.success) {
-                toast.showToast(result.message || '친구 요청을 수락했습니다.', 'success');
+                toast.showToast(result.message || t('friend_request_accept_success'), 'success');
                 await loadData();
                 // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
                 if (searchQuery.trim() && searchQuery.trim().length >= 2) {
@@ -654,11 +656,11 @@ function Friend({ user }) {
                     setSearchResults(results);
                 }
             } else {
-                toast.showToast(result.error || '친구 요청 수락에 실패했습니다.', 'error');
+                toast.showToast(result.error || t('friend_request_accept_failed'), 'error');
             }
         } catch (error) {
             console.error('친구 요청 수락 실패:', error);
-            toast.showToast('친구 요청 수락에 실패했습니다.', 'error');
+            toast.showToast(t('friend_request_accept_failed'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -669,7 +671,7 @@ function Friend({ user }) {
         try {
             const result = await rejectFriendRequest(requestId);
             if (result.success) {
-                toast.showToast(result.message || '친구 요청을 거절했습니다.', 'success');
+                toast.showToast(result.message || t('friend_request_reject_success'), 'success');
                 await loadData();
                 // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
                 if (searchQuery.trim() && searchQuery.trim().length >= 2) {
@@ -677,11 +679,11 @@ function Friend({ user }) {
                     setSearchResults(results);
                 }
             } else {
-                toast.showToast(result.error || '친구 요청 거절에 실패했습니다.', 'error');
+                toast.showToast(result.error || t('friend_request_reject_failed'), 'error');
             }
         } catch (error) {
             console.error('친구 요청 거절 실패:', error);
-            toast.showToast('친구 요청 거절에 실패했습니다.', 'error');
+            toast.showToast(t('friend_request_reject_failed'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -692,7 +694,7 @@ function Friend({ user }) {
         try {
             const result = await removeFriend(friendshipId);
             if (result.success) {
-                toast.showToast('친구를 삭제했습니다.', 'success');
+                toast.showToast(t('friend_remove_success'), 'success');
                 await loadData();
                 // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
                 if (searchQuery.trim() && searchQuery.trim().length >= 2) {
@@ -700,11 +702,11 @@ function Friend({ user }) {
                     setSearchResults(results);
                 }
             } else {
-                toast.showToast(result.error || '친구 삭제에 실패했습니다.', 'error');
+                toast.showToast(result.error || t('friend_remove_failed'), 'error');
             }
         } catch (error) {
             console.error('친구 삭제 실패:', error);
-            toast.showToast('친구 삭제에 실패했습니다.', 'error');
+            toast.showToast(t('friend_remove_failed'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -712,7 +714,8 @@ function Friend({ user }) {
 
     const openDeleteModal = (friend) => {
         console.log('친구 삭제 모달 열기:', friend);
-        const confirmed = window.confirm(`정말로 "${friend.user.displayName || '친구'}"님을 친구 목록에서 삭제하시겠습니까?`);
+        const name = friend.user.displayName || t('friend_default_name');
+        const confirmed = window.confirm(t('friend_remove_confirm', { name }));
         if (confirmed) {
             handleRemoveFriend(friend.id);
         }
@@ -735,7 +738,7 @@ function Friend({ user }) {
         setIsLoading(true);
         try {
             await cancelFriendRequest(requestId);
-            toast.showToast('친구 요청을 취소했습니다.', 'success');
+            toast.showToast(t('friend_request_cancel_success'), 'success');
             await loadData();
             // 검색 결과가 있다면 검색을 다시 실행하여 상태 업데이트
             if (searchQuery.trim() && searchQuery.trim().length >= 2) {
@@ -744,7 +747,7 @@ function Friend({ user }) {
             }
         } catch (error) {
             console.error('친구 요청 취소 실패:', error);
-            toast.showToast('친구 요청 취소에 실패했습니다.', 'error');
+            toast.showToast(t('friend_request_cancel_failed'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -753,11 +756,11 @@ function Friend({ user }) {
     const renderFriendsTab = () => (
         <div>
             <SearchSection theme={theme}>
-                <SearchTitle theme={theme}>친구 찾기</SearchTitle>
+                <SearchTitle theme={theme}>{t('friend_search_title')}</SearchTitle>
                 <SearchInputContainer>
                     <SearchInput
                         type="text"
-                        placeholder="이름 또는 이메일로 검색"
+                        placeholder={t('friend_search_placeholder')}
                         value={searchQuery}
                         onChange={handleSearchInputChange}
                         onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
@@ -777,13 +780,15 @@ function Friend({ user }) {
 
                 {searchResults.length > 0 && (
                     <div style={{ marginTop: '20px' }}>
-                        <SectionTitle theme={theme}>검색 결과 ({searchResults.length}명)</SectionTitle>
+                        <SectionTitle theme={theme}>
+                            {t('friend_search_results', { count: searchResults.length })}
+                        </SectionTitle>
                         {searchResults.map((user) => {
                             // 사용자 상태 확인
                             const isFriend = friends.some(friend => friend.user.uid === user.uid);
                             const hasSentRequest = sentRequests.some(req => req.toUserId === user.uid);
                             const hasReceivedRequest = receivedRequests.some(req => req.fromUserId === user.uid);
-                            
+
                             return (
                                 <UserCard
                                     key={user.uid}
@@ -792,15 +797,15 @@ function Friend({ user }) {
                                     whileTap={{ scale: 0.99 }}
                                 >
                                     <UserInfo>
-                                                                    <UserAvatar
-                                src={getSafeProfileImageUrl(user.photoURL)}
-                                alt={user.displayName}
-                                onError={(e) => handleImageError(e)}
-                            />
+                                        <UserAvatar
+                                            src={getSafeProfileImageUrl(user.photoURL)}
+                                            alt={user.displayName}
+                                            onError={(e) => handleImageError(e)}
+                                        />
                                         <UserDetails>
-                                            <UserName theme={theme}>{user.displayName || '사용자'}</UserName>
-                                            <UserEmail 
-                                                theme={theme} 
+                                            <UserName theme={theme}>{user.displayName || t('default_user_name')}</UserName>
+                                            <UserEmail
+                                                theme={theme}
                                                 title={user.email}
                                             >
                                                 {user.email}
@@ -814,19 +819,19 @@ function Friend({ user }) {
                                             disabled={isLoading}
                                         >
                                             <FaUserPlus />
-                                            친구 요청
+                                            {t('friend_request_button')}
                                         </ActionButton>
                                     )}
                                     {isFriend && (
-                                        <StatusBadge className="accepted" style={{ marginLeft: 'auto'}}>
+                                        <StatusBadge className="accepted" style={{ marginLeft: 'auto' }}>
                                             <FaUserCheck style={{ marginRight: '6px' }} />
-                                            친구
+                                            {t('friends')}
                                         </StatusBadge>
                                     )}
                                     {hasSentRequest && (
-                                        <StatusBadge className="pending" style={{ marginLeft: 'auto'}}>
+                                        <StatusBadge className="pending" style={{ marginLeft: 'auto' }}>
                                             <FaUserTimes style={{ marginRight: '6px' }} />
-                                            요청중
+                                            {t('friend_request_pending')}
                                         </StatusBadge>
                                     )}
                                     {hasReceivedRequest && (
@@ -838,7 +843,7 @@ function Friend({ user }) {
                                                 )}
                                                 disabled={isLoading}
                                             >
-                                                거절
+                                                {t('friend_request_reject')}
                                             </RejectButton>
                                             <AcceptButton
                                                 className="success"
@@ -849,7 +854,7 @@ function Friend({ user }) {
                                                 )}
                                                 disabled={isLoading}
                                             >
-                                                수락
+                                                {t('friend_request_accept')}
                                             </AcceptButton>
                                         </ActionRow>
                                     )}
@@ -862,7 +867,7 @@ function Friend({ user }) {
                 {isSearching && (
                     <div style={{ marginTop: '20px', textAlign: 'center', padding: '40px 20px' }}>
                         <div style={{ fontSize: '16px', color: theme.subText || '#666' }}>
-                            검색 중...
+                            {t('friend_search_loading')}
                         </div>
                     </div>
                 )}
@@ -871,8 +876,8 @@ function Friend({ user }) {
                     <div style={{ marginTop: '20px' }}>
                         <EmptyState theme={theme}>
                             <EmptyIcon>🔍</EmptyIcon>
-                            <EmptyText>검색 결과가 없습니다</EmptyText>
-                            <EmptySubtext>다른 검색어를 시도해보세요</EmptySubtext>
+                            <EmptyText>{t('friend_search_no_results')}</EmptyText>
+                            <EmptySubtext>{t('friend_search_no_results_sub')}</EmptySubtext>
                         </EmptyState>
                     </div>
                 )}
@@ -880,7 +885,7 @@ function Friend({ user }) {
                 {searchQuery.trim() && searchQuery.trim().length < 2 && (
                     <div style={{ marginTop: '20px', textAlign: 'center', padding: '20px' }}>
                         <div style={{ fontSize: '14px', color: theme.subText || '#666' }}>
-                            2글자 이상 입력해주세요
+                            {t('friend_search_min_length')}
                         </div>
                     </div>
                 )}
@@ -888,14 +893,14 @@ function Friend({ user }) {
 
             <SectionTitle theme={theme}>
                 <FaUsers />
-                내 친구 목록 ({friends.length}명)
+                {t('friend_list_title', { count: friends.length })}
             </SectionTitle>
 
             {friends.length === 0 ? (
                 <EmptyState theme={theme}>
                     <EmptyIcon>👥</EmptyIcon>
-                    <EmptyText>친구가 없습니다</EmptyText>
-                    <EmptySubtext>위에서 친구를 찾아서 요청을 보내보세요</EmptySubtext>
+                    <EmptyText>{t('friend_list_empty')}</EmptyText>
+                    <EmptySubtext>{t('friend_list_empty_sub')}</EmptySubtext>
                 </EmptyState>
             ) : (
                 friends.map((friend) => (
@@ -917,10 +922,10 @@ function Friend({ user }) {
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
-                                    {friend.user.displayName || '사용자'}
+                                    {friend.user.displayName || t('default_user_name')}
                                 </UserName>
-                                <UserEmail 
-                                    theme={theme} 
+                                <UserEmail
+                                    theme={theme}
                                     title={friend.user.email}
                                 >
                                     {friend.user.email}
@@ -934,7 +939,7 @@ function Friend({ user }) {
                                 openDeleteModal(friend);
                             }}
                             disabled={isLoading}
-                            title="친구 삭제"
+                            title={t('friend_remove_title')}
                         >
                             <HiOutlineTrash />
                         </TrashIconButton>
@@ -947,7 +952,7 @@ function Friend({ user }) {
     const renderRequestsTab = () => (
         <div>
             <SectionTitle theme={theme}>
-                받은 친구 요청
+                {t('friend_received_requests')}
                 {receivedRequests.length > 0 && (
                     <RequestCount>{receivedRequests.length}</RequestCount>
                 )}
@@ -956,8 +961,8 @@ function Friend({ user }) {
             {receivedRequests.length === 0 ? (
                 <EmptyState theme={theme}>
                     <EmptyIcon>📭</EmptyIcon>
-                    <EmptyText>받은 친구 요청이 없습니다</EmptyText>
-                    <EmptySubtext>새로운 친구 요청이 오면 여기에 표시됩니다</EmptySubtext>
+                    <EmptyText>{t('friend_received_empty')}</EmptyText>
+                    <EmptySubtext>{t('friend_received_empty_sub')}</EmptySubtext>
                 </EmptyState>
             ) : (
                 receivedRequests.map((request) => (
@@ -975,10 +980,10 @@ function Friend({ user }) {
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
-                                    {request.fromUser?.displayName || '사용자'}
+                                    {request.fromUser?.displayName || t('default_user_name')}
                                 </UserName>
-                                <UserEmail 
-                                    theme={theme} 
+                                <UserEmail
+                                    theme={theme}
                                     title={request.fromUser?.email || ''}
                                 >
                                     {request.fromUser?.email || ''}
@@ -991,26 +996,26 @@ function Friend({ user }) {
                                 onClick={() => handleRejectRequest(request.id)}
                                 disabled={isLoading}
                             >
-                                거절
+                                {t('friend_request_reject')}
                             </RejectButton>
                             <AcceptButton
                                 className="success"
                                 onClick={() => handleAcceptRequest(request.id, request.fromUserId, user.uid)}
                                 disabled={isLoading}
                             >
-                                수락
+                                {t('friend_request_accept')}
                             </AcceptButton>
                         </ActionRow>
                     </UserCard>
                 ))
             )}
 
-            <SectionTitle theme={theme}>보낸 친구 요청</SectionTitle>
+            <SectionTitle theme={theme}>{t('friend_sent_requests')}</SectionTitle>
             {sentRequests.length === 0 ? (
                 <EmptyState theme={theme}>
                     <EmptyIcon>📤</EmptyIcon>
-                    <EmptyText>보낸 친구 요청이 없습니다</EmptyText>
-                    <EmptySubtext>친구 요청을 보내면 여기에 표시됩니다</EmptySubtext>
+                    <EmptyText>{t('friend_sent_empty')}</EmptyText>
+                    <EmptySubtext>{t('friend_sent_empty_sub')}</EmptySubtext>
                 </EmptyState>
             ) : (
                 sentRequests.map((request) => (
@@ -1028,10 +1033,10 @@ function Friend({ user }) {
                             />
                             <UserDetails>
                                 <UserName theme={theme}>
-                                    {request.toUser?.displayName || '사용자'}
+                                    {request.toUser?.displayName || t('default_user_name')}
                                 </UserName>
-                                <UserEmail 
-                                    theme={theme} 
+                                <UserEmail
+                                    theme={theme}
                                     title={request.toUser?.email || ''}
                                 >
                                     {request.toUser?.email || ''}
@@ -1044,7 +1049,7 @@ function Friend({ user }) {
                             disabled={isLoading}
                             style={{ marginLeft: 'auto' }}
                         >
-                            요청 취소
+                            {t('friend_request_cancel')}
                         </RejectButton>
                     </UserCard>
                 ))
@@ -1055,7 +1060,7 @@ function Friend({ user }) {
     return (
         <Container theme={theme}>
             <GlobalStyle theme={theme} />
-            <Header user={user} title="친구" />
+            <Header user={user} title={t('friends')} />
 
             <TabContainer>
                 <TabHeader theme={theme}>
@@ -1064,14 +1069,14 @@ function Friend({ user }) {
                         onClick={() => setActiveTab('friends')}
                         theme={theme}
                     >
-                        친구
+                        {t('friends')}
                     </Tab>
                     <Tab
                         active={activeTab === 'requests'}
                         onClick={() => setActiveTab('requests')}
                         theme={theme}
                     >
-                        요청
+                        {t('friend_requests_tab')}
                         {receivedRequests.length > 0 && (
                             <RequestCount>{receivedRequests.length}</RequestCount>
                         )}
@@ -1090,9 +1095,9 @@ function Friend({ user }) {
                 open={showDeleteModal}
                 onCancel={closeDeleteModal}
                 onConfirm={confirmDeleteFriend}
-                title="친구 삭제"
-                description={`정말로 "${friendToDelete?.user?.displayName || '친구'}"님을 친구 목록에서 삭제하시겠습니까?`}
-                confirmText="삭제"
+                title={t('friend_remove_title')}
+                description={t('friend_remove_confirm', { name: friendToDelete?.user?.displayName || t('friend_default_name') })}
+                confirmText={t('delete')}
             />
         </Container>
     );

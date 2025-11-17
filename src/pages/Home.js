@@ -13,6 +13,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import { toast } from '../components/ui/Toast';
 import { getPointPolicy } from '../utils/appConfig';
 import { checkWeeklyBonus } from '../utils/weeklyBonus';
+import { useTranslation } from '../LanguageContext';
 
 
 const Container = styled.div`
@@ -465,6 +466,7 @@ const TabButton = styled.button`
 
 function Home({ user }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
@@ -472,14 +474,14 @@ function Home({ user }) {
   const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
 
 
-  // 포션 데이터
+  // 포션 데이터 (표시는 locale로)
   const potionData = [
-    { id: 'romance', name: '로맨스', image: '/potion/romance.png' },
-    { id: 'historical', name: '역사', image: '/potion/historical.png' },
-    { id: 'mystery', name: '추리', image: '/potion/mystery.png' },
-    { id: 'horror', name: '공포', image: '/potion/horror.png' },
-    { id: 'fairytale', name: '동화', image: '/potion/fairytale.png' },
-    { id: 'fantasy', name: '판타지', image: '/potion/fantasy.png' },
+    { id: 'romance', key: 'novel_genre_romance', image: '/potion/romance.png' },
+    { id: 'historical', key: 'novel_genre_historical', image: '/potion/historical.png' },
+    { id: 'mystery', key: 'novel_genre_mystery', image: '/potion/mystery.png' },
+    { id: 'horror', key: 'novel_genre_horror', image: '/potion/horror.png' },
+    { id: 'fairytale', key: 'novel_genre_fairytale', image: '/potion/fairytale.png' },
+    { id: 'fantasy', key: 'novel_genre_fantasy', image: '/potion/fantasy.png' },
   ];
 
   // 오늘의 글감 선택 로직
@@ -627,7 +629,7 @@ function Home({ user }) {
 
 
       <ContentGrid>
-        <SectionLabel>최근일기</SectionLabel>
+        <SectionLabel>{t('home_recent_diary')}</SectionLabel>
         <MainButtonRow>
           <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
             {recentDiaries.length > 0 && recentDiaries[0] ? (
@@ -643,8 +645,8 @@ function Home({ user }) {
               </DiaryPreviewContainer>
             ) : (
               <DiaryPreviewContainer>
-                <DiaryPreviewTitle>아직 작성된 일기가 없어요</DiaryPreviewTitle>
-                <DiaryPreviewContent lineClamp={6}>오늘의 첫 일기를 작성해보세요!</DiaryPreviewContent>
+                <DiaryPreviewTitle>{t('home_no_diary_yet')}</DiaryPreviewTitle>
+                <DiaryPreviewContent lineClamp={6}>{t('home_write_first_diary')}</DiaryPreviewContent>
               </DiaryPreviewContainer>
             )}
           </RecentDiaryCard>
@@ -652,13 +654,13 @@ function Home({ user }) {
           <RightColumn>
             <TopicCard>
               {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
-              <RecommendationIntro>이런 주제는 <br /> 어떠세요?💡</RecommendationIntro>
+              <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro>
               <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
             </TopicCard>
             <WriteDiaryButton onClick={handleWriteDiaryClick}>
               <WriteButtonContent>
                 <PencilIcon width="32" height="32" />
-                <MainButtonText>일기 쓰기</MainButtonText>
+                <MainButtonText>{t('home_write_diary')}</MainButtonText>
               </WriteButtonContent>
             </WriteDiaryButton>
           </RightColumn>
@@ -666,9 +668,9 @@ function Home({ user }) {
 
         {/* 탭 바 추가 */}
         <TabBar>
-          <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>내 소설</TabButton>
-          <TabButton $active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>구매한 소설</TabButton>
-          <TabButton $active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>내 포션</TabButton>
+          <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>{t('home_my_novel')}</TabButton>
+          <TabButton $active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>{t('home_purchased_novel')}</TabButton>
+          <TabButton $active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>{t('home_my_potion')}</TabButton>
         </TabBar>
         <div style={{ height: 16 }} />
 
@@ -697,7 +699,7 @@ function Home({ user }) {
                       marginRight: 'auto',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                     }} />
-                    <MyNovelTitle style={{ color: '#aaa' }}>소설 없음</MyNovelTitle>
+                    <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_novel')}</MyNovelTitle>
                   </MyNovelBox>
                 ))
               }
@@ -729,7 +731,7 @@ function Home({ user }) {
                       marginRight: 'auto',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                     }} />
-                    <MyNovelTitle style={{ color: '#aaa' }}>구매한 소설 없음</MyNovelTitle>
+                    <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_purchased_novel')}</MyNovelTitle>
                   </MyNovelBox>
                 ))
               }
@@ -746,19 +748,19 @@ function Home({ user }) {
                     <PotionCard
                       key={potion.id}
                       onClick={() => navigate('/my/potion-shop')}
-                      title={`${potion.name} 포션 ${count}개 보유`}
+                      title={`${t(potion.key)} ${t('potion') || ''} ${count}`}
                     >
-                      <PotionImage src={potion.image} alt={potion.name} />
+                      <PotionImage src={potion.image} alt={t(potion.key)} />
                       <PotionCount>{count}</PotionCount>
-                      <PotionName>{potion.name}</PotionName>
+                      <PotionName>{t(potion.key)}</PotionName>
                     </PotionCard>
                   ) : null;
                 })}
                 {Object.values(ownedPotions).every(count => !count || count <= 0) && (
                   <EmptyPotionCard>
-                    <EmptyPotionText>보유한 포션이 없어요</EmptyPotionText>
+                    <EmptyPotionText>{t('home_no_potion')}</EmptyPotionText>
                     <EmptyPotionText style={{ fontSize: '10px', marginTop: '4px' }}>
-                      포션 상점에서 구매해보세요!
+                      {t('home_buy_potion')}
                     </EmptyPotionText>
                   </EmptyPotionCard>
                 )}

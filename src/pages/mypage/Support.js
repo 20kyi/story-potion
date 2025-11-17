@@ -2,9 +2,11 @@ import React from 'react';
 import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import styles from './Support.module.css';
+import { useTranslation } from '../../LanguageContext';
 
 function Support() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     
     const handleMenuClick = (menuType) => {
         switch (menuType) {
@@ -30,20 +32,20 @@ function Support() {
 
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="고객지원" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('support_title')} />
             <div className={styles.supportContainer}>
                 <ul className={styles.supportList}>
                     <li className={styles.supportItem} onClick={() => handleMenuClick('notice')}>
-                        공지사항
+                        {t('notice')}
                     </li>
                     <li className={styles.supportItem} onClick={() => handleMenuClick('faq')}>
-                        FAQ
+                        {t('faq')}
                     </li>
                     <li className={styles.supportItem} onClick={() => handleMenuClick('inquiry')}>
-                        문의하기
+                        {t('inquiry')}
                     </li>
                     <li className={styles.supportItem} onClick={() => handleMenuClick('feedback')}>
-                        피드백
+                        {t('feedback')}
                     </li>
                 </ul>
             </div>

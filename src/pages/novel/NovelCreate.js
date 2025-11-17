@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import { motion } from 'framer-motion';
 import PointIcon from '../../components/icons/PointIcon';
 import { usePrompt } from '../../hooks/usePrompt';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -144,24 +145,24 @@ const Button = styled.button`
   }
 `;
 
-const loadingMessages = [
-    "당신의 일기가 한 편의 소설로 변신하는 중이에요…",
-    "마법사가 당신의 이야기를 엮고 있어요. 잠시만 기다려주세요!",
-    "소설의 세계를 상상하는 중… 조금만 기다려주세요!",
-    "주인공이 모험을 시작할 준비를 하고 있어요!",
-    "감동적인 한 주의 이야기를 소설로 빚는 중입니다…",
-    "AI 작가가 열심히 집필 중입니다. 잠시만 기다려주세요!",
-    "여러분의 일기가 소설로 태어나는 중이에요!",
-    "스토리 포션이 마법을 부리는 중입니다…"
+const loadingMessagesKeys = [
+    'novel_loading_msg_1',
+    'novel_loading_msg_2',
+    'novel_loading_msg_3',
+    'novel_loading_msg_4',
+    'novel_loading_msg_5',
+    'novel_loading_msg_6',
+    'novel_loading_msg_7',
+    'novel_loading_msg_8',
 ];
 
 const potionImages = [
-    { genre: '로맨스', src: '/potion/romance.png', label: '로맨스' },
-    { genre: '역사', src: '/potion/historical.png', label: '역사' },
-    { genre: '추리', src: '/potion/mystery.png', label: '추리' },
-    { genre: '공포', src: '/potion/horror.png', label: '공포' },
-    { genre: '동화', src: '/potion/fairytale.png', label: '동화' },
-    { genre: '판타지', src: '/potion/fantasy.png', label: '판타지' },
+    { genre: '로맨스', key: 'novel_genre_romance', src: '/potion/romance.png' },
+    { genre: '역사', key: 'novel_genre_historical', src: '/potion/historical.png' },
+    { genre: '추리', key: 'novel_genre_mystery', src: '/potion/mystery.png' },
+    { genre: '공포', key: 'novel_genre_horror', src: '/potion/horror.png' },
+    { genre: '동화', key: 'novel_genre_fairytale', src: '/potion/fairytale.png' },
+    { genre: '판타지', key: 'novel_genre_fantasy', src: '/potion/fantasy.png' },
 ];
 
 const PotionSelectSection = styled.div`
@@ -229,8 +230,10 @@ function NovelCreate({ user }) {
     const location = useLocation();
     const navigate = useNavigate();
     const toast = useToast();
+    const { t } = useTranslation();
+    const { language } = useLanguage();
     const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle } = location.state || {};
-    
+
     console.log('=== NovelCreate 컴포넌트 마운트 ===', new Date().toISOString());
     console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle });
     const [content, setContent] = useState('');
@@ -239,8 +242,8 @@ function NovelCreate({ user }) {
     const [isNovelGenerated, setIsNovelGenerated] = useState(false);
     const [selectedPotion, setSelectedPotion] = useState(null);
     const [generatedImageUrl, setGeneratedImageUrl] = useState(imageUrl);
-    const [title, setTitle] = useState(initialTitle || '나의 소설');
-    const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+    const [title, setTitle] = useState(initialTitle || t('novel_default_title'));
+    const [loadingMessage, setLoadingMessage] = useState(t(loadingMessagesKeys[0]));
     const [isNovelSaved, setIsNovelSaved] = useState(false);
     const [currentPoints, setCurrentPoints] = useState(0);
     const [ownedPotions, setOwnedPotions] = useState({});
@@ -248,7 +251,7 @@ function NovelCreate({ user }) {
 
     // 뒤로가기 방지 로직 - 소설 생성 중일 때 뒤로가기 방지
     usePrompt(isLoading, (location, callback) => {
-        if (window.confirm('소설 생성 중입니다. 정말 나가시겠습니까?')) {
+        if (window.confirm(t('novel_generate_confirm_leave'))) {
             callback();
         }
     });
@@ -261,19 +264,19 @@ function NovelCreate({ user }) {
             console.log('뒤로가기 방지 비활성화');
             return;
         }
-        
+
         console.log('뒤로가기 방지 활성화');
-        
+
         const handleBeforeUnload = (e) => {
             e.preventDefault();
-            e.returnValue = '소설 생성 중입니다. 정말 나가시겠습니까?';
-            return '소설 생성 중입니다. 정말 나가시겠습니까?';
+            e.returnValue = t('novel_generate_confirm_leave');
+            return t('novel_generate_confirm_leave');
         };
 
         const handlePopState = (e) => {
             if (isLoading) {
                 e.preventDefault();
-                if (window.confirm('소설 생성 중입니다. 정말 나가시겠습니까?')) {
+                if (window.confirm(t('novel_generate_confirm_leave'))) {
                     window.history.back();
                 } else {
                     window.history.pushState(null, '', window.location.href);
@@ -283,7 +286,7 @@ function NovelCreate({ user }) {
 
         window.addEventListener('beforeunload', handleBeforeUnload);
         window.addEventListener('popstate', handlePopState);
-        
+
         // 히스토리에 현재 상태 추가
         window.history.pushState(null, '', window.location.href);
 
@@ -300,9 +303,9 @@ function NovelCreate({ user }) {
             setWeekDiaries([]);
             return;
         }
-        
+
         console.log('일기 fetch useEffect 실행:', { userId: user.uid, dateRange });
-        
+
         const fetchDiaries = async () => {
             const [startStr, endStr] = dateRange.split(' ~ ');
             const diariesRef = collection(db, 'diaries');
@@ -331,9 +334,9 @@ function NovelCreate({ user }) {
             console.log('사용자 데이터 fetch 스킵: 사용자 없음');
             return;
         }
-        
+
         console.log('사용자 데이터 fetch useEffect 실행:', { userId: user.uid });
-        
+
         const fetchUserData = async () => {
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -356,9 +359,9 @@ function NovelCreate({ user }) {
             console.log('기존 소설 확인 스킵:', { hasUser: !!user?.uid, year, month, weekNum });
             return;
         }
-        
+
         console.log('기존 소설 확인 useEffect 실행:', { userId: user.uid, year, month, weekNum });
-        
+
         const checkExistingNovel = async () => {
             try {
                 console.log('기존 소설 확인 중:', { userId: user.uid, year, month, weekNum });
@@ -371,9 +374,9 @@ function NovelCreate({ user }) {
                     where('weekNum', '==', weekNum)
                 );
                 const querySnapshot = await getDocs(q);
-                
+
                 console.log('조회된 소설 개수:', querySnapshot.size);
-                
+
                 if (!querySnapshot.empty) {
                     // 이미 소설이 존재하면 해당 소설 페이지로 이동
                     const existingNovel = querySnapshot.docs[0];
@@ -388,7 +391,7 @@ function NovelCreate({ user }) {
                 console.error('기존 소설 확인 실패:', error);
             }
         };
-        
+
         checkExistingNovel();
     }, [user?.uid, year, month, weekNum]); // navigate, toast 제거
 
@@ -402,22 +405,22 @@ function NovelCreate({ user }) {
     const handleGenerateNovel = async () => {
         console.log('=== 소설 생성 시작 ===');
         console.log('현재 상태:', { isLoading, isNovelGenerated, selectedGenre, weekDiaries: weekDiaries?.length });
-        
+
         // 중복 생성 방지 - 이미 생성 중이거나 생성된 상태라면 중단
         if (isLoading || isNovelGenerated) {
             console.log('중복 생성 방지됨:', { isLoading, isNovelGenerated });
-            toast.showToast('이미 소설 생성 중이거나 생성이 완료되었습니다.', 'error');
+            toast.showToast(t('novel_generate_in_progress'), 'error');
             return;
         }
 
         if (!selectedGenre) {
             console.log('포션(장르) 미선택');
-            toast.showToast('포션(장르)을 선택해주세요!', 'error');
+            toast.showToast(t('novel_select_potion'), 'error');
             return;
         }
         if (!weekDiaries || weekDiaries.length === 0) {
             console.log('일기 데이터 없음:', weekDiaries);
-            toast.showToast('소설을 생성할 일기가 없습니다.', 'error');
+            toast.showToast(t('novel_generate_need_diary'), 'error');
             return;
         }
 
@@ -433,7 +436,7 @@ function NovelCreate({ user }) {
 
         if (!selectedPotionId || !ownedPotions[selectedPotionId] || ownedPotions[selectedPotionId] <= 0) {
             console.log('포션 부족:', { selectedPotionId, ownedPotions: ownedPotions[selectedPotionId] });
-            toast.showToast('해당 포션이 부족합니다. 포션 상점에서 구매해주세요.', 'error');
+            toast.showToast(t('novel_generate_need_potion'), 'error');
             // 포션 상점으로 이동
             setTimeout(() => {
                 navigate('/my/potion-shop');
@@ -442,34 +445,42 @@ function NovelCreate({ user }) {
         }
 
         console.log('소설 생성 함수 호출 준비');
-        setLoadingMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
+        const randomKey = loadingMessagesKeys[Math.floor(Math.random() * loadingMessagesKeys.length)];
+        setLoadingMessage(t(randomKey));
         setIsLoading(true);
         const functions = getFunctions();
         const generateNovel = httpsCallable(functions, 'generateNovel');
         const diaryContents = weekDiaries.map(d => `${d.date}:\n${d.content}`).join('\n\n');
         console.log('일기 내용 길이:', diaryContents.length);
-        console.log('소설 생성 파라미터:', { diaryContents: diaryContents.substring(0, 100) + '...', genre: selectedGenre, userName: user.displayName || '주인공' });
-        
+        console.log('소설 생성 파라미터:', {
+            diaryContents: diaryContents.substring(0, 100) + '...',
+            genre: selectedGenre,
+            userName: user.displayName || '주인공',
+            language,
+        });
+
         try {
             console.log('소설 생성 함수 호출 중...');
             console.log('전송할 데이터:', {
                 diaryContentsLength: diaryContents.length,
                 genre: selectedGenre,
                 userName: user.displayName || '주인공',
+                language,
                 diaryContentsPreview: diaryContents.substring(0, 200)
             });
-            
+
             const result = await generateNovel({
                 diaryContents,
                 genre: selectedGenre,
-                userName: user.displayName || '주인공'
+                userName: user.displayName || '주인공',
+                language,
             });
-            console.log('소설 생성 완료:', { 
-                title: result.data.title, 
+            console.log('소설 생성 완료:', {
+                title: result.data.title,
                 contentLength: result.data.content?.length,
-                imageUrl: result.data.imageUrl 
+                imageUrl: result.data.imageUrl
             });
-            
+
             setContent(result.data.content);
             setTitle(result.data.title);
             setGeneratedImageUrl(result.data.imageUrl);
@@ -503,16 +514,16 @@ function NovelCreate({ user }) {
                     potions: newPotions
                 });
 
-                 // 포션 사용은 포인트를 차감하지 않으므로 포인트 내역에 기록하지 않음
+                // 포션 사용은 포인트를 차감하지 않으므로 포인트 내역에 기록하지 않음
 
                 // 상태 업데이트
                 setOwnedPotions(newPotions);
                 console.log('포션 차감 성공');
             } catch (potionError) {
-                toast.showToast('포션 차감에 실패했습니다.', 'error');
+                toast.showToast(t('novel_point_deduct_failed'), 'error');
                 console.error('포션 차감 에러:', potionError);
             }
-            toast.showToast('소설이 저장되었습니다! 소설을 확인해보세요.', 'success');
+            toast.showToast(t('novel_saved'), 'success');
             console.log('소설 생성 및 저장 완료, 소설 보기 페이지로 이동 예정');
             // 소설이 완성되면 소설 보기 페이지로 이동하고 히스토리에서 소설 생성 페이지 제거
             setTimeout(() => {
@@ -533,20 +544,20 @@ function NovelCreate({ user }) {
                 customData: error.customData,
                 toString: error.toString()
             });
-            
+
             // Rate limit 에러 확인
             if (error.details?.status === 429 || error.message?.includes('요청 한도')) {
-                toast.showToast('OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.', 'error');
+                toast.showToast(t('openai_rate_limit_exceeded'), 'error');
                 return;
             }
-            
+
             // 네트워크 에러인지 확인
             if (error.code === 'functions/unknown' || error.code === 'internal') {
                 console.error('서버 내부 에러 발생. Firebase 콘솔에서 Functions 로그를 확인하세요.');
             }
-            
+
             // Firebase Functions 에러 메시지 추출
-            let errorMessage = '알 수 없는 오류';
+            let errorMessage = t('unknown_error');
 
             // 서버에서 전달한 details에 메시지가 있는 경우 우선 사용
             if (error.details && typeof error.details === 'object') {
@@ -561,7 +572,7 @@ function NovelCreate({ user }) {
                 errorMessage = error.toString();
             }
 
-            toast.showToast(`소설 생성 실패: ${errorMessage}`, 'error');
+            toast.showToast(`${t('novel_creation_fail')}: ${errorMessage}`, 'error');
         } finally {
             console.log('소설 생성 프로세스 종료, 로딩 상태 해제');
             setIsLoading(false);
@@ -596,13 +607,13 @@ function NovelCreate({ user }) {
                 });
                 console.log('포인트 차감 성공');
             } catch (pointError) {
-                toast.showToast('포인트 차감에 실패했습니다.', 'error');
+                toast.showToast(t('novel_point_deduct_failed'), 'error');
                 console.error('포인트 차감 에러:', pointError);
             }
             setIsNovelSaved(true);
-            toast.showToast('소설이 저장되었습니다!', 'success');
+            toast.showToast(t('novel_saved'), 'success');
         } catch (error) {
-            toast.showToast('소설 저장에 실패했습니다.', 'error');
+            toast.showToast(t('novel_save_failed'), 'error');
             console.error('Firestore 저장 에러:', error);
         }
     };
@@ -633,7 +644,7 @@ function NovelCreate({ user }) {
                     </div>
                     <div style={{ width: '1px', height: '20px', background: '#3498f3', opacity: 0.3 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>보유 포션:</span>
+                        <span style={{ fontSize: '12px' }}>보유 포션 </span>
                         {Object.values(ownedPotions).reduce((sum, count) => sum + (count || 0), 0)}개
                     </div>
                 </div>
@@ -697,7 +708,7 @@ function NovelCreate({ user }) {
                                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                                 <StyledPotionImg
                                                     src={potion.src}
-                                                    alt={potion.label}
+                                                    alt={t(potion.key)}
                                                     selected={selectedPotion === idx}
                                                     initial={{ scale: 0.8, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
@@ -763,7 +774,7 @@ function NovelCreate({ user }) {
                                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                                 <StyledPotionImg
                                                     src={potion.src}
-                                                    alt={potion.label}
+                                                    alt={t(potion.key)}
                                                     selected={selectedPotion === idx + 3}
                                                     initial={{ scale: 0.8, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
@@ -813,14 +824,14 @@ function NovelCreate({ user }) {
                                         marginBottom: '12px',
                                         fontWeight: '600'
                                     }}>
-                                        보유한 포션이 없습니다
+                                        {t('no_potions_available')}
                                     </div>
                                     <div style={{
                                         fontSize: '14px',
                                         color: '#666',
                                         marginBottom: '16px'
                                     }}>
-                                        포션 상점에서 포션을 구매해주세요
+                                        {t('buy_potions_from_shop')}
                                     </div>
                                     <button
                                         onClick={() => navigate('/my/potion-shop')}
@@ -836,7 +847,7 @@ function NovelCreate({ user }) {
                                             boxShadow: '0 2px 8px rgba(52, 152, 243, 0.3)'
                                         }}
                                     >
-                                        포션 상점 가기
+                                        {t('go_to_potion_shop')}
                                     </button>
                                 </div>
                             )}
@@ -870,11 +881,11 @@ function NovelCreate({ user }) {
                                     {isLoading
                                         ? loadingMessage
                                         : selectedPotion !== null
-                                            ? `${potionImages[selectedPotion].label} 소설 만들기`
-                                            : '소설 만들기'}
+                                            ? t('novel_generate_button_with_genre', { genre: t(potionImages[selectedPotion].key) })
+                                            : t('novel_generate_button')}
                                     {selectedPotion !== null && !isLoading && (
                                         <div style={{ fontSize: 14, marginTop: 4, opacity: 0.9 }}>
-                                            포션 1개 사용
+                                            {t('novel_generate_potion_use')}
                                         </div>
                                     )}
                                 </div>
@@ -901,11 +912,11 @@ function NovelCreate({ user }) {
                     {/* 저장하기 버튼 */}
                     {!isNovelSaved && (
                         <Button onClick={handleSaveNovel} style={{ marginTop: 24 }}>
-                            소설 저장하기
+                            {t('novel_save')}
                         </Button>
                     )}
                     {isNovelSaved && (
-                        <div style={{ color: '#4caf50', marginTop: 16 }}>저장 완료!</div>
+                        <div style={{ color: '#4caf50', marginTop: 16 }}>{t('novel_save_done')}</div>
                     )}
                 </div>
             )}

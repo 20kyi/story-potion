@@ -10,6 +10,7 @@ import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -167,11 +168,15 @@ const PremiumButton = styled.button`
 `;
 
 const premiumFeatures = [
-  { id: 'ads', title: '광고 제거', description: '모든 광고를 제거하고 깔끔한 환경을 제공합니다' },
-  { id: 'theme', title: '프리미엄 전용 테마', description: '독점적인 다크/라이트 테마를 사용할 수 있습니다' },
-  { id: 'ai-diary', title: 'AI 일기 자동 완성', description: 'AI가 입력한 감정과 키워드로 일기를 자동으로 완성해줍니다.' },
-  { id: 'free-potion-on-weekly-novel', title: '매주 소설 생성 1회 무료', description: '프리미엄 회원은 주간 소설 만들기 시 6개 장르 중 원하는 포션을 포인트 차감 없이 무료로 선택할 수 있습니다.' },
-  { id: 'premium-sticker', title: '프리미엄 전용 스티커', description: '프리미엄 회원만 사용할 수 있는 특별한 스티커 제공' },
+  { id: 'ads', titleKey: 'premium_feature_ads_title', descKey: 'premium_feature_ads_desc' },
+  { id: 'theme', titleKey: 'premium_feature_theme_title', descKey: 'premium_feature_theme_desc' },
+  { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
+  {
+    id: 'free-potion-on-weekly-novel',
+    titleKey: 'premium_feature_free_potion_title',
+    descKey: 'premium_feature_free_potion_desc',
+  },
+  { id: 'premium-sticker', titleKey: 'premium_feature_sticker_title', descKey: 'premium_feature_sticker_desc' },
 ];
 
 const PremiumCard = styled.div`
@@ -199,6 +204,7 @@ function Shop({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [premiumStatus, setPremiumStatus] = useState({
@@ -233,7 +239,7 @@ function Shop({ user }) {
 
   const handleMonthlyPremium = async () => {
     if (premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) {
-      toast.showToast('이미 프리미엄 회원입니다.', 'error');
+      toast.showToast(t('premium_already_member'), 'error');
       return;
     }
     setModal({ open: true, type: 'monthly' });
@@ -241,7 +247,7 @@ function Shop({ user }) {
 
   const handleYearlyPremium = async () => {
     if (premiumStatus.isYearlyPremium) {
-      toast.showToast('이미 연간 프리미엄 회원입니다.', 'error');
+      toast.showToast(t('premium_already_yearly'), 'error');
       return;
     }
     setModal({ open: true, type: 'yearly' });
@@ -261,7 +267,7 @@ function Shop({ user }) {
         premiumStartDate: now,
         premiumRenewalDate: renewalDate
       });
-      toast.showToast('월간 프리미엄 가입이 완료되었습니다!', 'success');
+      toast.showToast(t('premium_monthly_success'), 'success');
       setPremiumStatus({
         isMonthlyPremium: true,
         isYearlyPremium: false,
@@ -269,7 +275,7 @@ function Shop({ user }) {
       });
     } catch (error) {
       console.error('월간 프리미엄 가입 실패:', error);
-      toast.showToast('월간 프리미엄 가입에 실패했습니다.', 'error');
+      toast.showToast(t('premium_monthly_failed'), 'error');
     } finally {
       setIsLoading(false);
       setModal({ open: false, type: null });
@@ -279,7 +285,7 @@ function Shop({ user }) {
   const doYearlyPremium = async () => {
     setIsLoading(true);
     let extraDays = 0;
-    
+
     // 월간 프리미엄 회원인 경우 남은 기간 계산
     if (premiumStatus.isMonthlyPremium) {
       const now = new Date();
@@ -289,7 +295,7 @@ function Shop({ user }) {
           const data = userDoc.data();
           if (data.premiumRenewalDate) {
             let renewal;
-            
+
             // Firestore Timestamp 객체를 Date 객체로 변환
             if (data.premiumRenewalDate.seconds) {
               renewal = new Date(data.premiumRenewalDate.seconds * 1000);
@@ -298,7 +304,7 @@ function Shop({ user }) {
             } else {
               renewal = new Date(data.premiumRenewalDate);
             }
-            
+
             // 현재 시간보다 미래인 경우에만 추가 일수 계산
             if (renewal > now) {
               extraDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
@@ -311,18 +317,18 @@ function Shop({ user }) {
         // 에러가 발생해도 연간 프리미엄 가입은 진행
       }
     }
-    
+
     try {
       const now = new Date();
       let renewalDate = new Date(now);
       renewalDate.setFullYear(now.getFullYear() + 1);
-      
+
       // 월간 프리미엄의 남은 기간을 연간 프리미엄에 추가
       if (extraDays > 0) {
         renewalDate.setDate(renewalDate.getDate() + extraDays);
         console.log(`연간 프리미엄 갱신일: ${renewalDate.toLocaleDateString()}, 추가된 일수: ${extraDays}일`);
       }
-      
+
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: false,
         isYearlyPremium: true,
@@ -330,11 +336,12 @@ function Shop({ user }) {
         premiumStartDate: now,
         premiumRenewalDate: renewalDate
       });
-      
-      const successMessage = extraDays > 0 
-        ? `연간 프리미엄 가입이 완료되었습니다! (기존 월간 프리미엄 ${extraDays}일이 추가되었습니다)`
-        : '연간 프리미엄 가입이 완료되었습니다!';
-      
+
+      const successMessage =
+        extraDays > 0
+          ? t('premium_yearly_success_with_extra', { days: extraDays })
+          : t('premium_yearly_success');
+
       toast.showToast(successMessage, 'success');
       setPremiumStatus({
         isMonthlyPremium: false,
@@ -343,7 +350,7 @@ function Shop({ user }) {
       });
     } catch (error) {
       console.error('연간 프리미엄 가입 실패:', error);
-      toast.showToast('연간 프리미엄 가입에 실패했습니다.', 'error');
+      toast.showToast(t('premium_yearly_failed'), 'error');
     } finally {
       setIsLoading(false);
       setModal({ open: false, type: null });
@@ -352,14 +359,14 @@ function Shop({ user }) {
 
   return (
     <Container theme={theme}>
-      <Header user={user} title="상점" />
+      <Header user={user} title={t('shop_title')} />
 
       <PointDisplay theme={theme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
         </PointAmount>
-        <PointLabel theme={theme}>현재 보유 포인트</PointLabel>
+        <PointLabel theme={theme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
       {/* 메뉴 그리드 */}
@@ -369,9 +376,9 @@ function Shop({ user }) {
             <PointIcon width={24} height={24} color="#3498f3" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle>포인트 충전</MenuTitle>
+            <MenuTitle>{t('point_charge')}</MenuTitle>
             <MenuDescription>
-              포인트로 다양한 기능을 이용해보세요!
+              {t('point_charge_desc') || '포인트로 다양한 기능을 이용해보세요!'}
             </MenuDescription>
           </MenuContent>
         </MenuButton>
@@ -381,9 +388,9 @@ function Shop({ user }) {
             <ShopIcon width={24} height={24} color="#e46262" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle>포션 상점</MenuTitle>
+            <MenuTitle>{t('potion_shop')}</MenuTitle>
             <MenuDescription>
-              포션을 구매하여 소설을 생성하세요
+              {t('potion_shop_desc')}
             </MenuDescription>
           </MenuContent>
         </MenuButton>
@@ -393,12 +400,12 @@ function Shop({ user }) {
       <PremiumSection theme={theme}>
         <PremiumTitle theme={theme}>
           <span style={{ color: '#e46262' }}>👑</span>
-          프리미엄 혜택
+          {t('premium_benefits')}
         </PremiumTitle>
         <FeatureList>
           {premiumFeatures.map((feature) => (
             <FeatureItem key={feature.id} theme={theme}>
-              {feature.title}
+              {t(feature.titleKey)}
             </FeatureItem>
           ))}
         </FeatureList>
@@ -408,36 +415,140 @@ function Shop({ user }) {
       <div style={{ display: 'flex', gap: '6px', margin: '18px 0', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'stretch' }}>
         {/* 월간 결제 카드 */}
         <PremiumCard>
-          <div style={{ color: '#e46262', fontWeight: 700, fontSize: 12, marginBottom: 6, textAlign: 'center', fontFamily: 'inherit' }}>월간 프리미엄</div>
+          <div
+            style={{
+              color: '#e46262',
+              fontWeight: 700,
+              fontSize: 12,
+              marginBottom: 6,
+              textAlign: 'center',
+              fontFamily: 'inherit',
+            }}
+          >
+            {t('premium_monthly')}
+          </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, textAlign: 'center', fontFamily: 'inherit' }}>월 5,900원</div>
-            <div style={{ color: '#888', fontSize: 12, marginBottom: 10, textAlign: 'center', marginTop: 10, fontFamily: 'inherit' }}>매월 결제, <br />언제든 해지 가능</div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 800,
+                marginBottom: 2,
+                textAlign: 'center',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_monthly_price')}
+            </div>
+            <div
+              style={{
+                color: '#888',
+                fontSize: 12,
+                marginBottom: 10,
+                textAlign: 'center',
+                marginTop: 10,
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_monthly_desc')}
+            </div>
           </div>
           <PremiumButton
             style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
             onClick={handleMonthlyPremium}
             disabled={isLoading}
           >
-            {isLoading ? '처리중...' : '월간 가입하기'}
+            {isLoading ? t('processing') : t('premium_monthly_subscribe_button')}
           </PremiumButton>
         </PremiumCard>
 
         {/* 연간 결제 카드 */}
         <YearlyPremiumCard>
-          <div style={{ position: 'absolute', top: -14, left: 12, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 7, padding: '3px 12px', boxShadow: '0 2px 8px rgba(255,195,0,0.13)', letterSpacing: 1, fontFamily: 'inherit' }}>추천</div>
-          <div style={{ color: '#FF9800', fontWeight: 800, fontSize: 13, marginBottom: 6, textAlign: 'center', zIndex: 1, fontFamily: 'inherit' }}>연간 프리미엄</div>
+          <div
+            style={{
+              position: 'absolute',
+              top: -14,
+              left: 12,
+              background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 11,
+              borderRadius: 7,
+              padding: '3px 12px',
+              boxShadow: '0 2px 8px rgba(255,195,0,0.13)',
+              letterSpacing: 1,
+              fontFamily: 'inherit',
+            }}
+          >
+            {t('premium_recommended')}
+          </div>
+          <div
+            style={{
+              color: '#FF9800',
+              fontWeight: 800,
+              fontSize: 13,
+              marginBottom: 6,
+              textAlign: 'center',
+              zIndex: 1,
+              fontFamily: 'inherit',
+            }}
+          >
+            {t('premium_yearly')}
+          </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, textAlign: 'center', color: '#FF6F00', fontFamily: 'inherit' }}>연 49,560원</div>
-            <div style={{ color: '#FF9800', fontWeight: 700, fontSize: 12, marginBottom: 1, textAlign: 'center', fontFamily: 'inherit' }}>30% 할인</div>
-            <div style={{ color: '#FFB300', fontSize: 11, marginBottom: 1, textDecoration: 'line-through', textAlign: 'center', fontFamily: 'inherit' }}>정가 70,800원</div>
-            <div style={{ color: '#FF9800', fontSize: 13, marginBottom: 10, textAlign: 'center', fontFamily: 'inherit' }}>월 4,130원</div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 800,
+                marginBottom: 12,
+                textAlign: 'center',
+                color: '#FF6F00',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_yearly_price')}
+            </div>
+            <div
+              style={{
+                color: '#FF9800',
+                fontWeight: 700,
+                fontSize: 12,
+                marginBottom: 1,
+                textAlign: 'center',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_yearly_discount')}
+            </div>
+            <div
+              style={{
+                color: '#FFB300',
+                fontSize: 11,
+                marginBottom: 1,
+                textDecoration: 'line-through',
+                textAlign: 'center',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_yearly_original_price')}
+            </div>
+            <div
+              style={{
+                color: '#FF9800',
+                fontSize: 13,
+                marginBottom: 10,
+                textAlign: 'center',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t('premium_yearly_monthly_equiv')}
+            </div>
           </div>
           <PremiumButton
             style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
             onClick={handleYearlyPremium}
             disabled={isLoading}
           >
-            {isLoading ? '처리중...' : '연간 가입하기'}
+            {isLoading ? t('processing') : t('premium_yearly_subscribe_button')}
           </PremiumButton>
         </YearlyPremiumCard>
       </div>
@@ -445,14 +556,26 @@ function Shop({ user }) {
       {/* 프리미엄 가입 확인 모달 */}
       <ConfirmModal
         open={modal.open}
-        title={modal.type === 'monthly' ? '월간 프리미엄 가입' : modal.type === 'yearly' ? '연간 프리미엄 가입' : ''}
-        description={modal.type === 'monthly' ? '월간 프리미엄에 가입하시겠습니까?' : modal.type === 'yearly' ? '연간 프리미엄에 가입하시겠습니까?' : ''}
+        title={
+          modal.type === 'monthly'
+            ? t('premium_monthly_modal_title')
+            : modal.type === 'yearly'
+              ? t('premium_yearly_modal_title')
+              : ''
+        }
+        description={
+          modal.type === 'monthly'
+            ? t('premium_monthly_modal_desc')
+            : modal.type === 'yearly'
+              ? t('premium_yearly_modal_desc')
+              : ''
+        }
         onCancel={() => setModal({ open: false, type: null })}
         onConfirm={() => {
           if (modal.type === 'monthly') doMonthlyPremium();
           else if (modal.type === 'yearly') doYearlyPremium();
         }}
-        confirmText="가입하기"
+        confirmText={t('premium_subscribe_confirm_button')}
       />
 
       <Navigation />

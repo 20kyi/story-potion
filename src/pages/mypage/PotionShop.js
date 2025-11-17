@@ -10,6 +10,7 @@ import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
 import { motion } from 'framer-motion';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -220,6 +221,7 @@ function PotionShop({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [ownedPotions, setOwnedPotions] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -250,7 +252,7 @@ function PotionShop({ user }) {
     if (!potion) return;
 
     if (currentPoints < potion.price) {
-      toast.showToast('포인트가 부족합니다.', 'error');
+      toast.showToast(t('friend_novel_point_not_enough'), 'error');
       return;
     }
 
@@ -288,10 +290,13 @@ function PotionShop({ user }) {
       });
       setCurrentPoints(prev => prev - potion.price);
       setOwnedPotions(newPotions);
-      toast.showToast(potion.isSet ? '포션 6종 세트를 구매했습니다!' : `${potion.name}을 구매했습니다!`, 'success');
+      toast.showToast(
+        potion.isSet ? t('potion_set6_buy_success') : t('potion_buy_success', { name: potion.name }),
+        'success'
+      );
     } catch (error) {
       console.error('포션 구매 실패:', error);
-      toast.showToast('포션 구매에 실패했습니다.', 'error');
+      toast.showToast(t('potion_buy_failed'), 'error');
     } finally {
       setIsLoading(false);
       setModal({ open: false, potionId: null });
@@ -307,7 +312,7 @@ function PotionShop({ user }) {
     const set = themeSets.find(s => s.id === setId);
     if (!set) return;
     if (currentPoints < set.price) {
-      toast.showToast('포인트가 부족합니다.', 'error');
+      toast.showToast(t('friend_novel_point_not_enough'), 'error');
       setThemeModal({ open: false, setId: null });
       return;
     }
@@ -333,10 +338,10 @@ function PotionShop({ user }) {
       });
       setCurrentPoints(prev => prev - set.price);
       setOwnedPotions(newPotions);
-      toast.showToast(`${set.name}을 구매했습니다!`, 'success');
+      toast.showToast(t('potion_theme_buy_success', { name: set.name }), 'success');
     } catch (error) {
       console.error('테마 세트 구매 실패:', error);
-      toast.showToast('테마 세트 구매에 실패했습니다.', 'error');
+      toast.showToast(t('potion_theme_buy_failed'), 'error');
     } finally {
       setIsLoading(false);
       setThemeModal({ open: false, setId: null });
@@ -345,27 +350,21 @@ function PotionShop({ user }) {
 
   return (
     <Container theme={theme}>
-      <Header user={user} title="포션 상점" />
+      <Header user={user} title={t('potion_shop')} />
 
       <PointDisplay theme={theme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
         </PointAmount>
-        <PointLabel theme={theme}>현재 보유 포인트</PointLabel>
+        <PointLabel theme={theme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
       <InfoSection theme={theme}>
-        <InfoTitle theme={theme}>포션 사용법</InfoTitle>
-        <InfoText theme={theme}>
-          • 포션 1개당 80포인트로 구매할 수 있습니다
-        </InfoText>
-        <InfoText theme={theme}>
-          • 소설 생성 시 보유한 포션을 사용합니다
-        </InfoText>
-        <InfoText theme={theme}>
-          • 포션이 없으면 해당 장르의 소설을 만들 수 없습니다
-        </InfoText>
+        <InfoTitle theme={theme}>{t('potion_guide_title')}</InfoTitle>
+        <InfoText theme={theme}>{t('potion_guide_item1')}</InfoText>
+        <InfoText theme={theme}>{t('potion_guide_item2')}</InfoText>
+        <InfoText theme={theme}>{t('potion_guide_item3')}</InfoText>
       </InfoSection>
 
       {/* 포인트 충전 버튼 */}
@@ -377,7 +376,7 @@ function PotionShop({ user }) {
             marginBottom: '8px',
             fontWeight: '600'
           }}>
-            포인트가 부족합니다
+            {t('friend_novel_point_not_enough')}
           </div>
           <button
             onClick={() => navigate('/my/shop/charge')}
@@ -393,7 +392,7 @@ function PotionShop({ user }) {
               boxShadow: '0 2px 8px rgba(228, 98, 98, 0.3)'
             }}
           >
-            포인트 충전하기
+            {t('point_history_charge_button')}
           </button>
         </div>
       )}
@@ -438,7 +437,9 @@ function PotionShop({ user }) {
             ) : (
               <PotionImage src={potion.image} alt={potion.name} />
             )}
-            <PotionName style={potion.isSet ? { color: '#e462a0', fontWeight: 600 } : {}}>{potion.name}</PotionName>
+            <PotionName style={potion.isSet ? { color: '#e462a0', fontWeight: 600 } : {}}>
+              {potion.name}
+            </PotionName>
             <PotionDescription>{potion.description}</PotionDescription>
             {potion.isSet ? (
               <div style={{ marginBottom: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -471,7 +472,7 @@ function PotionShop({ user }) {
               marginBottom: '8px',
               fontWeight: '600'
             }}>
-              {!potion.isSet && `보유: ${ownedPotions[potion.id] || 0}개`}
+              {!potion.isSet && t('potion_owned_count', { count: ownedPotions[potion.id] || 0 })}
             </div>
             {/* BuyButton 제거됨 */}
           </PotionCard>
@@ -480,7 +481,9 @@ function PotionShop({ user }) {
 
       {/* 테마 세트 UI */}
       <div style={{ margin: '32px 0 16px 0' }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.text, fontFamily: 'inherit' }}>테마 세트</h3>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.text, fontFamily: 'inherit' }}>
+          {t('potion_theme_title')}
+        </h3>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
@@ -523,8 +526,12 @@ function PotionShop({ user }) {
                   style={{ width: 38, height: 38, objectFit: 'contain', background: theme.card, borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginLeft: 2 }}
                 />
               </div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: theme.text }}>{set.name}</div>
-              <div style={{ fontSize: 13, color: theme.subText || '#888', marginBottom: 8, textAlign: 'center', wordBreak: 'keep-all', whiteSpace: 'normal' }}>{set.description}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: theme.text }}>
+                {set.name}
+              </div>
+              <div style={{ fontSize: 13, color: theme.subText || '#888', marginBottom: 8, textAlign: 'center', wordBreak: 'keep-all', whiteSpace: 'normal' }}>
+                {set.description}
+              </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 'auto' }}>
@@ -539,21 +546,29 @@ function PotionShop({ user }) {
       {/* 테마 세트 구매 확인 모달 */}
       <ConfirmModal
         open={themeModal.open}
-        title="테마 세트 구매"
-        description={themeModal.setId ? `${themeSets.find(s => s.id === themeModal.setId)?.name || ''}을(를) 구매하시겠습니까?` : ''}
+        title={t('potion_theme_buy_title')}
+        description={
+          themeModal.setId
+            ? t('potion_theme_buy_confirm', { name: themeSets.find(s => s.id === themeModal.setId)?.name || '' })
+            : ''
+        }
         onCancel={() => setThemeModal({ open: false, setId: null })}
         onConfirm={doBuyThemeSet}
-        confirmText="구매하기"
+        confirmText={t('potion_buy_confirm')}
       />
 
       {/* 포션 구매 확인 모달 */}
       <ConfirmModal
         open={modal.open}
-        title="포션 구매"
-        description={modal.potionId ? `${potions.find(p => p.id === modal.potionId)?.name || ''}을(를) 구매하시겠습니까?` : ''}
+        title={t('potion_buy_title')}
+        description={
+          modal.potionId
+            ? t('potion_buy_confirm_desc', { name: potions.find(p => p.id === modal.potionId)?.name || '' })
+            : ''
+        }
         onCancel={() => setModal({ open: false, potionId: null })}
         onConfirm={doBuyPotion}
-        confirmText="구매하기"
+        confirmText={t('potion_buy_confirm')}
       />
 
       <Navigation />

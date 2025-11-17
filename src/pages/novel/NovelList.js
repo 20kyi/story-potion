@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import styled from 'styled-components';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -117,46 +118,52 @@ const NovelContent = styled.div`
 `;
 
 function NovelList() {
-    const navigate = useNavigate();
-    const novels = JSON.parse(localStorage.getItem('novels') || '[]');
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
+  const novels = JSON.parse(localStorage.getItem('novels') || '[]');
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-    };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    if (isNaN(date)) return '';
+    if (language === 'en') {
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
 
-    return (
-        <Container>
-            <Header />
-            <ContentWrapper>
-                <HeaderRow>
-                    <ProfileImage
-                        onClick={() => navigate('/home')}
-                        title="홈으로 이동"
-                    />
-                    <HeaderText>
-                        <Welcome>Welcome</Welcome>
-                        <HeaderTitle>소설보기</HeaderTitle>
-                    </HeaderText>
-                </HeaderRow>
-                <MainContent>
-                    <NovelListWrapper>
-                        {novels.map((novel) => (
-                            <NovelItem
-                                key={novel.id}
-                                onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}
-                            >
-                                <NovelTitle>{novel.title}</NovelTitle>
-                                <NovelDate>{formatDate(novel.date)}</NovelDate>
-                                <NovelContent>{novel.content}</NovelContent>
-                            </NovelItem>
-                        ))}
-                    </NovelListWrapper>
-                </MainContent>
-            </ContentWrapper>
-            <Navigation />
-        </Container>
-    );
+  return (
+    <Container>
+      <Header title={t('novel_list_header')} />
+      <ContentWrapper>
+        <HeaderRow>
+          <ProfileImage
+            onClick={() => navigate('/home')}
+            title={t('home')}
+          />
+          <HeaderText>
+            <Welcome>Welcome</Welcome>
+            <HeaderTitle>{t('novel_list_header')}</HeaderTitle>
+          </HeaderText>
+        </HeaderRow>
+        <MainContent>
+          <NovelListWrapper>
+            {novels.map((novel) => (
+              <NovelItem
+                key={novel.id}
+                onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}
+              >
+                <NovelTitle>{novel.title}</NovelTitle>
+                <NovelDate>{formatDate(novel.date)}</NovelDate>
+                <NovelContent>{novel.content}</NovelContent>
+              </NovelItem>
+            ))}
+          </NovelListWrapper>
+        </MainContent>
+      </ContentWrapper>
+      <Navigation />
+    </Container>
+  );
 }
 
 export default NovelList; 

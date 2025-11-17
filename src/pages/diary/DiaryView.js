@@ -9,6 +9,7 @@ import { useSwipeable } from 'react-swipeable';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useToast } from '../../components/ui/ToastProvider';
 import { useTheme } from '../../ThemeContext';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -94,6 +95,8 @@ function DiaryView({ user }) {
     const toast = useToast();
     const theme = useTheme();
     const isDark = theme.mode === 'dark';
+    const { language } = useLanguage();
+    const { t } = useTranslation();
 
     // 날짜 계산 함수
     const getAdjacentDate = (baseDate, diff) => {
@@ -320,6 +323,9 @@ function DiaryView({ user }) {
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
+        if (language === 'en') {
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     };
 
@@ -348,8 +354,8 @@ function DiaryView({ user }) {
                 rightActions={
                     diary && (
                         <>
-                            <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>수정</button>
-                            <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>삭제</button>
+                            <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>{t('diary_update')}</button>
+                            <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>{t('delete')}</button>
                         </>
                     )
                 }
@@ -357,23 +363,23 @@ function DiaryView({ user }) {
             <div style={styles.content}>
                 <main style={styles.mainContent}>
                     {isLoading ? (
-                        <div style={{ color: isDark ? '#fff' : '#000' }}>로딩 중...</div>
+                        <div style={{ color: isDark ? '#fff' : '#000' }}>{t('diary_loading')}</div>
                     ) : noMoreFuture ? (
                         <div style={{ textAlign: 'center', color: isDark ? '#aaa' : '#888', fontSize: '14px', marginTop: '80px' }}>
-                            더이상 일기가 없습니다.<br />
-                            (왼쪽으로 스와이프하면 이전 일기로 돌아갑니다)
+                            {t('diary_no_more')}<br />
+                            {t('diary_swipe_back')}
                         </div>
                     ) : diary ? (
                         <>
                             <DiaryDate>{formatDate(diary.date)}</DiaryDate>
                             <DiaryMeta>
-                                <span>오늘의 날씨 {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt="날씨" style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
-                                <span>내 기분 {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt="감정" style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
+                                <span>{t('today_weather')} {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
+                                <span>{t('today_mood')} {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
                             </DiaryMeta>
                             {!isLoading && !noMoreFuture && diary && diary.imageUrls && diary.imageUrls.length > 0 && (
                                 <div style={styles.imageGrid}>
                                     {diary.imageUrls.map((url, idx) => (
-                                        <img key={idx} src={url} alt={`일기 이미지 ${idx + 1}`} style={styles.image} />
+                                        <img key={idx} src={url} alt={`${t('diary_image_alt') || 'diary image'} ${idx + 1}`} style={styles.image} />
                                     ))}
                                 </div>
                             )}
@@ -405,7 +411,7 @@ function DiaryView({ user }) {
                         </>
                     ) : (
                         <div style={styles.noDiary}>
-                            이 날짜에 작성된 일기가 없습니다.
+                            {t('diary_no_diary')}
                         </div>
                     )}
                 </main>
@@ -413,8 +419,8 @@ function DiaryView({ user }) {
             <Navigation />
             <ConfirmModal
                 open={showDeleteModal}
-                title="일기 삭제"
-                description="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+                title={t('delete')}
+                description={t('diary_delete_confirm')}
                 onCancel={cancelDelete}
                 onConfirm={confirmDelete}
             />

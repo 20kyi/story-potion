@@ -27,6 +27,7 @@ import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
+import { useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -51,6 +52,7 @@ function PointHistory({ user }) {
     const [history, setHistory] = useState([]); // 포인트 내역 데이터
     const navigate = useNavigate();
     const theme = useTheme();
+    const { t } = useTranslation();
 
     // 사용자 포인트 내역을 Firestore에서 가져오기
     useEffect(() => {
@@ -75,9 +77,9 @@ function PointHistory({ user }) {
      */
     const getTypeLabel = (type) => {
         switch (type) {
-            case 'earn': return '적립';
-            case 'use': return '사용';
-            case 'charge': return '충전';
+            case 'earn': return t('tab_earn');
+            case 'use': return t('tab_use');
+            case 'charge': return t('tab_charge');
             default: return type;
         }
     };
@@ -99,7 +101,7 @@ function PointHistory({ user }) {
     if (!user?.uid) {
         return (
             <div style={{ maxWidth: 500, margin: '0 auto', minHeight: '100vh', background: theme.background, color: theme.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <div style={{ fontSize: 18, color: '#e46262', marginBottom: 24 }}>로그인이 필요합니다.</div>
+                <div style={{ fontSize: 18, color: '#e46262', marginBottom: 24 }}>{t('login_required')}</div>
                 <button onClick={() => navigate(-1)} style={{ padding: 12, borderRadius: 8, border: 'none', background: '#e46262', color: '#fff', fontWeight: 700, fontSize: 16 }}>돌아가기</button>
                 <Navigation style={{ position: 'fixed', left: 0, right: 0, bottom: 0, width: '100%', maxWidth: 500, margin: '0 auto' }} />
             </div>
@@ -108,13 +110,13 @@ function PointHistory({ user }) {
 
     return (
         <Container theme={theme}>
-            <Header user={user} title="포인트 내역" />
+            <Header user={user} title={t('point_history')} />
             <div style={{ padding: 24 }}>
                 {/* <button onClick={() => navigate(-1)} style={{ marginBottom: 16, background: 'none', border: 'none', color: '#e46262', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>← 뒤로가기</button> */}
                 {/* <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>포인트 내역</h2> */}
                 <div style={{ color: theme.subText || '#888', fontSize: 14, marginBottom: 16 }}>
-                    포인트는 일기 작성, 소설 생성, 충전 등 다양한 활동에서 적립/사용/충전됩니다.<br />
-                    내역이 실시간으로 반영됩니다.
+                    {t('point_history_intro_line1')}<br />
+                    {t('point_history_intro_line2')}
                 </div>
 
                 {/* 포인트 충전 버튼 */}
@@ -138,11 +140,11 @@ function PointHistory({ user }) {
                         }}
                     >
                         <PointIcon width={20} height={20} color="white" />
-                        포인트 충전하기
+                        {t('point_history_charge_button')}
                     </button>
                 </div>
                 {history.length === 0 ? (
-                    <div style={{ color: theme.subText || '#888', textAlign: 'center', marginTop: 40 }}>포인트 내역이 없습니다.</div>
+                    <div style={{ color: theme.subText || '#888', textAlign: 'center', marginTop: 40 }}>{t('no_point_history')}</div>
                 ) : (
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {history.map(item => (
@@ -151,8 +153,10 @@ function PointHistory({ user }) {
                                 padding: '14px 0', borderBottom: `1px solid ${theme.border || '#eee'}`, fontSize: 16
                             }}>
                                 <div>
-                                    <div style={{ fontWeight: 600, color: getTypeColor(item.type) }}>{getTypeLabel(item.type)} {item.amount > 0 ? '+' : ''}{item.amount}p</div>
-                                    <div style={{ color: theme.subText || '#888', fontSize: 13 }}>{item.desc || ''}</div>
+                                    <div style={{ fontWeight: 600, color: getTypeColor(item.type) }}>
+                                        {getTypeLabel(item.type)} {item.amount > 0 ? '+' : ''}{item.amount}p
+                                    </div>
+                                    {/* desc는 내부 코드/고정 문자열이므로 다국어 UI에서는 노출하지 않음 */}
                                 </div>
                                 <div style={{ color: theme.subText || '#aaa', fontSize: 13 }}>{
                                     item.createdAt && typeof item.createdAt.toDate === 'function'

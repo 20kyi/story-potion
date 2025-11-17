@@ -6,6 +6,7 @@ import { useTheme } from '../../ThemeContext';
 import { auth, storage } from '../../firebase';
 import { ref, listAll, getMetadata, deleteObject } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
+import { useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
   display: flex;
@@ -100,6 +101,7 @@ const WarningText = styled.p`
 function AppInfo({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [appVersion, setAppVersion] = useState('1.0.0');
   const [storageUsed, setStorageUsed] = useState('0 MB');
   const [cacheSize, setCacheSize] = useState('0 MB');
@@ -262,7 +264,7 @@ function AppInfo({ user }) {
         // 앱 환경에서는 기본적인 캐시만 삭제
         console.log('앱 환경에서 캐시 삭제');
         // 앱 환경에서는 제한적인 캐시 삭제만 가능
-        alert('앱 환경에서는 캐시 삭제가 제한적입니다. 앱을 재시작하거나 앱 설정에서 캐시를 삭제해주세요.');
+        alert(t('cache_clear_limited_app'));
         return;
       }
       
@@ -294,38 +296,27 @@ function AppInfo({ user }) {
       await calculateStorage();
       await calculateCacheSize();
       
-      alert('캐시가 성공적으로 삭제되었습니다!');
+      alert(t('cache_clear_success'));
       
     } catch (error) {
       console.error('캐시 삭제 중 오류 발생:', error);
-      alert('캐시 삭제 중 오류가 발생했습니다.');
+      alert(t('cache_clear_error'));
     }
   };
 
   const handleDeleteAccount = async () => {
     if (!user?.uid) {
-      alert('로그인이 필요합니다.');
+      alert(t('login_required'));
       return;
     }
 
-    const confirmDelete = window.confirm(
-      '정말로 계정을 삭제하시겠습니까?\n\n' +
-      '⚠️ 삭제되는 데이터:\n' +
-      '• 모든 일기 데이터\n' +
-      '• 모든 소설 데이터\n' +
-      '• 업로드된 이미지 파일들\n' +
-      '• 계정 정보\n\n' +
-      '이 작업은 되돌릴 수 없습니다.'
-    );
+    const confirmDelete = window.confirm(t('confirm_delete_account'));
 
     if (!confirmDelete) {
       return;
     }
 
-    const finalConfirm = window.confirm(
-      '마지막 확인: 모든 데이터가 영구적으로 삭제됩니다.\n\n' +
-      '정말 계속하시겠습니까?'
-    );
+    const finalConfirm = window.confirm(t('confirm_delete_account_final'));
 
     if (!finalConfirm) {
       return;
@@ -372,29 +363,29 @@ function AppInfo({ user }) {
       // 3. Firebase Auth 계정 삭제
       // TODO: Firebase Auth에서 사용자 계정 삭제 로직 구현
 
-      alert(`계정 삭제가 완료되었습니다.\n삭제된 파일: ${deletedCount}개`);
+      alert(t('account_delete_done', { count: deletedCount }));
       
       // 로그아웃 처리
       await auth.signOut();
       
     } catch (error) {
       console.error('계정 삭제 실패:', error);
-      alert('계정 삭제 중 오류가 발생했습니다.');
+      alert(t('account_delete_error'));
     }
   };
 
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      alert('로그아웃되었습니다.');
+      alert(t('logout_success'));
     } catch (error) {
-      alert('로그아웃에 실패했습니다.');
+      alert(t('logout_failed'));
     }
   };
 
   const handleExportData = async () => {
     if (!user?.uid) {
-      alert('로그인이 필요합니다.');
+      alert(t('login_required'));
       return;
     }
     
@@ -447,73 +438,73 @@ function AppInfo({ user }) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      alert('데이터가 성공적으로 내보내졌습니다.');
+      alert(t('data_export_success'));
     } catch (error) {
       console.error('데이터 내보내기 실패:', error);
-      alert('데이터 내보내기에 실패했습니다.');
+      alert(t('data_export_failed'));
     }
   };
 
   return (
     <>
-      <Header leftAction={() => navigate(-1)} leftIconType="back" title="앱 정보" />
+      <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('app_info_title')} />
       <Container theme={theme}>
         <InfoCard theme={theme}>
           <CardTitle theme={theme}>
-            📱 앱 정보
+            📱 {t('app_info_title')}
           </CardTitle>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>앱 버전</InfoLabel>
+            <InfoLabel theme={theme}>{t('app_version')}</InfoLabel>
             <InfoValue theme={theme}>{appVersion}</InfoValue>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>개발자</InfoLabel>
-            <InfoValue theme={theme}>Story Potion Team</InfoValue>
+            <InfoLabel theme={theme}>{t('developer')}</InfoLabel>
+            <InfoValue theme={theme}>{t('developer_name')}</InfoValue>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>이용약관</InfoLabel>
-            <ActionButton onClick={() => alert('이용약관 페이지로 이동')}>
-              보기
+            <InfoLabel theme={theme}>{t('terms_of_use')}</InfoLabel>
+            <ActionButton onClick={() => alert(t('terms_link_alert'))}>
+              {t('view')}
             </ActionButton>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>개인정보처리방침</InfoLabel>
-            <ActionButton onClick={() => alert('개인정보처리방침 페이지로 이동')}>
-              보기
+            <InfoLabel theme={theme}>{t('privacy_policy')}</InfoLabel>
+            <ActionButton onClick={() => alert(t('privacy_link_alert'))}>
+              {t('view')}
             </ActionButton>
           </InfoItem>
         </InfoCard>
 
         <InfoCard theme={theme}>
           <CardTitle theme={theme}>
-            💾 데이터 관리
+            💾 {t('data_management')}
           </CardTitle>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>저장공간 사용량</InfoLabel>
+            <InfoLabel theme={theme}>{t('storage_usage')}</InfoLabel>
             <InfoValue theme={theme}>{storageUsed}</InfoValue>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>캐시 크기</InfoLabel>
+            <InfoLabel theme={theme}>{t('cache_size')}</InfoLabel>
             <InfoValue theme={theme}>{cacheSize}</InfoValue>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>캐시 삭제</InfoLabel>
+            <InfoLabel theme={theme}>{t('clear_cache')}</InfoLabel>
             <ActionButton onClick={handleClearCache}>
-              삭제
+              {t('delete')}
             </ActionButton>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>데이터 내보내기</InfoLabel>
+            <InfoLabel theme={theme}>{t('export_data')}</InfoLabel>
             <ActionButton onClick={handleExportData}>
-              내보내기
+              {t('export_data')}
             </ActionButton>
           </InfoItem>
           
@@ -521,25 +512,25 @@ function AppInfo({ user }) {
 
         <InfoCard theme={theme}>
           <CardTitle theme={theme}>
-            🔐 계정 관리
+            🔐 {t('account_management')}
           </CardTitle>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>로그아웃</InfoLabel>
+            <InfoLabel theme={theme}>{t('logout')}</InfoLabel>
             <ActionButton onClick={handleLogout}>
-              로그아웃
+              {t('logout')}
             </ActionButton>
           </InfoItem>
           
           <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>계정 삭제</InfoLabel>
+            <InfoLabel theme={theme}>{t('account_delete')}</InfoLabel>
             <ActionButton onClick={handleDeleteAccount}>
-              삭제
+              {t('delete')}
             </ActionButton>
           </InfoItem>
           
           <WarningText>
-            ⚠️ 계정 삭제 시 모든 데이터가 영구적으로 삭제됩니다.
+            {t('account_delete_warning')}
           </WarningText>
         </InfoCard>
       </Container>

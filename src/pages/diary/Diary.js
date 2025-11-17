@@ -4,6 +4,7 @@ import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
 import Header from '../../components/Header';
 import { useTheme } from '../../ThemeContext';
+import { useLanguage, useTranslation } from '../../LanguageContext';
 
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -272,6 +273,8 @@ const PreviewCloseButton = styled.button`
 function Diary({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { language } = useLanguage();
+    const { t } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [diaries, setDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -343,7 +346,11 @@ function Diary({ user }) {
     };
 
     const formatMonth = (date) => {
-        return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+        // 언어에 따라 월 텍스트 포맷
+        if (language === 'en') {
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        }
+        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
     };
 
     const formatDateToString = (date) => {
@@ -413,15 +420,15 @@ function Diary({ user }) {
         empty: '#e0e0e0'      // 회색(미작성)
     };
 
-    // 감정별 한글명 및 이모티콘 경로 매핑
+    // 감정별 라벨 (언어별)
     const emotionBarLabels = {
-        love: '사랑',
-        good: '기쁨',
-        normal: '평온',
-        surprised: '놀람',
-        angry: '화남',
-        cry: '슬픔',
-        empty: '미작성'
+        love: t('emotion_love'),
+        good: t('emotion_good'),
+        normal: t('emotion_normal'),
+        surprised: t('emotion_surprised'),
+        angry: t('emotion_angry'),
+        cry: t('emotion_cry'),
+        empty: t('no_data')
     };
     const emotionBarIcons = {
         love: '/emotions/love.png',
@@ -433,27 +440,31 @@ function Diary({ user }) {
         empty: null
     };
 
-    // 감정별 맞춤형 상단 문구 매핑
-    const emotionTopMessages = {
-        love: (month) => `${month}월, 사랑이 가득한 한 달이었어요`,
-        good: (month) => `${month}월, 기쁨이 많았네요! 앞으로도 좋은 일만 가득하길`,
-        normal: (month) => `${month}월, 평온한 하루하루가 이어졌어요`,
-        surprised: (month) => `${month}월, 놀라움이 많았던 한 달이었네요!`,
-        angry: (month) => `${month}월, 화남이 많았어요. 내 마음을 토닥여주세요`,
-        cry: (month) => `${month}월, 슬픔이 많았군요. 힘든 순간도 곧 지나갈 거예요`,
-        empty: (month) => `${month}월의 마음은 비어있어요`
-    };
-
-    // 상단 문구 자동 생성 (감정별 맞춤)
+    // 상단 문구 (이번 달 감정 요약 - 감정별 다른 멘트)
     const getTopMessage = () => {
         const { percent } = getEmotionBarData();
         const emotionEntries = Object.entries(percent)
             .filter(([k]) => k !== 'empty')
             .sort((a, b) => b[1] - a[1]);
-        const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : null;
-        const month = currentDate.getMonth() + 1;
-        if (!mainEmotion || percent[mainEmotion] === 0) return emotionTopMessages.empty(month);
-        return emotionTopMessages[mainEmotion](month);
+        const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : 'empty';
+
+        // 언어별로 월 표시
+        const monthLabel = language === 'en'
+            ? currentDate.toLocaleDateString('en-US', { month: 'long' })
+            : `${currentDate.getMonth() + 1}`;
+
+        const keyMap = {
+            love: 'diary_emotion_top_love',
+            good: 'diary_emotion_top_good',
+            normal: 'diary_emotion_top_normal',
+            surprised: 'diary_emotion_top_surprised',
+            angry: 'diary_emotion_top_angry',
+            cry: 'diary_emotion_top_cry',
+            empty: 'diary_emotion_top_empty'
+        };
+
+        const key = keyMap[mainEmotion] || keyMap.empty;
+        return t(key, { month: monthLabel });
     };
 
 
@@ -613,7 +624,7 @@ function Diary({ user }) {
 
     return (
         <Container>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="일기" />
+            <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
             <Content>
                 <CalendarHeader>
                     <MonthButton onClick={handlePrevMonth}>&lt;</MonthButton>
@@ -623,7 +634,10 @@ function Diary({ user }) {
                 <Calendar>
                     <thead>
                         <tr>
-                            {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                            {(language === 'en'
+                                ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                : ['일', '월', '화', '수', '목', '금', '토']
+                            ).map(day => (
                                 <DayHeader key={day}>{day}</DayHeader>
                             ))}
                         </tr>
@@ -705,11 +719,11 @@ function Diary({ user }) {
                                 )}
                             </PreviewHeader>
                             {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                <PreviewDiaryImage src={previewDiary.imageUrls[0]} alt="일기 이미지" />
+                                <PreviewDiaryImage src={previewDiary.imageUrls[0]} alt="diary" />
                             )}
                             <PreviewTitle>{previewDiary.title}</PreviewTitle>
                             <PreviewDate>{previewDiary.date}</PreviewDate>
-                            <PreviewCloseButton onClick={() => setPreviewDiary(null)}>닫기</PreviewCloseButton>
+                            <PreviewCloseButton onClick={() => setPreviewDiary(null)}>{t('close')}</PreviewCloseButton>
                         </PreviewPopup>
                     );
                 })()}
