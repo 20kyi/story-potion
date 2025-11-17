@@ -174,9 +174,9 @@ function Settings() {
                 premiumType: null
             });
             alert('프리미엄이 해지되었습니다.');
-            } catch (error) {
+        } catch (error) {
             console.error('프리미엄 해지 실패:', error);
-                alert(t('premium_cancel_failed'));
+            alert(t('premium_cancel_failed'));
         } finally {
             setIsLoading(false);
             setModal(false);
@@ -293,7 +293,7 @@ function Settings() {
                     {/* 구독 관리 */}
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <span>{t('subscription_manage')}</span>
                                 <span style={{ fontSize: '12px', color: '#666' }}>
                                     {premiumStatus.isMonthlyPremium && `💎 ${t('premium_monthly')}`}
@@ -301,34 +301,6 @@ function Settings() {
                                     {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && `⭐ ${t('premium_basic')}`}
                                 </span>
                             </div>
-                            {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
-                                <>
-                                    <button
-                                        onClick={handleCancelPremium}
-                                        disabled={isLoading}
-                                        style={{
-                                            padding: '8px 16px',
-                                            backgroundColor: '#e46262',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            cursor: isLoading ? 'not-allowed' : 'pointer',
-                                            opacity: isLoading ? 0.6 : 1
-                                        }}
-                                    >
-                                        {isLoading ? t('processing') : t('premium_cancel_button')}
-                                    </button>
-                                    <ConfirmModal
-                                        open={modal}
-                                        title={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_title') : t('premium_cancel_yearly_title')}
-                                        description={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_desc') : t('premium_cancel_yearly_desc')}
-                                        onCancel={() => setModal(false)}
-                                        onConfirm={doCancelPremium}
-                                        confirmText={t('premium_cancel_button')}
-                                    />
-                                </>
-                            )}
                         </div>
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) &&
                             premiumStatus.premiumRenewalDate && (
@@ -350,6 +322,33 @@ function Settings() {
                             <div style={{ fontSize: '12px', color: '#888', lineHeight: '1.4' }}>
                                 {t('premium_cancel_notice')}
                             </div>
+                        )}
+                        {/* 구독 해지 버튼 */}
+                        {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+                            <>
+                                <div className="withdraw-link" style={{ marginTop: '24px' }}>
+                                    <span
+                                        onClick={handleCancelPremium}
+                                        style={{
+                                            color: '#e46262',
+                                            fontSize: '13px',
+                                            fontWeight: 400,
+                                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                                            opacity: isLoading ? 0.6 : 1
+                                        }}
+                                    >
+                                        {isLoading ? t('processing') : t('premium_cancel_button')}
+                                    </span>
+                                </div>
+                                <ConfirmModal
+                                    open={modal}
+                                    title={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_title') : t('premium_cancel_yearly_title')}
+                                    description={premiumStatus.isMonthlyPremium ? t('premium_cancel_monthly_desc') : t('premium_cancel_yearly_desc')}
+                                    onCancel={() => setModal(false)}
+                                    onConfirm={doCancelPremium}
+                                    confirmText={t('premium_cancel_button')}
+                                />
+                            </>
                         )}
                     </li>
                 </ul>

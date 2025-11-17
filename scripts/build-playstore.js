@@ -5,6 +5,11 @@ const path = require('path');
 console.log('🚀 플레이스토어 배포용 AAB 빌드 시작...\n');
 
 try {
+    // 0. 버전 자동 증가
+    console.log('🔢 버전 자동 증가 중...');
+    execSync('node scripts/increment-version.js', { stdio: 'inherit' });
+    console.log('');
+
     // 1. 웹 앱 빌드
     console.log('📦 웹 앱 빌드 중...');
     execSync('npm run build', { stdio: 'inherit' });
