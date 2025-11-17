@@ -9,7 +9,10 @@ const openai = new OpenAI({
     apiKey: functions.config().openai.key,
 });
 
-exports.generateNovel = functions.https.onCall(async (data, context) => {
+exports.generateNovel = functions.https.onCall({
+    timeoutSeconds: 540, // 9분 (최대값)
+    memory: '1GB'
+}, async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
             "unauthenticated",
@@ -26,6 +29,14 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
     }
 
     try {
+        // OpenAI API 키 확인
+        const apiKey = functions.config().openai?.key;
+        console.log("OpenAI API 키 확인:", apiKey ? "설정됨" : "설정되지 않음");
+        if (!apiKey) {
+            console.error("OpenAI API 키가 설정되지 않았습니다. firebase functions:config:set openai.key=YOUR_KEY 로 설정하세요.");
+            throw new Error("OpenAI API 키가 설정되지 않았습니다.");
+        }
+
         // 1. 장르별 프롬프트 분기 함수 정의
         function getPrompts(genre, diaryContents, novelContent) {
             let contentPrompt, titlePrompt, imagePrompt;
@@ -67,63 +78,206 @@ exports.generateNovel = functions.https.onCall(async (data, context) => {
             return { contentPrompt, titlePrompt, imagePrompt };
         }
 
+        // 재시도 헬퍼 함수 (exponential backoff)
+        async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const result = await fn();
+                    return result;
+                } catch (error) {
+                    // OpenAI SDK v4 에러 구조 처리
+                    const statusCode = error.statusCode || error.status || error.response?.status;
+                    const isRateLimit = statusCode === 429 || error.message?.toLowerCase().includes('rate limit');
+
+                    console.error(`재시도 중 에러 발생 (시도 ${i + 1}/${maxRetries}):`, {
+                        statusCode: statusCode,
+                        message: error.message,
+                        errorType: error.constructor?.name,
+                        isRateLimit: isRateLimit
+                    });
+
+                    if (isRateLimit) {
+                        if (i < maxRetries - 1) {
+                            const delay = baseDelay * Math.pow(2, i);
+                            console.log(`Rate limit 발생, ${delay}ms 후 재시도... (${i + 1}/${maxRetries})`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue;
+                        }
+                    }
+                    // Rate limit이 아니거나 재시도 횟수를 초과한 경우 에러를 던짐
+                    throw error;
+                }
+            }
+        }
+
         // 2. 소설 내용 생성
+        console.log("소설 내용 생성 시작...");
+        console.log("장르:", genre);
+        console.log("일기 내용 길이:", diaryContents?.length || 0);
         const { contentPrompt } = getPrompts(genre, diaryContents);
-        const contentResponse = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: contentPrompt }],
-            temperature: 0.7,
-            max_tokens: 2500,
-        });
+        console.log("프롬프트 길이:", contentPrompt?.length || 0);
+        let contentResponse;
+        try {
+            contentResponse = await retryWithBackoff(async () => {
+                console.log("OpenAI API 호출 시작 (소설 내용)...");
+                const response = await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: contentPrompt }],
+                    temperature: 0.7,
+                    max_tokens: 2500,
+                });
+                console.log("OpenAI API 응답 받음 (소설 내용)");
+                return response;
+            });
+        } catch (error) {
+            console.error("소설 내용 생성 실패 - 상세 에러:", {
+                message: error.message,
+                statusCode: error.statusCode,
+                status: error.status,
+                responseStatus: error.response?.status,
+                errorType: error.constructor?.name,
+                stack: error.stack?.substring(0, 500)
+            });
+            const statusCode = error.statusCode || error.status || error.response?.status;
+            if (statusCode === 429) {
+                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+            }
+            if (statusCode === 401) {
+                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+            }
+            if (statusCode === 500 || statusCode === 503) {
+                throw new Error("OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            }
+            throw new Error(`소설 내용 생성 실패: ${error.message || error.toString()}`);
+        }
+        if (!contentResponse?.choices?.[0]?.message?.content) {
+            throw new Error("소설 내용 생성 응답이 올바르지 않습니다.");
+        }
         const novelContent = contentResponse.choices[0].message.content;
+        console.log("소설 내용 생성 완료, 길이:", novelContent.length);
 
         // 3. 소설 제목 생성
+        console.log("소설 제목 생성 시작...");
         const { titlePrompt } = getPrompts(genre, diaryContents, novelContent);
-        const titleResponse = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: titlePrompt }],
-            temperature: 0.8,
-            max_tokens: 60,
-        });
+        let titleResponse;
+        try {
+            titleResponse = await retryWithBackoff(async () => {
+                return await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: titlePrompt }],
+                    temperature: 0.8,
+                    max_tokens: 60,
+                });
+            });
+        } catch (error) {
+            console.error("소설 제목 생성 실패 - 상세 에러:", {
+                message: error.message,
+                statusCode: error.statusCode,
+                status: error.status,
+                responseStatus: error.response?.status,
+                errorType: error.constructor?.name
+            });
+            const statusCode = error.statusCode || error.status || error.response?.status;
+            if (statusCode === 429) {
+                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+            }
+            if (statusCode === 401) {
+                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+            }
+            throw new Error(`소설 제목 생성 실패: ${error.message || error.toString()}`);
+        }
+        if (!titleResponse?.choices?.[0]?.message?.content) {
+            throw new Error("소설 제목 생성 응답이 올바르지 않습니다.");
+        }
         const novelTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
+        console.log("소설 제목 생성 완료:", novelTitle);
 
         // 4. 소설 표지 이미지 생성
+        console.log("소설 표지 이미지 생성 시작...");
         const { imagePrompt } = getPrompts(genre, diaryContents, novelContent);
-        const imageResponse = await openai.images.generate({
-            model: "dall-e-2",
-            prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
-            n: 1,
-            size: "512x512",
-            response_format: "b64_json",
-        });
-
-        const b64_json = imageResponse.data[0].b64_json;
-        if (!b64_json) {
-            throw new Error("b64_json is missing from the OpenAI response.");
+        let imageResponse;
+        try {
+            imageResponse = await retryWithBackoff(async () => {
+                return await openai.images.generate({
+                    model: "dall-e-2",
+                    prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
+                    n: 1,
+                    size: "512x512",
+                    response_format: "b64_json",
+                });
+            });
+        } catch (error) {
+            console.error("이미지 생성 실패 - 상세 에러:", {
+                message: error.message,
+                statusCode: error.statusCode,
+                status: error.status,
+                responseStatus: error.response?.status,
+                errorType: error.constructor?.name
+            });
+            const statusCode = error.statusCode || error.status || error.response?.status;
+            if (statusCode === 429) {
+                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+            }
+            if (statusCode === 401) {
+                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+            }
+            throw new Error(`이미지 생성 실패: ${error.message || error.toString()}`);
         }
+
+        if (!imageResponse?.data?.[0]?.b64_json) {
+            throw new Error("이미지 생성 응답이 올바르지 않습니다. b64_json이 없습니다.");
+        }
+        const b64_json = imageResponse.data[0].b64_json;
         const imageBuffer = Buffer.from(b64_json, "base64");
+        console.log("이미지 생성 완료, 크기:", imageBuffer.length, "bytes");
 
-        const bucket = admin.storage().bucket();
-        const fileName = `novel-covers/${novelTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
-        const file = bucket.file(fileName);
+        // 5. Storage에 이미지 업로드
+        console.log("Storage 업로드 시작...");
+        try {
+            const bucket = admin.storage().bucket();
+            const fileName = `novel-covers/${novelTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
+            const file = bucket.file(fileName);
 
-        await file.save(imageBuffer, {
-            metadata: {
-                contentType: "image/png",
-            },
-            public: true,
-        });
+            await file.save(imageBuffer, {
+                metadata: {
+                    contentType: "image/png",
+                },
+                public: true,
+            });
 
-        const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            console.log("Storage 업로드 완료:", imageUrl);
 
-        // 5. 모든 결과 반환
-        return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
+            // 6. 모든 결과 반환
+            return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
+        } catch (error) {
+            console.error("Storage 업로드 실패:", error);
+            throw new Error(`Storage 업로드 실패: ${error.message}`);
+        }
     } catch (error) {
         console.error("OpenAI API 호출 중 오류 발생:", error);
+        console.error("에러 상세:", {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            statusCode: error.statusCode,
+            status: error.status,
+            response: error.response,
+            errorType: error.constructor?.name
+        });
+
+        // 클라이언트로 전달 가능한 형태로만 상세 정보를 보냄
+        const safeDetails = {
+            message: error.message,
+            code: error.code,
+            statusCode: error.statusCode,
+            status: error.status,
+        };
+
         throw new functions.https.HttpsError(
             "internal",
-            "AI 소설 생성에 실패했습니다. 잠시 후 다시 시도해주세요。",
-            error,
+            `AI 소설 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`,
+            safeDetails,
         );
     }
 });

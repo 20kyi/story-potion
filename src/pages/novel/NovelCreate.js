@@ -452,6 +452,13 @@ function NovelCreate({ user }) {
         
         try {
             console.log('소설 생성 함수 호출 중...');
+            console.log('전송할 데이터:', {
+                diaryContentsLength: diaryContents.length,
+                genre: selectedGenre,
+                userName: user.displayName || '주인공',
+                diaryContentsPreview: diaryContents.substring(0, 200)
+            });
+            
             const result = await generateNovel({
                 diaryContents,
                 genre: selectedGenre,
@@ -517,7 +524,44 @@ function NovelCreate({ user }) {
             }, 1000);
         } catch (error) {
             console.error('소설 생성 실패:', error);
-            toast.showToast('소설 생성에 실패했습니다. 다시 시도해주세요.', 'error');
+            console.error('에러 전체 객체:', JSON.stringify(error, null, 2));
+            console.error('에러 상세:', {
+                code: error.code,
+                message: error.message,
+                details: error.details,
+                stack: error.stack,
+                customData: error.customData,
+                toString: error.toString()
+            });
+            
+            // Rate limit 에러 확인
+            if (error.details?.status === 429 || error.message?.includes('요청 한도')) {
+                toast.showToast('OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.', 'error');
+                return;
+            }
+            
+            // 네트워크 에러인지 확인
+            if (error.code === 'functions/unknown' || error.code === 'internal') {
+                console.error('서버 내부 에러 발생. Firebase 콘솔에서 Functions 로그를 확인하세요.');
+            }
+            
+            // Firebase Functions 에러 메시지 추출
+            let errorMessage = '알 수 없는 오류';
+
+            // 서버에서 전달한 details에 메시지가 있는 경우 우선 사용
+            if (error.details && typeof error.details === 'object') {
+                if (error.details.message) {
+                    errorMessage = error.details.message;
+                }
+            } else if (typeof error.details === 'string') {
+                errorMessage = error.details;
+            } else if (error.message) {
+                errorMessage = error.message;
+            } else if (error.toString) {
+                errorMessage = error.toString();
+            }
+
+            toast.showToast(`소설 생성 실패: ${errorMessage}`, 'error');
         } finally {
             console.log('소설 생성 프로세스 종료, 로딩 상태 해제');
             setIsLoading(false);
