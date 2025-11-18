@@ -16,8 +16,8 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 40px;
-  padding-bottom: 100px;
+//   padding-top: 40px;
+//   padding-bottom: 100px;
   margin: 40px auto;
   max-width: 600px;
   overflow-y: auto;
@@ -137,6 +137,48 @@ const NovelContent = styled.div`
   }
 `;
 
+const CoverViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 10px;
+  cursor: pointer;
+`;
+
+const LargeCover = styled.img`
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+`;
+
+const CoverTitle = styled.h2`
+  font-size: 24px;
+  color: ${({ theme }) => theme.primary};
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-align: center;
+  font-family: inherit;
+`;
+
+const CoverHint = styled.div`
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+  margin-top: 12px;
+  font-family: inherit;
+`;
+
 function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
@@ -149,6 +191,7 @@ function NovelView({ user }) {
     const [error, setError] = useState('');
     const [accessGranted, setAccessGranted] = useState(false);
     const [purchaseCount, setPurchaseCount] = useState(0);
+    const [showCoverView, setShowCoverView] = useState(true); // 표지 보기 모드로 시작
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
@@ -198,7 +241,8 @@ function NovelView({ user }) {
                     return;
                 }
                 setNovel(fetchedNovel);
-                
+                setShowCoverView(true); // 소설이 로드될 때마다 표지 보기 모드로 리셋
+
                 // 본인 소설인 경우 구매자 수 조회
                 if (fetchedNovel.userId === user.uid) {
                     setAccessGranted(true);
@@ -226,7 +270,7 @@ function NovelView({ user }) {
                     })();
                     return;
                 }
-                
+
                 // 비공개 소설인 경우 친구도 접근 불가
                 if (fetchedNovel.isPublic === false) {
                     setError(t('novel_private') || '이 소설은 비공개입니다.');
@@ -366,6 +410,25 @@ function NovelView({ user }) {
         );
     }
 
+    // 표지 보기 모드
+    if (showCoverView) {
+        return (
+            <Container>
+                <Header user={user} />
+                <CoverViewContainer onClick={() => setShowCoverView(false)}>
+                    <LargeCover
+                        src={novel.imageUrl || '/novel_banner/default.png'}
+                        alt={novel.title}
+                    />
+                    <CoverTitle>{novel.title}</CoverTitle>
+                    {/* <CoverHint>표지를 터치하거나 클릭하여 소설을 읽으세요</CoverHint> */}
+                </CoverViewContainer>
+                <Navigation />
+            </Container>
+        );
+    }
+
+    // 내용 보기 모드
     return (
         <Container>
             <Header user={user} />
@@ -381,7 +444,7 @@ function NovelView({ user }) {
                                 <div>
                                     <SettingLabel>공개 설정</SettingLabel>
                                     <PurchaseCount>
-                                        {novel.isPublic !== false ? '공개' : '비공개'} 
+                                        {novel.isPublic !== false ? '공개' : '비공개'}
                                         {novel.isPublic !== false && ` · 구매 ${purchaseCount}명`}
                                     </PurchaseCount>
                                 </div>
