@@ -290,12 +290,17 @@ const WeeklyCard = styled.div`
 const WeekTitle = styled.h3`
   color: #cb6565;
   font-size: 18px;
-  margin: 0 0 10px 0;
+//   margin: 0 0 10px 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   min-height: 32px;
   line-height: 1.2;
+  span {
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
 `;
 
 const DateRange = styled.p`
@@ -396,22 +401,20 @@ const ButtonGroup = styled.div`
 `;
 
 const AddButton = styled.button`
-  min-width: 32px;
-  min-height: 32px;
   background-color: transparent;
   color: ${({ theme }) => theme.primary};
   border: none;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 24px;
+  padding: 0;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-weight: 700;
+  font-weight: 600;
   font-family: inherit;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  line-height: 1;
+  line-height: 1.2;
+  white-space: nowrap;
   &:hover {
     color: ${({ theme }) => theme.secondary};
     opacity: 0.96;
@@ -945,7 +948,7 @@ const Novel = ({ user }) => {
                                     <span>{t('week_num', { num: week.weekNum })}</span>
                                     {firstNovel && isCompleted && (
                                         <AddButton onClick={handleAddNovel} title="다른 장르의 소설 만들기">
-                                            +
+                                            소설추가
                                         </AddButton>
                                     )}
                                 </WeekTitle>
