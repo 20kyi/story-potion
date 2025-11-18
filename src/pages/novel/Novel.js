@@ -309,26 +309,30 @@ const DateRange = styled.p`
 
 const ProgressBar = styled.div`
   width: 100%;
-  height: 8px;
-  background-color: ${({ barColor, theme }) => {
-        if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
-        return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
-    }};
-  border-radius: 4px;
+  display: flex;
+  gap: 4px;
   margin: 0 0 10px 0;
-  overflow: hidden;
-  div {
-    width: ${props => props.progress}%;
-    height: 100%;
-    background-color: ${({ barColor, theme }) => {
+  justify-content: space-between;
+`;
+
+const DayIndicator = styled.div`
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background-color: ${({ hasDiary, barColor, theme }) => {
+        if (!hasDiary) {
+            // 일기가 없으면 연한 회색
+            if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
+            return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
+        }
+        // 일기가 있으면 버튼 색상과 일치
         if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
         if (barColor === 'create') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (barColor === 'free') return '#e4a30d';
         if (barColor === 'view') return theme.primary;
         return '#cb6565'; // 기본값
     }};
-    transition: width 0.3s ease;
-  }
+  transition: background-color 0.3s ease;
 `;
 
 const CreateButton = styled.button`
@@ -946,17 +950,51 @@ const Novel = ({ user }) => {
                                     )}
                                 </WeekTitle>
                                 <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                <ProgressBar 
-                                    progress={progress}
+                                <ProgressBar
                                     barColor={
-                                        firstNovel 
-                                            ? 'view' 
-                                            : isCompleted 
+                                        firstNovel
+                                            ? 'view'
+                                            : isCompleted
                                                 ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? 'free' : 'create')
                                                 : 'fill'
                                     }
                                 >
-                                    <div />
+                                    {(() => {
+                                        // 주의 시작일부터 7일간의 날짜 생성
+                                        const weekStart = new Date(week.start);
+                                        const weekDays = [];
+                                        for (let i = 0; i < 7; i++) {
+                                            const date = new Date(weekStart);
+                                            date.setDate(weekStart.getDate() + i);
+                                            weekDays.push(date);
+                                        }
+
+                                        // 해당 주의 일기 날짜 목록
+                                        const weekStartStr = formatDate(week.start);
+                                        const weekEndStr = formatDate(week.end);
+                                        const weekDiaries = diaries.filter(diary => {
+                                            return diary.date >= weekStartStr && diary.date <= weekEndStr;
+                                        });
+                                        const writtenDates = new Set(weekDiaries.map(diary => diary.date));
+
+                                        return weekDays.map((day, idx) => {
+                                            const dayStr = formatDate(day);
+                                            const hasDiary = writtenDates.has(dayStr);
+                                            return (
+                                                <DayIndicator
+                                                    key={idx}
+                                                    hasDiary={hasDiary}
+                                                    barColor={
+                                                        firstNovel
+                                                            ? 'view'
+                                                            : isCompleted
+                                                                ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? 'free' : 'create')
+                                                                : 'fill'
+                                                    }
+                                                />
+                                            );
+                                        });
+                                    })()}
                                 </ProgressBar>
                                 {firstNovel ? (
                                     <CreateButton
@@ -980,12 +1018,12 @@ const Novel = ({ user }) => {
                                         {t('novel_view')}
                                     </CreateButton>
                                 ) : (
-                                    <CreateButton 
-                                        completed={false} 
+                                    <CreateButton
+                                        completed={false}
                                         isFree={isCompleted && novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey]}
                                         onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}
                                     >
-                                        {isCompleted 
+                                        {isCompleted
                                             ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? (
                                                 <>
                                                     <span>👑</span>
