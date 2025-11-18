@@ -31,10 +31,17 @@ const CalendarHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  gap: 12px;
+`;
+
+const MonthSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
 `;
 
 const MonthText = styled.span`
-  font-size: 24px;
+  font-size: 20px;
   color: #e46262;
   font-weight: 500;
 `;
@@ -53,6 +60,31 @@ const MonthButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  &:hover {
+    background-color: rgba(223, 150, 150, 0.1);
+  }
+`;
+
+const TodayButton = styled.button`
+  background: transparent;
+  border: 1.5px solid #e46262;
+  color: #e46262;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 90px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 36px;
+  margin: 0 8px;
+  &:hover {
+    background: rgba(228, 98, 98, 0.1);
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const Calendar = styled.table`
@@ -384,6 +416,14 @@ function Diary({ user }) {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
     };
 
+    const handleToday = () => {
+        setCurrentDate(new Date());
+    };
+
+    const getTodayDate = () => {
+        return new Date().getDate();
+    };
+
     const handleDateClick = (clickedDate) => {
         if (isFutureDate(clickedDate)) return;
         const dateString = formatDateToString(clickedDate);
@@ -638,9 +678,12 @@ function Diary({ user }) {
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
             <Content>
                 <CalendarHeader>
-                    <MonthButton onClick={handlePrevMonth}>&lt;</MonthButton>
-                    <MonthText>{formatMonth(currentDate)}</MonthText>
-                    <MonthButton onClick={handleNextMonth}>&gt;</MonthButton>
+                    <MonthSection>
+                        <MonthButton onClick={handlePrevMonth}>&lt;</MonthButton>
+                        <MonthText>{formatMonth(currentDate)}</MonthText>
+                        <MonthButton onClick={handleNextMonth}>&gt;</MonthButton>
+                    </MonthSection>
+                    <TodayButton onClick={handleToday}>{getTodayDate()}</TodayButton>
                 </CalendarHeader>
                 <Calendar>
                     <thead>
