@@ -308,6 +308,18 @@ function NovelView({ user }) {
         });
     };
 
+    const formatWeekInfo = (novel) => {
+        if (!novel || novel.month === undefined || novel.weekNum === undefined) {
+            return '';
+        }
+        if (language === 'en') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            return `${monthNames[novel.month - 1]} Week ${novel.weekNum} Novel`;
+        }
+        return `${novel.month}월 ${novel.weekNum}주차 소설`;
+    };
+
     const handleDelete = async () => {
         if (!novel || !novel.id) return;
         if (!window.confirm(t('novel_delete_confirm'))) return;
@@ -361,7 +373,7 @@ function NovelView({ user }) {
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelInfo>
                     <NovelTitle>{novel.title}</NovelTitle>
-                    <NovelDate>{formatDate(novel.createdAt)}</NovelDate>
+                    <NovelDate>{formatWeekInfo(novel) || formatDate(novel.createdAt)}</NovelDate>
                     {/* 소설 설정 (소설 주인만) */}
                     {novel.id && novel.userId === user.uid && (
                         <NovelSettings>
