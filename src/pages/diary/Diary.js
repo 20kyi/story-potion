@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import styled from 'styled-components';
 import Header from '../../components/Header';
@@ -272,10 +272,13 @@ const PreviewCloseButton = styled.button`
 
 function Diary({ user }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
     const { language } = useLanguage();
     const { t } = useTranslation();
-    const [currentDate, setCurrentDate] = useState(new Date());
+    // location.state에서 달 정보를 받아오거나, 없으면 현재 달 사용
+    const initialDate = location.state?.targetDate ? new Date(location.state.targetDate) : new Date();
+    const [currentDate, setCurrentDate] = useState(initialDate);
     const [diaries, setDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [previewDiary, setPreviewDiary] = useState(null);
@@ -288,6 +291,14 @@ function Diary({ user }) {
         totalWritten: 0,
         totalDays: 7
     });
+
+    // location.state가 변경되면 currentDate 업데이트
+    useEffect(() => {
+        if (location.state?.targetDate) {
+            const targetDate = new Date(location.state.targetDate);
+            setCurrentDate(targetDate);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         if (!user) return;

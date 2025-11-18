@@ -100,7 +100,17 @@ const Header = ({ user, rightActions, title }) => {
     if (location.pathname === '/diaries') {
       navigate('/');
     } else if (location.pathname.startsWith('/diary/')) {
-      navigate('/diaries');
+      // 일기 상세 페이지에서 뒤로가기 시 해당 달의 일기 목록으로 이동
+      const dateMatch = location.pathname.match(/\/diary\/date\/(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        const dateStr = dateMatch[1];
+        const [year, month] = dateStr.split('-').map(Number);
+        // 해당 달의 첫 날짜를 targetDate로 전달
+        const targetDate = new Date(year, month - 1, 1);
+        navigate('/diaries', { state: { targetDate: targetDate.toISOString() } });
+      } else {
+        navigate(-1);
+      }
     } else if (location.pathname === '/write' || location.pathname.startsWith('/write')) {
       navigate('/diaries');
     } else if (location.pathname === '/novel/create') {
