@@ -214,11 +214,18 @@ function FriendNovelList({ user }) {
                     setFriendInfo({ uid: friendSnap.id, ...friendSnap.data() });
                 }
 
-                // 소설 목록 가져오기
+                // 소설 목록 가져오기 (공개 소설만)
                 const novelsRef = collection(db, 'novels');
-                const q = query(novelsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+                const q = query(
+                    novelsRef, 
+                    where('userId', '==', userId),
+                    orderBy('createdAt', 'desc')
+                );
                 const querySnapshot = await getDocs(q);
-                const fetchedNovels = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // 클라이언트 측에서 비공개 소설 필터링 (isPublic이 false가 아닌 것만)
+                const fetchedNovels = querySnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(novel => novel.isPublic !== false); // undefined나 true는 통과
                 setNovels(fetchedNovels);
 
                 // 구매 여부 확인

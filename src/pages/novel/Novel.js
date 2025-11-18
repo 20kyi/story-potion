@@ -155,6 +155,100 @@ const DatePickerButton = styled.button`
   }
 `;
 
+const NovelListModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const NovelListContent = styled.div`
+  background-color: ${({ theme }) => theme.card || 'white'};
+  padding: 20px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+`;
+
+const NovelListHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const NovelListTitle = styled.h3`
+  color: #cb6565;
+  margin: 0;
+  font-size: 20px;
+`;
+
+const NovelListClose = styled.button`
+  background: none;
+  border: none;
+  color: #cb6565;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+`;
+
+const NovelListItem = styled.div`
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+  background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9'};
+  &:hover {
+    background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f0f0f0'};
+  }
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const NovelListCover = styled.img`
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+`;
+
+const NovelListInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+`;
+
+const NovelListNovelTitle = styled.div`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const NovelListGenre = styled.div`
+  font-size: 14px;
+  color: #cb6565;
+  font-weight: 500;
+`;
+
 const WeeklySection = styled.div`
   margin-top: 20px;
   overflow: hidden;
@@ -197,12 +291,18 @@ const WeekTitle = styled.h3`
   color: #cb6565;
   font-size: 18px;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const DateRange = styled.p`
   color: #666;
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ProgressBar = styled.div`
@@ -265,6 +365,39 @@ const CreateButton = styled.button`
   }
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  width: 100%;
+`;
+
+const AddButton = styled.button`
+  min-width: 32px;
+  min-height: 32px;
+  background-color: transparent;
+  color: ${({ theme }) => theme.primary};
+  border: none;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  &:hover {
+    color: ${({ theme }) => theme.secondary};
+    opacity: 0.96;
+    background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
 const bannerData = [
     { genre: '로맨스', genreKey: 'romance', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
     { genre: '추리', genreKey: 'mystery', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
@@ -287,6 +420,7 @@ const Novel = ({ user }) => {
     const [diaries, setDiaries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [novelsMap, setNovelsMap] = useState({});
+    const [selectedWeekNovels, setSelectedWeekNovels] = useState(null);
 
 
 
@@ -344,8 +478,11 @@ const Novel = ({ user }) => {
                 novelSnapshot.forEach(doc => {
                     const novel = doc.data();
                     if (novel.week) { // week 정보가 있는 소설만 맵에 추가
-                        // novel 전체 데이터를 저장하여 장르 정보도 포함
-                        newNovelsMap[novel.week] = { id: doc.id, ...novel };
+                        // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
+                        if (!newNovelsMap[novel.week]) {
+                            newNovelsMap[novel.week] = [];
+                        }
+                        newNovelsMap[novel.week].push({ id: doc.id, ...novel });
                     }
                 });
                 setNovelsMap(newNovelsMap);
@@ -463,7 +600,8 @@ const Novel = ({ user }) => {
     const formatDisplayDate = (date) => {
         if (!date) return '';
         const d = new Date(date);
-        return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+        // 모바일에서 공간 절약을 위해 더 짧은 형식 사용
+        return `${d.getMonth() + 1}/${d.getDate()}`;
     }
 
     const handleCreateNovel = (week) => {
@@ -475,6 +613,10 @@ const Novel = ({ user }) => {
 
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
+        const weekKey = `${month}월 ${week.weekNum}주차`;
+        const novelsForWeek = novelsMap[weekKey] || [];
+        const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+
         const novelTitle = language === 'en'
             ? t('novel_list_by_genre_title', { genre: t('novel_title') }) // simple fallback
             : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
@@ -496,10 +638,11 @@ const Novel = ({ user }) => {
                 year: year,
                 month: month,
                 weekNum: week.weekNum,
-                week: `${month}월 ${week.weekNum}주차`,
+                week: weekKey,
                 dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
                 imageUrl: imageUrl,
-                title: novelTitle
+                title: novelTitle,
+                existingGenres: existingGenres
             }
         });
     };
@@ -618,20 +761,82 @@ const Novel = ({ user }) => {
                     {weeks.map((week) => {
                         const progress = weeklyProgress[week.weekNum] || 0;
                         const isCompleted = progress >= 100;
-                        const novelData = novelsMap[`${currentDate.getMonth() + 1}월 ${week.weekNum}주차`];
-                        const novelKey = novelData 
-                            ? createNovelUrl(currentDate.getFullYear(), currentDate.getMonth() + 1, week.weekNum, novelData.genre)
-                            : `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${week.weekNum}`;
+                        const weekKey = `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
+                        const novelsForWeek = novelsMap[weekKey] || [];
+                        const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
+                        const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+
+                        const handleAddNovel = () => {
+                            const weekProgress = weeklyProgress[week.weekNum] || 0;
+                            if (weekProgress < 100) {
+                                alert(t('novel_all_diaries_needed'));
+                                return;
+                            }
+
+                            const year = currentDate.getFullYear();
+                            const month = currentDate.getMonth() + 1;
+                            const novelTitle = language === 'en'
+                                ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+
+                            const weekStartDate = new Date(week.start);
+                            const weekEndDate = new Date(week.end);
+
+                            const firstDiaryWithImage = diaries.find(diary => {
+                                const diaryDate = new Date(diary.date);
+                                return diaryDate >= weekStartDate &&
+                                    diaryDate <= weekEndDate &&
+                                    diary.imageUrls && diary.imageUrls.length > 0;
+                            });
+                            const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+
+                            navigate('/novel/create', {
+                                state: {
+                                    year: year,
+                                    month: month,
+                                    weekNum: week.weekNum,
+                                    week: weekKey,
+                                    dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
+                                    imageUrl: imageUrl,
+                                    title: novelTitle,
+                                    existingGenres: existingGenres
+                                }
+                            });
+                        };
 
                         return (
                             <WeeklyCard key={week.weekNum}>
-                                <WeekTitle>{t('week_num', { num: week.weekNum })}</WeekTitle>
+                                <WeekTitle>
+                                    <span>{t('week_num', { num: week.weekNum })}</span>
+                                    {firstNovel && isCompleted && (
+                                        <AddButton onClick={handleAddNovel} title="다른 장르의 소설 만들기">
+                                            +
+                                        </AddButton>
+                                    )}
+                                </WeekTitle>
                                 <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
                                 <ProgressBar progress={progress}>
                                     <div />
                                 </ProgressBar>
-                                {novelData ? (
-                                    <CreateButton completed={true} onClick={() => navigate(`/novel/${novelKey}`)}>
+                                {firstNovel ? (
+                                    <CreateButton
+                                        completed={true}
+                                        onClick={() => {
+                                            // 소설이 2개 이상이면 목록 모달 표시
+                                            if (novelsForWeek.length > 1) {
+                                                setSelectedWeekNovels(novelsForWeek);
+                                            } else {
+                                                // 소설이 1개면 바로 이동
+                                                const novelKey = createNovelUrl(
+                                                    currentDate.getFullYear(),
+                                                    currentDate.getMonth() + 1,
+                                                    week.weekNum,
+                                                    firstNovel.genre
+                                                );
+                                                navigate(`/novel/${novelKey}`);
+                                            }
+                                        }}
+                                    >
                                         {t('novel_view')}
                                     </CreateButton>
                                 ) : (
@@ -644,6 +849,54 @@ const Novel = ({ user }) => {
                     })}
                 </WeeklyGrid>
             </WeeklySection>
+            
+            {/* 소설 목록 모달 */}
+            {selectedWeekNovels && (
+                <NovelListModal onClick={() => setSelectedWeekNovels(null)}>
+                    <NovelListContent onClick={(e) => e.stopPropagation()}>
+                        <NovelListHeader>
+                            <NovelListTitle>소설 선택</NovelListTitle>
+                            <NovelListClose onClick={() => setSelectedWeekNovels(null)}>×</NovelListClose>
+                        </NovelListHeader>
+                        {selectedWeekNovels.map((novel) => {
+                            const genreKey = novel.genre === '로맨스' ? 'romance' :
+                                novel.genre === '역사' ? 'historical' :
+                                novel.genre === '추리' ? 'mystery' :
+                                novel.genre === '공포' ? 'horror' :
+                                novel.genre === '동화' ? 'fairytale' :
+                                novel.genre === '판타지' ? 'fantasy' : null;
+                            
+                            return (
+                                <NovelListItem
+                                    key={novel.id}
+                                    onClick={() => {
+                                        const novelKey = createNovelUrl(
+                                            novel.year,
+                                            novel.month,
+                                            novel.weekNum,
+                                            novel.genre
+                                        );
+                                        navigate(`/novel/${novelKey}`);
+                                        setSelectedWeekNovels(null);
+                                    }}
+                                >
+                                    <NovelListCover 
+                                        src={novel.imageUrl || '/novel_banner/default.png'} 
+                                        alt={novel.title} 
+                                    />
+                                    <NovelListInfo>
+                                        <NovelListNovelTitle>{novel.title}</NovelListNovelTitle>
+                                        <NovelListGenre>
+                                            {genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}
+                                        </NovelListGenre>
+                                    </NovelListInfo>
+                                </NovelListItem>
+                            );
+                        })}
+                    </NovelListContent>
+                </NovelListModal>
+            )}
+            
             <Navigation />
         </Container>
     );

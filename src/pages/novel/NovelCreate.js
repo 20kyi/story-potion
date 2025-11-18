@@ -233,7 +233,7 @@ function NovelCreate({ user }) {
     const toast = useToast();
     const { t } = useTranslation();
     const { language } = useLanguage();
-    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle } = location.state || {};
+    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [] } = location.state || {};
 
     console.log('=== NovelCreate 컴포넌트 마운트 ===', new Date().toISOString());
     console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle });
@@ -354,47 +354,9 @@ function NovelCreate({ user }) {
         fetchUserData();
     }, [user?.uid]);
 
-    // 이미 생성된 소설이 있는지 확인하고 있다면 해당 소설 페이지로 리다이렉트
-    useEffect(() => {
-        if (!user?.uid || !year || !month || !weekNum) {
-            console.log('기존 소설 확인 스킵:', { hasUser: !!user?.uid, year, month, weekNum });
-            return;
-        }
-
-        console.log('기존 소설 확인 useEffect 실행:', { userId: user.uid, year, month, weekNum });
-
-        const checkExistingNovel = async () => {
-            try {
-                console.log('기존 소설 확인 중:', { userId: user.uid, year, month, weekNum });
-                const novelsRef = collection(db, 'novels');
-                const q = query(
-                    novelsRef,
-                    where('userId', '==', user.uid),
-                    where('year', '==', year),
-                    where('month', '==', month),
-                    where('weekNum', '==', weekNum)
-                );
-                const querySnapshot = await getDocs(q);
-
-                console.log('조회된 소설 개수:', querySnapshot.size);
-
-                if (!querySnapshot.empty) {
-                    // 이미 소설이 존재하면 해당 소설 페이지로 이동
-                    const existingNovel = querySnapshot.docs[0].data();
-                    const novelUrl = createNovelUrl(year, month, weekNum, existingNovel.genre);
-                    console.log('기존 소설 발견, 이동:', novelUrl);
-                    toast.showToast('이미 생성된 소설이 있습니다.', 'info');
-                    navigate(`/novel/${novelUrl}`);
-                } else {
-                    console.log('기존 소설 없음, 생성 가능');
-                }
-            } catch (error) {
-                console.error('기존 소설 확인 실패:', error);
-            }
-        };
-
-        checkExistingNovel();
-    }, [user?.uid, year, month, weekNum]); // navigate, toast 제거
+    // 이미 생성된 소설이 있는지 확인 (같은 장르인 경우에만 리다이렉트)
+    // 이제는 여러 장르의 소설을 만들 수 있으므로, 같은 장르가 아닌 경우에는 리다이렉트하지 않음
+    // 이 useEffect는 제거하거나 주석 처리 (기존 로직과 충돌)
 
     const formatDisplayDate = (dateStr) => {
         const date = new Date(dateStr);
@@ -500,6 +462,7 @@ function NovelCreate({ user }) {
                 year,
                 month,
                 weekNum,
+                isPublic: true, // 기본값: 공개
             };
             console.log('저장할 소설 데이터:', newNovel);
             console.log('Firestore에 소설 저장 중...');
@@ -718,6 +681,11 @@ function NovelCreate({ user }) {
                                         return null;
                                     }
 
+                                    // 이미 생성된 장르는 선택할 수 없도록 필터링
+                                    if (existingGenres.includes(potion.genre)) {
+                                        return null;
+                                    }
+
                                     return (
                                         <motion.div
                                             key={potion.genre}
@@ -781,6 +749,11 @@ function NovelCreate({ user }) {
 
                                     // 보유한 포션이 없으면 표시하지 않음
                                     if (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0) {
+                                        return null;
+                                    }
+
+                                    // 이미 생성된 장르는 선택할 수 없도록 필터링
+                                    if (existingGenres.includes(potion.genre)) {
                                         return null;
                                     }
 

@@ -5,7 +5,7 @@ import Header from '../../components/Header';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { parseNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 
@@ -68,6 +68,58 @@ const NovelDate = styled.div`
   font-family: inherit;
 `;
 
+const NovelSettings = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+`;
+
+const SettingRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9'};
+  border-radius: 8px;
+`;
+
+const SettingLabel = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text};
+  font-weight: 500;
+`;
+
+const ToggleButton = styled.button`
+  width: 50px;
+  height: 28px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  background-color: ${({ active }) => active ? '#cb6565' : '#ccc'};
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: ${({ active }) => active ? '24px' : '2px'};
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+`;
+
+const PurchaseCount = styled.div`
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+`;
+
 const NovelContent = styled.div`
   font-size: 16px;
   line-height: 1.8;
@@ -96,6 +148,7 @@ function NovelView({ user }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [accessGranted, setAccessGranted] = useState(false);
+    const [purchaseCount, setPurchaseCount] = useState(0);
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
@@ -145,9 +198,38 @@ function NovelView({ user }) {
                     return;
                 }
                 setNovel(fetchedNovel);
-                // 본인 소설은 바로 접근 허용
+                
+                // 본인 소설인 경우 구매자 수 조회
                 if (fetchedNovel.userId === user.uid) {
                     setAccessGranted(true);
+                    // 구매자 수 조회 (비동기로 처리하여 로딩 속도 향상)
+                    (async () => {
+                        try {
+                            // 모든 사용자의 viewedNovels 서브컬렉션에서 해당 소설 ID를 가진 문서 개수 조회
+                            // Note: Firestore의 collection group query를 사용할 수 없으므로
+                            // 모든 사용자를 순회하는 방식 사용 (사용자 수가 많지 않다면 문제없음)
+                            const usersRef = collection(db, 'users');
+                            const usersSnapshot = await getDocs(usersRef);
+                            let count = 0;
+                            const checkPromises = [];
+                            usersSnapshot.docs.forEach(userDoc => {
+                                const viewedRef = doc(db, 'users', userDoc.id, 'viewedNovels', fetchedNovel.id);
+                                checkPromises.push(getDoc(viewedRef).then(snap => {
+                                    if (snap.exists()) count++;
+                                }));
+                            });
+                            await Promise.all(checkPromises);
+                            setPurchaseCount(count);
+                        } catch (error) {
+                            console.error('구매자 수 조회 실패:', error);
+                        }
+                    })();
+                    return;
+                }
+                
+                // 비공개 소설인 경우 친구도 접근 불가
+                if (fetchedNovel.isPublic === false) {
+                    setError(t('novel_private') || '이 소설은 비공개입니다.');
                     return;
                 }
                 // 친구 관계 확인 (friendships 컬렉션)
@@ -238,6 +320,20 @@ function NovelView({ user }) {
         }
     };
 
+    const handleTogglePublic = async () => {
+        if (!novel || !novel.id) return;
+        const newIsPublic = !novel.isPublic;
+        try {
+            await updateDoc(doc(db, 'novels', novel.id), {
+                isPublic: newIsPublic
+            });
+            setNovel({ ...novel, isPublic: newIsPublic });
+        } catch (error) {
+            console.error('공개 설정 변경 실패:', error);
+            alert('공개 설정 변경에 실패했습니다.');
+        }
+    };
+
     if (loading) {
         return (
             <Container>
@@ -266,11 +362,26 @@ function NovelView({ user }) {
                 <NovelInfo>
                     <NovelTitle>{novel.title}</NovelTitle>
                     <NovelDate>{formatDate(novel.createdAt)}</NovelDate>
-                    {/* 삭제 버튼 */}
+                    {/* 소설 설정 (소설 주인만) */}
                     {novel.id && novel.userId === user.uid && (
-                        <button onClick={handleDelete} style={{ marginTop: 16, background: '#e46262', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>
-                            소설 삭제하기
-                        </button>
+                        <NovelSettings>
+                            <SettingRow>
+                                <div>
+                                    <SettingLabel>공개 설정</SettingLabel>
+                                    <PurchaseCount>
+                                        {novel.isPublic !== false ? '공개' : '비공개'} 
+                                        {novel.isPublic !== false && ` · 구매 ${purchaseCount}명`}
+                                    </PurchaseCount>
+                                </div>
+                                <ToggleButton
+                                    active={novel.isPublic !== false}
+                                    onClick={handleTogglePublic}
+                                />
+                            </SettingRow>
+                            <button onClick={handleDelete} style={{ marginTop: 8, background: '#e46262', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+                                소설 삭제하기
+                            </button>
+                        </NovelSettings>
                     )}
                 </NovelInfo>
             </NovelHeader>
