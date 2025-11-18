@@ -81,3 +81,32 @@ export const createNovelPurchaseNotification = async (authorId, buyerId, novelId
     }
 };
 
+/**
+ * 포션 선물 알림 생성 (포션을 받은 사용자에게)
+ * @param {string} receiverId - 포션을 받은 사용자 ID
+ * @param {string} giverId - 포션을 선물한 사용자 ID
+ * @param {string} potionId - 포션 ID
+ * @param {string} potionName - 포션 이름
+ * @returns {Promise<boolean>} 알림 생성 성공 여부
+ */
+export const createPotionGiftNotification = async (receiverId, giverId, potionId, potionName) => {
+    try {
+        // 선물한 사용자 정보 조회
+        const giverDoc = await getDoc(doc(db, 'users', giverId));
+        const giverName = giverDoc.exists() 
+            ? (giverDoc.data().displayName || giverDoc.data().nickname || giverDoc.data().nick || '친구')
+            : '친구';
+
+        return await createNotification(
+            receiverId,
+            'potion_gift',
+            '포션 선물 받음',
+            `${giverName}님이 ${potionName} 포션을 선물했습니다.`,
+            { giverId, giverName, potionId, potionName }
+        );
+    } catch (error) {
+        console.error('포션 선물 알림 생성 실패:', error);
+        return false;
+    }
+};
+
