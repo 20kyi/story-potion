@@ -85,6 +85,95 @@ const DiaryMeta = styled.div`
   font-weight: 500;
 `;
 
+const ImageViewerModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+`;
+
+const ImageViewerContent = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ImageViewerImg = styled.img`
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+`;
+
+const ImageViewerClose = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  color: #333;
+  z-index: 2001;
+  font-weight: bold;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+`;
+
+const ImageViewerNav = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+  z-index: 2001;
+  font-weight: bold;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+`;
+
+const ImageViewerPrev = styled(ImageViewerNav)`
+  left: 20px;
+`;
+
+const ImageViewerNext = styled(ImageViewerNav)`
+  right: 20px;
+`;
+
 function DiaryView({ user }) {
     const navigate = useNavigate();
     const { date } = useParams();
@@ -92,6 +181,7 @@ function DiaryView({ user }) {
     const [isLoading, setIsLoading] = useState(true);
     const [noMoreFuture, setNoMoreFuture] = useState(false); // 미래 안내 상태
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(null);
     const toast = useToast();
     const theme = useTheme();
     const isDark = theme.mode === 'dark';
@@ -210,6 +300,26 @@ function DiaryView({ user }) {
     const cancelDelete = () => {
         setShowDeleteModal(false);
     };
+
+    // 이미지 뷰어 키보드 이벤트
+    useEffect(() => {
+        if (selectedImageIndex === null || !diary || !diary.imageUrls) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setSelectedImageIndex(null);
+            } else if (e.key === 'ArrowLeft' && selectedImageIndex > 0) {
+                setSelectedImageIndex(selectedImageIndex - 1);
+            } else if (e.key === 'ArrowRight' && selectedImageIndex < diary.imageUrls.length - 1) {
+                setSelectedImageIndex(selectedImageIndex + 1);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedImageIndex, diary]);
 
     // 컨테이너 크기를 스티커 위치에 맞게 업데이트
     const updateContainerSize = () => {
@@ -379,7 +489,13 @@ function DiaryView({ user }) {
                             {!isLoading && !noMoreFuture && diary && diary.imageUrls && diary.imageUrls.length > 0 && (
                                 <div style={styles.imageGrid}>
                                     {diary.imageUrls.map((url, idx) => (
-                                        <img key={idx} src={url} alt={`${t('diary_image_alt') || 'diary image'} ${idx + 1}`} style={styles.image} />
+                                        <img
+                                            key={idx}
+                                            src={url}
+                                            alt={`${t('diary_image_alt') || 'diary image'} ${idx + 1}`}
+                                            style={{ ...styles.image, cursor: 'pointer' }}
+                                            onClick={() => setSelectedImageIndex(idx)}
+                                        />
                                     ))}
                                 </div>
                             )}
@@ -424,6 +540,41 @@ function DiaryView({ user }) {
                 onCancel={cancelDelete}
                 onConfirm={confirmDelete}
             />
+            {/* 이미지 뷰어 모달 */}
+            {selectedImageIndex !== null && diary && diary.imageUrls && (
+                <ImageViewerModal onClick={() => setSelectedImageIndex(null)}>
+                    <ImageViewerContent onClick={(e) => e.stopPropagation()}>
+                        <ImageViewerClose onClick={() => setSelectedImageIndex(null)}>
+                            ×
+                        </ImageViewerClose>
+                        {selectedImageIndex > 0 && (
+                            <ImageViewerPrev
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedImageIndex(selectedImageIndex - 1);
+                                }}
+                            >
+                                ‹
+                            </ImageViewerPrev>
+                        )}
+                        <ImageViewerImg
+                            src={diary.imageUrls[selectedImageIndex]}
+                            alt={`이미지 ${selectedImageIndex + 1}`}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        {selectedImageIndex < diary.imageUrls.length - 1 && (
+                            <ImageViewerNext
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedImageIndex(selectedImageIndex + 1);
+                                }}
+                            >
+                                ›
+                            </ImageViewerNext>
+                        )}
+                    </ImageViewerContent>
+                </ImageViewerModal>
+            )}
         </Container>
     );
 }

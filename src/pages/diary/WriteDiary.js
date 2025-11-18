@@ -109,6 +109,7 @@ const ImagePreviewContainer = styled.div`
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
+  min-height: 100px;
 `;
 const ImagePreviewBox = styled.div`
   position: relative;
@@ -116,11 +117,20 @@ const ImagePreviewBox = styled.div`
   height: 100px;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
+  border: 2px solid ${({ theme, isDragging, isDragOver }) => {
+        if (isDragging) return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
+        if (isDragOver) return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
+        return theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2';
+    }};
   background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: ${props => props.isDragging ? 'grabbing' : 'grab'};
+  transition: all 0.2s ease;
+  opacity: ${props => props.isDragging ? 0.5 : 1};
+  transform: ${props => props.isDragOver ? 'scale(1.05)' : 'scale(1)'};
+  box-shadow: ${props => props.isDragOver ? '0 4px 12px rgba(203, 101, 101, 0.3)' : 'none'};
 `;
 const PreviewImg = styled.img`
   width: 100%;
@@ -143,7 +153,98 @@ const RemoveButton = styled.button`
   cursor: pointer;
   font-size: 12px;
   color: #cb6565;
+  z-index: 10;
 `;
+
+const ImageViewerModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+`;
+
+const ImageViewerContent = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ImageViewerImg = styled.img`
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+`;
+
+const ImageViewerClose = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  color: #333;
+  z-index: 2001;
+  font-weight: bold;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+`;
+
+const ImageViewerNav = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+  z-index: 2001;
+  font-weight: bold;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+`;
+
+const ImageViewerPrev = styled(ImageViewerNav)`
+  left: 20px;
+`;
+
+const ImageViewerNext = styled(ImageViewerNav)`
+  right: 20px;
+`;
+
 
 // 스티커 관련 스타일 컴포넌트들
 
@@ -443,6 +544,35 @@ function WriteDiary({ user }) {
     const [draggedSticker, setDraggedSticker] = useState(null);
     const [dragStartPos, setDragStartPos] = useState(null);
 
+    // 이미지 드래그 앤 드롭 관련 state
+    const [draggedImageIndex, setDraggedImageIndex] = useState(null);
+    const [dragOverImageIndex, setDragOverImageIndex] = useState(null);
+    const [touchStartIndex, setTouchStartIndex] = useState(null);
+    const [touchStartY, setTouchStartY] = useState(null);
+
+    // 이미지 뷰어 모달 관련 state
+    const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+
+    // 이미지 뷰어 키보드 이벤트
+    useEffect(() => {
+        if (selectedImageIndex === null) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setSelectedImageIndex(null);
+            } else if (e.key === 'ArrowLeft' && selectedImageIndex > 0) {
+                setSelectedImageIndex(selectedImageIndex - 1);
+            } else if (e.key === 'ArrowRight' && selectedImageIndex < imagePreview.length - 1) {
+                setSelectedImageIndex(selectedImageIndex + 1);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedImageIndex, imagePreview.length]);
+
     const weatherImageMap = {
         sunny: '/weather/sunny.png',
         cloudy: '/weather/cloudy.png',
@@ -737,8 +867,9 @@ function WriteDiary({ user }) {
                 })
             )
         );
-        setImageFiles(prev => [...prev, ...compressedFiles]);
+        // imageFiles와 imagePreview를 함께 관리하여 순서 추적
         const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
+        setImageFiles(prev => [...prev, ...compressedFiles]);
         setImagePreview(prev => [...prev, ...newPreviews]);
     };
 
@@ -760,6 +891,177 @@ function WriteDiary({ user }) {
             setImageFiles(prev => prev.filter((_, i) => i !== fileIndexToRemove));
         }
     };
+
+    // 이미지 순서 변경 함수
+    const reorderImages = (fromIndex, toIndex) => {
+        if (fromIndex === toIndex) return;
+
+        const existingUrlCount = (diary.imageUrls || []).length;
+
+        // imagePreview 순서 변경
+        const newImagePreview = [...imagePreview];
+        const [movedPreview] = newImagePreview.splice(fromIndex, 1);
+        newImagePreview.splice(toIndex, 0, movedPreview);
+        setImagePreview(newImagePreview);
+
+        // diary.imageUrls와 imageFiles 순서 변경
+        if (fromIndex < existingUrlCount && toIndex < existingUrlCount) {
+            // 둘 다 기존 이미지인 경우
+            const newImageUrls = [...diary.imageUrls];
+            const [movedUrl] = newImageUrls.splice(fromIndex, 1);
+            newImageUrls.splice(toIndex, 0, movedUrl);
+            setDiary(prev => ({
+                ...prev,
+                imageUrls: newImageUrls
+            }));
+        } else if (fromIndex >= existingUrlCount && toIndex >= existingUrlCount) {
+            // 둘 다 새 파일인 경우
+            const newImageFiles = [...imageFiles];
+            const fileFromIndex = fromIndex - existingUrlCount;
+            const fileToIndex = toIndex - existingUrlCount;
+            const [movedFile] = newImageFiles.splice(fileFromIndex, 1);
+            newImageFiles.splice(fileToIndex, 0, movedFile);
+            setImageFiles(newImageFiles);
+        }
+        // 기존 이미지와 새 파일이 섞이는 경우는 imagePreview 순서만 변경
+        // 저장 시 imagePreview 순서를 기준으로 재구성하므로 여기서는 imagePreview만 변경
+    };
+
+    // 이미지 드래그 시작
+    const handleImageDragStart = (e, index) => {
+        console.log('드래그 시작:', index, e);
+        setDraggedImageIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', index.toString());
+    };
+
+    // 이미지 드래그 오버
+    const handleImageDragOver = (e, index) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedImageIndex !== null && draggedImageIndex !== index) {
+            setDragOverImageIndex(index);
+        }
+    };
+
+    // 이미지 드래그 리브
+    const handleImageDragLeave = (e) => {
+        e.preventDefault();
+        // 자식 요소로 이동하는 경우는 무시하지 않음
+        setDragOverImageIndex(null);
+    };
+
+    // 이미지 드롭
+    const handleImageDrop = (e, dropIndex) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('드롭:', draggedImageIndex, '->', dropIndex);
+
+        if (draggedImageIndex === null || draggedImageIndex === dropIndex) {
+            setDraggedImageIndex(null);
+            setDragOverImageIndex(null);
+            return;
+        }
+
+        reorderImages(draggedImageIndex, dropIndex);
+        setDraggedImageIndex(null);
+        setDragOverImageIndex(null);
+    };
+
+    // 이미지 드래그 종료
+    const handleImageDragEnd = (e) => {
+        console.log('드래그 종료');
+        setDraggedImageIndex(null);
+        setDragOverImageIndex(null);
+    };
+
+    // 터치 이벤트 핸들러 (모바일 지원) - useRef로 passive: false 설정
+    const imageBoxRefs = useRef([]);
+    const touchHandlersRef = useRef({});
+
+    useEffect(() => {
+        // 터치 이벤트 리스너를 passive: false로 등록
+        const boxes = imageBoxRefs.current;
+        const handlers = touchHandlersRef.current;
+
+        boxes.forEach((box, index) => {
+            if (!box) return;
+
+            // 기존 핸들러 제거
+            if (handlers[index]) {
+                const { start, move, end } = handlers[index];
+                box.removeEventListener('touchstart', start);
+                box.removeEventListener('touchmove', move);
+                box.removeEventListener('touchend', end);
+            }
+
+            const handleTouchStart = (e) => {
+                const touch = e.touches[0];
+                console.log('터치 시작:', index);
+                setTouchStartIndex(index);
+                setTouchStartY(touch.clientY);
+                setDraggedImageIndex(index);
+            };
+
+            const handleTouchMove = (e) => {
+                const currentTouchStartIndex = touchStartIndex;
+                if (currentTouchStartIndex === null || currentTouchStartIndex !== index) return;
+
+                e.preventDefault(); // passive: false이므로 가능
+                const touch = e.touches[0];
+                const currentY = touch.clientY;
+                const startY = touchStartY;
+
+                if (startY === null) return;
+
+                const deltaY = currentY - startY;
+                const boxHeight = 108;
+                const newIndex = Math.round(currentTouchStartIndex + (deltaY / boxHeight));
+
+                if (newIndex >= 0 && newIndex < imagePreview.length && newIndex !== currentTouchStartIndex) {
+                    setDragOverImageIndex(newIndex);
+                }
+            };
+
+            const handleTouchEnd = (e) => {
+                const currentTouchStartIndex = touchStartIndex;
+                const currentDragOverIndex = dragOverImageIndex;
+
+                if (currentTouchStartIndex === null || currentTouchStartIndex !== index) return;
+
+                console.log('터치 종료:', currentTouchStartIndex, '->', currentDragOverIndex);
+
+                if (currentDragOverIndex !== null && currentDragOverIndex !== currentTouchStartIndex) {
+                    reorderImages(currentTouchStartIndex, currentDragOverIndex);
+                }
+
+                setTouchStartIndex(null);
+                setTouchStartY(null);
+                setDraggedImageIndex(null);
+                setDragOverImageIndex(null);
+            };
+
+            box.addEventListener('touchstart', handleTouchStart, { passive: true });
+            box.addEventListener('touchmove', handleTouchMove, { passive: false });
+            box.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+            handlers[index] = {
+                start: handleTouchStart,
+                move: handleTouchMove,
+                end: handleTouchEnd
+            };
+        });
+
+        return () => {
+            boxes.forEach((box, index) => {
+                if (!box || !handlers[index]) return;
+                const { start, move, end } = handlers[index];
+                box.removeEventListener('touchstart', start);
+                box.removeEventListener('touchmove', move);
+                box.removeEventListener('touchend', end);
+            });
+        };
+    }, [imagePreview.length]);
 
     const handleDelete = async () => {
         if (window.confirm(t('diary_delete_confirm'))) {
@@ -1142,9 +1444,9 @@ function WriteDiary({ user }) {
             return;
         }
         // 사진 한도 확장 시 저장 시점에만 포인트 차감
-            if (hasExtendedThisSession && !isEditMode) {
-                if (currentPoints < 20) {
-                    toast.showToast(t('image_limit_insufficient_point'), 'error');
+        if (hasExtendedThisSession && !isEditMode) {
+            if (currentPoints < 20) {
+                toast.showToast(t('image_limit_insufficient_point'), 'error');
                 return;
             }
         }
@@ -1201,18 +1503,51 @@ function WriteDiary({ user }) {
                 }
             }
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
-            let finalImageUrls = diary.imageUrls || [];
+            // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+            const existingUrlCount = (diary.imageUrls || []).length;
+            const existingUrls = diary.imageUrls || [];
+
+            // 새 파일 업로드
+            let uploadedUrls = [];
             if (imageFiles.length > 0) {
-                const uploadPromises = imageFiles.map(file => {
-                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${file.name}`);
+                const uploadPromises = imageFiles.map((file, fileIndex) => {
+                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
                     return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
                 });
-                const uploadedUrls = await Promise.all(uploadPromises);
-                finalImageUrls = [...finalImageUrls, ...uploadedUrls];
+                uploadedUrls = await Promise.all(uploadPromises);
+            }
+
+            // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+            // imagePreview의 각 항목이 기존 URL(https://)인지 새 파일(blob:)인지 확인
+            // 드래그 앤 드롭으로 순서가 변경되었을 수 있으므로, imagePreview 순서를 그대로 따름
+            const finalImageUrlsResult = [];
+            let newFileUploadIndex = 0;
+
+            for (let i = 0; i < imagePreview.length; i++) {
+                const preview = imagePreview[i];
+                if (preview.startsWith('blob:')) {
+                    // blob URL인 경우 (새 파일)
+                    // imagePreview에서 blob URL의 원래 순서를 찾기 위해
+                    // 현재 imagePreview에서 blob URL이 몇 번째인지 계산
+                    const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                    const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+
+                    // 원래 imageFiles 순서와 매핑
+                    // 드래그 앤 드롭으로 순서가 변경되었을 수 있으므로,
+                    // imagePreview에서 blob URL의 현재 위치를 기준으로 imageFiles에서 찾기
+                    // 하지만 더 정확한 방법은 imagePreview와 imageFiles를 함께 추적하는 것
+                    // 간단하게는 imagePreview에서 blob URL의 순서대로 uploadedUrls 사용
+                    if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                        finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                    }
+                } else {
+                    // 기존 URL인 경우 (https:// 또는 http://)
+                    finalImageUrlsResult.push(preview);
+                }
             }
             // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
             await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
-                imageUrls: finalImageUrls,
+                imageUrls: finalImageUrlsResult,
                 updatedAt: new Date(),
                 imageLimitExtended: isImageLimitExtended, // 필드 추가
             });
@@ -1258,7 +1593,7 @@ function WriteDiary({ user }) {
 
                 <DiaryMeta>
                     <MetaLabel>
-                                {!diary.weather ? (
+                        {!diary.weather ? (
                             <Button
                                 onClick={(e) => {
                                     setIsWeatherSheetOpen(true);
@@ -1294,7 +1629,7 @@ function WriteDiary({ user }) {
                         )}
                     </MetaLabel>
                     <MetaLabel>
-                                {!diary.emotion ? (
+                        {!diary.emotion ? (
                             <Button
                                 onClick={(e) => {
                                     setIsEmotionSheetOpen(true);
@@ -1387,7 +1722,7 @@ function WriteDiary({ user }) {
                             type="button"
                             onClick={() => setIsWeatherSheetOpen(false)}
                             style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
-                            >{t('close')}</button>
+                        >{t('close')}</button>
                     </div>
                 )}
                 {isEmotionSheetOpen && (
@@ -1436,7 +1771,7 @@ function WriteDiary({ user }) {
                             type="button"
                             onClick={() => setIsEmotionSheetOpen(false)}
                             style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
-                            >{t('close')}</button>
+                        >{t('close')}</button>
                     </div>
                 )}
 
@@ -1453,11 +1788,58 @@ function WriteDiary({ user }) {
                         style={{ display: 'none' }}
                         disabled={imagePreview.length >= 4 || (!isImageLimitExtended && imagePreview.length >= 1)}
                     />
-                    <ImagePreviewContainer style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ImagePreviewContainer
+                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                        }}
+                    >
                         {imagePreview.map((src, index) => (
-                            <ImagePreviewBox key={index}>
-                                <PreviewImg src={src} alt={`upload ${index + 1}`} />
-                                <RemoveButton type="button" onClick={(e) => removeImage(index)}>
+                            <ImagePreviewBox
+                                key={`img-${index}`}
+                                ref={(el) => {
+                                    if (imageBoxRefs.current) {
+                                        imageBoxRefs.current[index] = el;
+                                    }
+                                }}
+                                draggable={true}
+                                isDragging={draggedImageIndex === index}
+                                isDragOver={dragOverImageIndex === index}
+                                onDragStart={(e) => handleImageDragStart(e, index)}
+                                onDragOver={(e) => handleImageDragOver(e, index)}
+                                onDragLeave={handleImageDragLeave}
+                                onDrop={(e) => handleImageDrop(e, index)}
+                                onDragEnd={handleImageDragEnd}
+                            >
+                                <PreviewImg
+                                    src={src}
+                                    alt={`upload ${index + 1}`}
+                                    draggable={false}
+                                    onDragStart={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedImageIndex(index);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <RemoveButton
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        removeImage(index);
+                                    }}
+                                    onMouseDown={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    onDragStart={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                >
                                     ×
                                 </RemoveButton>
                             </ImagePreviewBox>
@@ -1557,7 +1939,7 @@ function WriteDiary({ user }) {
                         )}
                     </ImagePreviewContainer>
                     {/* 안내 메시지 */}
-                        {imagePreview.length >= 4 && (
+                    {imagePreview.length >= 4 && (
                         <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>{t('image_limit_max')}</div>
                     )}
                     {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 20 && (
@@ -1730,6 +2112,42 @@ function WriteDiary({ user }) {
                 </StickerButton>
             </main>
             <div style={styles.navigationFixed}>
+                {/* 이미지 뷰어 모달 */}
+                {selectedImageIndex !== null && (
+                    <ImageViewerModal onClick={() => setSelectedImageIndex(null)}>
+                        <ImageViewerContent onClick={(e) => e.stopPropagation()}>
+                            <ImageViewerClose onClick={() => setSelectedImageIndex(null)}>
+                                ×
+                            </ImageViewerClose>
+                            {selectedImageIndex > 0 && (
+                                <ImageViewerPrev
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedImageIndex(selectedImageIndex - 1);
+                                    }}
+                                >
+                                    ‹
+                                </ImageViewerPrev>
+                            )}
+                            <ImageViewerImg
+                                src={imagePreview[selectedImageIndex]}
+                                alt={`이미지 ${selectedImageIndex + 1}`}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            {selectedImageIndex < imagePreview.length - 1 && (
+                                <ImageViewerNext
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedImageIndex(selectedImageIndex + 1);
+                                    }}
+                                >
+                                    ›
+                                </ImageViewerNext>
+                            )}
+                        </ImageViewerContent>
+                    </ImageViewerModal>
+                )}
+
                 <Navigation />
             </div>
         </div>
