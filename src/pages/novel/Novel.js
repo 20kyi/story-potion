@@ -290,16 +290,18 @@ const WeeklyCard = styled.div`
 const WeekTitle = styled.h3`
   color: #cb6565;
   font-size: 18px;
-  margin-bottom: 10px;
+  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 32px;
+  line-height: 1.2;
 `;
 
 const DateRange = styled.p`
   color: #666;
   font-size: 11px;
-  margin-bottom: 15px;
+  margin: 0 0 10px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -310,7 +312,7 @@ const ProgressBar = styled.div`
   height: 8px;
   background-color:rgb(233, 219, 219);
   border-radius: 4px;
-  margin-bottom: 15px;
+  margin: 0 0 10px 0;
   overflow: hidden;
   div {
     width: ${props => props.progress}%;
@@ -322,6 +324,7 @@ const ProgressBar = styled.div`
 
 const CreateButton = styled.button`
   width: 100%;
+  margin: 0;
   background-color: ${({ children, completed, theme }) => {
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
