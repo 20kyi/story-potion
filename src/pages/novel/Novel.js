@@ -325,19 +325,22 @@ const ProgressBar = styled.div`
 const CreateButton = styled.button`
   width: 100%;
   margin: 0;
-  background-color: ${({ children, completed, theme }) => {
+  background-color: ${({ children, completed, theme, isFree }) => {
+        if (isFree) return 'transparent';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
-  color: ${({ children, completed, theme }) => {
+  color: ${({ children, completed, theme, isFree }) => {
+        if (isFree) return '#e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
-  border: ${({ children, theme }) => {
+  border: ${({ children, theme, isFree }) => {
+        if (isFree) return '2px solid #e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
@@ -345,22 +348,27 @@ const CreateButton = styled.button`
     }};
   border-radius: 10px;
   padding: 12px;
-  font-size: 14px;
+  font-size: ${({ isFree }) => isFree ? '12px' : '14px'};
   cursor: pointer;
   opacity: 1;
   transition: all 0.2s ease;
   font-weight: 700;
   font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-shadow: ${({ children }) =>
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
-    background-color: ${({ children, theme }) => {
+    background-color: ${({ children, theme, isFree }) => {
+        if (isFree) return 'rgba(228, 163, 13, 0.1)';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
-    color: ${({ children, theme }) => {
+    color: ${({ children, theme, isFree }) => {
+        if (isFree) return '#e4a30d';
         if (children === '일기 채우기' || children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
         return '#fff';
     }};
@@ -425,6 +433,7 @@ const Novel = ({ user }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [novelsMap, setNovelsMap] = useState({});
     const [selectedWeekNovels, setSelectedWeekNovels] = useState(null);
+    const [freeNovelHistoryMap, setFreeNovelHistoryMap] = useState({}); // 주차별 무료 사용 기록
 
 
 
@@ -494,13 +503,120 @@ const Novel = ({ user }) => {
                 // 오류가 나도 UI는 계속 진행되도록 함
             }
 
-            // 3. Calculate progress
+            // 3. Fetch all free novel history for the user
+            try {
+                const freeNovelHistoryRef = collection(db, 'users', user.uid, 'freeNovelHistory');
+                const freeNovelHistorySnapshot = await getDocs(freeNovelHistoryRef);
+                const newFreeNovelHistoryMap = {};
+                freeNovelHistorySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    if (record.year && record.month && record.weekNum) {
+                        const key = `${record.month}월 ${record.weekNum}주차`;
+                        newFreeNovelHistoryMap[key] = true;
+                    }
+                });
+                setFreeNovelHistoryMap(newFreeNovelHistoryMap);
+            } catch (error) {
+                // 오류가 나도 UI는 계속 진행되도록 함
+            }
+
+            // 4. Calculate progress
             calculateAllProgress(year, month, fetchedDiaries);
             setIsLoading(false);
         };
 
         fetchAllData();
     }, [user, currentDate]);
+
+    // location state에서 소설 삭제 알림을 받으면 데이터 다시 가져오기
+    useEffect(() => {
+        if (location.state?.novelDeleted && user) {
+            const fetchAllData = async () => {
+                setIsLoading(true);
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+
+                // 표시되는 월의 주차 정보를 먼저 가져옴
+                const monthWeeks = getWeeksInMonth(year, month);
+
+                // 주차 정보가 없으면 데이터를 불러오지 않음
+                if (monthWeeks.length === 0) {
+                    setDiaries([]);
+                    setNovelsMap({});
+                    calculateAllProgress(year, month, []);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // 표시되는 모든 주차를 포함하는 날짜 범위 설정
+                const startDate = monthWeeks[0].start;
+                const endDate = monthWeeks[monthWeeks.length - 1].end;
+
+                // 1. 확장된 날짜 범위로 일기 가져오기
+                const diariesRef = collection(db, 'diaries');
+                const diariesQuery = query(diariesRef,
+                    where('userId', '==', user.uid),
+                    where('date', '>=', formatDate(startDate)),
+                    where('date', '<=', formatDate(endDate)),
+                    orderBy('date')
+                );
+
+                let fetchedDiaries = [];
+                try {
+                    const diarySnapshot = await getDocs(diariesQuery);
+                    fetchedDiaries = diarySnapshot.docs.map(doc => doc.data());
+                    setDiaries(fetchedDiaries);
+                } catch (error) {
+                    // 오류가 나도 UI는 계속 진행되도록 함
+                }
+
+                // 2. Fetch all Novels for the user to create a map
+                const novelsRef = collection(db, 'novels');
+                const novelsQuery = query(novelsRef, where('userId', '==', user.uid));
+                try {
+                    const novelSnapshot = await getDocs(novelsQuery);
+                    const newNovelsMap = {};
+                    novelSnapshot.forEach(doc => {
+                        const novel = doc.data();
+                        if (novel.week) { // week 정보가 있는 소설만 맵에 추가
+                            // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
+                            if (!newNovelsMap[novel.week]) {
+                                newNovelsMap[novel.week] = [];
+                            }
+                            newNovelsMap[novel.week].push({ id: doc.id, ...novel });
+                        }
+                    });
+                    setNovelsMap(newNovelsMap);
+                } catch (error) {
+                    // 오류가 나도 UI는 계속 진행되도록 함
+                }
+
+                // 3. Fetch all free novel history for the user
+                try {
+                    const freeNovelHistoryRef = collection(db, 'users', user.uid, 'freeNovelHistory');
+                    const freeNovelHistorySnapshot = await getDocs(freeNovelHistoryRef);
+                    const newFreeNovelHistoryMap = {};
+                    freeNovelHistorySnapshot.forEach(doc => {
+                        const record = doc.data();
+                        if (record.year && record.month && record.weekNum) {
+                            const key = `${record.month}월 ${record.weekNum}주차`;
+                            newFreeNovelHistoryMap[key] = true;
+                        }
+                    });
+                    setFreeNovelHistoryMap(newFreeNovelHistoryMap);
+                } catch (error) {
+                    // 오류가 나도 UI는 계속 진행되도록 함
+                }
+
+                // 4. Calculate progress
+                calculateAllProgress(year, month, fetchedDiaries);
+                setIsLoading(false);
+            };
+            fetchAllData();
+            // location state 초기화
+            navigate(location.pathname, { replace: true });
+        }
+    }, [location.state?.novelDeleted, user, currentDate, navigate, location.pathname]);
 
 
     const getWeeksInMonth = (year, month) => {
@@ -846,8 +962,20 @@ const Novel = ({ user }) => {
                                         {t('novel_view')}
                                     </CreateButton>
                                 ) : (
-                                    <CreateButton completed={false} onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}>
-                                        {isCompleted ? t('novel_create') : t('novel_fill_diary')}
+                                    <CreateButton 
+                                        completed={false} 
+                                        isFree={isCompleted && novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey]}
+                                        onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}
+                                    >
+                                        {isCompleted 
+                                            ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? (
+                                                <>
+                                                    <span>👑</span>
+                                                    <span style={{ margin: '0 4px' }}>{t('novel_generate_free_button')}</span>
+                                                    <span>👑</span>
+                                                </>
+                                            ) : t('novel_create'))
+                                            : t('novel_fill_diary')}
                                     </CreateButton>
                                 )}
                             </WeeklyCard>

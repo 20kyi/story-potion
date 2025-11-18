@@ -370,7 +370,7 @@ function NovelView({ user }) {
         try {
             await deleteDoc(doc(db, 'novels', novel.id));
             alert(t('novel_deleted'));
-            navigate('/novel');
+            navigate('/novel', { state: { novelDeleted: true } });
         } catch (error) {
             alert(t('novel_delete_failed'));
         }
