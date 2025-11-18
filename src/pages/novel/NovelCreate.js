@@ -233,7 +233,9 @@ function NovelCreate({ user }) {
     const toast = useToast();
     const { t } = useTranslation();
     const { language } = useLanguage();
-    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [] } = location.state || {};
+    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath } = location.state || {};
+    // 이전 페이지 경로 저장 (없으면 기본값으로 '/novel')
+    const previousPath = returnPath || '/novel';
 
     console.log('=== NovelCreate 컴포넌트 마운트 ===', new Date().toISOString());
     console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle });
@@ -412,7 +414,8 @@ function NovelCreate({ user }) {
         setLoadingMessage(t(randomKey));
         setIsLoading(true);
         const functions = getFunctions();
-        const generateNovel = httpsCallable(functions, 'generateNovel');
+        // 타임아웃을 10분(600초)으로 설정 (Cloud Functions는 최대 540초이지만 클라이언트 타임아웃을 늘림)
+        const generateNovel = httpsCallable(functions, 'generateNovel', { timeout: 600000 });
         // 날짜 정보 없이 일기 내용만 추출
         const diaryContents = weekDiaries.map(d => d.content).filter(content => content && content.trim()).join('\n\n');
         console.log('일기 내용 길이:', diaryContents.length);
@@ -494,9 +497,8 @@ function NovelCreate({ user }) {
             setTimeout(() => {
                 const novelUrl = createNovelUrl(year, month, weekNum, selectedGenre);
                 console.log('소설 보기 페이지로 이동 중...', novelUrl);
-                // 히스토리에서 현재 페이지(소설 생성 페이지)를 소설 보기 페이지로 교체
-                window.history.replaceState(null, '', `/novel/${novelUrl}`);
-                navigate(`/novel/${novelUrl}`, { replace: true });
+                // 이전 페이지 경로를 전달하여 뒤로가기 시 포션 선택 페이지를 건너뛰고 이전 페이지로 이동
+                navigate(`/novel/${novelUrl}`, { state: { skipCreatePage: true, returnPath: previousPath } });
             }, 1000);
         } catch (error) {
             console.error('=== 소설 생성 실패 ===');
@@ -520,6 +522,19 @@ function NovelCreate({ user }) {
                 } else if (typeof error.details === 'string') {
                     errorMessage = error.details;
                 }
+            }
+
+            // Deadline exceeded 에러 확인 (타임아웃)
+            if (error.code === 'functions/deadline-exceeded' ||
+                error.code === 'deadline-exceeded' ||
+                error.message?.includes('deadline-exceeded') ||
+                error.message?.includes('deadline')) {
+                errorMessage = '소설 생성 시간이 초과되었습니다. 일기 내용이 많거나 서버가 바쁠 수 있습니다. 잠시 후 다시 시도해주세요.';
+                shouldShowToast = true;
+                setIsLoading(false);
+                setIsNovelGenerated(false);
+                toast.showToast(errorMessage, 'error');
+                return;
             }
 
             // Rate limit 에러 확인

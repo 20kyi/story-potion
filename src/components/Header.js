@@ -123,7 +123,13 @@ const Header = ({ user, rightActions, title }) => {
         navigate(`/friend-novels?userId=${userId}`);
       } else {
         // 소설 보기 페이지에서 뒤로가기 시 직전 페이지로 이동
-        navigate(-1);
+        // 단, 포션 선택 페이지(NovelCreate)에서 온 경우는 건너뛰기
+        if (location.state?.skipCreatePage && location.state?.returnPath) {
+          // 포션 선택 페이지를 건너뛰고 이전 페이지로 직접 이동
+          navigate(location.state.returnPath);
+        } else {
+          navigate(-1);
+        }
       }
     } else if (location.pathname === '/novel') {
       navigate('/');

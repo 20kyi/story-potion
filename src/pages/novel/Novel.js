@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createNovelUrl } from '../../utils/novelUtils';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
@@ -409,6 +409,7 @@ const bannerData = [
 
 const Novel = ({ user }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { language } = useLanguage();
     const { t } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -642,7 +643,8 @@ const Novel = ({ user }) => {
                 dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
                 imageUrl: imageUrl,
                 title: novelTitle,
-                existingGenres: existingGenres
+                existingGenres: existingGenres,
+                returnPath: location.pathname || '/novel'
             }
         });
     };
@@ -799,7 +801,8 @@ const Novel = ({ user }) => {
                                     dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
                                     imageUrl: imageUrl,
                                     title: novelTitle,
-                                    existingGenres: existingGenres
+                                    existingGenres: existingGenres,
+                                    returnPath: location.pathname || '/novel'
                                 }
                             });
                         };
