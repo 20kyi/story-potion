@@ -54,6 +54,7 @@ import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크�
 import FriendNovelList from './pages/novel/FriendNovelList';
 import AppInfo from './pages/mypage/AppInfo';
 import { inAppPurchaseService } from './utils/inAppPurchase';
+import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -113,9 +114,18 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
             setIsLoading(false);
+            
+            // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
+            if (user?.uid) {
+                try {
+                    await checkAndRenewMonthlyPremium(user.uid);
+                } catch (error) {
+                    console.error('프리미엄 갱신 확인 중 오류:', error);
+                }
+            }
         });
 
         // 🔐 딥링크 리디렉션 처리

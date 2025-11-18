@@ -87,6 +87,16 @@ function Settings() {
             }
         };
         fetchPremiumStatus();
+
+        // 페이지가 포커스될 때마다 프리미엄 상태 다시 조회
+        const handleFocus = () => {
+            fetchPremiumStatus();
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
     }, []);
 
     const handleAccordion = (key) => {
@@ -166,12 +176,16 @@ function Settings() {
                 isMonthlyPremium: false,
                 isYearlyPremium: false,
                 premiumType: null,
-                premiumStartDate: null
+                premiumStartDate: null,
+                premiumRenewalDate: null,
+                premiumCancelled: true,
+                updatedAt: new Date()
             });
             setPremiumStatus({
                 isMonthlyPremium: false,
                 isYearlyPremium: false,
-                premiumType: null
+                premiumType: null,
+                premiumRenewalDate: null
             });
             alert('프리미엄이 해지되었습니다.');
         } catch (error) {

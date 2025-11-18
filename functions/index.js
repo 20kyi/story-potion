@@ -596,3 +596,82 @@ exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(
 
     return null;
 });
+
+// 월간 프리미엄 자동 갱신 함수 (매일 자정에 실행)
+exports.renewMonthlyPremium = functions.pubsub.schedule('every day 00:00').timeZone('Asia/Seoul').onRun(async (context) => {
+    console.log('월간 프리미엄 자동 갱신 시작...');
+    const now = admin.firestore.Timestamp.now();
+    const nowDate = new Date();
+
+    try {
+        // 월간 프리미엄 회원 중 갱신일이 지난 사용자 조회
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('isMonthlyPremium', '==', true)
+            .where('premiumRenewalDate', '<=', now)
+            .get();
+
+        if (usersSnapshot.empty) {
+            console.log('갱신 대상자 없음');
+            return null;
+        }
+
+        let renewedCount = 0;
+        const batchSize = 500; // Firestore 배치 제한
+        let batch = admin.firestore().batch();
+        let currentBatchCount = 0;
+        const batches = [];
+
+        usersSnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+
+            // premiumRenewalDate가 실제로 지났는지 확인
+            let renewalDate;
+            if (userData.premiumRenewalDate?.seconds) {
+                renewalDate = new Date(userData.premiumRenewalDate.seconds * 1000);
+            } else if (userData.premiumRenewalDate?.toDate) {
+                renewalDate = userData.premiumRenewalDate.toDate();
+            } else {
+                renewalDate = new Date(userData.premiumRenewalDate);
+            }
+
+            // 갱신일이 지났고, 해지되지 않은 경우에만 갱신
+            // premiumCancelled 필드가 없거나 false인 경우 갱신
+            if (renewalDate <= nowDate && userData.isMonthlyPremium && userData.premiumCancelled !== true) {
+                // 다음 갱신일 계산 (1개월 후)
+                const nextRenewalDate = new Date(renewalDate);
+                nextRenewalDate.setMonth(nextRenewalDate.getMonth() + 1);
+
+                const userRef = admin.firestore().collection('users').doc(userDoc.id);
+                batch.update(userRef, {
+                    premiumRenewalDate: admin.firestore.Timestamp.fromDate(nextRenewalDate),
+                    premiumStartDate: admin.firestore.Timestamp.fromDate(nowDate),
+                    updatedAt: admin.firestore.Timestamp.now()
+                });
+
+                renewedCount++;
+                currentBatchCount++;
+
+                // 배치 크기 제한 체크
+                if (currentBatchCount >= batchSize) {
+                    batches.push(batch);
+                    batch = admin.firestore().batch();
+                    currentBatchCount = 0;
+                }
+            }
+        });
+
+        // 남은 배치 추가
+        if (currentBatchCount > 0) {
+            batches.push(batch);
+        }
+
+        // 모든 배치 커밋
+        await Promise.all(batches.map(b => b.commit()));
+
+        console.log(`월간 프리미엄 자동 갱신 완료: ${renewedCount}명`);
+        return null;
+    } catch (error) {
+        console.error('월간 프리미엄 자동 갱신 실패:', error);
+        throw error;
+    }
+});

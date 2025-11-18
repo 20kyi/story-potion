@@ -265,7 +265,9 @@ function Shop({ user }) {
         isYearlyPremium: false,
         premiumType: 'monthly',
         premiumStartDate: now,
-        premiumRenewalDate: renewalDate
+        premiumRenewalDate: renewalDate,
+        premiumCancelled: false,
+        updatedAt: new Date()
       });
       toast.showToast(t('premium_monthly_success'), 'success');
       setPremiumStatus({
@@ -334,7 +336,9 @@ function Shop({ user }) {
         isYearlyPremium: true,
         premiumType: 'yearly',
         premiumStartDate: now,
-        premiumRenewalDate: renewalDate
+        premiumRenewalDate: renewalDate,
+        premiumCancelled: false,
+        updatedAt: new Date()
       });
 
       const successMessage =
