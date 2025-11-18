@@ -310,14 +310,23 @@ const DateRange = styled.p`
 const ProgressBar = styled.div`
   width: 100%;
   height: 8px;
-  background-color:rgb(233, 219, 219);
+  background-color: ${({ barColor, theme }) => {
+        if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
+        return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
+    }};
   border-radius: 4px;
   margin: 0 0 10px 0;
   overflow: hidden;
   div {
     width: ${props => props.progress}%;
     height: 100%;
-    background-color: #cb6565;
+    background-color: ${({ barColor, theme }) => {
+        if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
+        if (barColor === 'create') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        if (barColor === 'free') return '#e4a30d';
+        if (barColor === 'view') return theme.primary;
+        return '#cb6565'; // 기본값
+    }};
     transition: width 0.3s ease;
   }
 `;
@@ -937,7 +946,16 @@ const Novel = ({ user }) => {
                                     )}
                                 </WeekTitle>
                                 <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                <ProgressBar progress={progress}>
+                                <ProgressBar 
+                                    progress={progress}
+                                    barColor={
+                                        firstNovel 
+                                            ? 'view' 
+                                            : isCompleted 
+                                                ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? 'free' : 'create')
+                                                : 'fill'
+                                    }
+                                >
                                     <div />
                                 </ProgressBar>
                                 {firstNovel ? (

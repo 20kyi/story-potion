@@ -801,28 +801,30 @@ function NovelCreate({ user }) {
                                                     whileHover={{ scale: 1.2 }}
                                                     transition={{ type: 'spring', stiffness: 300, damping: 18 }}
                                                 />
-                                                {/* 포션 개수 표시 */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '-6px',
-                                                    right: '-6px',
-                                                    background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
-                                                    color: 'white',
-                                                    borderRadius: '12px',
-                                                    minWidth: '20px',
-                                                    height: '20px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: '10px',
-                                                    fontWeight: '700',
-                                                    border: '2px solid white',
-                                                    boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
-                                                    zIndex: 10,
-                                                    padding: '0 4px'
-                                                }}>
-                                                    {ownedPotions[potionId]}
-                                                </div>
+                                                {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
+                                                {!isFreeMode && potionId && ownedPotions[potionId] > 0 && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '-6px',
+                                                        right: '-6px',
+                                                        background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
+                                                        color: 'white',
+                                                        borderRadius: '12px',
+                                                        minWidth: '20px',
+                                                        height: '20px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '10px',
+                                                        fontWeight: '700',
+                                                        border: '2px solid white',
+                                                        boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
+                                                        zIndex: 10,
+                                                        padding: '0 4px'
+                                                    }}>
+                                                        {ownedPotions[potionId]}
+                                                    </div>
+                                                )}
                                             </div>
                                         </motion.div>
                                     );
@@ -873,28 +875,30 @@ function NovelCreate({ user }) {
                                                     whileHover={{ scale: 1.2 }}
                                                     transition={{ type: 'spring', stiffness: 300, damping: 18 }}
                                                 />
-                                                {/* 포션 개수 표시 */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '-6px',
-                                                    right: '-6px',
-                                                    background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
-                                                    color: 'white',
-                                                    borderRadius: '12px',
-                                                    minWidth: '20px',
-                                                    height: '20px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: '10px',
-                                                    fontWeight: '700',
-                                                    border: '2px solid white',
-                                                    boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
-                                                    zIndex: 10,
-                                                    padding: '0 4px'
-                                                }}>
-                                                    {ownedPotions[potionId]}
-                                                </div>
+                                                {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
+                                                {!isFreeMode && potionId && ownedPotions[potionId] > 0 && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '-6px',
+                                                        right: '-6px',
+                                                        background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
+                                                        color: 'white',
+                                                        borderRadius: '12px',
+                                                        minWidth: '20px',
+                                                        height: '20px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '10px',
+                                                        fontWeight: '700',
+                                                        border: '2px solid white',
+                                                        boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
+                                                        zIndex: 10,
+                                                        padding: '0 4px'
+                                                    }}>
+                                                        {ownedPotions[potionId]}
+                                                    </div>
+                                                )}
                                             </div>
                                         </motion.div>
                                     );
@@ -983,8 +987,8 @@ function NovelCreate({ user }) {
                                 <div
                                     style={{
                                         position: 'relative',
-                                        width: '60%',
-                                        maxWidth: 260,
+                                        width: '80%',
+                                        maxWidth: 360,
                                         display: 'block',
                                         zIndex: 1,
                                         cursor: selectedPotion !== null && !isLoading ? 'pointer' : 'default',
@@ -999,9 +1003,11 @@ function NovelCreate({ user }) {
                                             position: 'absolute',
                                             top: 0, left: 0, width: '100%', height: '100%',
                                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                            fontWeight: 700, fontSize: 18, color: '#fff', textShadow: '0 2px 8px #0008',
+                                            fontWeight: 700, fontSize: 16, color: '#fff', textShadow: '0 2px 8px #0008',
                                             pointerEvents: 'none',
                                             userSelect: 'none',
+                                            whiteSpace: 'nowrap',
+                                            padding: '0 8px',
                                         }}
                                     >
                                         {isLoading
@@ -1010,7 +1016,7 @@ function NovelCreate({ user }) {
                                                 ? t('novel_generate_button_with_genre', { genre: t(potionImages[selectedPotion].key) })
                                                 : t('novel_generate_button')}
                                         {selectedPotion !== null && !isLoading && (
-                                            <div style={{ fontSize: 14, marginTop: 4, opacity: 0.9 }}>
+                                            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
                                                 {!weeklyFreeNovelUsed && year && month && weekNum
                                                     ? t('novel_generate_free_use')
                                                     : t('novel_generate_potion_use')}
