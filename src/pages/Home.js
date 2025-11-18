@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import Navigation from '../components/Navigation';
 import Header from '../components/Header';
 import PencilIcon from '../components/icons/PencilIcon';
+import NotificationModal from '../components/NotificationModal';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, increment, updateDoc, addDoc } from 'firebase/firestore';
 import dailyTopics from '../data/topics.json';
@@ -473,6 +474,8 @@ function Home({ user }) {
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
   const [ownedPotions, setOwnedPotions] = useState({});
   const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
 
   // 포션 데이터 (표시는 locale로)
@@ -587,6 +590,28 @@ function Home({ user }) {
     fetchRecentData();
   }, [user]);
 
+  // 알림 개수 조회
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const notificationsRef = collection(db, 'users', user.uid, 'notifications');
+        const q = query(notificationsRef, where('isRead', '==', false));
+        const snapshot = await getDocs(q);
+        setUnreadNotificationCount(snapshot.size);
+      } catch (error) {
+        console.error('읽지 않은 알림 개수 조회 실패:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    
+    // 실시간 업데이트를 위한 구독 (선택사항)
+    const interval = setInterval(fetchUnreadCount, 30000); // 30초마다 체크
+    return () => clearInterval(interval);
+  }, [user]);
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     // 'YYYY-MM-DD' 형식을 로컬 시간대로 안전하게 파싱
@@ -603,7 +628,16 @@ function Home({ user }) {
 
   return (
     <Container>
-      <Header user={user} />
+      <Header 
+        user={user} 
+        onNotificationClick={() => setNotificationModalOpen(true)}
+        hasUnreadNotifications={unreadNotificationCount > 0}
+      />
+      <NotificationModal 
+        isOpen={notificationModalOpen}
+        onClose={() => setNotificationModalOpen(false)}
+        user={user}
+      />
       <CarouselContainer>
         <Slider {...sliderSettings}>
           {bannerData.map((banner, idx) => (

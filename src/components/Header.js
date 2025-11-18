@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import BackIcon from './icons/BackIcon';
+import NotificationIcon from './icons/NotificationIcon';
 import { useTheme } from '../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../utils/profileImageUtils';
 
@@ -64,6 +65,35 @@ const RightSection = styled.div`
   gap: 8px;
 `;
 
+const NotificationButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: ${({ theme }) => theme.text || '#333'};
+  border-radius: 50%;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: ${({ theme }) => theme.cardHover || 'rgba(0, 0, 0, 0.05)'};
+  }
+`;
+
+const NotificationBadge = styled.div`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4444;
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.card || '#fff'};
+`;
+
 const LogoText = styled.span`
   font-size: 28px;
   font-weight: 700;
@@ -84,14 +114,14 @@ const CenterSection = styled.div`
   pointer-events: none;
 `;
 
-const Header = ({ user, rightActions, title }) => {
+const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotifications }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const { theme: themeMode, actualTheme, setThemeMode, toggleTheme } = useTheme();
   const theme = actualTheme === 'dark'
-    ? { text: '#fff' }
-    : { text: '#222' };
+    ? { text: '#fff', card: '#2a2a2a', cardHover: '#333' }
+    : { text: '#222', card: '#fff', cardHover: '#f5f5f5' };
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
   const photoURL = user?.photoURL || '/profile-placeholder.jpg';
@@ -162,7 +192,15 @@ const Header = ({ user, rightActions, title }) => {
           <span style={{ fontSize: 20, fontWeight: 700, lineHeight: '1', display: 'flex', alignItems: 'center', height: '100%' }}>{title}</span>
         </CenterSection>
       )}
-      {rightActions && <RightSection>{rightActions}</RightSection>}
+      <RightSection>
+        {isHome && onNotificationClick && (
+          <NotificationButton theme={theme} onClick={onNotificationClick}>
+            <NotificationIcon size={24} color={theme.text} />
+            {hasUnreadNotifications && <NotificationBadge theme={theme} />}
+          </NotificationButton>
+        )}
+        {rightActions && rightActions}
+      </RightSection>
     </HeaderContainer>
   );
 };

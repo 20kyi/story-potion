@@ -423,5 +423,8 @@
     "friend_sent_requests": "보낸 친구 요청",
     "friend_sent_empty": "보낸 친구 요청이 없습니다",
     "friend_sent_empty_sub": "친구 요청을 보내면 여기에 표시됩니다",
-    "friend_requests_tab": "요청"
+    "friend_requests_tab": "요청",
+    "notifications": "알림",
+    "no_notifications": "알림이 없습니다.",
+    "mark_all_read": "모두 읽음"
 }

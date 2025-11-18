@@ -10,6 +10,7 @@ import { useTheme } from '../../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 import { createNovelUrl } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import { createNovelPurchaseNotification, createPointEarnNotification } from '../../utils/notificationService';
 
 const Container = styled.div`
   display: flex;
@@ -321,6 +322,15 @@ function FriendNovelList({ user }) {
                 novelId: novel.id,
                 createdAt: Timestamp.now(),
             });
+            // 포인트 적립 알림 생성 (저자에게)
+            await createPointEarnNotification(novel.userId, 15, '소설 판매 적립');
+            // 소설 구매 알림 생성 (저자에게)
+            await createNovelPurchaseNotification(
+                novel.userId,
+                user.uid,
+                novel.id,
+                novel.title
+            );
             setPurchased((prev) => ({ ...prev, [novel.id]: true }));
             alert(t('friend_novel_buy_success'));
         } catch (e) {

@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, increment } from 'firebase/firestore';
+import { createPointEarnNotification } from './notificationService';
 
 // 해당 주의 시작일(월요일)과 끝일(일요일)을 계산
 const getWeekRange = (date) => {
@@ -93,6 +94,8 @@ export const checkWeeklyBonus = async (userId, currentDate) => {
                 desc: '일주일 연속 일기 작성 보너스',
                 createdAt: new Date()
             });
+            // 포인트 적립 알림 생성
+            await createPointEarnNotification(userId, 10, '일주일 연속 일기 작성 보너스');
 
             console.log('일주일 연속 일기 작성 보너스 지급 완료');
         }

@@ -16,6 +16,7 @@ import { Capacitor } from '@capacitor/core';
 import { getPointPolicy } from '../../utils/appConfig';
 import { checkWeeklyBonus } from '../../utils/weeklyBonus';
 import { useTranslation } from '../../LanguageContext';
+import { createPointEarnNotification } from '../../utils/notificationService';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
 const getTodayString = () => {
@@ -1423,6 +1424,8 @@ function WriteDiary({ user }) {
                             desc: t('today_diary'),
                             createdAt: new Date()
                         });
+                        // 포인트 적립 알림 생성
+                        await createPointEarnNotification(user.uid, earnPoint, t('today_diary'));
 
                         // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
                         await checkWeeklyBonus(user.uid, today);
