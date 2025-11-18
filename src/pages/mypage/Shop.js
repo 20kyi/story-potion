@@ -169,7 +169,6 @@ const PremiumButton = styled.button`
 
 const premiumFeatures = [
   { id: 'ads', titleKey: 'premium_feature_ads_title', descKey: 'premium_feature_ads_desc' },
-  { id: 'theme', titleKey: 'premium_feature_theme_title', descKey: 'premium_feature_theme_desc' },
   { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
   {
     id: 'free-potion-on-weekly-novel',
@@ -177,6 +176,7 @@ const premiumFeatures = [
     descKey: 'premium_feature_free_potion_desc',
   },
   { id: 'premium-sticker', titleKey: 'premium_feature_sticker_title', descKey: 'premium_feature_sticker_desc' },
+  { id: 'photo-upload', titleKey: 'premium_feature_photo_upload_title', descKey: 'premium_feature_photo_upload_desc' },
 ];
 
 const PremiumCard = styled.div`

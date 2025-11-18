@@ -530,9 +530,7 @@ function WriteDiary({ user }) {
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
-    const [currentPoints, setCurrentPoints] = useState(0);
-    const [isImageLimitExtended, setIsImageLimitExtended] = useState(false);
-    const [hasExtendedThisSession, setHasExtendedThisSession] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
     const { t } = useTranslation();
 
     // 스티커 관련 state
@@ -707,30 +705,21 @@ function WriteDiary({ user }) {
 
     useEffect(() => {
         if (user?.uid) {
-            const fetchPoints = async () => {
+            const fetchPremiumStatus = async () => {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     if (userDoc.exists()) {
-                        setCurrentPoints(userDoc.data().point || 0);
+                        const userData = userDoc.data();
+                        setIsPremium(userData.isMonthlyPremium || userData.isYearlyPremium || false);
                     }
                 } catch (error) {
-                    console.error('포인트 조회 실패:', error);
+                    console.error('프리미엄 상태 조회 실패:', error);
                 }
             };
-            fetchPoints();
+            fetchPremiumStatus();
         }
     }, [user]);
 
-    // 페이지를 나갈 때 확장 상태 초기화
-    usePrompt(
-        hasExtendedThisSession && !isEditMode,
-        (location, callback) => {
-            // 확장 상태를 초기화하고 페이지 이동 허용
-            setIsImageLimitExtended(false);
-            setHasExtendedThisSession(false);
-            callback();
-        }
-    );
 
     // 스티커 드래그 앤 드롭 기능
     useEffect(() => {
@@ -783,8 +772,6 @@ function WriteDiary({ user }) {
             setStickerCounter(existingDiary.stickers ? existingDiary.stickers.length : 0);
             setIsEditMode(true);
             setExistingDiaryId(diaryId);
-            setIsImageLimitExtended(!!existingDiary.imageLimitExtended); // 필드 없으면 false
-            setHasExtendedThisSession(false); // 기존 일기 불러올 때는 세션 확장 상태 초기화
         } else {
             // Reset form if no diary exists for the new date
             setDiary({
@@ -801,8 +788,6 @@ function WriteDiary({ user }) {
             setStickerCounter(0);
             setIsEditMode(false);
             setExistingDiaryId(null);
-            setIsImageLimitExtended(false);
-            setHasExtendedThisSession(false);
         }
     };
 
@@ -821,40 +806,18 @@ function WriteDiary({ user }) {
         }));
     };
 
-    // 사진 한도 확장 함수
-    const handleExtendImageLimit = async () => {
-        if (currentPoints < 20) {
-            toast.showToast(t('image_limit_insufficient_point'), 'error');
-            return;
-        }
-        try {
-            await updateDoc(doc(db, 'users', user.uid), {
-                point: increment(-20)
-            });
-            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-                type: 'use',
-                amount: -20,
-                desc: '일기 사진 한도 확장',
-                createdAt: new Date()
-            });
-            setCurrentPoints(prev => prev - 20);
-            setIsImageLimitExtended(true);
-            toast.showToast(t('diary_image_limit_extended_now'), 'success');
-        } catch (error) {
-            toast.showToast(t('diary_image_limit_extend_failed'), 'error');
-        }
-    };
 
     const handleImageUpload = async (e) => {
         const newFiles = Array.from(e.target.files);
         const totalImages = imagePreview.length + newFiles.length;
-        // 한도 미확장 시 1장까지만 허용
-        if (!isImageLimitExtended && totalImages > 1) {
-            toast.showToast(t('image_limit_not_extended'), 'info');
-            return;
-        }
-        if (totalImages > 4) {
-            toast.showToast(t('image_limit_max'), 'error');
+        const maxImages = isPremium ? 4 : 1;
+
+        if (totalImages > maxImages) {
+            if (!isPremium) {
+                toast.showToast(t('image_limit_premium_required'), 'info');
+            } else {
+                toast.showToast(t('image_limit_max'), 'error');
+            }
             return;
         }
         // 이미지 압축 및 리사이즈
@@ -1078,29 +1041,6 @@ function WriteDiary({ user }) {
         }
     };
 
-    // 사진 한도 확장 함수 (포인트 차감 없이 확장만)
-    const handleExtendAndEnableImageUpload = async () => {
-        if (currentPoints < 20) {
-            toast.showToast(t('image_limit_insufficient_point'), 'error');
-            return;
-        }
-
-        setIsImageLimitExtended(true);
-        setHasExtendedThisSession(true);
-        toast.showToast(t('diary_image_limit_extended'), 'success');
-
-        // 수정 모드라면 Firestore에도 반영
-        if (isEditMode && existingDiaryId) {
-            try {
-                await updateDoc(doc(db, 'diaries', existingDiaryId), { imageLimitExtended: true });
-            } catch (e) {
-                toast.showToast(t('diary_image_limit_extend_failed'), 'error');
-            }
-        }
-
-        // 확장 후 바로 파일 선택창 열기
-        document.getElementById('image-upload').click();
-    };
 
     // 감정/날씨 바텀시트 오버레이 닫기 핸들러
     const closeSheets = () => {
@@ -1443,13 +1383,6 @@ function WriteDiary({ user }) {
             toast.showToast(t('diary_need_more_content'), 'info');
             return;
         }
-        // 사진 한도 확장 시 저장 시점에만 포인트 차감
-        if (hasExtendedThisSession && !isEditMode) {
-            if (currentPoints < 20) {
-                toast.showToast(t('image_limit_insufficient_point'), 'error');
-                return;
-            }
-        }
         setIsSubmitting(true);
         try {
             // 1. Firestore에 일기 텍스트만 먼저 저장 (imageUrls는 저장하지 않음)
@@ -1463,7 +1396,6 @@ function WriteDiary({ user }) {
                 mood: diary.mood,
                 stickers: stickers,
                 createdAt: new Date(),
-                imageLimitExtended: isImageLimitExtended, // 필드 추가
             };
             let diaryRef;
             if (isEditMode && existingDiaryId) {
@@ -1549,21 +1481,7 @@ function WriteDiary({ user }) {
             await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
                 imageUrls: finalImageUrlsResult,
                 updatedAt: new Date(),
-                imageLimitExtended: isImageLimitExtended, // 필드 추가
             });
-            // 4. 사진 한도 확장 시 포인트 차감(저장 시점, 새로 작성하는 경우에만)
-            if (hasExtendedThisSession && !isEditMode) {
-                await updateDoc(doc(db, 'users', user.uid), {
-                    point: increment(-20)
-                });
-                await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-                    type: 'use',
-                    amount: -20,
-                    desc: t('image_limit_extend_button'),
-                    createdAt: new Date()
-                });
-                toast.showToast(t('diary_image_limit_extended'), 'info');
-            }
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
             toast.showToast(t('diary_save_failed'), 'error');
@@ -1786,10 +1704,14 @@ function WriteDiary({ user }) {
                         accept="image/*"
                         onChange={handleImageUpload}
                         style={{ display: 'none' }}
-                        disabled={imagePreview.length >= 4 || (!isImageLimitExtended && imagePreview.length >= 1)}
+                        disabled={isPremium ? imagePreview.length >= 4 : imagePreview.length >= 1}
                     />
                     <ImagePreviewContainer
-                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                        }}
                         onDragOver={(e) => {
                             e.preventDefault();
                         }}
@@ -1844,55 +1766,12 @@ function WriteDiary({ user }) {
                                 </RemoveButton>
                             </ImagePreviewBox>
                         ))}
-                        {/* 한도 미확장 && 사진 1장 이상이면 확장 버튼 */}
-                        {!isImageLimitExtended && imagePreview.length >= 1 && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={handleExtendAndEnableImageUpload}
-                                    disabled={currentPoints < 20}
-                                    style={{
-                                        marginTop: 0,
-                                        width: 100,
-                                        height: 100,
-                                        borderRadius: 8,
-                                        background: currentPoints < 20 ? '#eee' : '#cb6565',
-                                        color: currentPoints < 20 ? '#aaa' : '#fff',
-                                        border: 'none',
-                                        fontSize: 15,
-                                        fontWeight: 600,
-                                        cursor: currentPoints < 20 ? 'not-allowed' : 'pointer',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        position: 'relative',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                                    }}
-                                >
-                                    <span className="icon" style={{ fontSize: 24, marginBottom: 4 }}>📸</span>
-                                    {t('image_limit_extend_button')}
-                                </button>
-                                <span style={{
-                                    marginLeft: 6,
-                                    fontSize: 13,
-                                    color: '#cb6565',
-                                    fontWeight: 400,
-                                    minWidth: 38,
-                                    textAlign: 'left',
-                                    alignSelf: 'flex-end',
-                                    letterSpacing: '-0.5px',
-                                }}>
-                                    ({imagePreview.length}/1)
-                                </span>
-                            </>
-                        )}
-                        {/* 한도 확장 && 4장 미만이면 사진 추가 버튼 */}
-                        {isImageLimitExtended && imagePreview.length < 4 && (
+                        {/* 사진 추가 버튼 */}
+                        {((isPremium && imagePreview.length < 4) || (!isPremium && imagePreview.length < 1)) && (
                             <>
                                 <UploadLabel htmlFor="image-upload" style={{
-                                    opacity: imagePreview.length >= 4 ? 0.5 : 1,
-                                    pointerEvents: imagePreview.length >= 4 ? 'none' : 'auto',
+                                    opacity: (isPremium && imagePreview.length >= 4) || (!isPremium && imagePreview.length >= 1) ? 0.5 : 1,
+                                    pointerEvents: (isPremium && imagePreview.length >= 4) || (!isPremium && imagePreview.length >= 1) ? 'none' : 'auto',
                                     position: 'relative',
                                 }}>
                                     <span className="icon">📸</span>
@@ -1908,42 +1787,85 @@ function WriteDiary({ user }) {
                                     alignSelf: 'flex-end',
                                     letterSpacing: '-0.5px',
                                 }}>
-                                    ({imagePreview.length}/4)
-                                </span>
-                            </>
-                        )}
-                        {/* 한도 미확장 && 사진이 0개일 때만 사진 추가 버튼 */}
-                        {!isImageLimitExtended && imagePreview.length === 0 && (
-                            <>
-                                <UploadLabel htmlFor="image-upload" style={{
-                                    opacity: 1,
-                                    pointerEvents: 'auto',
-                                    position: 'relative',
-                                }}>
-                                    <span className="icon">📸</span>
-                                    {t('image_add')}
-                                </UploadLabel>
-                                <span style={{
-                                    marginLeft: 6,
-                                    fontSize: 13,
-                                    color: '#cb6565',
-                                    fontWeight: 400,
-                                    minWidth: 38,
-                                    textAlign: 'left',
-                                    alignSelf: 'flex-end',
-                                    letterSpacing: '-0.5px',
-                                }}>
-                                    (0/1)
+                                    ({imagePreview.length}/{isPremium ? 4 : 1})
                                 </span>
                             </>
                         )}
                     </ImagePreviewContainer>
-                    {/* 안내 메시지 */}
-                    {imagePreview.length >= 4 && (
-                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>{t('image_limit_max')}</div>
+                    {/* 프리미엄 업그레이드 안내 - 사진 아래에 배치 */}
+                    {!isPremium && imagePreview.length >= 1 && (
+                        <div style={{
+                            marginTop: 12,
+                            padding: '12px 16px',
+                            background: isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)',
+                            borderRadius: 12,
+                            border: `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(255, 209, 111, 0.3)'}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: 12,
+                        }}>
+                            <div style={{
+                                color: isDark ? '#ff9f9f' : '#cb6565',
+                                fontSize: 13,
+                                lineHeight: 1.5,
+                                fontWeight: 500,
+                                textAlign: 'center',
+                            }}>
+                                프리미엄으로 업그레이드하면<br />
+                                사진을 4장까지 업로드할 수 있습니다
+                            </div>
+                            <button
+                                onClick={() => navigate('/my/shop')}
+                                style={{
+                                    color: '#fff',
+                                    background: 'linear-gradient(135deg,rgb(228, 163, 13) 0%,rgb(255, 226, 148) 100%)',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    padding: '8px 20px',
+                                    fontSize: 13,
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    boxShadow: '0 2px 8px rgba(203, 101, 101, 0.3)',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    whiteSpace: 'nowrap',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.transform = 'translateY(-1px)';
+                                    e.target.style.boxShadow = '0 4px 12px rgba(203, 101, 101, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.transform = 'translateY(0)';
+                                    e.target.style.boxShadow = '0 2px 8px rgba(203, 101, 101, 0.3)';
+                                }}
+                            >
+                                <span>👑</span>
+                                <span>프리미엄 업그레이드</span>
+                                <span>👑</span>
+                            </button>
+                        </div>
                     )}
-                    {imagePreview.length === 1 && !isImageLimitExtended && currentPoints < 20 && (
-                        <div style={{ color: '#cb6565', marginTop: 8, fontSize: 14 }}>{t('image_limit_insufficient_point')}</div>
+                    {/* 프리미엄 사용자 최대 사진 제한 안내 */}
+                    {isPremium && imagePreview.length >= 4 && (
+                        <div style={{
+                            marginTop: 12,
+                            padding: '8px 12px',
+                            background: isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(203, 101, 101, 0.05)',
+                            borderRadius: 8,
+                            border: `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(203, 101, 101, 0.2)'}`,
+                            textAlign: 'center',
+                        }}>
+                            <div style={{
+                                color: '#cb6565',
+                                fontSize: 13,
+                            }}>
+                                {t('image_limit_max')}
+                            </div>
+                        </div>
                     )}
                 </div>
 
