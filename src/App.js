@@ -60,6 +60,11 @@ const AppLayout = ({ user, isLoading }) => {
     const showNavigation = !['/login', '/signup'].includes(location.pathname);
     const { notification, hideNotification } = useNotification(user);
 
+    // 페이지 전환 시 스크롤을 맨 위로 초기화
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location.pathname]);
+
     if (isLoading) return <div>로딩 중...</div>;
 
     return (
