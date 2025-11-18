@@ -112,8 +112,8 @@ const Header = ({ user, rightActions, title }) => {
       if (userId) {
         navigate(`/friend-novels?userId=${userId}`);
       } else {
-        // 소설 보기 페이지에서 뒤로가기 시 소설 홈으로 이동
-        navigate('/novel');
+        // 소설 보기 페이지에서 뒤로가기 시 직전 페이지로 이동
+        navigate(-1);
       }
     } else if (location.pathname === '/novel') {
       navigate('/');

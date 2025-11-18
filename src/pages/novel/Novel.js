@@ -849,7 +849,7 @@ const Novel = ({ user }) => {
                     })}
                 </WeeklyGrid>
             </WeeklySection>
-            
+
             {/* 소설 목록 모달 */}
             {selectedWeekNovels && (
                 <NovelListModal onClick={() => setSelectedWeekNovels(null)}>
@@ -861,11 +861,11 @@ const Novel = ({ user }) => {
                         {selectedWeekNovels.map((novel) => {
                             const genreKey = novel.genre === '로맨스' ? 'romance' :
                                 novel.genre === '역사' ? 'historical' :
-                                novel.genre === '추리' ? 'mystery' :
-                                novel.genre === '공포' ? 'horror' :
-                                novel.genre === '동화' ? 'fairytale' :
-                                novel.genre === '판타지' ? 'fantasy' : null;
-                            
+                                    novel.genre === '추리' ? 'mystery' :
+                                        novel.genre === '공포' ? 'horror' :
+                                            novel.genre === '동화' ? 'fairytale' :
+                                                novel.genre === '판타지' ? 'fantasy' : null;
+
                             return (
                                 <NovelListItem
                                     key={novel.id}
@@ -880,9 +880,9 @@ const Novel = ({ user }) => {
                                         setSelectedWeekNovels(null);
                                     }}
                                 >
-                                    <NovelListCover 
-                                        src={novel.imageUrl || '/novel_banner/default.png'} 
-                                        alt={novel.title} 
+                                    <NovelListCover
+                                        src={novel.imageUrl || '/novel_banner/default.png'}
+                                        alt={novel.title}
                                     />
                                     <NovelListInfo>
                                         <NovelListNovelTitle>{novel.title}</NovelListNovelTitle>
@@ -896,7 +896,7 @@ const Novel = ({ user }) => {
                     </NovelListContent>
                 </NovelListModal>
             )}
-            
+
             <Navigation />
         </Container>
     );
