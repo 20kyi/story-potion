@@ -30,7 +30,7 @@ exports.generateNovel = functions.runWith({
         console.log("=== generateNovel 함수 호출 시작 ===");
         console.log("요청 시간:", new Date().toISOString());
         console.log("사용자 ID:", context.auth?.uid || "인증되지 않음");
-        
+
         if (!context.auth) {
             console.error("❌ 인증되지 않은 사용자");
             throw new functions.https.HttpsError(
@@ -46,7 +46,7 @@ exports.generateNovel = functions.runWith({
             userName: userName,
             language: language
         });
-        
+
         if (!diaryContents || !genre || !userName) {
             console.error("❌ 필수 파라미터 누락:", { diaryContents: !!diaryContents, genre: !!genre, userName: !!userName });
             throw new functions.https.HttpsError(
@@ -56,471 +56,471 @@ exports.generateNovel = functions.runWith({
         }
 
         try {
-        // OpenAI 클라이언트 확인
-        if (!openai) {
+            // OpenAI 클라이언트 확인
+            if (!openai) {
+                const apiKey = functions.config().openai?.key;
+                console.error("❌ OpenAI 클라이언트가 초기화되지 않았습니다.");
+                console.error("API 키 상태:", apiKey ? "설정됨" : "설정되지 않음");
+                throw new functions.https.HttpsError(
+                    "failed-precondition",
+                    "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
+                    { message: "OpenAI API 키가 설정되지 않았습니다." }
+                );
+            }
+
+            // OpenAI API 키 재확인
             const apiKey = functions.config().openai?.key;
-            console.error("❌ OpenAI 클라이언트가 초기화되지 않았습니다.");
-            console.error("API 키 상태:", apiKey ? "설정됨" : "설정되지 않음");
-            throw new functions.https.HttpsError(
-                "failed-precondition",
-                "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
-                { message: "OpenAI API 키가 설정되지 않았습니다." }
-            );
-        }
+            console.log("✅ OpenAI API 키 확인:", apiKey ? "설정됨" : "설정되지 않음");
+            if (!apiKey) {
+                console.error("❌ OpenAI API 키가 설정되지 않았습니다.");
+                throw new functions.https.HttpsError(
+                    "failed-precondition",
+                    "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
+                    { message: "OpenAI API 키가 설정되지 않았습니다." }
+                );
+            }
 
-        // OpenAI API 키 재확인
-        const apiKey = functions.config().openai?.key;
-        console.log("✅ OpenAI API 키 확인:", apiKey ? "설정됨" : "설정되지 않음");
-        if (!apiKey) {
-            console.error("❌ OpenAI API 키가 설정되지 않았습니다.");
-            throw new functions.https.HttpsError(
-                "failed-precondition",
-                "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
-                { message: "OpenAI API 키가 설정되지 않았습니다." }
-            );
-        }
+            const targetLanguage = language === 'en' ? 'en' : 'ko';
 
-        const targetLanguage = language === 'en' ? 'en' : 'ko';
+            // 1. 장르별 프롬프트 분기 함수 정의
+            function getPrompts(genre, diaryContents, novelContent, lang) {
+                const isEnglish = lang === 'en';
+                let contentPrompt, titlePrompt, imagePrompt;
 
-        // 1. 장르별 프롬프트 분기 함수 정의
-        function getPrompts(genre, diaryContents, novelContent, lang) {
-            const isEnglish = lang === 'en';
-            let contentPrompt, titlePrompt, imagePrompt;
-
-            const diaryBanClauseKo = `아래는 한 주간의 일기입니다.
+                const diaryBanClauseKo = `아래는 한 주간의 일기입니다.
 - 절대 일기와 관련된 인물, 사건, 배경, 감정, 구체적 내용, 메타적 언급(예: '이 일기를 바탕으로', '경험', '방문', '실제', '반영', '참고', '소재', '영감' 등)과 관련된 단어, 상황, 구조, 시점, 경험을 사용하지 마세요.
 - 일기와 관련된 그 어떤 흔적도 남기지 말고, 완전히 새로운 세계관, 인물, 사건, 대화, 분위기로 창작하세요.
 - 반드시 한국어로 소설을 작성하세요.
 `;
 
-            const diaryBanClauseEn = `Below is a week of diary entries.
+                const diaryBanClauseEn = `Below is a week of diary entries.
 - Do NOT use any content, characters, events, background, emotions, meta references (such as “based on this diary”, “the writer experienced”, “visited”, “real”, “inspired by”, etc.), or any structure, perspective, or experience related to the diary.
 - Leave absolutely no trace of the diary. Write a completely new, original, and unrelated story with a new world, characters, events, dialogues, and atmosphere.
 - The novel must be written in English.
 `;
 
-            const diaryBanClause = isEnglish ? diaryBanClauseEn : diaryBanClauseKo;
-            switch (genre) {
-                case '로맨스':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional romance novelist.
+                const diaryBanClause = isEnglish ? diaryBanClauseEn : diaryBanClauseKo;
+                switch (genre) {
+                    case '로맨스':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional romance novelist.
 ${diaryBanClause}
 Write a long, immersive romance novel as if it will be published in a bookstore. Include rich emotions, conversations between characters, and inner monologues. Focus on love, excitement, and the changes in relationships. Do not separate introduction/body/conclusion—write it as one continuous, natural story.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a warm and emotional romance novel. Suggest only one most fitting title in English, with no explanation.
+                            titlePrompt = `This is a warm and emotional romance novel. Suggest only one most fitting title in English, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 로맨스 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 로맨스 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 로맨스 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`;
-                    break;
-                case '추리':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional mystery novelist.
+                        }
+                        imagePrompt = `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`;
+                        break;
+                    case '추리':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional mystery novelist.
 ${diaryBanClause}
 Write a long, immersive mystery novel as if it will be published in a bookstore. Include clues, twists, psychological tension, investigation process, dialogues, and inner monologues. Do not separate introduction/body/conclusion—write it as one continuous, natural story.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a mystery novel full of deduction and twists. Suggest only one most fitting English title, with no explanation.
+                            titlePrompt = `This is a mystery novel full of deduction and twists. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 추리 소설처럼 치밀하고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 단서, 반전, 추리, 탐정의 추리 과정, 인물 간의 심리전과 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`;
-                    break;
-                case '역사':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional historical novelist.
+                        }
+                        imagePrompt = `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`;
+                        break;
+                    case '역사':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional historical novelist.
 ${diaryBanClause}
 Write a long, immersive historical novel with vivid setting, accurate details, and rich descriptions of people's lives and events. Include dialogues and inner monologues. Write it as one continuous story.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a historical novel with a vivid sense of era. Suggest only one most fitting English title, with no explanation.
+                            titlePrompt = `This is a historical novel with a vivid sense of era. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 역사 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 역사 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 역사 소설처럼 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`;
-                    break;
-                case '동화':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional children's fairy tale writer.
+                        }
+                        imagePrompt = `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`;
+                        break;
+                    case '동화':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional children's fairy tale writer.
 ${diaryBanClause}
 Write a bright, heartwarming, and meaningful fairy tale that feels like a published storybook. Use imagination, gentle lessons, dialogues, and inner monologues. Write it as one continuous story.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a bright and heartwarming fairy tale. Suggest only one most fitting English title, with no explanation.
+                            titlePrompt = `This is a bright and heartwarming fairy tale. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 동화 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 동화 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 동화처럼 밝고 환상적이며 교훈적이고, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 이야기로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`;
-                    break;
-                case '판타지':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional fantasy novelist.
+                        }
+                        imagePrompt = `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`;
+                        break;
+                    case '판타지':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional fantasy novelist.
 ${diaryBanClause}
 Write a long, immersive fantasy novel with a rich world, magic, mysterious beings, and adventures. Include dialogues and inner monologues and write it as one continuous story.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a fantasy novel set in a mysterious world. Suggest only one most fitting English title, with no explanation.
+                            titlePrompt = `This is a fantasy novel set in a mysterious world. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 판타지 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 판타지 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 판타지 소설처럼 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`;
-                    break;
-                case '공포':
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional horror novelist.
+                        }
+                        imagePrompt = `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`;
+                        break;
+                    case '공포':
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional horror novelist.
 ${diaryBanClause}
 Write a long, immersive psychological horror novel focusing on tension, unease, and atmosphere rather than gore. Avoid explicit violence, blood, ghosts, or corpses. Use strange memories, odd behaviors, subtle supernatural hints, dialogues, and inner monologues.
 
 [Diary entries]
 ${diaryContents}`;
-                        titlePrompt = `This is a horror novel with strong psychological tension. Suggest only one most fitting English title, with no explanation.
+                            titlePrompt = `This is a horror novel with strong psychological tension. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 공포 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 공포 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 공포 소설처럼 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 직접적인 폭력, 피, 유령, 시체 등은 피하고, 심리적 공포와 분위기, 내면 묘사에 집중해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. 정체불명의 존재, 이상한 기억의 공백, 반복되는 꿈, 사진 속 괴이한 형체, 이상한 말투 등 공포 요소를 자유롭게 활용해 주세요. 배경은 일상적일수록 좋지만, 점점 이상한 기운이나 초자연적 사건이 드러나도록 구성해 주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                        titlePrompt = `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+                            titlePrompt = `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`;
-                    }
-                    imagePrompt = `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`;
-                    break;
-                default:
-                    if (isEnglish) {
-                        contentPrompt = `You are a professional '${genre}' novelist.
+                        }
+                        imagePrompt = `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`;
+                        break;
+                    default:
+                        if (isEnglish) {
+                            contentPrompt = `You are a professional '${genre}' novelist.
 ${diaryBanClause}
 Write a long, immersive novel as if it will be published in a bookstore. Include dialogues and inner monologues and write it as one continuous story.
 
 [Diary entries]
 ${diaryContents}`;
-                    } else {
-                        contentPrompt = `당신은 실제 출판되는 장편 '${genre}' 소설 작가입니다.
+                        } else {
+                            contentPrompt = `당신은 실제 출판되는 장편 '${genre}' 소설 작가입니다.
 ${diaryBanClause}
 소설은 실제 서점에서 판매되는 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 [일기 내용]
 ${diaryContents}`;
-                    }
-            }
-            return { contentPrompt, titlePrompt, imagePrompt };
-        }
-
-        // 재시도 헬퍼 함수 (exponential backoff)
-        async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const result = await fn();
-                    return result;
-                } catch (error) {
-                    // OpenAI SDK v4 에러 구조 처리
-                    const statusCode = error.statusCode || error.status || error.response?.status;
-                    const isRateLimit = statusCode === 429 || error.message?.toLowerCase().includes('rate limit');
-
-                    console.error(`재시도 중 에러 발생 (시도 ${i + 1}/${maxRetries}):`, {
-                        statusCode: statusCode,
-                        message: error.message,
-                        errorType: error.constructor?.name,
-                        isRateLimit: isRateLimit
-                    });
-
-                    if (isRateLimit) {
-                        if (i < maxRetries - 1) {
-                            const delay = baseDelay * Math.pow(2, i);
-                            console.log(`Rate limit 발생, ${delay}ms 후 재시도... (${i + 1}/${maxRetries})`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            continue;
                         }
+                }
+                return { contentPrompt, titlePrompt, imagePrompt };
+            }
+
+            // 재시도 헬퍼 함수 (exponential backoff)
+            async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const result = await fn();
+                        return result;
+                    } catch (error) {
+                        // OpenAI SDK v4 에러 구조 처리
+                        const statusCode = error.statusCode || error.status || error.response?.status;
+                        const isRateLimit = statusCode === 429 || error.message?.toLowerCase().includes('rate limit');
+
+                        console.error(`재시도 중 에러 발생 (시도 ${i + 1}/${maxRetries}):`, {
+                            statusCode: statusCode,
+                            message: error.message,
+                            errorType: error.constructor?.name,
+                            isRateLimit: isRateLimit
+                        });
+
+                        if (isRateLimit) {
+                            if (i < maxRetries - 1) {
+                                const delay = baseDelay * Math.pow(2, i);
+                                console.log(`Rate limit 발생, ${delay}ms 후 재시도... (${i + 1}/${maxRetries})`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                continue;
+                            }
+                        }
+                        // Rate limit이 아니거나 재시도 횟수를 초과한 경우 에러를 던짐
+                        throw error;
                     }
-                    // Rate limit이 아니거나 재시도 횟수를 초과한 경우 에러를 던짐
-                    throw error;
                 }
             }
-        }
 
-        // 2. 소설 내용 생성
-        console.log("소설 내용 생성 시작...");
-        console.log("장르:", genre);
-        console.log("타겟 언어:", targetLanguage);
-        console.log("일기 내용 길이:", diaryContents?.length || 0);
-        const { contentPrompt } = getPrompts(genre, diaryContents, null, targetLanguage);
-        console.log("프롬프트 길이:", contentPrompt?.length || 0);
-        let contentResponse;
-        try {
-            contentResponse = await retryWithBackoff(async () => {
-                console.log("OpenAI API 호출 시작 (소설 내용)...");
-                const response = await openai.chat.completions.create({
-                    model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: contentPrompt }],
-                    temperature: 0.7,
-                    max_tokens: 2500,
+            // 2. 소설 내용 생성
+            console.log("소설 내용 생성 시작...");
+            console.log("장르:", genre);
+            console.log("타겟 언어:", targetLanguage);
+            console.log("일기 내용 길이:", diaryContents?.length || 0);
+            const { contentPrompt } = getPrompts(genre, diaryContents, null, targetLanguage);
+            console.log("프롬프트 길이:", contentPrompt?.length || 0);
+            let contentResponse;
+            try {
+                contentResponse = await retryWithBackoff(async () => {
+                    console.log("OpenAI API 호출 시작 (소설 내용)...");
+                    const response = await openai.chat.completions.create({
+                        model: "gpt-3.5-turbo",
+                        messages: [{ role: "user", content: contentPrompt }],
+                        temperature: 0.7,
+                        max_tokens: 2500,
+                    });
+                    console.log("OpenAI API 응답 받음 (소설 내용)");
+                    return response;
                 });
-                console.log("OpenAI API 응답 받음 (소설 내용)");
-                return response;
-            });
-        } catch (error) {
-            console.error("소설 내용 생성 실패 - 상세 에러:", {
-                message: error.message,
-                statusCode: error.statusCode,
-                status: error.status,
-                responseStatus: error.response?.status,
-                errorType: error.constructor?.name,
-                stack: error.stack?.substring(0, 500)
-            });
-            const statusCode = error.statusCode || error.status || error.response?.status;
-            if (statusCode === 429) {
-                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
-            }
-            if (statusCode === 401) {
-                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
-            }
-            if (statusCode === 500 || statusCode === 503) {
-                throw new Error("OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
-            }
-            throw new Error(`소설 내용 생성 실패: ${error.message || error.toString()}`);
-        }
-        if (!contentResponse?.choices?.[0]?.message?.content) {
-            throw new Error("소설 내용 생성 응답이 올바르지 않습니다.");
-        }
-        const novelContent = contentResponse.choices[0].message.content;
-        console.log("소설 내용 생성 완료, 길이:", novelContent.length);
-
-        // 3. 소설 제목 생성
-        console.log("소설 제목 생성 시작...");
-        const { titlePrompt } = getPrompts(genre, diaryContents, novelContent, targetLanguage);
-        let titleResponse;
-        try {
-            titleResponse = await retryWithBackoff(async () => {
-                return await openai.chat.completions.create({
-                    model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: titlePrompt }],
-                    temperature: 0.8,
-                    max_tokens: 60,
+            } catch (error) {
+                console.error("소설 내용 생성 실패 - 상세 에러:", {
+                    message: error.message,
+                    statusCode: error.statusCode,
+                    status: error.status,
+                    responseStatus: error.response?.status,
+                    errorType: error.constructor?.name,
+                    stack: error.stack?.substring(0, 500)
                 });
-            });
-        } catch (error) {
-            console.error("소설 제목 생성 실패 - 상세 에러:", {
-                message: error.message,
-                statusCode: error.statusCode,
-                status: error.status,
-                responseStatus: error.response?.status,
-                errorType: error.constructor?.name
-            });
-            const statusCode = error.statusCode || error.status || error.response?.status;
-            if (statusCode === 429) {
-                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+                const statusCode = error.statusCode || error.status || error.response?.status;
+                if (statusCode === 429) {
+                    throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+                }
+                if (statusCode === 401) {
+                    throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+                }
+                if (statusCode === 500 || statusCode === 503) {
+                    throw new Error("OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+                throw new Error(`소설 내용 생성 실패: ${error.message || error.toString()}`);
             }
-            if (statusCode === 401) {
-                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+            if (!contentResponse?.choices?.[0]?.message?.content) {
+                throw new Error("소설 내용 생성 응답이 올바르지 않습니다.");
             }
-            throw new Error(`소설 제목 생성 실패: ${error.message || error.toString()}`);
-        }
-        if (!titleResponse?.choices?.[0]?.message?.content) {
-            throw new Error("소설 제목 생성 응답이 올바르지 않습니다.");
-        }
-        const novelTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
-        console.log("소설 제목 생성 완료:", novelTitle);
+            const novelContent = contentResponse.choices[0].message.content;
+            console.log("소설 내용 생성 완료, 길이:", novelContent.length);
 
-        // 4. 소설 표지 이미지 생성
-        console.log("소설 표지 이미지 생성 시작...");
-        const { imagePrompt } = getPrompts(genre, diaryContents, novelContent);
-        let imageResponse;
-        try {
-            imageResponse = await retryWithBackoff(async () => {
-                return await openai.images.generate({
-                    model: "dall-e-2",
-                    prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
-                    n: 1,
-                    size: "512x512",
-                    response_format: "b64_json",
+            // 3. 소설 제목 생성
+            console.log("소설 제목 생성 시작...");
+            const { titlePrompt } = getPrompts(genre, diaryContents, novelContent, targetLanguage);
+            let titleResponse;
+            try {
+                titleResponse = await retryWithBackoff(async () => {
+                    return await openai.chat.completions.create({
+                        model: "gpt-3.5-turbo",
+                        messages: [{ role: "user", content: titlePrompt }],
+                        temperature: 0.8,
+                        max_tokens: 60,
+                    });
                 });
-            });
-        } catch (error) {
-            console.error("이미지 생성 실패 - 상세 에러:", {
-                message: error.message,
-                statusCode: error.statusCode,
-                status: error.status,
-                responseStatus: error.response?.status,
-                errorType: error.constructor?.name
-            });
-            const statusCode = error.statusCode || error.status || error.response?.status;
-            if (statusCode === 429) {
-                throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+            } catch (error) {
+                console.error("소설 제목 생성 실패 - 상세 에러:", {
+                    message: error.message,
+                    statusCode: error.statusCode,
+                    status: error.status,
+                    responseStatus: error.response?.status,
+                    errorType: error.constructor?.name
+                });
+                const statusCode = error.statusCode || error.status || error.response?.status;
+                if (statusCode === 429) {
+                    throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+                }
+                if (statusCode === 401) {
+                    throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+                }
+                throw new Error(`소설 제목 생성 실패: ${error.message || error.toString()}`);
             }
-            if (statusCode === 401) {
-                throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+            if (!titleResponse?.choices?.[0]?.message?.content) {
+                throw new Error("소설 제목 생성 응답이 올바르지 않습니다.");
             }
-            throw new Error(`이미지 생성 실패: ${error.message || error.toString()}`);
-        }
+            const novelTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
+            console.log("소설 제목 생성 완료:", novelTitle);
 
-        if (!imageResponse?.data?.[0]?.b64_json) {
-            throw new Error("이미지 생성 응답이 올바르지 않습니다. b64_json이 없습니다.");
-        }
-        const b64_json = imageResponse.data[0].b64_json;
-        const imageBuffer = Buffer.from(b64_json, "base64");
-        console.log("이미지 생성 완료, 크기:", imageBuffer.length, "bytes");
+            // 4. 소설 표지 이미지 생성
+            console.log("소설 표지 이미지 생성 시작...");
+            const { imagePrompt } = getPrompts(genre, diaryContents, novelContent);
+            let imageResponse;
+            try {
+                imageResponse = await retryWithBackoff(async () => {
+                    return await openai.images.generate({
+                        model: "dall-e-2",
+                        prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
+                        n: 1,
+                        size: "512x512",
+                        response_format: "b64_json",
+                    });
+                });
+            } catch (error) {
+                console.error("이미지 생성 실패 - 상세 에러:", {
+                    message: error.message,
+                    statusCode: error.statusCode,
+                    status: error.status,
+                    responseStatus: error.response?.status,
+                    errorType: error.constructor?.name
+                });
+                const statusCode = error.statusCode || error.status || error.response?.status;
+                if (statusCode === 429) {
+                    throw new Error("OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.");
+                }
+                if (statusCode === 401) {
+                    throw new Error("OpenAI API 키가 유효하지 않습니다. API 키를 확인해주세요.");
+                }
+                throw new Error(`이미지 생성 실패: ${error.message || error.toString()}`);
+            }
 
-        // 5. Storage에 이미지 업로드
-        console.log("Storage 업로드 시작...");
-        try {
-            const bucket = admin.storage().bucket();
-            const fileName = `novel-covers/${novelTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
-            const file = bucket.file(fileName);
+            if (!imageResponse?.data?.[0]?.b64_json) {
+                throw new Error("이미지 생성 응답이 올바르지 않습니다. b64_json이 없습니다.");
+            }
+            const b64_json = imageResponse.data[0].b64_json;
+            const imageBuffer = Buffer.from(b64_json, "base64");
+            console.log("이미지 생성 완료, 크기:", imageBuffer.length, "bytes");
 
-            await file.save(imageBuffer, {
-                metadata: {
-                    contentType: "image/png",
-                },
-                public: true,
-            });
+            // 5. Storage에 이미지 업로드
+            console.log("Storage 업로드 시작...");
+            try {
+                const bucket = admin.storage().bucket();
+                const fileName = `novel-covers/${novelTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.png`;
+                const file = bucket.file(fileName);
 
-            const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-            console.log("Storage 업로드 완료:", imageUrl);
+                await file.save(imageBuffer, {
+                    metadata: {
+                        contentType: "image/png",
+                    },
+                    public: true,
+                });
 
-            // 6. 모든 결과 반환
-            return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
+                const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                console.log("Storage 업로드 완료:", imageUrl);
+
+                // 6. 모든 결과 반환
+                return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
+            } catch (error) {
+                console.error("Storage 업로드 실패:", error);
+                throw new Error(`Storage 업로드 실패: ${error.message}`);
+            }
         } catch (error) {
-            console.error("Storage 업로드 실패:", error);
-            throw new Error(`Storage 업로드 실패: ${error.message}`);
-        }
-    } catch (error) {
-        console.error("=== 소설 생성 함수 에러 발생 ===");
-        console.error("에러 타입:", error.constructor?.name);
-        console.error("에러 메시지:", error.message);
-        console.error("에러 스택:", error.stack);
-        console.error("에러 코드:", error.code);
-        console.error("상태 코드:", error.statusCode || error.status || error.response?.status);
-        console.error("전체 에러 객체:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            console.error("=== 소설 생성 함수 에러 발생 ===");
+            console.error("에러 타입:", error.constructor?.name);
+            console.error("에러 메시지:", error.message);
+            console.error("에러 스택:", error.stack);
+            console.error("에러 코드:", error.code);
+            console.error("상태 코드:", error.statusCode || error.status || error.response?.status);
+            console.error("전체 에러 객체:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
 
-        // 에러 메시지 구성
-        let errorMessage = "AI 소설 생성에 실패했습니다.";
-        let errorCode = "internal";
+            // 에러 메시지 구성
+            let errorMessage = "AI 소설 생성에 실패했습니다.";
+            let errorCode = "internal";
 
-        // OpenAI API 키 관련 에러
-        if (error.message?.includes("OpenAI API 키")) {
-            errorMessage = "OpenAI API 키가 설정되지 않았거나 유효하지 않습니다. 관리자에게 문의하세요.";
-            errorCode = "failed-precondition";
-        }
-        // Rate limit 에러
-        else if (error.statusCode === 429 || error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
-            errorMessage = "OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
-            errorCode = "resource-exhausted";
-        }
-        // 인증 에러
-        else if (error.statusCode === 401 || error.status === 401) {
-            errorMessage = "OpenAI API 인증에 실패했습니다. API 키를 확인해주세요.";
-            errorCode = "unauthenticated";
-        }
-        // 서버 에러
-        else if (error.statusCode === 500 || error.status === 500 || error.statusCode === 503 || error.status === 503) {
-            errorMessage = "OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
-            errorCode = "unavailable";
-        }
-        // Storage 에러
-        else if (error.message?.includes("Storage")) {
-            errorMessage = `이미지 저장에 실패했습니다: ${error.message}`;
-        }
-        // 기타 에러
-        else if (error.message) {
-            errorMessage = `소설 생성 중 오류가 발생했습니다: ${error.message}`;
-        }
+            // OpenAI API 키 관련 에러
+            if (error.message?.includes("OpenAI API 키")) {
+                errorMessage = "OpenAI API 키가 설정되지 않았거나 유효하지 않습니다. 관리자에게 문의하세요.";
+                errorCode = "failed-precondition";
+            }
+            // Rate limit 에러
+            else if (error.statusCode === 429 || error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
+                errorMessage = "OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
+                errorCode = "resource-exhausted";
+            }
+            // 인증 에러
+            else if (error.statusCode === 401 || error.status === 401) {
+                errorMessage = "OpenAI API 인증에 실패했습니다. API 키를 확인해주세요.";
+                errorCode = "unauthenticated";
+            }
+            // 서버 에러
+            else if (error.statusCode === 500 || error.status === 500 || error.statusCode === 503 || error.status === 503) {
+                errorMessage = "OpenAI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                errorCode = "unavailable";
+            }
+            // Storage 에러
+            else if (error.message?.includes("Storage")) {
+                errorMessage = `이미지 저장에 실패했습니다: ${error.message}`;
+            }
+            // 기타 에러
+            else if (error.message) {
+                errorMessage = `소설 생성 중 오류가 발생했습니다: ${error.message}`;
+            }
 
-        // 클라이언트로 전달할 상세 정보 (직렬화 가능한 형태로만)
-        const safeDetails = {
-            message: error.message || "알 수 없는 오류",
-            code: error.code || null,
-            statusCode: error.statusCode || error.status || error.response?.status || null,
-            errorType: error.constructor?.name || "Error",
-            originalMessage: error.message || "알 수 없는 오류",
-        };
+            // 클라이언트로 전달할 상세 정보 (직렬화 가능한 형태로만)
+            const safeDetails = {
+                message: error.message || "알 수 없는 오류",
+                code: error.code || null,
+                statusCode: error.statusCode || error.status || error.response?.status || null,
+                errorType: error.constructor?.name || "Error",
+                originalMessage: error.message || "알 수 없는 오류",
+            };
 
-        // 에러 메시지에 상세 정보 포함 (details가 전달되지 않을 경우 대비)
-        // 원본 에러 메시지가 있으면 포함, 없으면 간단한 메시지만
-        const fullErrorMessage = error.message && error.message !== errorMessage 
-            ? `${errorMessage} (원인: ${error.message})` 
-            : errorMessage;
+            // 에러 메시지에 상세 정보 포함 (details가 전달되지 않을 경우 대비)
+            // 원본 에러 메시지가 있으면 포함, 없으면 간단한 메시지만
+            const fullErrorMessage = error.message && error.message !== errorMessage
+                ? `${errorMessage} (원인: ${error.message})`
+                : errorMessage;
 
-        console.error("클라이언트로 전달할 에러 메시지:", fullErrorMessage);
-        console.error("클라이언트로 전달할 상세 정보:", JSON.stringify(safeDetails, null, 2));
-        console.error("에러 코드:", errorCode);
+            console.error("클라이언트로 전달할 에러 메시지:", fullErrorMessage);
+            console.error("클라이언트로 전달할 상세 정보:", JSON.stringify(safeDetails, null, 2));
+            console.error("에러 코드:", errorCode);
 
-        // HttpsError 던지기
-        throw new functions.https.HttpsError(
-            errorCode,
-            fullErrorMessage,
-            safeDetails,
-        );
+            // HttpsError 던지기
+            throw new functions.https.HttpsError(
+                errorCode,
+                fullErrorMessage,
+                safeDetails,
+            );
         }
     } catch (outerError) {
         // 최상위 레벨에서 모든 예상치 못한 에러를 잡음
@@ -528,17 +528,17 @@ ${diaryContents}`;
         console.error("에러 타입:", outerError.constructor?.name);
         console.error("에러 메시지:", outerError.message);
         console.error("에러 스택:", outerError.stack);
-        
+
         // 이미 HttpsError인 경우 그대로 던지기
         if (outerError instanceof functions.https.HttpsError) {
             console.error("HttpsError로 전달:", outerError.message);
             throw outerError;
         }
-        
+
         // 그 외의 에러는 HttpsError로 변환
         const errorMessage = outerError.message || "알 수 없는 오류가 발생했습니다.";
         console.error("일반 에러를 HttpsError로 변환:", errorMessage);
-        
+
         throw new functions.https.HttpsError(
             "internal",
             `소설 생성 중 오류가 발생했습니다: ${errorMessage}`,

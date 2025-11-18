@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { parseNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
 import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
@@ -88,9 +89,9 @@ function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     const targetUserId = searchParams.get('userId') || user.uid;
-    // id가 연-월-주차(예: 2025-6-3) 형식인지 확인
-    const idParts = id ? id.split('-') : [];
-    const isDateKey = idParts.length === 3 && idParts.every(part => !isNaN(Number(part)));
+    // URL 파싱 (year-month-weekNum 또는 year-month-weekNum-genre 형식)
+    const parsedUrl = parseNovelUrl(id);
+    const isDateKey = parsedUrl !== null;
     const [novel, setNovel] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -112,16 +113,20 @@ function NovelView({ user }) {
             try {
                 let fetchedNovel = null;
                 if (isDateKey) {
-                    // 연-월-주차로 쿼리 (targetUserId 사용)
-                    const [year, month, weekNum] = idParts.map(Number);
+                    // 연-월-주차(및 장르)로 쿼리 (targetUserId 사용)
+                    const { year, month, weekNum, genre } = parsedUrl;
                     const novelsRef = collection(db, 'novels');
-                    const q = query(
+                    let q = query(
                         novelsRef,
                         where('year', '==', year),
                         where('month', '==', month),
                         where('weekNum', '==', weekNum),
                         where('userId', '==', targetUserId)
                     );
+                    // 장르가 있으면 장르 필터 추가
+                    if (genre) {
+                        q = query(q, where('genre', '==', genre));
+                    }
                     const snapshot = await getDocs(q);
                     if (!snapshot.empty) {
                         fetchedNovel = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };

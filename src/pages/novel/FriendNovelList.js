@@ -8,6 +8,7 @@ import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useTheme } from '../../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
+import { createNovelUrl } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 
 const Container = styled.div`
@@ -383,7 +384,7 @@ function FriendNovelList({ user }) {
                                     </div>
                                         {purchased[novel.id] ? (
                                         <ActionButtonView
-                                            onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}
+                                            onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}
                                         >
                                             {t('friend_novel_view')}
                                         </ActionButtonView>

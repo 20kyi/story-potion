@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { createNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -379,11 +380,11 @@ function NovelCreate({ user }) {
 
                 if (!querySnapshot.empty) {
                     // 이미 소설이 존재하면 해당 소설 페이지로 이동
-                    const existingNovel = querySnapshot.docs[0];
-                    const dateKey = `${year}-${month}-${weekNum}`;
-                    console.log('기존 소설 발견, 이동:', dateKey);
+                    const existingNovel = querySnapshot.docs[0].data();
+                    const novelUrl = createNovelUrl(year, month, weekNum, existingNovel.genre);
+                    console.log('기존 소설 발견, 이동:', novelUrl);
                     toast.showToast('이미 생성된 소설이 있습니다.', 'info');
-                    navigate(`/novel/${dateKey}`);
+                    navigate(`/novel/${novelUrl}`);
                 } else {
                     console.log('기존 소설 없음, 생성 가능');
                 }
@@ -450,7 +451,8 @@ function NovelCreate({ user }) {
         setIsLoading(true);
         const functions = getFunctions();
         const generateNovel = httpsCallable(functions, 'generateNovel');
-        const diaryContents = weekDiaries.map(d => `${d.date}:\n${d.content}`).join('\n\n');
+        // 날짜 정보 없이 일기 내용만 추출
+        const diaryContents = weekDiaries.map(d => d.content).filter(content => content && content.trim()).join('\n\n');
         console.log('일기 내용 길이:', diaryContents.length);
         console.log('소설 생성 파라미터:', {
             diaryContents: diaryContents.substring(0, 100) + '...',
@@ -527,11 +529,11 @@ function NovelCreate({ user }) {
             console.log('소설 생성 및 저장 완료, 소설 보기 페이지로 이동 예정');
             // 소설이 완성되면 소설 보기 페이지로 이동하고 히스토리에서 소설 생성 페이지 제거
             setTimeout(() => {
-                const dateKey = `${year}-${month}-${weekNum}`;
-                console.log('소설 보기 페이지로 이동 중...', dateKey);
+                const novelUrl = createNovelUrl(year, month, weekNum, selectedGenre);
+                console.log('소설 보기 페이지로 이동 중...', novelUrl);
                 // 히스토리에서 현재 페이지(소설 생성 페이지)를 소설 보기 페이지로 교체
-                window.history.replaceState(null, '', `/novel/${dateKey}`);
-                navigate(`/novel/${dateKey}`, { replace: true });
+                window.history.replaceState(null, '', `/novel/${novelUrl}`);
+                navigate(`/novel/${novelUrl}`, { replace: true });
             }, 1000);
         } catch (error) {
             console.error('=== 소설 생성 실패 ===');
@@ -539,7 +541,7 @@ function NovelCreate({ user }) {
             console.error('에러 메시지:', error.message);
             console.error('에러 details:', error.details);
             console.error('에러 전체 객체:', error);
-            
+
             // 에러 상세 정보 추출
             let errorMessage = t('unknown_error');
             let shouldShowToast = true;
@@ -558,8 +560,8 @@ function NovelCreate({ user }) {
             }
 
             // Rate limit 에러 확인
-            if (error.details?.statusCode === 429 || 
-                error.details?.status === 429 || 
+            if (error.details?.statusCode === 429 ||
+                error.details?.status === 429 ||
                 error.message?.includes('요청 한도') ||
                 error.message?.includes('rate limit')) {
                 errorMessage = t('openai_rate_limit_exceeded');
@@ -580,12 +582,12 @@ function NovelCreate({ user }) {
                 console.error('- 에러 메시지:', error.message);
                 console.error('- 에러 details:', error.details);
                 console.error('- 에러 전체:', error);
-                
+
                 // 에러 메시지가 'INTERNAL'만 있는 경우 더 자세한 메시지로 교체
                 if (errorMessage === t('unknown_error') || errorMessage === 'INTERNAL' || !errorMessage || errorMessage.trim() === '') {
                     errorMessage = '서버에서 오류가 발생했습니다. 잠시 후 다시 시도해주세요. 문제가 계속되면 관리자에게 문의하세요.';
                 }
-                
+
                 // 에러 메시지에 원인 정보가 포함되어 있으면 그대로 사용
                 if (error.message && error.message.includes('원인:')) {
                     errorMessage = error.message;

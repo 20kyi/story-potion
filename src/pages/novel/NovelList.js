@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createNovelUrl } from '../../utils/novelUtils';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import styled from 'styled-components';
@@ -151,7 +152,7 @@ function NovelList() {
             {novels.map((novel) => (
               <NovelItem
                 key={novel.id}
-                onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}
+                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}
               >
                 <NovelTitle>{novel.title}</NovelTitle>
                 <NovelDate>{formatDate(novel.date)}</NovelDate>

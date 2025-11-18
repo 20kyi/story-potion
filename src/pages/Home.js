@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createNovelUrl } from '../utils/novelUtils';
 import styled from 'styled-components';
 import Navigation from '../components/Navigation';
 import Header from '../components/Header';
@@ -680,7 +681,7 @@ function Home({ user }) {
             <MyNovelRow>
               {recentNovels.length > 0 ?
                 recentNovels.map(novel => (
-                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`)}>
+                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
                     <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                     <MyNovelTitle>{novel.title}</MyNovelTitle>
                   </MyNovelBox>
@@ -711,7 +712,7 @@ function Home({ user }) {
             <MyNovelRow>
               {purchasedNovels.length > 0 ?
                 purchasedNovels.map(novel => (
-                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}?userId=${novel.userId}`)}>
+                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}>
                     <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                     <MyNovelTitle>{novel.title}</MyNovelTitle>
                     <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>

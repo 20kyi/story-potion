@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { createNovelUrl } from '../../utils/novelUtils';
 import styled from 'styled-components';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -177,7 +178,7 @@ const NovelListByGenre = ({ user }) => {
   }, [user, genre]);
 
   const handleNovelClick = (novel) => {
-    navigate(`/novel/${novel.year}-${novel.month}-${novel.weekNum}`);
+    navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
   };
 
   const bannerImage = genreBanners[genre];

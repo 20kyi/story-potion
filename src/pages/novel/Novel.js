@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createNovelUrl } from '../../utils/novelUtils';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
@@ -343,7 +344,8 @@ const Novel = ({ user }) => {
                 novelSnapshot.forEach(doc => {
                     const novel = doc.data();
                     if (novel.week) { // week 정보가 있는 소설만 맵에 추가
-                        newNovelsMap[novel.week] = doc.id;
+                        // novel 전체 데이터를 저장하여 장르 정보도 포함
+                        newNovelsMap[novel.week] = { id: doc.id, ...novel };
                     }
                 });
                 setNovelsMap(newNovelsMap);
@@ -616,8 +618,10 @@ const Novel = ({ user }) => {
                     {weeks.map((week) => {
                         const progress = weeklyProgress[week.weekNum] || 0;
                         const isCompleted = progress >= 100;
-                        const novelKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${week.weekNum}`;
-                        const novelId = novelsMap[`${currentDate.getMonth() + 1}월 ${week.weekNum}주차`];
+                        const novelData = novelsMap[`${currentDate.getMonth() + 1}월 ${week.weekNum}주차`];
+                        const novelKey = novelData 
+                            ? createNovelUrl(currentDate.getFullYear(), currentDate.getMonth() + 1, week.weekNum, novelData.genre)
+                            : `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${week.weekNum}`;
 
                         return (
                             <WeeklyCard key={week.weekNum}>
@@ -626,7 +630,7 @@ const Novel = ({ user }) => {
                                 <ProgressBar progress={progress}>
                                     <div />
                                 </ProgressBar>
-                                {novelId ? (
+                                {novelData ? (
                                     <CreateButton completed={true} onClick={() => navigate(`/novel/${novelKey}`)}>
                                         {t('novel_view')}
                                     </CreateButton>
