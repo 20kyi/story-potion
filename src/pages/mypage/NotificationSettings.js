@@ -41,11 +41,20 @@ function NotificationSettings({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
 
+    // 알림 메시지 옵션
+    const reminderMessages = [
+        { value: '오늘의 일기를 작성해보세요! 📝', label: '오늘의 일기를 작성해보세요! 📝' },
+        { value: '오늘 하루는 어떠셨나요? 일기로 기록해보세요 ✍️', label: '오늘 하루는 어떠셨나요? 일기로 기록해보세요 ✍️' },
+        { value: '일기 작성 시간이에요! 오늘의 추억을 남겨보세요 💭', label: '일기 작성 시간이에요! 오늘의 추억을 남겨보세요 💭' },
+        { value: '오늘도 소중한 하루였을 거예요. 일기로 남겨볼까요? 🌟', label: '오늘도 소중한 하루였을 거예요. 일기로 남겨볼까요? 🌟' },
+        { value: '일기 작성 리마인더! 오늘의 이야기를 기록해보세요 📖', label: '일기 작성 리마인더! 오늘의 이야기를 기록해보세요 📖' }
+    ];
+
     // 알림 설정 상태
     const [settings, setSettings] = useState({
         enabled: false, // 알림 활성화 여부
         time: '21:00', // 알림 시간 (기본값: 오후 9시)
-        message: '오늘의 일기를 작성해보세요! 📝' // 알림 메시지
+        message: reminderMessages[0].value // 알림 메시지 (기본값: 첫 번째 옵션)
     });
 
     // UI 상태
@@ -67,10 +76,13 @@ function NotificationSettings({ user }) {
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    // 저장된 메시지가 옵션에 없으면 기본값 사용
+                    const savedMessage = data.message || reminderMessages[0].value;
+                    const isValidMessage = reminderMessages.some(msg => msg.value === savedMessage);
                     setSettings({
                         enabled: !!data.reminderEnabled,
                         time: data.reminderTime || '21:00',
-                        message: data.message || '오늘의 일기를 작성해보세요! 📝'
+                        message: isValidMessage ? savedMessage : reminderMessages[0].value
                     });
                     setEventEnabled(!!data.eventEnabled);
                     setMarketingEnabled(!!data.marketingEnabled);
@@ -168,6 +180,7 @@ function NotificationSettings({ user }) {
             const data = {
                 reminderEnabled: newSettings.enabled ?? false,
                 reminderTime: newSettings.time ?? '',
+                message: newSettings.message ?? reminderMessages[0].value,
                 eventEnabled: newSettings.eventEnabled ?? false,
                 marketingEnabled: newSettings.marketingEnabled ?? false,
                 reminderTimezone: newSettings.reminderTimezone ?? 'Asia/Seoul',
@@ -252,11 +265,9 @@ function NotificationSettings({ user }) {
 
     // 저장 버튼 핸들러 추가
     const handleSaveAll = async () => {
-        alert('handleSaveAll 실행됨');
         console.log('handleSaveAll 실행됨');
         if (!user) {
             console.log('user 없음');
-            alert('사용자 정보를 찾을 수 없습니다.');
             return;
         }
         const newSettings = {
@@ -268,7 +279,6 @@ function NotificationSettings({ user }) {
             const success = await storageManager.setItem(`notificationSettings_${user.uid}`, newSettings);
             if (success) {
                 setSettings(newSettings);
-                alert('저장되었습니다.');
                 await saveSettingsToFirestore(user.uid, newSettings);
 
                 // 디버깅 로그 추가
@@ -285,12 +295,13 @@ function NotificationSettings({ user }) {
                         console.error('FCM 토큰 발급 실패');
                     }
                 }
+                alert('저장되었습니다.');
             } else {
                 alert('저장에 실패했습니다.');
             }
         } catch (error) {
             alert('저장 중 오류가 발생했습니다.');
-            console.error(error);
+            console.error('저장 중 오류가 발생했습니다:', error);
         }
     };
 
@@ -328,15 +339,32 @@ function NotificationSettings({ user }) {
                         </label>
                     </div>
                     {settings.enabled && (
-                        <div className="notification-item notification-row">
-                            <span className="notification-label">알림 시간</span>
-                            <input
-                                type="time"
-                                value={settings.time}
-                                onChange={handleTimeChange}
-                                className="time-input styled-input"
-                            />
-                        </div>
+                        <>
+                            <div className="notification-item notification-row">
+                                <span className="notification-label">알림 시간</span>
+                                <input
+                                    type="time"
+                                    value={settings.time}
+                                    onChange={handleTimeChange}
+                                    className="time-input styled-input"
+                                />
+                            </div>
+                            <div className="notification-item notification-row">
+                                <span className="notification-label">알림 메시지</span>
+                                <select
+                                    value={settings.message}
+                                    onChange={handleMessageChange}
+                                    className="styled-input"
+                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                                >
+                                    {reminderMessages.map((msg, index) => (
+                                        <option key={index} value={msg.value}>
+                                            {msg.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
                     )}
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
