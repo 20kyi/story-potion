@@ -125,6 +125,46 @@ function App() {
                 } catch (error) {
                     console.error('프리미엄 갱신 확인 중 오류:', error);
                 }
+
+                // 앱 환경에서 FCM 토큰 자동 등록
+                if (Capacitor.getPlatform() !== 'web') {
+                    try {
+                        // 권한 확인
+                        const permStatus = await PushNotifications.checkPermissions();
+                        if (permStatus.receive === 'granted') {
+                            // 이미 등록되어 있는지 확인
+                            const registration = await PushNotifications.register();
+                            console.log('푸시 알림 등록:', registration);
+
+                            // 토큰 등록 리스너 (한 번만 등록)
+                            if (!window.__pushRegListenerAdded) {
+                                window.__pushRegListenerAdded = true;
+                                PushNotifications.addListener('registration', async (token) => {
+                                    console.log('FCM 토큰 발급:', token.value);
+                                    if (user && token.value) {
+                                        try {
+                                            await setDoc(doc(db, "users", user.uid), { 
+                                                fcmToken: token.value 
+                                            }, { merge: true });
+                                            console.log('앱 FCM 토큰 Firestore 저장 완료:', token.value);
+                                        } catch (error) {
+                                            console.error('FCM 토큰 Firestore 저장 실패:', error);
+                                        }
+                                    }
+                                });
+
+                                // 토큰 갱신 리스너
+                                PushNotifications.addListener('registrationError', (error) => {
+                                    console.error('FCM 토큰 등록 오류:', error);
+                                });
+                            }
+                        } else {
+                            console.log('푸시 알림 권한이 없습니다. 사용자가 알림 설정에서 권한을 허용해야 합니다.');
+                        }
+                    } catch (error) {
+                        console.error('FCM 토큰 등록 중 오류:', error);
+                    }
+                }
             }
         });
 

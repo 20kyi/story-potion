@@ -46,6 +46,7 @@ import {
 } from '../../utils/debugUsers';
 import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
 import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     checkGoogleUserProfiles, 
     forceUpdateGoogleUserProfiles, 
@@ -277,6 +278,14 @@ function UserManagement({ user }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [adminNote, setAdminNote] = useState('');
   const [newPassword, setNewPassword] = useState('');
+
+  // 마케팅/이벤트 알림 발송 관련 상태
+  const [notificationType, setNotificationType] = useState('marketing'); // 'marketing' or 'event'
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationImageUrl, setNotificationImageUrl] = useState('');
+  const [notificationLinkUrl, setNotificationLinkUrl] = useState('');
+  const [notificationSending, setNotificationSending] = useState(false);
 
   // 페이지네이션/정렬 상태
   const [pageLimit] = useState(10);
@@ -1541,6 +1550,179 @@ function UserManagement({ user }) {
               style={{ backgroundColor: '#e74c3c' }}
             >
               500p 즉시 지급
+            </Button>
+          </div>
+        </Section>
+      )}
+
+      {/* 마케팅/이벤트 알림 발송 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme}>📢 마케팅/이벤트 알림 발송</SectionTitle>
+          <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
+            {notificationType === 'marketing' 
+              ? '마케팅 알림 수신 동의한 사용자에게 알림을 발송합니다.'
+              : '이벤트 알림 수신 동의한 사용자에게 알림을 발송합니다.'}
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+              알림 유형:
+            </label>
+            <select
+              value={notificationType}
+              onChange={(e) => setNotificationType(e.target.value)}
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                width: '200px',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                color: theme.text
+              }}
+            >
+              <option value="marketing">마케팅 알림</option>
+              <option value="event">이벤트 알림</option>
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+              제목 <span style={{ color: '#e74c3c' }}>*</span>:
+            </label>
+            <input
+              type="text"
+              value={notificationTitle}
+              onChange={(e) => setNotificationTitle(e.target.value)}
+              placeholder="알림 제목을 입력하세요"
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                color: theme.text
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+              메시지 <span style={{ color: '#e74c3c' }}>*</span>:
+            </label>
+            <textarea
+              value={notificationMessage}
+              onChange={(e) => setNotificationMessage(e.target.value)}
+              placeholder="알림 메시지를 입력하세요"
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                color: theme.text,
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+              이미지 URL (선택):
+            </label>
+            <input
+              type="url"
+              value={notificationImageUrl}
+              onChange={(e) => setNotificationImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                color: theme.text
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+              링크 URL (선택):
+            </label>
+            <input
+              type="url"
+              value={notificationLinkUrl}
+              onChange={(e) => setNotificationLinkUrl(e.target.value)}
+              placeholder="https://example.com"
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                color: theme.text
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <Button
+              onClick={async () => {
+                if (!notificationTitle.trim() || !notificationMessage.trim()) {
+                  toast.show('제목과 메시지는 필수입니다.', 'error');
+                  return;
+                }
+
+                setNotificationSending(true);
+                try {
+                  const functions = getFunctions();
+                  const sendNotification = httpsCallable(
+                    functions,
+                    notificationType === 'marketing' ? 'sendMarketingNotification' : 'sendEventNotification'
+                  );
+
+                  const result = await sendNotification({
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    imageUrl: notificationImageUrl || undefined,
+                    linkUrl: notificationLinkUrl || undefined
+                  });
+
+                  const data = result.data;
+                  if (data.success) {
+                    toast.show(
+                      `${data.message}\n발송: ${data.sentCount}명, 실패: ${data.failureCount}명`,
+                      'success'
+                    );
+                    // 폼 초기화
+                    setNotificationTitle('');
+                    setNotificationMessage('');
+                    setNotificationImageUrl('');
+                    setNotificationLinkUrl('');
+                  } else {
+                    toast.show('알림 발송에 실패했습니다.', 'error');
+                  }
+                } catch (error) {
+                  console.error('알림 발송 오류:', error);
+                  toast.show(
+                    error.message || '알림 발송 중 오류가 발생했습니다.',
+                    'error'
+                  );
+                } finally {
+                  setNotificationSending(false);
+                }
+              }}
+              disabled={notificationSending || !notificationTitle.trim() || !notificationMessage.trim()}
+              style={{ 
+                backgroundColor: notificationType === 'marketing' ? '#e74c3c' : '#3498db',
+                width: '100%'
+              }}
+            >
+              {notificationSending 
+                ? '발송 중...' 
+                : `${notificationType === 'marketing' ? '마케팅' : '이벤트'} 알림 발송`}
             </Button>
           </div>
         </Section>

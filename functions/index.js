@@ -553,48 +553,157 @@ ${diaryContents}`;
 
 // 일기 작성 리마인더 예약 푸시 함수
 exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(async (context) => {
-    const usersSnapshot = await admin.firestore().collection('users')
-        .where('reminderEnabled', '==', true)
-        .get();
+    const utcNow = DateTime.now().setZone('UTC');
+    const kstNow = DateTime.now().setZone('Asia/Seoul');
+    console.log('리마인더 함수 실행 시작');
+    console.log('UTC 시간:', utcNow.toFormat('yyyy-MM-dd HH:mm:ss'));
+    console.log('한국 시간:', kstNow.toFormat('yyyy-MM-dd HH:mm:ss'));
 
-    const messages = [];
-    usersSnapshot.forEach(doc => {
-        const user = doc.data();
-        const token = user.fcmToken;
-        const reminderTime = user.reminderTime;
+    try {
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('reminderEnabled', '==', true)
+            .get();
 
-        if (!token || !reminderTime) return;
+        if (usersSnapshot.empty) {
+            console.log('리마인더 활성화된 사용자 없음');
+            return null;
+        }
 
-        const timezone = user.reminderTimezone || 'Asia/Seoul';
-        const now = DateTime.now().setZone(timezone).toFormat('HH:mm');
+        console.log(`리마인더 활성화된 사용자: ${usersSnapshot.size}명`);
 
-        // 약간의 오차 허용 (±30초 범위)
-        const reminderHourMinute = DateTime.fromFormat(reminderTime, 'HH:mm', { zone: timezone });
-        const diff = Math.abs(DateTime.now().setZone(timezone).diff(reminderHourMinute, 'minutes').minutes);
-        if (diff <= 1) {
-            messages.push({
+        const messages = [];
+
+        // 각 사용자에 대해 비동기로 처리
+        const userPromises = usersSnapshot.docs.map(async (userDoc) => {
+            const user = userDoc.data();
+            const userId = userDoc.id;
+            const token = user.fcmToken;
+            const reminderTime = user.reminderTime;
+
+            if (!token || !reminderTime) {
+                console.log(`사용자 ${userId}: FCM 토큰 또는 알림 시간 없음 (토큰: ${!!token}, 시간: ${reminderTime})`);
+                return null;
+            }
+
+            const timezone = user.reminderTimezone || 'Asia/Seoul';
+            const now = DateTime.now().setZone(timezone);
+            const reminderHourMinute = DateTime.fromFormat(reminderTime, 'HH:mm', { zone: timezone });
+
+            // 현재 시간과 알림 시간 비교
+            const currentTimeInMinutes = now.hour * 60 + now.minute;
+            const reminderTimeInMinutes = reminderHourMinute.hour * 60 + reminderHourMinute.minute;
+
+            // 디버깅 로그
+            console.log(`사용자 ${userId}: 현재 시간(${timezone}): ${now.toFormat('HH:mm:ss')}, 알림 시간: ${reminderTime}, 차이: ${Math.abs(currentTimeInMinutes - reminderTimeInMinutes)}분`);
+
+            // 정확히 같은 분인지 확인 (함수가 1분마다 실행되므로, 현재 분이 알림 시간의 분과 일치해야 함)
+            // 예: 알림 시간이 21:00이면, 21:00:00 ~ 21:00:59 사이에 실행될 때만 알림 발송
+            if (currentTimeInMinutes !== reminderTimeInMinutes) {
+                // 알림 시간이 아님
+                return null;
+            }
+
+            // 오늘 날짜를 yyyy-mm-dd 형식으로 생성
+            const todayStr = now.toFormat('yyyy-MM-dd');
+
+            // 오늘 일기를 이미 작성했는지 확인
+            const diariesRef = admin.firestore().collection('diaries');
+            const todayDiaryQuery = await diariesRef
+                .where('userId', '==', userId)
+                .where('date', '==', todayStr)
+                .limit(1)
+                .get();
+
+            if (!todayDiaryQuery.empty) {
+                console.log(`사용자 ${userId}: 오늘(${todayStr}) 일기 이미 작성됨 - 알림 건너뜀`);
+                return null;
+            }
+
+            // 오늘 일기를 작성하지 않았고, 알림 시간이 맞으면 알림 추가
+            console.log(`✅ 사용자 ${userId}: 리마인더 알림 추가 (시간: ${reminderTime}, 타임존: ${timezone}, 현재: ${now.toFormat('HH:mm:ss')})`);
+            return {
                 token,
                 notification: {
                     title: '일기 작성 리마인더',
                     body: user.message || '오늘의 일기를 잊지 마세요!',
+                },
+                data: {
+                    type: 'diary_reminder',
+                    userId: userId
                 }
-            });
-        }
-    });
+            };
+        });
 
-    if (messages.length === 0) {
-        console.log('리마인더 대상자 없음');
+        // 모든 사용자 확인 완료 대기
+        const results = await Promise.all(userPromises);
+
+        // null이 아닌 결과만 messages에 추가
+        results.forEach(result => {
+            if (result) {
+                messages.push(result);
+            }
+        });
+
+        if (messages.length === 0) {
+            console.log('리마인더 대상자 없음 (모두 오늘 일기 작성 완료 또는 시간 불일치)');
+            return null;
+        }
+
+        console.log(`${messages.length}명에게 리마인더 푸시 발송 시도`);
+
+        // FCM으로 알림 전송
+        let successCount = 0;
+        let failureCount = 0;
+
+        if (messages.length === 1) {
+            // 메시지가 1개일 때는 send() 사용
+            try {
+                const message = messages[0];
+                console.log('메시지 형식 확인:', JSON.stringify({
+                    token: message.token ? '있음' : '없음',
+                    notification: message.notification ? '있음' : '없음',
+                    data: message.data ? '있음' : '없음'
+                }));
+
+                const result = await admin.messaging().send(message);
+                successCount = 1;
+                console.log('1명에게 리마인더 푸시 발송 완료, 메시지 ID:', result);
+            } catch (error) {
+                failureCount = 1;
+                console.error('리마인더 푸시 발송 실패:', error);
+                console.error('에러 상세:', {
+                    code: error.code,
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+        } else {
+            // 여러 메시지는 sendAll() 사용
+            try {
+                const response = await admin.messaging().sendAll(messages);
+                successCount = response.successCount;
+                failureCount = response.failureCount;
+                console.log(`${response.successCount}명에게 리마인더 푸시 발송 완료`);
+
+                if (response.failureCount > 0) {
+                    console.warn(`${response.failureCount}명에게 리마인더 푸시 발송 실패`);
+                    response.responses.forEach((resp, idx) => {
+                        if (!resp.success) {
+                            console.error(`사용자 ${idx} 알림 실패:`, resp.error);
+                        }
+                    });
+                }
+            } catch (error) {
+                failureCount = messages.length;
+                console.error('리마인더 푸시 발송 실패:', error);
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('리마인더 함수 실행 오류:', error);
         return null;
     }
-
-    try {
-        const response = await admin.messaging().sendAll(messages);
-        console.log(`${response.successCount}명에게 리마인더 푸시 발송 완료`);
-    } catch (error) {
-        console.error('FCM 전송 오류:', error);
-    }
-
-    return null;
 });
 
 // 월간 프리미엄 자동 갱신 함수 (매일 자정에 실행)
@@ -673,5 +782,320 @@ exports.renewMonthlyPremium = functions.pubsub.schedule('every day 00:00').timeZ
     } catch (error) {
         console.error('월간 프리미엄 자동 갱신 실패:', error);
         throw error;
+    }
+});
+
+// 마케팅 알림 발송 함수 (관리자용)
+exports.sendMarketingNotification = functions.https.onCall(async (data, context) => {
+    // 인증 확인
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            '인증이 필요합니다.'
+        );
+    }
+
+    // 관리자 권한 확인 (필요시 추가)
+    // const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+    // if (!userDoc.exists() || userDoc.data().role !== 'admin') {
+    //     throw new functions.https.HttpsError(
+    //         'permission-denied',
+    //         '관리자 권한이 필요합니다.'
+    //     );
+    // }
+
+    const { title, message, imageUrl, linkUrl } = data;
+
+    if (!title || !message) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '제목과 메시지는 필수입니다.'
+        );
+    }
+
+    try {
+        console.log('마케팅 알림 발송 시작:', { title, message });
+
+        // marketingEnabled가 true인 사용자들 조회
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('marketingEnabled', '==', true)
+            .get();
+
+        if (usersSnapshot.empty) {
+            console.log('마케팅 알림 수신 동의한 사용자 없음');
+            return { success: true, sentCount: 0, message: '마케팅 알림 수신 동의한 사용자가 없습니다.' };
+        }
+
+        const messages = [];
+        const notificationPromises = [];
+
+        usersSnapshot.forEach((userDoc) => {
+            const user = userDoc.data();
+            const userId = userDoc.id;
+            const token = user.fcmToken;
+
+            if (!token) {
+                console.log(`사용자 ${userId}: FCM 토큰 없음`);
+                return;
+            }
+
+            // FCM 메시지 추가
+            const fcmMessage = {
+                token,
+                notification: {
+                    title: title,
+                    body: message,
+                },
+                data: {
+                    type: 'marketing',
+                    title: title,
+                    message: message,
+                    ...(imageUrl && { imageUrl }),
+                    ...(linkUrl && { linkUrl }),
+                },
+                ...(imageUrl && {
+                    android: {
+                        notification: {
+                            imageUrl: imageUrl
+                        }
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                'mutable-content': 1
+                            }
+                        },
+                        fcm_options: {
+                            image: imageUrl
+                        }
+                    }
+                })
+            };
+            messages.push(fcmMessage);
+
+            // Firestore에 알림 저장
+            const notificationData = {
+                type: 'marketing',
+                title: title,
+                message: message,
+                data: {
+                    ...(imageUrl && { imageUrl }),
+                    ...(linkUrl && { linkUrl }),
+                },
+                isRead: false,
+                createdAt: admin.firestore.Timestamp.now(),
+            };
+            notificationPromises.push(
+                admin.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('notifications')
+                    .add(notificationData)
+            );
+        });
+
+        if (messages.length === 0) {
+            return { success: true, sentCount: 0, message: 'FCM 토큰이 있는 사용자가 없습니다.' };
+        }
+
+        console.log(`${messages.length}명에게 마케팅 알림 발송 시도`);
+
+        // FCM으로 알림 전송 (500개씩 배치로 전송)
+        const batchSize = 500;
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (let i = 0; i < messages.length; i += batchSize) {
+            const batch = messages.slice(i, i + batchSize);
+            try {
+                const response = await admin.messaging().sendAll(batch);
+                successCount += response.successCount;
+                failureCount += response.failureCount;
+
+                if (response.failureCount > 0) {
+                    response.responses.forEach((resp, idx) => {
+                        if (!resp.success) {
+                            console.error(`사용자 ${i + idx} 알림 실패:`, resp.error);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`배치 ${i} 전송 실패:`, error);
+                failureCount += batch.length;
+            }
+        }
+
+        // Firestore 알림 저장 완료 대기
+        await Promise.all(notificationPromises);
+
+        console.log(`마케팅 알림 발송 완료: 성공 ${successCount}건, 실패 ${failureCount}건`);
+
+        return {
+            success: true,
+            sentCount: successCount,
+            failureCount: failureCount,
+            totalUsers: usersSnapshot.size,
+            message: `${successCount}명에게 마케팅 알림이 발송되었습니다.`
+        };
+    } catch (error) {
+        console.error('마케팅 알림 발송 오류:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            '마케팅 알림 발송 중 오류가 발생했습니다.',
+            error.message
+        );
+    }
+});
+
+// 이벤트 알림 발송 함수 (관리자용)
+exports.sendEventNotification = functions.https.onCall(async (data, context) => {
+    // 인증 확인
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            '인증이 필요합니다.'
+        );
+    }
+
+    const { title, message, imageUrl, linkUrl } = data;
+
+    if (!title || !message) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '제목과 메시지는 필수입니다.'
+        );
+    }
+
+    try {
+        console.log('이벤트 알림 발송 시작:', { title, message });
+
+        // eventEnabled가 true인 사용자들 조회
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('eventEnabled', '==', true)
+            .get();
+
+        if (usersSnapshot.empty) {
+            console.log('이벤트 알림 수신 동의한 사용자 없음');
+            return { success: true, sentCount: 0, message: '이벤트 알림 수신 동의한 사용자가 없습니다.' };
+        }
+
+        const messages = [];
+        const notificationPromises = [];
+
+        usersSnapshot.forEach((userDoc) => {
+            const user = userDoc.data();
+            const userId = userDoc.id;
+            const token = user.fcmToken;
+
+            if (!token) {
+                console.log(`사용자 ${userId}: FCM 토큰 없음`);
+                return;
+            }
+
+            // FCM 메시지 추가
+            const fcmMessage = {
+                token,
+                notification: {
+                    title: title,
+                    body: message,
+                },
+                data: {
+                    type: 'event',
+                    title: title,
+                    message: message,
+                    ...(imageUrl && { imageUrl }),
+                    ...(linkUrl && { linkUrl }),
+                },
+                ...(imageUrl && {
+                    android: {
+                        notification: {
+                            imageUrl: imageUrl
+                        }
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                'mutable-content': 1
+                            }
+                        },
+                        fcm_options: {
+                            image: imageUrl
+                        }
+                    }
+                })
+            };
+            messages.push(fcmMessage);
+
+            // Firestore에 알림 저장
+            const notificationData = {
+                type: 'event',
+                title: title,
+                message: message,
+                data: {
+                    ...(imageUrl && { imageUrl }),
+                    ...(linkUrl && { linkUrl }),
+                },
+                isRead: false,
+                createdAt: admin.firestore.Timestamp.now(),
+            };
+            notificationPromises.push(
+                admin.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('notifications')
+                    .add(notificationData)
+            );
+        });
+
+        if (messages.length === 0) {
+            return { success: true, sentCount: 0, message: 'FCM 토큰이 있는 사용자가 없습니다.' };
+        }
+
+        console.log(`${messages.length}명에게 이벤트 알림 발송 시도`);
+
+        // FCM으로 알림 전송 (500개씩 배치로 전송)
+        const batchSize = 500;
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (let i = 0; i < messages.length; i += batchSize) {
+            const batch = messages.slice(i, i + batchSize);
+            try {
+                const response = await admin.messaging().sendAll(batch);
+                successCount += response.successCount;
+                failureCount += response.failureCount;
+
+                if (response.failureCount > 0) {
+                    response.responses.forEach((resp, idx) => {
+                        if (!resp.success) {
+                            console.error(`사용자 ${i + idx} 알림 실패:`, resp.error);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`배치 ${i} 전송 실패:`, error);
+                failureCount += batch.length;
+            }
+        }
+
+        // Firestore 알림 저장 완료 대기
+        await Promise.all(notificationPromises);
+
+        console.log(`이벤트 알림 발송 완료: 성공 ${successCount}건, 실패 ${failureCount}건`);
+
+        return {
+            success: true,
+            sentCount: successCount,
+            failureCount: failureCount,
+            totalUsers: usersSnapshot.size,
+            message: `${successCount}명에게 이벤트 알림이 발송되었습니다.`
+        };
+    } catch (error) {
+        console.error('이벤트 알림 발송 오류:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            '이벤트 알림 발송 중 오류가 발생했습니다.',
+            error.message
+        );
     }
 });
