@@ -344,21 +344,24 @@ const CreateButton = styled.button`
   width: 100%;
   margin: 0;
   margin-top: 2px;
-  background-color: ${({ children, completed, theme, isFree }) => {
+  background-color: ${({ children, completed, theme, isFree, disabled }) => {
+        if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'transparent';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
-  color: ${({ children, completed, theme, isFree }) => {
+  color: ${({ children, completed, theme, isFree, disabled }) => {
+        if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
-  border: ${({ children, theme, isFree }) => {
+  border: ${({ children, theme, isFree, disabled }) => {
+        if (disabled) return theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
         if (isFree) return '2px solid #e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
@@ -368,8 +371,8 @@ const CreateButton = styled.button`
   border-radius: 10px;
   padding: 8px;
   font-size: ${({ isFree }) => isFree ? '12px' : '12px'};
-  cursor: pointer;
-  opacity: 1;
+  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${({ disabled }) => disabled ? 0.6 : 1};
   transition: all 0.2s ease;
   font-weight: 700;
   font-family: inherit;
@@ -379,19 +382,21 @@ const CreateButton = styled.button`
   box-shadow: ${({ children }) =>
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
-    background-color: ${({ children, theme, isFree }) => {
+    background-color: ${({ children, theme, isFree, disabled }) => {
+        if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'rgba(228, 163, 13, 0.1)';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
-    color: ${({ children, theme, isFree }) => {
+    color: ${({ children, theme, isFree, disabled }) => {
+        if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
         if (children === '일기 채우기' || children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
         return '#fff';
     }};
-    opacity: 0.96;
+    opacity: ${({ disabled }) => disabled ? 0.6 : 0.96};
   }
 `;
 
@@ -785,7 +790,40 @@ const Novel = ({ user }) => {
         });
     };
 
+    // 주차가 미래인지 확인하는 함수
+    const isFutureWeek = (week) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekStartDate = new Date(week.start);
+        weekStartDate.setHours(0, 0, 0, 0);
+        return weekStartDate > today;
+    };
+
+    // 오늘에 해당하는 주차에서 오늘의 일기가 작성되었는지 확인하는 함수
+    const hasTodayDiary = (week) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekStartDate = new Date(week.start);
+        weekStartDate.setHours(0, 0, 0, 0);
+        const weekEndDate = new Date(week.end);
+        weekEndDate.setHours(23, 59, 59, 999);
+
+        // 오늘이 이 주차에 포함되는지 확인
+        if (today < weekStartDate || today > weekEndDate) {
+            return false;
+        }
+
+        // 오늘의 일기가 작성되었는지 확인
+        const todayStr = formatDate(today);
+        return diaries.some(diary => diary.date === todayStr);
+    };
+
     const handleWriteDiary = (week) => {
+        // 미래 주차이거나 오늘의 일기가 이미 작성된 경우 처리하지 않음
+        if (isFutureWeek(week) || hasTodayDiary(week)) {
+            return;
+        }
+
         // 해당 주차에서 작성하지 않은 첫 번째 날짜 찾기
         const weekStartDate = new Date(week.start);
         const weekEndDate = new Date(week.end);
@@ -1025,7 +1063,13 @@ const Novel = ({ user }) => {
                                     <CreateButton
                                         completed={false}
                                         isFree={isCompleted && novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey]}
-                                        onClick={() => isCompleted ? handleCreateNovel(week) : handleWriteDiary(week)}
+                                        disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
+                                        onClick={() => {
+                                            if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
+                                                return;
+                                            }
+                                            isCompleted ? handleCreateNovel(week) : handleWriteDiary(week);
+                                        }}
                                     >
                                         {isCompleted
                                             ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? (
