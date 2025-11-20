@@ -24,6 +24,7 @@
     "deploy:auto": "npm run build && npx cap sync android && node scripts/build-and-share.js && firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:607033226027:android:0090a554ad21bf47370b6e --groups testers --release-notes '자동 배포 - $(date)'",
     "deploy:quick": "npm run build:apk:firebase",
     "deploy:web": "npm run build && firebase deploy --only hosting",
+    "deploy:firestore:rules": "firebase deploy --only firestore:rules",
     "deploy:all": "npm run build && firebase deploy --only hosting && node scripts/build-and-share.js && firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:607033226027:android:0090a554ad21bf47370b6e --groups testers --release-notes '웹+앱 자동 배포'"
   },
   "keywords": [],

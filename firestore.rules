@@ -2,6 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // users 컬렉션: 이메일 중복 체크를 위해 인증되지 않은 사용자도 읽기 허용
+    match /users/{userId} {
+      // 인증되지 않은 사용자는 읽기만 허용 (이메일 중복 체크용)
+      allow read: if true;
+      // 쓰기는 인증된 사용자만 허용
+      allow write: if request.auth != null;
+    }
+    
+    // 나머지 모든 문서는 인증된 사용자만 접근 가능
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
