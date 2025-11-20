@@ -428,13 +428,14 @@ const RecommendationIntro = styled.p`
 `;
 
 const RecommendationTopic = styled.p`
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: ${({ theme }) => theme.cardSubText};
   line-height: 1.4;
   margin-top: 4px;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  letter-spacing: -0.3px;
 `;
 
 const CarouselContainer = styled.div`
