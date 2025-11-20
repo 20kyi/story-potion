@@ -64,7 +64,7 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   // min-height: 100vh;
-  padding: 20px;
+  padding: 0;
   // padding-top: 0;
   margin: 60px auto;
   max-width: 600px;
@@ -212,9 +212,9 @@ const EditProfileCard = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 18px;
   box-shadow: ${({ theme }) => theme.cardShadow};
-  padding: 32px 24px 24px 24px;
+  padding: 20px 16px;
   max-width: 380px;
-  margin: 40px auto 0 auto;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -269,14 +269,14 @@ const EditLabel = styled.label`
   font-weight: 500;
   color: #888;
   margin-bottom: 6px;
-  margin-top: 20px;
+  margin-top: 12px;
   align-self: flex-start;
 `;
 
 const EditInputWrap = styled.div`
   width: 100%;
   max-width: 260px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   display: flex;
   flex-direction: column;
 `;
@@ -464,6 +464,7 @@ function MyPage({ user }) {
   // 프로필 편집 관련 상태
   const [isEditing, setIsEditing] = useState(false); // 편집 모드 활성화 여부
   const [newDisplayName, setNewDisplayName] = useState(''); // 새로운 닉네임
+  const [newPhoneNumber, setNewPhoneNumber] = useState(''); // 새로운 휴대전화 번호
   const [newProfileImageFile, setNewProfileImageFile] = useState(null); // 새 프로필 이미지 파일
   const [newProfileImageUrl, setNewProfileImageUrl] = useState(''); // 새 프로필 이미지 URL (미리보기용)
   const [removeProfileImage, setRemoveProfileImage] = useState(false); // 프로필 이미지 삭제 여부
@@ -504,6 +505,15 @@ function MyPage({ user }) {
       setNewDisplayName(user.displayName || '');
       setNewProfileImageUrl(user.photoURL || '');
       setRemoveProfileImage(false);
+      // Firestore에서 휴대전화 번호 가져오기
+      if (user?.uid) {
+        getDoc(doc(db, "users", user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setNewPhoneNumber(userData.phoneNumber || '');
+          }
+        });
+      }
     }
   }, [user]);
 
@@ -623,10 +633,11 @@ function MyPage({ user }) {
         photoURL: photoURL,
       });
 
-      // Firestore users 문서에도 photoURL 반영
+      // Firestore users 문서에도 photoURL 및 휴대전화 번호 반영
       await updateDoc(doc(db, 'users', user.uid), {
         displayName: newDisplayName,
-        photoURL: photoURL
+        photoURL: photoURL,
+        phoneNumber: newPhoneNumber || ''
       });
 
       alert('프로필이 성공적으로 업데이트되었습니다.');
@@ -644,7 +655,7 @@ function MyPage({ user }) {
     <>
       <Header user={user} title={t('mypage')} />
       <MainContainer className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
-        {isEditing ? (
+        {false && isEditing ? (
           <EditProfileCard>
             <div style={{ position: 'relative', marginBottom: '16px' }}>
               <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', opacity: removeProfileImage ? 0.5 : 1 }}>
@@ -733,6 +744,18 @@ function MyPage({ user }) {
                 onChange={(e) => setNewDisplayName(e.target.value)}
                 placeholder="닉네임을 입력하세요"
                 maxLength={20}
+                autoComplete="off"
+                onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+              />
+            </EditInputWrap>
+            <EditInputWrap>
+              <EditLabel htmlFor="edit-phone">휴대전화 번호</EditLabel>
+              <EditInput
+                id="edit-phone"
+                type="tel"
+                value={newPhoneNumber}
+                onChange={(e) => setNewPhoneNumber(e.target.value)}
+                placeholder="휴대전화 번호 (예: 01012345678)"
                 autoComplete="off"
                 onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
               />
@@ -868,7 +891,7 @@ function MyPage({ user }) {
                 alt="Profile"
                 onError={(e) => handleImageError(e)}
               />
-              <EditIconWrapper onClick={() => setIsEditing(true)}>
+              <EditIconWrapper onClick={() => navigate('/my/profile-edit')}>
                 <EditIcon width="20" height="20" color="#555555" />
               </EditIconWrapper>
             </ProfileContainer>

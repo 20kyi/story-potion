@@ -174,6 +174,7 @@ function Signup() {
   const [formData, setFormData] = useState({
     nickname: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: ''
   });
@@ -255,6 +256,7 @@ function Signup() {
         createdAt: new Date(),
         displayName: formData.nickname,
         email: formData.email,
+        phoneNumber: formData.phoneNumber || '',
         emailVerified: user.emailVerified || false,
         eventEnabled: false,
         fcmToken: "",
@@ -326,6 +328,19 @@ function Signup() {
                 name="email"
                 placeholder="이메일"
                 value={formData.email}
+                onChange={handleChange}
+                ref={inputRef}
+                onFocus={e => {
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
+              />
+              <Input
+                type="tel"
+                name="phoneNumber"
+                placeholder="휴대전화 번호 (예: 01012345678)"
+                value={formData.phoneNumber}
                 onChange={handleChange}
                 ref={inputRef}
                 onFocus={e => {

@@ -47,6 +47,7 @@ import PotionShop from './pages/mypage/PotionShop';
 import PointCharge from './pages/mypage/PointCharge';
 import UserManagement from './pages/admin/UserManagement';
 import ProfileFix from './pages/mypage/ProfileFix';
+import ProfileEdit from './pages/mypage/ProfileEdit';
 import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
 import './utils/syncAuthUsers'; // 사용자 동기화 스크립트 로드
 import './utils/debugUsers'; // 사용자 디버깅 스크립트 로드
@@ -108,6 +109,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/profile-fix" element={user ? <ProfileFix user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/profile-edit" element={user ? <ProfileEdit user={user} /> : <Navigate to="/login" />} />
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />

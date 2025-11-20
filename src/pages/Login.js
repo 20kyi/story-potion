@@ -27,8 +27,7 @@ import './Login.css';
 import {
   initializeRecaptcha,
   sendSMSCode,
-  verifySMSCodeAndResetPassword,
-  findUserByPhone
+  verifySMSCodeAndResetPassword
 } from '../utils/passwordResetUtils';
 import {
   getUserSecurityQuestions,
@@ -52,9 +51,8 @@ function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   
   // 아이디 찾기 관련 상태
-  const [findIdMethod, setFindIdMethod] = useState('email'); // 'email', 'phone'
-  const [findIdEmail, setFindIdEmail] = useState('');
-  const [findIdPhone, setFindIdPhone] = useState('');
+  const [findIdMethod, setFindIdMethod] = useState('nickname'); // 'nickname'
+  const [findIdEmail, setFindIdEmail] = useState(''); // 닉네임 입력용
   const [findIdMessage, setFindIdMessage] = useState('');
   const [findIdLoading, setFindIdLoading] = useState(false);
   const [foundEmail, setFoundEmail] = useState('');
@@ -610,11 +608,11 @@ function Login() {
     }
   };
 
-  // 아이디 찾기 (이메일로)
-  const handleFindIdByEmail = async (e) => {
+  // 아이디 찾기 (닉네임으로)
+  const handleFindIdByNickname = async (e) => {
     e.preventDefault();
     if (!findIdEmail.trim()) {
-      setFindIdMessage('이메일을 입력해주세요.');
+      setFindIdMessage('닉네임을 입력해주세요.');
       return;
     }
 
@@ -624,44 +622,21 @@ function Login() {
 
     try {
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', findIdEmail.trim()));
+      const q = query(usersRef, where('displayName', '==', findIdEmail.trim()));
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
-        setFindIdMessage('해당 이메일로 가입된 계정을 찾을 수 없습니다.');
+        setFindIdMessage('해당 닉네임으로 가입된 계정을 찾을 수 없습니다.');
       } else {
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data();
-        setFoundEmail(userData.email || findIdEmail);
+        // 이메일의 일부를 마스킹하여 표시
+        const email = userData.email || '';
+        const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, (match, p1, p2, p3) => {
+          return p1 + '*'.repeat(Math.min(p2.length, 4)) + p3;
+        }) : '';
+        setFoundEmail(maskedEmail);
         setFindIdMessage('아이디를 찾았습니다.');
-      }
-    } catch (error) {
-      console.error('아이디 찾기 실패:', error);
-      setFindIdMessage('아이디 찾기에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setFindIdLoading(false);
-    }
-  };
-
-  // 아이디 찾기 (휴대폰 번호로)
-  const handleFindIdByPhone = async (e) => {
-    e.preventDefault();
-    if (!findIdPhone.trim()) {
-      setFindIdMessage('휴대폰 번호를 입력해주세요.');
-      return;
-    }
-
-    setFindIdLoading(true);
-    setFindIdMessage('');
-    setFoundEmail('');
-
-    try {
-      const result = await findUserByPhone(findIdPhone.trim());
-      if (result.success) {
-        setFoundEmail(result.user.email || '');
-        setFindIdMessage('아이디를 찾았습니다.');
-      } else {
-        setFindIdMessage(result.message);
       }
     } catch (error) {
       console.error('아이디 찾기 실패:', error);
@@ -1368,233 +1343,99 @@ function Login() {
               아이디 찾기
             </h3>
 
-            {/* 방법 선택 탭 */}
-            <div style={{
-              display: 'flex',
-              marginBottom: '20px',
-              borderBottom: '1px solid #eee'
-            }}>
-              {[
-                { key: 'email', label: '이메일' },
-                { key: 'phone', label: '휴대폰 번호' }
-              ].map(method => (
+            {/* 닉네임 방법 */}
+            <form onSubmit={handleFindIdByNickname}>
+              <p style={{
+                margin: '0 0 20px 0',
+                fontSize: '14px',
+                color: '#666',
+                lineHeight: '1.5',
+                textAlign: 'center'
+              }}>
+                가입하신 닉네임을 입력하시면<br />
+                아이디(이메일)를 찾아드립니다.
+              </p>
+
+              <Input
+                type="text"
+                placeholder="닉네임"
+                value={findIdEmail}
+                onChange={(e) => setFindIdEmail(e.target.value)}
+                style={{ marginBottom: '15px' }}
+              />
+
+                {foundEmail && (
+                  <div style={{
+                    padding: '15px',
+                    marginBottom: '15px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    backgroundColor: '#d4edda',
+                    color: '#155724',
+                    border: '1px solid #c3e6cb'
+                  }}>
+                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
+                    <div>{foundEmail}</div>
+                  </div>
+                )}
+
+              {findIdMessage && !foundEmail && (
+                <div style={{
+                  padding: '10px',
+                  marginBottom: '15px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  backgroundColor: '#f8d7da',
+                  color: '#721c24',
+                  border: '1px solid #f5c6cb'
+                }}>
+                  {findIdMessage}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button
-                  key={method.key}
+                  type="button"
                   onClick={() => {
-                    setFindIdMethod(method.key);
+                    setShowFindId(false);
+                    setFindIdEmail('');
                     setFindIdMessage('');
                     setFoundEmail('');
                   }}
                   style={{
                     flex: 1,
                     padding: '12px',
-                    border: 'none',
-                    background: 'none',
-                    color: findIdMethod === method.key ? '#e46262' : '#666',
-                    borderBottom: findIdMethod === method.key ? '2px solid #e46262' : 'none',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    background: 'white',
+                    color: '#666',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: findIdMethod === method.key ? '600' : '400'
+                    fontSize: '14px'
                   }}
                 >
-                  {method.label}
+                  취소
                 </button>
-              ))}
-            </div>
-
-            {/* 이메일 방법 */}
-            {findIdMethod === 'email' && (
-              <form onSubmit={handleFindIdByEmail}>
-                <p style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  가입하신 이메일 주소를 입력하시면<br />
-                  아이디(이메일)를 찾아드립니다.
-                </p>
-
-                <Input
-                  type="email"
-                  placeholder="이메일 주소"
-                  value={findIdEmail}
-                  onChange={(e) => setFindIdEmail(e.target.value)}
-                  style={{ marginBottom: '15px' }}
-                />
-
-                {foundEmail && (
-                  <div style={{
-                    padding: '15px',
-                    marginBottom: '15px',
+                <button
+                  type="submit"
+                  disabled={findIdLoading}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    border: 'none',
                     borderRadius: '8px',
+                    background: '#e46262',
+                    color: 'white',
+                    cursor: findIdLoading ? 'not-allowed' : 'pointer',
                     fontSize: '14px',
-                    textAlign: 'center',
-                    backgroundColor: '#d4edda',
-                    color: '#155724',
-                    border: '1px solid #c3e6cb'
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
-                    <div>{foundEmail}</div>
-                  </div>
-                )}
-
-                {findIdMessage && !foundEmail && (
-                  <div style={{
-                    padding: '10px',
-                    marginBottom: '15px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    backgroundColor: '#f8d7da',
-                    color: '#721c24',
-                    border: '1px solid #f5c6cb'
-                  }}>
-                    {findIdMessage}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowFindId(false);
-                      setFindIdEmail('');
-                      setFindIdPhone('');
-                      setFindIdMessage('');
-                      setFoundEmail('');
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      background: 'white',
-                      color: '#666',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    취소
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={findIdLoading}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: '#e46262',
-                      color: 'white',
-                      cursor: findIdLoading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      opacity: findIdLoading ? 0.7 : 1
-                    }}
-                  >
-                    {findIdLoading ? '찾는 중...' : '아이디 찾기'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* 휴대폰 번호 방법 */}
-            {findIdMethod === 'phone' && (
-              <form onSubmit={handleFindIdByPhone}>
-                <p style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  가입하신 휴대폰 번호를 입력하시면<br />
-                  아이디(이메일)를 찾아드립니다.
-                </p>
-
-                <Input
-                  type="tel"
-                  placeholder="휴대폰 번호 (예: 01012345678)"
-                  value={findIdPhone}
-                  onChange={(e) => setFindIdPhone(e.target.value)}
-                  style={{ marginBottom: '15px' }}
-                />
-
-                {foundEmail && (
-                  <div style={{
-                    padding: '15px',
-                    marginBottom: '15px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    backgroundColor: '#d4edda',
-                    color: '#155724',
-                    border: '1px solid #c3e6cb'
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
-                    <div>{foundEmail}</div>
-                  </div>
-                )}
-
-                {findIdMessage && !foundEmail && (
-                  <div style={{
-                    padding: '10px',
-                    marginBottom: '15px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    backgroundColor: '#f8d7da',
-                    color: '#721c24',
-                    border: '1px solid #f5c6cb'
-                  }}>
-                    {findIdMessage}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowFindId(false);
-                      setFindIdEmail('');
-                      setFindIdPhone('');
-                      setFindIdMessage('');
-                      setFoundEmail('');
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      background: 'white',
-                      color: '#666',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    취소
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={findIdLoading}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: '#e46262',
-                      color: 'white',
-                      cursor: findIdLoading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      opacity: findIdLoading ? 0.7 : 1
-                    }}
-                  >
-                    {findIdLoading ? '찾는 중...' : '아이디 찾기'}
-                  </button>
-                </div>
-              </form>
-            )}
+                    opacity: findIdLoading ? 0.7 : 1
+                  }}
+                >
+                  {findIdLoading ? '찾는 중...' : '아이디 찾기'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
