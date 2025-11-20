@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEye, FaEyeSlash, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { createUserWithEmailAndPassword, updateProfile, signOut, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { setDoc, doc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import {
-  initializeRecaptchaForSignup,
-  sendSMSCodeForSignup,
-  verifySMSCodeForSignup,
+  // initializeRecaptchaForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
+  // sendSMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
+  // verifySMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
   generateRandomNickname
 } from '../utils/signupUtils';
 
@@ -346,11 +346,12 @@ function Signup() {
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [smsSent, setSmsSent] = useState(false);
-  const [smsLoading, setSmsLoading] = useState(false);
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [isVerified, setIsVerified] = useState(false);
+  // SMS 인증 관련 상태 (나중에 사용 가능하도록 주석 처리)
+  // const [smsSent, setSmsSent] = useState(false);
+  // const [smsLoading, setSmsLoading] = useState(false);
+  // const [verificationLoading, setVerificationLoading] = useState(false);
+  // const [confirmationResult, setConfirmationResult] = useState(null);
+  // const [isVerified, setIsVerified] = useState(false);
   const [isEmailChecking, setIsEmailChecking] = useState(false);
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
   const mainRef = useRef();
@@ -554,105 +555,127 @@ function Signup() {
     setCurrentStep(3);
   };
 
-  // SMS 코드 발송
-  const handleSendSMSCode = async (e) => {
+  // 3단계: 휴대폰 번호 입력 및 회원가입 진행
+  const handleStep3Next = (e) => {
     e.preventDefault();
-
-    if (!formData.phoneNumber.trim()) {
-      setError('휴대폰 번호를 입력해주세요.');
-      return;
-    }
-
-    // 휴대폰 번호 형식 검증 (한국 번호)
-    const phoneRegex = /^010\d{8}$|^010-\d{4}-\d{4}$/;
-    const cleanPhone = formData.phoneNumber.replace(/-/g, '');
-
-    if (!phoneRegex.test(cleanPhone) && !/^\+82/.test(formData.phoneNumber)) {
-      setError('올바른 휴대폰 번호를 입력해주세요. (예: 01012345678)');
-      return;
-    }
-
-    setSmsLoading(true);
     setError('');
     setSuccessMessage('');
 
-    try {
-      // reCAPTCHA 초기화
-      let container = document.getElementById('recaptcha-container-signup');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'recaptcha-container-signup';
-        container.style.display = 'none';
-        document.body.appendChild(container);
-      }
-      initializeRecaptchaForSignup('recaptcha-container-signup');
+    // 휴대폰 번호는 선택사항이므로 비어있어도 진행 가능
+    // 하지만 입력된 경우 형식 검증
+    if (formData.phoneNumber.trim()) {
+      const phoneRegex = /^010\d{8}$|^010-\d{4}-\d{4}$/;
+      const cleanPhone = formData.phoneNumber.replace(/-/g, '');
 
-      const result = await sendSMSCodeForSignup(formData.phoneNumber);
-
-      if (result.success) {
-        setConfirmationResult(result.confirmationResult);
-        setSmsSent(true);
-        setSuccessMessage('인증 코드가 발송되었습니다.');
-      } else {
-        setError(result.message || 'SMS 발송에 실패했습니다.');
+      if (!phoneRegex.test(cleanPhone) && !/^\+82/.test(formData.phoneNumber)) {
+        setError('올바른 휴대폰 번호를 입력해주세요. (예: 01012345678)');
+        return;
       }
-    } catch (error) {
-      console.error('SMS 발송 실패:', error);
-      setError('SMS 발송에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setSmsLoading(false);
     }
+
+    // 휴대폰 번호 입력 후 바로 회원가입 진행
+    handleFinalSignup();
   };
 
-  // SMS 인증 코드 확인
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
+  // SMS 코드 발송 (나중에 사용 가능하도록 주석 처리)
+  // const handleSendSMSCode = async (e) => {
+  //   e.preventDefault();
 
-    if (!formData.verificationCode.trim()) {
-      setError('인증 코드를 입력해주세요.');
-      return;
-    }
+  //   if (!formData.phoneNumber.trim()) {
+  //     setError('휴대폰 번호를 입력해주세요.');
+  //     return;
+  //   }
 
-    if (formData.verificationCode.length !== 6) {
-      setError('인증 코드는 6자리입니다.');
-      return;
-    }
+  //   // 휴대폰 번호 형식 검증 (한국 번호)
+  //   const phoneRegex = /^010\d{8}$|^010-\d{4}-\d{4}$/;
+  //   const cleanPhone = formData.phoneNumber.replace(/-/g, '');
 
-    if (!confirmationResult) {
-      setError('먼저 인증 코드를 발송해주세요.');
-      return;
-    }
+  //   if (!phoneRegex.test(cleanPhone) && !/^\+82/.test(formData.phoneNumber)) {
+  //     setError('올바른 휴대폰 번호를 입력해주세요. (예: 01012345678)');
+  //     return;
+  //   }
 
-    setVerificationLoading(true);
-    setError('');
-    setSuccessMessage('');
+  //   setSmsLoading(true);
+  //   setError('');
+  //   setSuccessMessage('');
 
-    try {
-      const result = await verifySMSCodeForSignup(confirmationResult, formData.verificationCode);
+  //   try {
+  //     // reCAPTCHA 초기화
+  //     let container = document.getElementById('recaptcha-container-signup');
+  //     if (!container) {
+  //       container = document.createElement('div');
+  //       container.id = 'recaptcha-container-signup';
+  //       container.style.display = 'none';
+  //       document.body.appendChild(container);
+  //     }
+  //     initializeRecaptchaForSignup('recaptcha-container-signup');
 
-      if (result.success) {
-        setIsVerified(true);
-        setSuccessMessage('인증이 완료되었습니다.');
+  //     const result = await sendSMSCodeForSignup(formData.phoneNumber);
 
-        // SMS 인증으로 생성된 임시 계정이 있으면 로그아웃
-        if (auth.currentUser && auth.currentUser.phoneNumber) {
-          await auth.signOut();
-        }
+  //     if (result.success) {
+  //       setConfirmationResult(result.confirmationResult);
+  //       setSmsSent(true);
+  //       setSuccessMessage('인증 코드가 발송되었습니다.');
+  //     } else {
+  //       setError(result.message || 'SMS 발송에 실패했습니다.');
+  //     }
+  //   } catch (error) {
+  //     console.error('SMS 발송 실패:', error);
+  //     setError('SMS 발송에 실패했습니다. 다시 시도해주세요.');
+  //   } finally {
+  //     setSmsLoading(false);
+  //   }
+  // };
 
-        // 인증 성공 후 자동으로 회원가입 진행
-        setTimeout(() => {
-          handleFinalSignup();
-        }, 500);
-      } else {
-        setError(result.message || '인증에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('인증 실패:', error);
-      setError('인증에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
+  // SMS 인증 코드 확인 (나중에 사용 가능하도록 주석 처리)
+  // const handleVerifyCode = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!formData.verificationCode.trim()) {
+  //     setError('인증 코드를 입력해주세요.');
+  //     return;
+  //   }
+
+  //   if (formData.verificationCode.length !== 6) {
+  //     setError('인증 코드는 6자리입니다.');
+  //     return;
+  //   }
+
+  //   if (!confirmationResult) {
+  //     setError('먼저 인증 코드를 발송해주세요.');
+  //     return;
+  //   }
+
+  //   setVerificationLoading(true);
+  //   setError('');
+  //   setSuccessMessage('');
+
+  //   try {
+  //     const result = await verifySMSCodeForSignup(confirmationResult, formData.verificationCode);
+
+  //     if (result.success) {
+  //       setIsVerified(true);
+  //       setSuccessMessage('인증이 완료되었습니다.');
+
+  //       // SMS 인증으로 생성된 임시 계정이 있으면 로그아웃
+  //       if (auth.currentUser && auth.currentUser.phoneNumber) {
+  //         await auth.signOut();
+  //       }
+
+  //       // 인증 성공 후 자동으로 회원가입 진행
+  //       setTimeout(() => {
+  //         handleFinalSignup();
+  //       }, 500);
+  //     } else {
+  //       setError(result.message || '인증에 실패했습니다.');
+  //     }
+  //   } catch (error) {
+  //     console.error('인증 실패:', error);
+  //     setError('인증에 실패했습니다. 다시 시도해주세요.');
+  //   } finally {
+  //     setVerificationLoading(false);
+  //   }
+  // };
 
   // 최종 회원가입 처리
   const handleFinalSignup = async () => {
@@ -665,7 +688,6 @@ function Signup() {
 
       if (signInMethods && signInMethods.length > 0) {
         setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
-        setIsVerified(false);
         setIsEmailDuplicate(true);
         setCurrentStep(1); // 1단계로 돌아가기
         return;
@@ -678,7 +700,6 @@ function Signup() {
 
       if (!querySnapshot.empty) {
         setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
-        setIsVerified(false);
         setIsEmailDuplicate(true);
         setCurrentStep(1); // 1단계로 돌아가기
         return;
@@ -687,7 +708,6 @@ function Signup() {
       console.error('최종 이메일 중복 체크 실패:', error);
       // 체크 실패 시에도 진행하지 않음 (안전하게)
       setError('이메일 확인에 실패했습니다. 다시 시도해주세요.');
-      setIsVerified(false);
       setIsEmailDuplicate(true);
       return;
     }
@@ -881,56 +901,22 @@ function Signup() {
 
   const renderStep3 = () => (
     <>
-      <Title>휴대폰 인증</Title>
-      <Subtitle>휴대폰 번호로 본인 인증을 진행합니다</Subtitle>
+      <Title>휴대폰 번호 입력</Title>
+      <Subtitle>휴대폰 번호를 입력해주세요 (선택사항)</Subtitle>
       {renderStepIndicator()}
-      <Form onSubmit={smsSent ? handleVerifyCode : handleSendSMSCode}>
-        <PhoneInputContainer>
-          <PhoneInput
-            type="tel"
-            name="phoneNumber"
-            placeholder="휴대전화 (예: 01012345678)"
-            value={formData.phoneNumber}
-            onChange={(e) => {
-              // 숫자와 하이픈만 허용
-              const value = e.target.value.replace(/[^0-9-]/g, '');
-              setFormData(prev => ({ ...prev, phoneNumber: value }));
-              setError('');
-              setSuccessMessage('');
-            }}
-            disabled={smsSent || isVerified}
-            required={!isVerified}
-            onFocus={e => {
-              setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 100);
-            }}
-          />
-          <SendCodeButton
-            type="button"
-            onClick={handleSendSMSCode}
-            disabled={smsLoading || !formData.phoneNumber.trim() || smsSent || isVerified}
-          >
-            {smsLoading ? '발송 중...' : '인증번호 전송'}
-          </SendCodeButton>
-        </PhoneInputContainer>
-
-        <VerificationInput
-          type="text"
-          name="verificationCode"
-          placeholder="인증번호 6자리"
-          value={formData.verificationCode}
+      <Form onSubmit={handleStep3Next}>
+        <Input
+          type="tel"
+          name="phoneNumber"
+          placeholder="휴대전화 (예: 01012345678, 선택사항)"
+          value={formData.phoneNumber}
           onChange={(e) => {
-            // 숫자만 입력 허용
-            const value = e.target.value.replace(/[^0-9]/g, '');
-            setFormData(prev => ({ ...prev, verificationCode: value }));
+            // 숫자와 하이픈만 허용
+            const value = e.target.value.replace(/[^0-9-]/g, '');
+            setFormData(prev => ({ ...prev, phoneNumber: value }));
             setError('');
             setSuccessMessage('');
           }}
-          maxLength={6}
-          autoComplete="one-time-code"
-          disabled={isVerified}
-          required
           onFocus={e => {
             setTimeout(() => {
               e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -939,24 +925,17 @@ function Signup() {
         />
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        {successMessage && !isVerified && <SuccessMessage>{successMessage}</SuccessMessage>}
+        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
         <ButtonContainer>
           <BackButton type="button" onClick={() => setCurrentStep(2)}>
             <FaArrowLeft /> 이전으로
           </BackButton>
-          <Button
-            type="submit"
-            disabled={!smsSent || verificationLoading || formData.verificationCode.length !== 6 || isVerified}
-          >
-            {verificationLoading ? '인증 중...' : '인증하기'}
+          <Button type="submit">
+            가입 완료
             <FaArrowRight />
           </Button>
         </ButtonContainer>
-
-        {isVerified && (
-          <SuccessMessage>✓ 인증이 완료되었습니다. 회원가입을 진행합니다...</SuccessMessage>
-        )}
       </Form>
     </>
   );
@@ -979,7 +958,6 @@ function Signup() {
           </FormSection>
         </ContentWrapper>
       </Container>
-      <div id="recaptcha-container-signup" style={{ display: 'none' }}></div>
     </div>
   );
 }

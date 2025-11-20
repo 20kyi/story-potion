@@ -481,12 +481,12 @@ const PremiumBanner = styled(motion.div)`
   &::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    animation: shimmer 3s infinite;
+    top: -25%;
+    right: -25%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+    animation: shimmer 4s infinite;
   }
   
   @keyframes shimmer {

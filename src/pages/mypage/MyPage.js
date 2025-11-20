@@ -64,7 +64,7 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   // min-height: 100vh;
-  padding: 0;
+  padding: 0 20px;
   // padding-top: 0;
   margin: 60px auto;
   max-width: 600px;
@@ -417,8 +417,8 @@ const StatLabel = styled.span`
 `;
 
 const PremiumUpgradeCard = styled.div`
-  margin: 20px auto;
-  max-width: 400px;
+  width: 100%;
+  margin: 24px 0 32px 0;
   background: linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%);
   border-radius: 16px;
   padding: 18px 24px;
@@ -432,12 +432,12 @@ const PremiumUpgradeCard = styled.div`
   &::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    animation: shimmer 3s infinite;
+    top: -25%;
+    right: -25%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+    animation: shimmer 4s infinite;
   }
   
   @keyframes shimmer {
