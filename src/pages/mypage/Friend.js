@@ -20,8 +20,7 @@ import {
     removeFriend,
     subscribeToFriendRequests
 } from '../../utils/friendSystem';
-import { giftPotionToFriend } from '../../utils/potionGift';
-import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaTrash, FaUsers, FaGift } from 'react-icons/fa';
+import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaTrash, FaUsers } from 'react-icons/fa';
 import { HiOutlineTrash } from 'react-icons/hi';
 import { collection, query, where, getDocs, or, getDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -481,150 +480,7 @@ const TrashIconButton = styled.button`
   }
 `;
 
-const GiftIconButton = styled.button`
-  background: #e46262;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  
-  &:hover, &:focus {
-    background: #d45555;
-    transform: translateY(-1px);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
 
-const PotionGiftModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-`;
-
-const PotionGiftContent = styled.div`
-  background-color: ${({ theme }) => theme.card || 'white'};
-  padding: 24px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow-y: auto;
-`;
-
-const PotionGiftHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const PotionGiftTitle = styled.h3`
-  color: #cb6565;
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-`;
-
-const PotionGiftClose = styled.button`
-  background: none;
-  border: none;
-  color: #cb6565;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 8px;
-`;
-
-const PotionGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-`;
-
-const PotionItem = styled(motion.div)`
-  background: ${({ theme }) => theme.background || '#f9f9f9'};
-  border: 2px solid ${({ selected, theme }) => selected ? '#e46262' : (theme.border || '#e0e0e0')};
-  border-radius: 12px;
-  padding: 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  
-  ${({ disabled }) => disabled && `
-    opacity: 0.5;
-    cursor: not-allowed;
-    &:hover {
-      transform: none;
-    }
-  `}
-`;
-
-const PotionImage = styled.img`
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-  margin: 0 auto 8px auto;
-`;
-
-const PotionName = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 4px;
-`;
-
-const PotionCount = styled.div`
-  font-size: 11px;
-  color: #3498f3;
-  font-weight: 600;
-`;
-
-const GiftButton = styled.button`
-  width: 100%;
-  background-color: #e46262;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background-color: #d45555;
-  }
-  
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-`;
 
 function Friend({ user }) {
     const navigate = useNavigate();
@@ -641,48 +497,19 @@ function Friend({ user }) {
     const [isLoading, setIsLoading] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [friendToDelete, setFriendToDelete] = useState(null);
-    const [showGiftModal, setShowGiftModal] = useState(false);
-    const [friendToGift, setFriendToGift] = useState(null);
-    const [selectedPotion, setSelectedPotion] = useState(null);
-    const [ownedPotions, setOwnedPotions] = useState({});
 
     // 디바운싱을 위한 타이머
     const [searchTimeout, setSearchTimeout] = useState(null);
 
-    // 포션 데이터
-    const potions = [
-        { id: 'romance', name: '로맨스', image: '/potion/romance.png' },
-        { id: 'historical', name: '역사', image: '/potion/historical.png' },
-        { id: 'mystery', name: '추리', image: '/potion/mystery.png' },
-        { id: 'horror', name: '공포', image: '/potion/horror.png' },
-        { id: 'fairytale', name: '동화', image: '/potion/fairytale.png' },
-        { id: 'fantasy', name: '판타지', image: '/potion/fantasy.png' },
-    ];
-
     useEffect(() => {
         if (user?.uid) {
             loadData();
-            loadOwnedPotions();
             const unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
                 setReceivedRequests(requests.filter(req => req.status === 'pending'));
             });
             return unsubscribe;
         }
     }, [user]);
-
-    // 보유 포션 조회
-    const loadOwnedPotions = async () => {
-        if (!user?.uid) return;
-        try {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setOwnedPotions(userData.potions || {});
-            }
-        } catch (error) {
-            console.error('보유 포션 조회 실패:', error);
-        }
-    };
 
     const getAllMyFriendRequests = async (userId) => {
         try {
@@ -909,60 +736,6 @@ function Friend({ user }) {
         }
     };
 
-    // 포션 선물 모달 열기
-    const openGiftModal = (friend) => {
-        setFriendToGift(friend);
-        setSelectedPotion(null);
-        setShowGiftModal(true);
-    };
-
-    // 포션 선물 모달 닫기
-    const closeGiftModal = () => {
-        setShowGiftModal(false);
-        setFriendToGift(null);
-        setSelectedPotion(null);
-    };
-
-    // 포션 선물하기
-    const handleGiftPotion = async () => {
-        if (!friendToGift || !selectedPotion) {
-            toast.showToast(t('potion_gift_select'), 'error');
-            return;
-        }
-
-        const potion = potions.find(p => p.id === selectedPotion);
-        if (!potion) return;
-
-        // 보유 포션 확인
-        const potionCount = ownedPotions[selectedPotion] || 0;
-        if (potionCount <= 0) {
-            toast.showToast(t('potion_gift_no_potion', { name: potion.name }), 'error');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const result = await giftPotionToFriend(
-                user.uid,
-                friendToGift.user.uid,
-                selectedPotion,
-                potion.name
-            );
-
-            if (result.success) {
-                toast.showToast(t('potion_gift_success', { name: potion.name }), 'success');
-                await loadOwnedPotions(); // 보유 포션 새로고침
-                closeGiftModal();
-            } else {
-                toast.showToast(result.error || t('potion_gift_failed'), 'error');
-            }
-        } catch (error) {
-            console.error('포션 선물 실패:', error);
-            toast.showToast(t('potion_gift_failed'), 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleCancelRequest = async (requestId) => {
         setIsLoading(true);
@@ -1162,30 +935,17 @@ function Friend({ user }) {
                                 </UserEmail>
                             </UserDetails>
                         </UserInfo>
-                        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto', alignItems: 'center' }}>
-                            <GiftIconButton
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    openGiftModal(friend);
-                                }}
-                                disabled={isLoading}
-                                title={t('potion_gift')}
-                            >
-                                <FaGift />
-                                {t('potion_gift')}
-                            </GiftIconButton>
-                            <TrashIconButton
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    console.log('휴지통 클릭됨:', friend);
-                                    openDeleteModal(friend);
-                                }}
-                                disabled={isLoading}
-                                title={t('friend_remove_title')}
-                            >
-                                <HiOutlineTrash />
-                            </TrashIconButton>
-                        </div>
+                        <TrashIconButton
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('휴지통 클릭됨:', friend);
+                                openDeleteModal(friend);
+                            }}
+                            disabled={isLoading}
+                            title={t('friend_remove_title')}
+                        >
+                            <HiOutlineTrash />
+                        </TrashIconButton>
                     </UserCard>
                 ))
             )}
@@ -1343,54 +1103,6 @@ function Friend({ user }) {
                 confirmText={t('delete')}
             />
 
-            {/* 포션 선물 모달 */}
-            {showGiftModal && friendToGift && (
-                <PotionGiftModal onClick={closeGiftModal} theme={theme}>
-                    <PotionGiftContent onClick={(e) => e.stopPropagation()} theme={theme}>
-                        <PotionGiftHeader>
-                            <PotionGiftTitle>{t('potion_gift_title')}</PotionGiftTitle>
-                            <PotionGiftClose onClick={closeGiftModal}>×</PotionGiftClose>
-                        </PotionGiftHeader>
-                        
-                        <div style={{ marginBottom: '16px', fontSize: '14px', color: theme.subText || '#666' }}>
-                            {friendToGift.user.displayName || t('friend_default_name')}님에게 {t('potion_gift_select')}
-                        </div>
-
-                        <PotionGrid>
-                            {potions.map((potion) => {
-                                const count = ownedPotions[potion.id] || 0;
-                                const hasPotion = count > 0;
-                                
-                                return (
-                                    <PotionItem
-                                        key={potion.id}
-                                        selected={selectedPotion === potion.id}
-                                        disabled={!hasPotion}
-                                        onClick={() => hasPotion && setSelectedPotion(potion.id)}
-                                        theme={theme}
-                                        whileHover={hasPotion ? { scale: 1.05 } : {}}
-                                        whileTap={hasPotion ? { scale: 0.95 } : {}}
-                                    >
-                                        <PotionImage src={potion.image} alt={potion.name} />
-                                        <PotionName theme={theme}>{potion.name}</PotionName>
-                                        <PotionCount>보유: {count}개</PotionCount>
-                                    </PotionItem>
-                                );
-                            })}
-                        </PotionGrid>
-
-                        <GiftButton
-                            onClick={handleGiftPotion}
-                            disabled={!selectedPotion || isLoading}
-                        >
-                            {selectedPotion 
-                                ? `${potions.find(p => p.id === selectedPotion)?.name || ''} 포션 선물하기`
-                                : t('potion_gift_select')
-                            }
-                        </GiftButton>
-                    </PotionGiftContent>
-                </PotionGiftModal>
-            )}
         </Container>
     );
 }

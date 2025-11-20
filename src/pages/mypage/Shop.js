@@ -9,6 +9,7 @@ import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
+import GiftIcon from '../../components/icons/GiftIcon';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useTranslation } from '../../LanguageContext';
 
@@ -53,7 +54,7 @@ const PointLabel = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 30px;
 `;
@@ -395,6 +396,18 @@ function Shop({ user }) {
             <MenuTitle>{t('potion_shop')}</MenuTitle>
             <MenuDescription>
               {t('potion_shop_desc')}
+            </MenuDescription>
+          </MenuContent>
+        </MenuButton>
+
+        <MenuButton onClick={() => navigate('/my/potion-gift')}>
+          <MenuIcon>
+            <GiftIcon width={24} height={24} color="#e46262" />
+          </MenuIcon>
+          <MenuContent>
+            <MenuTitle>{t('potion_gift') || '포션 선물'}</MenuTitle>
+            <MenuDescription>
+              {t('potion_gift_desc') || '친구에게 포션을 선물해보세요!'}
             </MenuDescription>
           </MenuContent>
         </MenuButton>

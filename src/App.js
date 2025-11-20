@@ -32,6 +32,7 @@ import Support from './pages/mypage/Support';
 import FAQ from './pages/mypage/FAQ';
 import Social from './pages/mypage/Social';
 import Friend from './pages/mypage/Friend';
+import PotionGift from './pages/mypage/PotionGift';
 import Shop from './pages/mypage/Shop';
 import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
@@ -98,6 +99,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/faq" element={user ? <FAQ user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/friend" element={user ? <Friend user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/potion-gift" element={user ? <PotionGift user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/shop" element={user ? <Shop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/shop/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />

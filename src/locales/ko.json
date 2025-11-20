@@ -440,6 +440,7 @@
     "friend_requests_tab": "요청",
     "potion_gift": "포션 선물",
     "potion_gift_title": "포션 선물하기",
+    "potion_gift_desc": "친구에게 포션을 선물해보세요!",
     "potion_gift_select": "선물할 포션을 선택해주세요",
     "potion_gift_success": "{{name}} 포션을 선물했습니다!",
     "potion_gift_failed": "포션 선물에 실패했습니다.",
