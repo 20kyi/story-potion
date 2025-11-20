@@ -71,6 +71,16 @@ function Login() {
   const mainRef = useRef();
   const inputRef = useRef();
 
+  // 라이트 모드 강제 적용
+  useEffect(() => {
+    const originalTheme = document.body.className;
+    document.body.className = 'light';
+    
+    return () => {
+      document.body.className = originalTheme;
+    };
+  }, []);
+
   useEffect(() => {
     let onShow, onHide;
     if (isMobile) {
@@ -578,7 +588,7 @@ function Login() {
             </SocialLoginContainer>
             <SignupLink>
               계정이 없으신가요?
-              <Link to="/signup">회원가입</Link>
+              <Link to="/terms-agreement">회원가입</Link>
             </SignupLink>
           </FormSection>
         </ContentWrapper>

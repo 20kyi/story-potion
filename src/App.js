@@ -22,6 +22,7 @@ import NovelCreate from './pages/novel/NovelCreate';
 import NovelView from './pages/novel/NovelView';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import TermsAgreement from './pages/TermsAgreement';
 import NovelListByGenre from './pages/novel/NovelListByGenre';
 import { ToastProvider } from './components/ui/ToastProvider';
 import Statistics from './pages/mypage/Statistics';
@@ -61,7 +62,7 @@ import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
-    const showNavigation = !['/login', '/signup'].includes(location.pathname);
+    const showNavigation = !['/login', '/signup', '/terms-agreement'].includes(location.pathname);
     const { notification, hideNotification } = useNotification(user);
 
     // 페이지 전환 시 스크롤을 맨 위로 초기화
@@ -76,6 +77,7 @@ const AppLayout = ({ user, isLoading }) => {
             <NotificationToast notification={notification} onClose={hideNotification} />
             <Routes>
                 <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+                <Route path="/terms-agreement" element={!user ? <TermsAgreement /> : <Navigate to="/" />} />
                 <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
                 <Route path="/" element={user ? <Home user={user} /> : <Navigate to="/login" />} />
                 <Route path="/home" element={user ? <Home user={user} /> : <Navigate to="/login" />} />

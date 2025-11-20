@@ -13,7 +13,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.background};
+  background-color: #fff;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
@@ -68,7 +68,7 @@ const Logo = styled.img`
 
 const Title = styled.h1`
   font-size: 28px;
-  color: ${({ theme }) => theme.primary};
+  color: #e46262;
   margin-bottom: 30px;
   font-weight: 700;
 `;
@@ -92,16 +92,16 @@ const PasswordInput = styled.input`
   padding: 14px 20px;
   padding-right: 45px;
   border-radius: 15px;
-  border: 1px solid ${({ theme }) => theme.border};
+  border: 1px solid #f1f1f1;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  background-color: ${({ theme }) => theme.card};
+  color: #222;
+  background-color: #fff;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
   width: 100%;
   &:focus {
-    border-color: ${({ theme }) => theme.primary};
-    background-color: ${({ theme }) => theme.background};
+    border-color: #e46262;
+    background-color: #fff;
   }
 `;
 
@@ -118,15 +118,15 @@ const EyeIcon = styled.div`
 const Input = styled.input`
   padding: 14px 20px;
   border-radius: 15px;
-  border: 1px solid ${({ theme }) => theme.border};
+  border: 1px solid #f1f1f1;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  background-color: ${({ theme }) => theme.card};
+  color: #222;
+  background-color: #fff;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
   &:focus {
-    border-color: ${({ theme }) => theme.primary};
-    background-color: ${({ theme }) => theme.background};
+    border-color: #e46262;
+    background-color: #fff;
   }
 `;
 
@@ -157,7 +157,7 @@ const LoginLink = styled.div`
   font-size: 14px;
   color: #555;
   a {
-    color: ${({ theme }) => theme.primary};
+    color: #e46262;
     text-decoration: none;
     font-weight: 600;
     margin-left: 5px;
@@ -181,6 +181,25 @@ function Signup() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const mainRef = useRef();
   const inputRef = useRef();
+
+  // 라이트 모드 강제 적용
+  useEffect(() => {
+    const originalTheme = document.body.className;
+    document.body.className = 'light';
+    
+    return () => {
+      document.body.className = originalTheme;
+    };
+  }, []);
+
+  // 약관 동의 확인
+  useEffect(() => {
+    const termsAgreement = sessionStorage.getItem('termsAgreement');
+    if (!termsAgreement) {
+      // 약관 동의를 하지 않았다면 약관 동의 페이지로 리다이렉트
+      navigate('/terms-agreement');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     let onShow, onHide;
@@ -228,6 +247,9 @@ function Signup() {
         photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
       });
       
+      // 약관 동의 정보 가져오기
+      const termsAgreement = JSON.parse(sessionStorage.getItem('termsAgreement') || '{}');
+      
       await setDoc(doc(db, "users", user.uid), {
         authProvider: providerId,
         createdAt: new Date(),
@@ -238,13 +260,25 @@ function Signup() {
         fcmToken: "",
         isActive: true,
         lastLoginAt: new Date(),
-        marketingEnabled: false,
+        marketingEnabled: termsAgreement.marketing || false,
         point: 100,
         reminderEnabled: false,
         reminderTime: "",
         updatedAt: new Date(),
-        photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
+        photoURL: process.env.PUBLIC_URL + '/default-profile.svg',
+        // 약관 동의 정보 저장
+        termsAgreement: {
+          service: termsAgreement.service || false,
+          privacy: termsAgreement.privacy || false,
+          collection: termsAgreement.collection || false,
+          marketing: termsAgreement.marketing || false,
+          agreedAt: new Date()
+        }
       });
+      
+      // 약관 동의 정보 세션에서 제거
+      sessionStorage.removeItem('termsAgreement');
+      
       alert('회원가입이 완료되었습니다!');
       navigate('/login');
     } catch (error) {

@@ -4,7 +4,7 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.background};
+  background-color: #fff;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
@@ -86,17 +86,17 @@ export const PasswordInput = styled.input`
   padding: 14px 20px;
   padding-right: 45px;
   border-radius: 15px;
-  border: 1px solid ${({ theme }) => theme.border};
+  border: 1px solid #f1f1f1;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  background-color: ${({ theme }) => theme.card};
+  color: #222;
+  background-color: #fff;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
   width: 100%;
 
   &:focus {
-    border-color: ${({ theme }) => theme.primary};
-    background-color: ${({ theme }) => theme.background};
+    border-color: #e46262;
+    background-color: #fff;
   }
 `;
 
@@ -113,16 +113,16 @@ export const EyeIcon = styled.div`
 export const Input = styled.input`
   padding: 14px 20px;
   border-radius: 15px;
-  border: 1px solid ${({ theme }) => theme.border};
+  border: 1px solid #f1f1f1;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  background-color: ${({ theme }) => theme.card};
+  color: #222;
+  background-color: #fff;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
 
   &:focus {
-    border-color: ${({ theme }) => theme.primary};
-    background-color: ${({ theme }) => theme.background};
+    border-color: #e46262;
+    background-color: #fff;
   }
 `;
 
