@@ -146,19 +146,24 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
     } else if (location.pathname === '/novel/create') {
       navigate('/novel');
     } else if (location.pathname.startsWith('/novel/') && location.pathname !== '/novel') {
-      // URL에 userId 쿼리 파라미터가 있으면 친구 소설 목록으로 이동
-      const urlParams = new URLSearchParams(location.search);
-      const userId = urlParams.get('userId');
-      if (userId) {
-        navigate(`/friend-novels?userId=${userId}`);
+      // state에 returnPath가 있으면 해당 경로로 이동 (구매한 소설 페이지 등)
+      if (location.state?.returnPath) {
+        navigate(location.state.returnPath);
       } else {
-        // 소설 보기 페이지에서 뒤로가기 시 직전 페이지로 이동
-        // 단, 포션 선택 페이지(NovelCreate)에서 온 경우는 건너뛰기
-        if (location.state?.skipCreatePage && location.state?.returnPath) {
-          // 포션 선택 페이지를 건너뛰고 이전 페이지로 직접 이동
-          navigate(location.state.returnPath);
+        // URL에 userId 쿼리 파라미터가 있으면 친구 소설 목록으로 이동
+        const urlParams = new URLSearchParams(location.search);
+        const userId = urlParams.get('userId');
+        if (userId) {
+          navigate(`/friend-novels?userId=${userId}`);
         } else {
-          navigate(-1);
+          // 소설 보기 페이지에서 뒤로가기 시 직전 페이지로 이동
+          // 단, 포션 선택 페이지(NovelCreate)에서 온 경우는 건너뛰기
+          if (location.state?.skipCreatePage && location.state?.returnPath) {
+            // 포션 선택 페이지를 건너뛰고 이전 페이지로 직접 이동
+            navigate(location.state.returnPath);
+          } else {
+            navigate(-1);
+          }
         }
       }
     } else if (location.pathname === '/novel') {

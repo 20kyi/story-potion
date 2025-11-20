@@ -563,21 +563,40 @@ function Home({ user }) {
       try {
         const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
         const viewedSnapshot = await getDocs(viewedNovelsRef);
-        const novelIds = viewedSnapshot.docs.map(doc => doc.id);
-        if (novelIds.length === 0) {
+
+        if (viewedSnapshot.empty) {
           setPurchasedNovels([]);
         } else {
-          // novelId로 novels 컬렉션에서 데이터 fetch (최신순 3개)
-          // Firestore는 in 쿼리로 최대 10개까지 지원하므로, novelIds가 많으면 최근 10개만
-          const limitedNovelIds = novelIds.slice(-10);
+          // viewedNovels 문서에서 novelId와 viewedAt 정보 추출
+          const viewedNovelsData = viewedSnapshot.docs.map(doc => ({
+            novelId: doc.id,
+            viewedAt: doc.data().viewedAt || doc.data().createdAt || null
+          }));
+
+          // novelId로 novels 컬렉션에서 데이터 fetch
           const novelsRef = collection(db, 'novels');
-          // novelId별 getDoc 병렬 fetch
-          const novelDocs = await Promise.all(limitedNovelIds.map(id => getDoc(doc(novelsRef, id))));
+          const novelDocs = await Promise.all(
+            viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
+          );
+
           let purchased = novelDocs
-            .filter(snap => snap.exists())
-            .map(snap => ({ ...snap.data(), id: snap.id }));
-          // 최신순 정렬(createdAt 내림차순)
-          purchased = purchased.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+            .map((snap, idx) => {
+              if (!snap.exists()) return null;
+              return {
+                ...snap.data(),
+                id: snap.id,
+                purchasedAt: viewedNovelsData[idx].viewedAt
+              };
+            })
+            .filter(novel => novel !== null);
+
+          // 구매일 기준 최신순 정렬
+          purchased = purchased.sort((a, b) => {
+            const aDate = a.purchasedAt?.toDate?.() || a.purchasedAt || new Date(0);
+            const bDate = b.purchasedAt?.toDate?.() || b.purchasedAt || new Date(0);
+            return bDate - aDate;
+          });
+
           // 각 소설의 userId로 닉네임/아이디 조회
           const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
           const userDocs = await Promise.all(ownerIds.map(uid => getDoc(doc(db, 'users', uid))));
@@ -592,6 +611,7 @@ function Home({ user }) {
           });
           // novel에 ownerName 필드 추가
           purchased = purchased.map(novel => ({ ...novel, ownerName: ownerMap[novel.userId] }));
+          // 최근 구매일 순으로 3개만 표시
           setPurchasedNovels(purchased.slice(0, 3));
         }
       } catch (e) {
@@ -787,7 +807,9 @@ function Home({ user }) {
               {purchasedNovels.length > 0 ?
                 <>
                   {purchasedNovels.map(novel => (
-                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}>
+                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
+                      state: { returnPath: '/' }
+                    })}>
                       <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                       <MyNovelTitle>{novel.title}</MyNovelTitle>
                       <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>

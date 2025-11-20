@@ -8,6 +8,8 @@ import Navigation from '../../components/Navigation';
 import { useTheme } from '../../ThemeContext';
 import { createNovelUrl } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import GridIcon from '../../components/icons/GridIcon';
+import ListIcon from '../../components/icons/ListIcon';
 
 const Container = styled.div`
   display: flex;
@@ -34,81 +36,154 @@ const Title = styled.h1`
   margin: 24px 0 24px 0;
 `;
 
-const NovelListWrapper = styled.div`
+const ViewToggle = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 0 4px;
+`;
+
+const SortSelect = styled.select`
+  padding: 8px 12px;
+  background: ${({ theme }) => theme.card || '#fff'};
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: ${({ theme }) => theme.text || '#333'};
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  outline: none;
+  
+  &:hover {
+    border-color: #cb6565;
+  }
+  
+  &:focus {
+    border-color: #cb6565;
+  }
+`;
+
+const ViewToggleRight = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const ToggleButton = styled.button`
+  padding: 8px;
+  background: ${props => props.$active ? '#cb6565' : 'transparent'};
+  border: 1px solid ${props => props.$active ? '#cb6565' : '#ddd'};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  
+  &:hover {
+    background: ${props => props.$active ? '#cb6565' : '#f5f5f5'};
+    border-color: ${props => props.$active ? '#cb6565' : '#cb6565'};
+  }
+  
+  svg {
+    stroke: ${props => props.$active ? '#fff' : '#888'};
+    transition: stroke 0.2s;
+  }
+  
+  &:hover svg {
+    stroke: ${props => props.$active ? '#fff' : '#cb6565'};
+  }
+`;
+
+const NovelListWrapper = styled.div`
+  display: ${props => props.$viewMode === 'card' ? 'grid' : 'flex'};
+  grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(2, 1fr)' : 'none'};
+  flex-direction: ${props => props.$viewMode === 'list' ? 'column' : 'row'};
+  gap: 20px;
+  padding-bottom: 20px;
+  
+  @media (min-width: 480px) {
+    grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(3, 1fr)' : 'none'};
+  }
 `;
 
 const NovelItem = styled.div`
   background: ${({ theme }) => theme.card};
   border-radius: 12px;
-  padding: 16px;
+  padding: ${props => props.$viewMode === 'card' ? '20px' : '16px'};
   box-shadow: ${({ theme }) => theme.cardShadow};
   border: 1px solid ${({ theme }) => theme.border};
   cursor: pointer;
   transition: box-shadow 0.15s;
+  display: flex;
+  flex-direction: ${props => props.$viewMode === 'card' ? 'column' : 'row'};
+  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
+  gap: ${props => props.$viewMode === 'card' ? '12px' : '16px'};
+  width: 100%;
   &:hover {
     box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   }
 `;
 
 const NovelCover = styled.img`
-  width: 100px;
-  height: 140px;
+  width: ${props => props.$viewMode === 'card' ? '100%' : '80px'};
+  max-width: ${props => props.$viewMode === 'card' ? '180px' : '80px'};
+  aspect-ratio: 2/3;
+  height: ${props => props.$viewMode === 'card' ? 'auto' : '120px'};
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #E5E5E5;
-  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+`;
+
+const NovelInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
+  gap: 8px;
+  flex: 1;
+  width: 100%;
 `;
 
 const NovelTitle = styled.div`
-  font-size: 18px;
+  font-size: 15px;
+  color: ${({ theme }) => theme.text};
   font-weight: 600;
-  color: ${({ theme }) => theme.primary};
-  margin-bottom: 6px;
-`;
-
-const NovelDate = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.cardSubText};
-  margin-bottom: 8px;
-`;
-
-const NovelOwner = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.cardSubText};
-  margin-bottom: 14px;
-`;
-
-const NovelContent = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.cardText};
+  margin-bottom: 4px;
+  text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 0;
 `;
 
-const ActionButtonView = styled.button`
+const NovelOwner = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0;
+  font-weight: 500;
+  text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
+`;
+
+const PurchaseDate = styled.div`
+  font-size: 11px;
+  color: ${({ theme }) => theme.cardSubText || '#888'};
+  margin-bottom: 0;
+  margin-top: 4px;
+  text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   width: 100%;
-  padding: 12px 0;
-  background: transparent;
-  color: #2176bd;
-  font-weight: 700;
-  box-shadow: none;
-  border: none;
-  border-radius: 0 0 12px 12px;
-  font-family: inherit;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 12px;
-  &:active, &:hover {
-    background: transparent;
-    text-decoration: underline;
-  }
 `;
 
 const EmptyMessage = styled.div`
@@ -124,7 +199,14 @@ function PurchasedNovels({ user }) {
     const { language } = useLanguage();
     const { t } = useTranslation();
     const [novels, setNovels] = useState([]);
+    const [sortedNovels, setSortedNovels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    // localStorage에서 저장된 viewMode를 가져오거나 기본값 'card' 사용
+    const [viewMode, setViewMode] = useState(() => {
+        const savedViewMode = localStorage.getItem('purchasedNovelsViewMode');
+        return savedViewMode === 'list' ? 'list' : 'card';
+    });
+    const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'author'
 
     useEffect(() => {
         if (!user) {
@@ -135,34 +217,39 @@ function PurchasedNovels({ user }) {
         const fetchPurchasedNovels = async () => {
             setIsLoading(true);
             try {
-                // 사용자가 구매한 소설 ID 목록 가져오기
+                // 사용자가 구매한 소설 ID 목록과 구매 날짜 가져오기
                 const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
                 const viewedSnapshot = await getDocs(viewedNovelsRef);
-                const novelIds = viewedSnapshot.docs.map(doc => doc.id);
                 
-                if (novelIds.length === 0) {
+                if (viewedSnapshot.empty) {
                     setNovels([]);
                     setIsLoading(false);
                     return;
                 }
 
+                // viewedNovels 문서에서 novelId와 viewedAt 정보 추출
+                const viewedNovelsData = viewedSnapshot.docs.map(doc => ({
+                    novelId: doc.id,
+                    viewedAt: doc.data().viewedAt || doc.data().createdAt || null
+                }));
+
                 // novelId로 novels 컬렉션에서 데이터 fetch
                 const novelsRef = collection(db, 'novels');
                 const novelDocs = await Promise.all(
-                    novelIds.map(id => getDoc(doc(novelsRef, id)))
+                    viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
                 );
                 
                 let purchased = novelDocs
-                    .filter(snap => snap.exists())
-                    .map(snap => ({ ...snap.data(), id: snap.id }));
+                    .map((snap, idx) => {
+                        if (!snap.exists()) return null;
+                        return {
+                            ...snap.data(),
+                            id: snap.id,
+                            purchasedAt: viewedNovelsData[idx].viewedAt
+                        };
+                    })
+                    .filter(novel => novel !== null);
                 
-                // 최신순 정렬(createdAt 내림차순)
-                purchased = purchased.sort((a, b) => {
-                    const aDate = a.createdAt?.toDate?.() || new Date(0);
-                    const bDate = b.createdAt?.toDate?.() || new Date(0);
-                    return bDate - aDate;
-                });
-
                 // 각 소설의 userId로 닉네임/아이디 조회
                 const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
                 const userDocs = await Promise.all(
@@ -197,6 +284,36 @@ function PurchasedNovels({ user }) {
         fetchPurchasedNovels();
     }, [user]);
 
+    // 정렬 로직
+    useEffect(() => {
+        if (novels.length === 0) {
+            setSortedNovels([]);
+            return;
+        }
+
+        const sorted = [...novels].sort((a, b) => {
+            if (sortBy === 'newest') {
+                // 구매일 기준 최신순
+                const aDate = a.purchasedAt?.toDate?.() || a.purchasedAt || new Date(0);
+                const bDate = b.purchasedAt?.toDate?.() || b.purchasedAt || new Date(0);
+                return bDate - aDate;
+            } else if (sortBy === 'oldest') {
+                // 구매일 기준 오래된순
+                const aDate = a.purchasedAt?.toDate?.() || a.purchasedAt || new Date(0);
+                const bDate = b.purchasedAt?.toDate?.() || b.purchasedAt || new Date(0);
+                return aDate - bDate;
+            } else if (sortBy === 'author') {
+                // 작가순 (가나다순)
+                const aName = a.ownerName || '';
+                const bName = b.ownerName || '';
+                return aName.localeCompare(bName, 'ko');
+            }
+            return 0;
+        });
+
+        setSortedNovels(sorted);
+    }, [novels, sortBy]);
+
     return (
         <Container theme={theme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('home_purchased_novel')} />
@@ -205,37 +322,77 @@ function PurchasedNovels({ user }) {
             ) : novels.length === 0 ? (
                 <EmptyMessage>{t('home_no_purchased_novel')}</EmptyMessage>
             ) : (
-                <NovelListWrapper>
-                    {novels.map((novel) => (
-                        <NovelItem
-                            key={novel.id}
-                            style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', flexDirection: 'column', padding: 0 }}
+                <>
+                    <ViewToggle>
+                        <SortSelect 
+                            value={sortBy} 
+                            onChange={(e) => setSortBy(e.target.value)}
+                            theme={theme}
                         >
-                            <div style={{ display: 'flex', width: '100%', padding: 16 }}>
-                                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
-                                    <NovelTitle>{novel.title}</NovelTitle>
-                                    <NovelDate>
-                                        {language === 'en'
-                                            ? (() => {
-                                                const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
-                                                const monthName = d.toLocaleDateString('en-US', { month: 'long' });
-                                                return `${monthName} ${t('week_num', { num: novel.weekNum })}`;
-                                            })()
-                                            : `${novel.month}월 ${novel.weekNum}주차 소설`}
-                                    </NovelDate>
-                                    <NovelOwner>by {novel.ownerName}</NovelOwner>
-                                    <NovelContent>{novel.content}</NovelContent>
-                                </div>
-                            </div>
-                            <ActionButtonView
-                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}
+                            <option value="newest">구매일 최신순</option>
+                            <option value="oldest">구매일 오래된순</option>
+                            <option value="author">작가순</option>
+                        </SortSelect>
+                        <ViewToggleRight>
+                            <ToggleButton 
+                                $active={viewMode === 'card'} 
+                                onClick={() => {
+                                    setViewMode('card');
+                                    localStorage.setItem('purchasedNovelsViewMode', 'card');
+                                }}
+                                title="그리드형"
                             >
-                                {t('friend_novel_view')}
-                            </ActionButtonView>
-                        </NovelItem>
-                    ))}
-                </NovelListWrapper>
+                                <GridIcon width={20} height={20} />
+                            </ToggleButton>
+                            <ToggleButton 
+                                $active={viewMode === 'list'} 
+                                onClick={() => {
+                                    setViewMode('list');
+                                    localStorage.setItem('purchasedNovelsViewMode', 'list');
+                                }}
+                                title="목록형"
+                            >
+                                <ListIcon width={20} height={20} />
+                            </ToggleButton>
+                        </ViewToggleRight>
+                    </ViewToggle>
+                    <NovelListWrapper $viewMode={viewMode}>
+                        {sortedNovels.map((novel) => {
+                            const formatPurchaseDate = (purchasedAt) => {
+                                if (!purchasedAt) return '';
+                                const date = purchasedAt.toDate ? purchasedAt.toDate() : new Date(purchasedAt);
+                                if (isNaN(date.getTime())) return '';
+                                const year = date.getFullYear();
+                                const month = date.getMonth() + 1;
+                                const day = date.getDate();
+                                return `${year}. ${month}. ${day}`;
+                            };
+
+                            return (
+                                <NovelItem
+                                    key={novel.id}
+                                    $viewMode={viewMode}
+                                    onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, { 
+                                        state: { returnPath: '/purchased-novels' } 
+                                    })}
+                                >
+                                    <NovelCover 
+                                        src={novel.imageUrl || '/novel_banner/default.png'} 
+                                        alt={novel.title || '소설 표지'}
+                                        $viewMode={viewMode}
+                                    />
+                                    <NovelInfo $viewMode={viewMode}>
+                                        <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
+                                        <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
+                                        <PurchaseDate $viewMode={viewMode}>
+                                            구매일: {formatPurchaseDate(novel.purchasedAt)}
+                                        </PurchaseDate>
+                                    </NovelInfo>
+                                </NovelItem>
+                            );
+                        })}
+                    </NovelListWrapper>
+                </>
             )}
             <Navigation />
         </Container>
