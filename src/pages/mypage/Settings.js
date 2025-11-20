@@ -4,7 +4,6 @@ import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { useTheme } from '../../ThemeContext';
-import notificationTest from '../../utils/notificationTest';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './Settings.css';
@@ -31,11 +30,6 @@ function Settings() {
         theme: false,
         language: false,
     });
-    const [notificationStatus, setNotificationStatus] = useState({
-        supported: false,
-        granted: false,
-        message: '확인 중...'
-    });
     const [premiumStatus, setPremiumStatus] = useState({
         isMonthlyPremium: false,
         isYearlyPremium: false,
@@ -43,27 +37,9 @@ function Settings() {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [modal, setModal] = useState(false);
+    const [logoutModal, setLogoutModal] = useState(false);
 
 
-
-    // 알림 상태 확인
-    useEffect(() => {
-        const checkNotificationStatus = async () => {
-            try {
-                const status = await notificationTest.checkPermission();
-                setNotificationStatus(status);
-            } catch (error) {
-                console.error('알림 상태 확인 실패:', error);
-                setNotificationStatus({
-                    supported: false,
-                    granted: false,
-                    message: '상태 확인 실패'
-                });
-            }
-        };
-
-        checkNotificationStatus();
-    }, []);
 
     // 프리미엄 상태 조회
     useEffect(() => {
@@ -103,65 +79,6 @@ function Settings() {
         setOpen(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    // 알림 상태에 따른 스타일 반환
-    const getStatusStyle = () => {
-        if (!notificationStatus.supported) {
-            return { color: '#999', fontSize: '12px' };
-        }
-
-        if (notificationStatus.granted) {
-            return { color: '#4CAF50', fontSize: '12px' };
-        } else {
-            return { color: '#FF9800', fontSize: '12px' };
-        }
-    };
-
-    // 알림 상태 텍스트 반환
-    const getStatusText = () => {
-        if (!notificationStatus.supported) {
-            return t('notification_status_unsupported');
-        }
-
-        if (notificationStatus.granted) {
-            return t('notification_status_granted');
-        } else {
-            return t('notification_status_required');
-        }
-    };
-
-    // 알림 테스트 함수
-    const handleNotificationTest = async () => {
-        try {
-            // 먼저 권한 확인 없이 알림 전송 시도
-            await notificationTest.sendTestNotification();
-            // 성공 시 별도 메시지 없음
-        } catch (error) {
-            if (error.message === 'PERMISSION_REQUIRED') {
-                // 권한이 필요한 경우 안내 메시지 표시
-                const guideMessage = notificationTest.getPermissionGuideMessage();
-                const userConfirmed = window.confirm(guideMessage);
-
-                if (userConfirmed) {
-                    try {
-                        // 사용자가 확인하면 권한 요청 후 알림 전송
-                        await notificationTest.sendTestNotificationWithPermission();
-                        // 성공 시 별도 메시지 없음
-
-                        // 권한 상태 다시 확인
-                        const newStatus = await notificationTest.checkPermission();
-                        setNotificationStatus(newStatus);
-                    } catch (permissionError) {
-                        console.error('권한 요청 후 알림 전송 실패:', permissionError);
-                        alert(`알림 전송 실패: ${permissionError.message}`);
-                    }
-                }
-            } else {
-                console.error('알림 테스트 실패:', error);
-                alert(`알림 테스트 실패: ${error.message}`);
-            }
-        }
-    };
-
     // 프리미엄 해지 함수
     const handleCancelPremium = async () => {
         if (!auth.currentUser?.uid) return;
@@ -197,6 +114,23 @@ function Settings() {
         }
     };
 
+    // 로그아웃 모달 열기
+    const handleLogoutClick = () => {
+        setLogoutModal(true);
+    };
+
+    // 실제 로그아웃 실행
+    const doLogout = async () => {
+        try {
+            await auth.signOut();
+            alert(t('logout_success'));
+        } catch (error) {
+            alert(t('logout_failed'));
+        } finally {
+            setLogoutModal(false);
+        }
+    };
+
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('personal_settings')} />
@@ -206,33 +140,6 @@ function Settings() {
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/notification-settings')}>
                             <span>{t('notification_settings')}</span>
-                        </div>
-                    </li>
-
-                    {/* 알림 테스트 */}
-                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span>{t('notification_test')}</span>
-                                <span style={getStatusStyle()}>
-                                    {getStatusText()}
-                                </span>
-                            </div>
-                            <button
-                                onClick={handleNotificationTest}
-                                disabled={!notificationStatus.supported}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: notificationStatus.supported ? '#e46262' : '#ccc',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
-                                    cursor: notificationStatus.supported ? 'pointer' : 'not-allowed'
-                                }}
-                            >
-                                {t('notification_test_button')}
-                            </button>
                         </div>
                     </li>
 
@@ -365,8 +272,38 @@ function Settings() {
                             </>
                         )}
                     </li>
+
+                    {/* 로그아웃 */}
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>{t('logout')}</span>
+                            <button
+                                onClick={handleLogoutClick}
+                                style={{
+                                    padding: 0,
+                                    backgroundColor: 'transparent',
+                                    color: '#e46262',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '16px',
+                                    fontWeight: 500,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {t('logout')}
+                            </button>
+                        </div>
+                    </li>
                 </ul>
             </div>
+            <ConfirmModal
+                open={logoutModal}
+                title={t('logout')}
+                description={t('confirm_logout')}
+                onCancel={() => setLogoutModal(false)}
+                onConfirm={doLogout}
+                confirmText={t('logout')}
+            />
             <Navigation />
         </>
     );

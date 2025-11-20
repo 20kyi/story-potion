@@ -72,9 +72,8 @@ const isDarkMode = () => typeof document !== 'undefined' && document.body.classL
 
 const DiaryDate = styled.div`
   font-size: 18px;
-//   margin-bottom: 20px;
   font-weight: 500;
-//   margin-top: 40px;
+  margin-top: 0;
   cursor: default;
   display: flex;
   align-items: center;
@@ -544,19 +543,21 @@ const UploadLabel = styled.label`
   justify-content: center;
   width: 100px;
   height: 100px;
+  flex-shrink: 0;
   border-radius: 8px;
-  background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-  color: #555;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#f5f5f5'};
+  color: ${({ theme }) => theme.mode === 'dark' ? '#ccc' : '#666'};
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: background 0.2s, box-shadow 0.2s;
+  border: 2px dashed ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#ddd'};
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.1)'};
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
   font-family: inherit;
   &:hover {
-    background: linear-gradient(135deg, #cccccc 0%, #e0e0e0 100%);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    background: ${({ theme }) => theme.mode === 'dark' ? '#3a3a3a' : '#e8e8e8'};
+    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.15)'};
+    border-color: ${({ theme }) => theme.mode === 'dark' ? '#5a5a5a' : '#bbb'};
   }
   & > .icon {
     font-size: 28px;
@@ -569,7 +570,7 @@ const TitleInput = styled.input`
   font-size: 25px;
   font-weight: 500;
   margin-bottom: 16px;
-  margin-top: 30px;
+  margin-top: 16px;
   color: ${({ theme }) => theme.diaryText};
   border: none;
   background: transparent;
@@ -1377,11 +1378,13 @@ function WriteDiary({ user }) {
         mainContent: {
             flex: 1,
             position: 'relative',
+            paddingTop: '0',
+            paddingLeft: '0',
+            paddingRight: '0',
             paddingBottom: window.innerWidth <= 768 ? '250px' : '220px', // 키보드 대응을 위해 더 큰 패딩
             minHeight: 0,
             width: '100%',
             maxWidth: '100%',
-            paddingTop: '8px',
             overflowX: 'hidden', // 가로 스크롤 방지
         },
         // header: {
@@ -1957,88 +1960,80 @@ function WriteDiary({ user }) {
                             </ImagePreviewBox>
                         ))}
                         {/* 사진 추가 버튼 */}
-                        {((isPremium && imagePreview.length < 4) || (!isPremium && imagePreview.length < 1)) && (
-                            <>
-                                <UploadLabel htmlFor="image-upload" style={{
-                                    opacity: (isPremium && imagePreview.length >= 4) || (!isPremium && imagePreview.length >= 1) ? 0.5 : 1,
-                                    pointerEvents: (isPremium && imagePreview.length >= 4) || (!isPremium && imagePreview.length >= 1) ? 'none' : 'auto',
-                                    position: 'relative',
-                                }}>
-                                    <span className="icon">📸</span>
-                                    {t('image_add')}
-                                </UploadLabel>
-                                <span style={{
-                                    marginLeft: 6,
-                                    fontSize: 13,
-                                    color: '#cb6565',
-                                    fontWeight: 400,
-                                    minWidth: 38,
-                                    textAlign: 'left',
-                                    alignSelf: 'flex-end',
-                                    letterSpacing: '-0.5px',
-                                }}>
-                                    ({imagePreview.length}/{isPremium ? 4 : 1})
-                                </span>
-                            </>
-                        )}
-                    </ImagePreviewContainer>
-                    {/* 프리미엄 업그레이드 안내 - 사진 아래에 배치 */}
-                    {!isPremium && imagePreview.length >= 1 && (
-                        <div style={{
-                            marginTop: 12,
-                            padding: '12px 16px',
-                            background: isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)',
-                            borderRadius: 12,
-                            border: `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(255, 209, 111, 0.3)'}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: 12,
-                        }}>
-                            <div style={{
-                                color: isDark ? '#ff9f9f' : '#cb6565',
-                                fontSize: 13,
-                                lineHeight: 1.5,
-                                fontWeight: 500,
-                                textAlign: 'center',
-                            }}>
-                                프리미엄으로 업그레이드하면<br />
-                                사진을 4장까지 업로드할 수 있습니다
-                            </div>
+                        {(isPremium && imagePreview.length < 4) || (!isPremium && imagePreview.length < 1) ? (
+                            <UploadLabel htmlFor="image-upload">
+                                <span className="icon">📸</span>
+                                {t('image_add')}
+                            </UploadLabel>
+                        ) : !isPremium && imagePreview.length === 1 ? (
                             <button
+                                type="button"
                                 onClick={() => navigate('/my/shop')}
                                 style={{
-                                    color: '#fff',
-                                    background: 'linear-gradient(135deg,rgb(228, 163, 13) 0%,rgb(255, 226, 148) 100%)',
-                                    border: 'none',
-                                    borderRadius: 8,
-                                    padding: '8px 20px',
-                                    fontSize: 13,
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    boxShadow: '0 2px 8px rgba(203, 101, 101, 0.3)',
-                                    transition: 'all 0.2s ease',
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
-                                    gap: 6,
-                                    whiteSpace: 'nowrap',
+                                    justifyContent: 'center',
+                                    width: '100px',
+                                    height: '100px',
+                                    flexShrink: 0,
+                                    borderRadius: '8px',
+                                    background: isDark ? '#2a2a2a' : '#f5f5f5',
+                                    color: isDark ? '#ccc' : '#666',
+                                    fontSize: '15px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    border: `2px dashed ${isDark ? '#4a4a4a' : '#ddd'}`,
+                                    boxShadow: isDark
+                                        ? '0 2px 6px rgba(0,0,0,0.3)'
+                                        : '0 2px 6px rgba(0,0,0,0.1)',
+                                    fontFamily: 'inherit',
+                                    transition: 'background 0.2s, box-shadow 0.2s, border-color 0.2s',
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.target.style.transform = 'translateY(-1px)';
-                                    e.target.style.boxShadow = '0 4px 12px rgba(203, 101, 101, 0.4)';
+                                    e.target.style.background = isDark ? '#3a3a3a' : '#e8e8e8';
+                                    e.target.style.boxShadow = isDark
+                                        ? '0 4px 12px rgba(0,0,0,0.4)'
+                                        : '0 4px 12px rgba(0,0,0,0.15)';
+                                    e.target.style.borderColor = isDark ? '#5a5a5a' : '#bbb';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.target.style.transform = 'translateY(0)';
-                                    e.target.style.boxShadow = '0 2px 8px rgba(203, 101, 101, 0.3)';
+                                    e.target.style.background = isDark ? '#2a2a2a' : '#f5f5f5';
+                                    e.target.style.boxShadow = isDark
+                                        ? '0 2px 6px rgba(0,0,0,0.3)'
+                                        : '0 2px 6px rgba(0,0,0,0.1)';
+                                    e.target.style.borderColor = isDark ? '#4a4a4a' : '#ddd';
                                 }}
                             >
-                                <span>👑</span>
-                                <span>프리미엄 업그레이드</span>
-                                <span>👑</span>
+                                <span className="icon" style={{ fontSize: '20px', marginBottom: '4px' }}>👑</span>
+                                <span style={{
+                                    fontSize: '11px',
+                                    textAlign: 'center',
+                                    lineHeight: '1.3',
+                                    padding: '0 4px',
+                                }}>
+                                    {t('diary_image_premium_feature')}
+                                </span>
                             </button>
-                        </div>
-                    )}
+                        ) : null}
+                    </ImagePreviewContainer>
+                    {/* 카운터 - 항상 마지막에 표시 */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: 12,
+                        width: '100%',
+                    }}>
+                        <span style={{
+                            fontSize: 14,
+                            color: '#cb6565',
+                            fontWeight: 500,
+                            letterSpacing: '-0.3px',
+                        }}>
+                            ({imagePreview.length}/{isPremium ? 4 : 1})
+                        </span>
+                    </div>
                     {/* 프리미엄 사용자 최대 사진 제한 안내 */}
                     {isPremium && imagePreview.length >= 4 && (
                         <div style={{
@@ -2167,14 +2162,14 @@ function WriteDiary({ user }) {
                     ))}
                 </ContentContainer>
 
-                {/* AI 보완하기 버튼 (프리미엄 회원만) */}
-                {isPremium && diary.content.trim().length >= 10 && (
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        marginBottom: '20px',
-                        marginTop: '-10px'
-                    }}>
+                {/* AI 일기 생성 버튼 */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    marginBottom: '20px',
+                    marginTop: '12px'
+                }}>
+                    {isPremium ? (
                         <button
                             type="button"
                             onClick={handleEnhanceDiary}
@@ -2207,17 +2202,58 @@ function WriteDiary({ user }) {
                             {isEnhancing ? (
                                 <>
                                     <span>⏳</span>
-                                    <span>AI 보완 중...</span>
+                                    <span>{t('diary_ai_generating')}</span>
                                 </>
                             ) : (
                                 <>
                                     <span>✨</span>
-                                    <span>AI로 보완하기</span>
+                                    <span>{t('diary_ai_generate')}</span>
                                 </>
                             )}
                         </button>
-                    </div>
-                )}
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => navigate('/my/shop')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 20px',
+                                backgroundColor: isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)',
+                                border: `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(255, 209, 111, 0.3)'}`,
+                                borderRadius: '8px',
+                                color: isDark ? '#ff9f9f' : '#cb6565',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = isDark ? 'rgba(203, 101, 101, 0.2)' : 'rgba(255, 209, 111, 0.2)';
+                                e.target.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)';
+                                e.target.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            <span>✨</span>
+                            <span>{t('diary_ai_generate')}</span>
+                            <span style={{
+                                fontSize: '10px',
+                                color: isDark ? '#ff9f9f' : '#cb6565',
+                                fontWeight: 500,
+                                padding: '2px 6px',
+                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                                borderRadius: '4px',
+                            }}>
+                                {t('premium_only')}
+                            </span>
+                        </button>
+                    )}
+                </div>
 
                 {/* 스티커 패널 */}
                 {isStickerPanelOpen && (

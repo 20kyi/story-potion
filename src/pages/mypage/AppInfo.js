@@ -16,7 +16,9 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { useTranslation } from '../../LanguageContext';
+import packageJson from '../../../package.json';
 
 const Container = styled.div`
   display: flex;
@@ -256,8 +258,26 @@ function AppInfo({ user }) {
   };
 
   useEffect(() => {
-    // 앱 버전 정보 가져오기 (실제로는 package.json에서 가져올 수 있음)
-    setAppVersion('1.0.0');
+    // 앱 버전 정보 가져오기
+    const getAppVersion = async () => {
+      const isApp = Capacitor.getPlatform() !== 'web';
+
+      if (isApp) {
+        try {
+          // Capacitor 앱 환경에서는 실제 앱 버전 가져오기
+          const appInfo = await CapacitorApp.getInfo();
+          setAppVersion(appInfo.version || '1.0.0');
+        } catch (error) {
+          console.error('앱 버전 정보 가져오기 실패:', error);
+          setAppVersion(packageJson.version || '1.0.0');
+        }
+      } else {
+        // 웹 환경에서는 package.json 버전 사용
+        setAppVersion(packageJson.version || '1.0.0');
+      }
+    };
+
+    getAppVersion();
 
     // 저장공간 사용량과 캐시 크기 계산
     calculateStorage();
@@ -547,14 +567,6 @@ function AppInfo({ user }) {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      alert(t('logout_success'));
-    } catch (error) {
-      alert(t('logout_failed'));
-    }
-  };
 
   const handleExportData = async () => {
     if (!user?.uid) {
@@ -687,13 +699,6 @@ function AppInfo({ user }) {
           <CardTitle theme={theme}>
             🔐 {t('account_management')}
           </CardTitle>
-
-          <InfoItem theme={theme}>
-            <InfoLabel theme={theme}>{t('logout')}</InfoLabel>
-            <ActionButton onClick={handleLogout}>
-              {t('logout')}
-            </ActionButton>
-          </InfoItem>
 
           <InfoItem theme={theme}>
             <InfoLabel theme={theme}>{t('account_delete')}</InfoLabel>
