@@ -9,7 +9,7 @@ const NavBar = styled.nav`
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
   box-shadow: ${({ theme }) => theme.cardShadow};
-  padding: 12px 0 calc(8px + env(safe-area-inset-bottom)) 0;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
   display: flex;
   justify-content: space-around;
   z-index: 100;
