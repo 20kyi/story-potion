@@ -23,7 +23,7 @@ const FONT_OPTIONS = [
 
 function Settings() {
     const navigate = useNavigate();
-    const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily } = useTheme();
+    const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily, actualTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const [open, setOpen] = useState({
         notification: false,
@@ -190,10 +190,19 @@ function Settings() {
                             className="settings-select"
                             value={language}
                             onChange={e => setLanguage(e.target.value)}
-                            style={{ marginLeft: 'auto', width: 160, fontSize: 18, padding: '6px 12px', borderRadius: 8 }}
+                            style={{
+                                marginLeft: 'auto',
+                                width: 160,
+                                fontSize: 18,
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
+                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                            }}
                         >
-                            <option value="ko">한국어</option>
-                            <option value="en">English</option>
+                            <option value="ko" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>한국어</option>
+                            <option value="en" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>English</option>
                         </select>
                     </li>
                     {/* 폰트 선택 */}
@@ -203,16 +212,34 @@ function Settings() {
                             className="settings-select"
                             value={fontFamily}
                             onChange={e => setFontFamily(e.target.value)}
-                            style={{ marginLeft: 'auto', width: 200, fontSize: 18, padding: '6px 12px', borderRadius: 8 }}
+                            style={{
+                                marginLeft: 'auto',
+                                width: 200,
+                                fontSize: 18,
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
+                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                            }}
                         >
                             {FONT_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <option
+                                    key={opt.value}
+                                    value={opt.value}
+                                    style={{
+                                        backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                        color: actualTheme === 'dark' ? '#f1f1f1' : '#222'
+                                    }}
+                                >
+                                    {opt.label}
+                                </option>
                             ))}
                         </select>
                     </li>
 
                     {/* 구독 관리 */}
-                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
+                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18, cursor: 'pointer' }} onClick={() => navigate('/my/shop')}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <span>{t('subscription_manage')}</span>
@@ -247,7 +274,7 @@ function Settings() {
                         {/* 구독 해지 버튼 */}
                         {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
                             <>
-                                <div className="withdraw-link" style={{ marginTop: '24px' }}>
+                                <div className="withdraw-link" style={{ marginTop: '24px' }} onClick={(e) => e.stopPropagation()}>
                                     <span
                                         onClick={handleCancelPremium}
                                         style={{

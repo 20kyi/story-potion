@@ -3,10 +3,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-    // 로컬스토리지에서 테마 불러오기, 기본값은 'system'
+    // 로컬스토리지에서 테마 불러오기, 기본값은 'light'
     const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem('theme');
-        return saved ? saved : 'system';
+        return saved ? saved : 'light';
     });
 
     // 실제 적용될 테마 (시스템 설정일 때는 시스템 테마를 감지)

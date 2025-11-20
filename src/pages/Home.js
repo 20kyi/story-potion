@@ -137,7 +137,7 @@ const DiaryPreviewImagePlaceholderIcon = styled.div`
 
 const DiaryPreviewImagePlaceholderText = styled.div`
   font-size: 13px;
-  color: #2C3E50;
+  color: ${({ theme }) => theme.cardSubText || theme.text};
   opacity: 0.7;
   text-align: center;
   font-weight: 500;
@@ -153,7 +153,7 @@ const DiaryPreviewTextContainer = styled.div`
 const DiaryPreviewDate = styled.div`
   font-size: 12px;
   opacity: 0.8;
-  color: #2C3E50;
+  color: ${({ theme }) => theme.cardSubText || theme.text};
   margin-bottom: 8px;
   // @media (min-width: 768px) {
   //   font-size: 14px;
@@ -163,7 +163,7 @@ const DiaryPreviewDate = styled.div`
 const DiaryPreviewTitle = styled.div`
   font-size: 16px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: ${({ theme }) => theme.cardText || theme.text};
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -176,7 +176,7 @@ const DiaryPreviewTitle = styled.div`
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
   font-size: 14px;
-  color: #2C3E50;
+  color: ${({ theme }) => theme.cardSubText || theme.diaryContent || theme.text};
   opacity: 0.9;
   overflow: hidden;
   text-overflow: ellipsis;

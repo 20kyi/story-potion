@@ -321,7 +321,7 @@ ${diaryContents}`;
                 contentResponse = await retryWithBackoff(async () => {
                     console.log("OpenAI API 호출 시작 (소설 내용)...");
                     const response = await openai.chat.completions.create({
-                        model: "gpt-3.5-turbo",
+                        model: "gpt-4o",
                         messages: [{ role: "user", content: contentPrompt }],
                         temperature: 0.7,
                         max_tokens: 2500,
@@ -363,7 +363,7 @@ ${diaryContents}`;
             try {
                 titleResponse = await retryWithBackoff(async () => {
                     return await openai.chat.completions.create({
-                        model: "gpt-3.5-turbo",
+                        model: "gpt-4o",
                         messages: [{ role: "user", content: titlePrompt }],
                         temperature: 0.8,
                         max_tokens: 60,
@@ -618,35 +618,44 @@ exports.enhanceDiary = functions.runWith({
 
             // ai일기 프롬프트 생성
             const enhancePrompt = isEnglish
-                ? `Please enhance the following diary entry by:
-- Adding more descriptive details and emotions
-- Expanding on thoughts and feelings
-- Making the writing more vivid and engaging
-- Keeping the original meaning and tone
-- Writing in a natural, flowing style
+                ? `You are a sentimental and literary writer. Your mission is to take the simple, core content provided by the user and expand and refine it into a rich, detailed, and captivating diary entry while preserving the original emotion and experience.
 
-Please return only the enhanced diary content without any explanations or additional text.
+## Style and Goal
+1. **Tone:** Write in a warm, introspective, and sentimental essay style.
+2. **Length:** The entry must be structured into a minimum of 3 paragraphs, aiming for 200-400 words.
+3. **Core Focus:** Absolutely maintain the core subject and emotion of the original entry, augmenting it with detailed descriptions and personal reflection.
+
+## Mandatory Content Expansion
+* **Setting Description:** Add sensory details (sight, sound, smell, etc.) to paint a vivid picture of the atmosphere or location where the event took place.
+* **Emotional Depth:** Expand upon the user's emotion, exploring the 'why' and the 'internal thoughts' surrounding the event.
+* **Reflective Conclusion:** Conclude the entry with a deep, reflective statement about the meaning or realization gained from the day.
+
+## Output Format
+Output ONLY the refined diary text. Do not include any titles, introductory phrases, or explanations.
 
 [Original Diary]
 ${diaryContent}`
-                : `아래 일기 내용을 더 풍성하고 생생하게 보강해주세요:
-- 사용자가 준 키워드들은 반드시 모두 포함한다.
-- 단순 나열이 아니라, 하나의 하루 일기로 자연스럽게 연결한다.
-- 현실적인 일기 톤으로 작성하고, 과한 비유나 과장된 소설톤은 금지.
-- 분량은 250~400자 정도의 자연스러운 일기 형식으로 작성한다.
-- 키워드의 의미를 억지로 왜곡하지 않는다.
-- 문장의 끝은 항상 ‘~했다’, ‘~이었다’, ‘~같았다’, ‘~하려고 했다’처럼 서술형 일기체로 마무리한다.
-- 전체 톤은 일기장에 기록하는 담백하고 차분한 문체로 유지한다.
-- 과장된 소설톤은 금지하고, 현실적인 하루 기록처럼 작성한다.
-- 출력에는 일기 내용만 작성하고, 추가 설명은 포함하지 않는다.
-- 절대로 ‘~했어’ 같은 반말 구어체나 존댓말을 사용하지 않는다.
+                : `당신은 감성적이고 문학적인 작가입니다. 당신의 임무는 사용자가 제공한 간단하고 핵심적인 일기 내용을 바탕으로, 그 감정과 경험을 최대한 살려 더 풍부하고 구체적이며 매력적인 문체의 일기로 확장하고 수정하는 것입니다.
+
+## 스타일 및 목표
+1. 문체: 따뜻하고, 회고적이며, 감성적인 에세이 문체로 작성합니다.
+2. 길이: 최소 3문단, 200~400자 분량으로 작성합니다.
+3. 핵심: 원본 일기의 핵심 내용과 감정을 절대 놓치지 않고, 이를 구체적인 묘사와 개인적인 성찰로 보강해야 합니다.
+
+## 확장할 내용 (필수 포함)
+* 주변 묘사: 사건이 일어난 장소의 분위기나 오감을 자극하는 디테일을 추가합니다.
+* 감정 심화: 일기에 언급된 감정을 느끼게 된 이유와 그로 인한 내면의 움직임을 설명합니다.
+* 성찰적 마무리: 일의 의미나 깨달음을 담은 깊이 있는 문장으로 마무리합니다.
+
+## 출력 형식
+오직 수정된 일기 텍스트만 출력합니다. 다른 설명이나 제목은 포함하지 않습니다.
 
 [원본 일기]
 ${diaryContent}`;
 
             console.log("OpenAI API 호출 시작 (ai 일기)...");
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-4o",
                 messages: [{ role: "user", content: enhancePrompt }],
                 temperature: 0.7,
                 max_tokens: 2000,
