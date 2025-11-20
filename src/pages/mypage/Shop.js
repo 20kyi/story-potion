@@ -374,6 +374,162 @@ function Shop({ user }) {
         <PointLabel theme={theme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
+      {/* 프리미엄 결제 비교 카드 UI - 상단으로 이동 */}
+      {!premiumStatus.isYearlyPremium && (
+        <>
+          <div style={{
+            display: 'flex',
+            gap: '6px',
+            margin: '0 0 24px 0',
+            flexWrap: 'nowrap',
+            justifyContent: 'center',
+            alignItems: 'stretch'
+          }}>
+            {/* 월간 결제 카드 - 프리미엄이 아닌 사용자에게만 표시 */}
+            {!premiumStatus.isMonthlyPremium && (
+              <PremiumCard>
+                <div
+                  style={{
+                    color: '#e46262',
+                    fontWeight: 700,
+                    fontSize: 12,
+                    marginBottom: 6,
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('premium_monthly')}
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 800,
+                      marginBottom: 2,
+                      textAlign: 'center',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {t('premium_monthly_price')}
+                  </div>
+                  <div
+                    style={{
+                      color: '#888',
+                      fontSize: 12,
+                      marginBottom: 10,
+                      textAlign: 'center',
+                      marginTop: 10,
+                      fontFamily: 'inherit',
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    {t('premium_monthly_desc')}
+                  </div>
+                </div>
+                <PremiumButton
+                  style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
+                  onClick={handleMonthlyPremium}
+                  disabled={isLoading}
+                >
+                  {isLoading ? t('processing') : t('premium_monthly_subscribe_button')}
+                </PremiumButton>
+              </PremiumCard>
+            )}
+
+            {/* 연간 결제 카드 - 월간 프리미엄 회원도 연간으로 전환 가능 */}
+            <YearlyPremiumCard>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -14,
+                  left: 12,
+                  background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  borderRadius: 7,
+                  padding: '3px 12px',
+                  boxShadow: '0 2px 8px rgba(255,195,0,0.13)',
+                  letterSpacing: 1,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t('premium_recommended')}
+              </div>
+              <div
+                style={{
+                  color: '#FF9800',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  marginBottom: 6,
+                  textAlign: 'center',
+                  zIndex: 1,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t('premium_yearly')}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 800,
+                    marginBottom: 12,
+                    textAlign: 'center',
+                    color: '#FF6F00',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('premium_yearly_price')}
+                </div>
+                <div
+                  style={{
+                    color: '#FF9800',
+                    fontWeight: 700,
+                    fontSize: 12,
+                    marginBottom: 1,
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('premium_yearly_discount')}
+                </div>
+                <div
+                  style={{
+                    color: '#FFB300',
+                    fontSize: 11,
+                    marginBottom: 1,
+                    textDecoration: 'line-through',
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('premium_yearly_original_price')}
+                </div>
+                <div
+                  style={{
+                    color: '#FF9800',
+                    fontSize: 13,
+                    marginBottom: 10,
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {t('premium_yearly_monthly_equiv')}
+                </div>
+              </div>
+              <PremiumButton
+                style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
+                onClick={handleYearlyPremium}
+                disabled={isLoading}
+              >
+                {isLoading ? t('processing') : t('premium_yearly_subscribe_button')}
+              </PremiumButton>
+            </YearlyPremiumCard>
+          </div>
+        </>
+      )}
+
       {/* 메뉴 그리드 */}
       <MenuGrid>
         <MenuButton onClick={() => navigate('/my/shop/charge')}>
@@ -413,11 +569,61 @@ function Shop({ user }) {
         </MenuButton>
       </MenuGrid>
 
-      {/* 프리미엄 기능 섹션 */}
-      <PremiumSection theme={theme}>
+      {/* 연간 프리미엄 회원인 경우 축하 메시지 */}
+      {premiumStatus.isYearlyPremium && (
+        <PremiumSection theme={theme} style={{
+          marginTop: '24px',
+          background: 'linear-gradient(135deg, rgba(228, 98, 98, 0.1) 0%, rgba(212, 85, 85, 0.1) 100%)',
+          border: '2px solid #e46262'
+        }}>
+          <PremiumTitle theme={theme}>
+            <span style={{ color: '#e46262' }}>👑</span>
+            {t('premium_yearly')}
+          </PremiumTitle>
+          <div style={{
+            textAlign: 'center',
+            padding: '16px 0',
+            color: theme.text,
+            fontSize: '15px',
+            lineHeight: '1.6'
+          }}>
+            프리미엄 회원이 되신 것을 축하합니다! 🎉<br />
+            모든 프리미엄 혜택을 자유롭게 이용하실 수 있습니다.
+          </div>
+        </PremiumSection>
+      )}
+
+      {/* 월간 프리미엄 회원인 경우 축하 메시지 */}
+      {premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+        <PremiumSection theme={theme} style={{
+          marginTop: '24px',
+          background: 'linear-gradient(135deg, rgba(228, 98, 98, 0.1) 0%, rgba(212, 85, 85, 0.1) 100%)',
+          border: '2px solid #e46262'
+        }}>
+          <PremiumTitle theme={theme}>
+            <span style={{ color: '#e46262' }}>👑</span>
+            {t('premium_monthly')}
+          </PremiumTitle>
+          <div style={{
+            textAlign: 'center',
+            padding: '16px 0',
+            color: theme.text,
+            fontSize: '15px',
+            lineHeight: '1.6'
+          }}>
+            프리미엄 회원이 되신 것을 축하합니다! 🎉<br />
+            모든 프리미엄 혜택을 자유롭게 이용하실 수 있습니다.
+          </div>
+        </PremiumSection>
+      )}
+
+      {/* 프리미엄 기능 섹션 - 모든 사용자에게 표시 */}
+      <PremiumSection theme={theme} style={{ marginTop: '24px' }}>
         <PremiumTitle theme={theme}>
           <span style={{ color: '#e46262' }}>👑</span>
-          {t('premium_benefits')}
+          {premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium
+            ? t('premium_current_benefits')
+            : t('premium_benefits')}
         </PremiumTitle>
         <FeatureList>
           {premiumFeatures.map((feature) => (
@@ -427,148 +633,6 @@ function Shop({ user }) {
           ))}
         </FeatureList>
       </PremiumSection>
-
-      {/* 프리미엄 결제 비교 카드 UI */}
-      <div style={{ display: 'flex', gap: '6px', margin: '18px 0', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'stretch' }}>
-        {/* 월간 결제 카드 */}
-        <PremiumCard>
-          <div
-            style={{
-              color: '#e46262',
-              fontWeight: 700,
-              fontSize: 12,
-              marginBottom: 6,
-              textAlign: 'center',
-              fontFamily: 'inherit',
-            }}
-          >
-            {t('premium_monthly')}
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 800,
-                marginBottom: 2,
-                textAlign: 'center',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_monthly_price')}
-            </div>
-            <div
-              style={{
-                color: '#888',
-                fontSize: 12,
-                marginBottom: 10,
-                textAlign: 'center',
-                marginTop: 10,
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_monthly_desc')}
-            </div>
-          </div>
-          <PremiumButton
-            style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
-            onClick={handleMonthlyPremium}
-            disabled={isLoading}
-          >
-            {isLoading ? t('processing') : t('premium_monthly_subscribe_button')}
-          </PremiumButton>
-        </PremiumCard>
-
-        {/* 연간 결제 카드 */}
-        <YearlyPremiumCard>
-          <div
-            style={{
-              position: 'absolute',
-              top: -14,
-              left: 12,
-              background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 11,
-              borderRadius: 7,
-              padding: '3px 12px',
-              boxShadow: '0 2px 8px rgba(255,195,0,0.13)',
-              letterSpacing: 1,
-              fontFamily: 'inherit',
-            }}
-          >
-            {t('premium_recommended')}
-          </div>
-          <div
-            style={{
-              color: '#FF9800',
-              fontWeight: 800,
-              fontSize: 13,
-              marginBottom: 6,
-              textAlign: 'center',
-              zIndex: 1,
-              fontFamily: 'inherit',
-            }}
-          >
-            {t('premium_yearly')}
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 800,
-                marginBottom: 12,
-                textAlign: 'center',
-                color: '#FF6F00',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_yearly_price')}
-            </div>
-            <div
-              style={{
-                color: '#FF9800',
-                fontWeight: 700,
-                fontSize: 12,
-                marginBottom: 1,
-                textAlign: 'center',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_yearly_discount')}
-            </div>
-            <div
-              style={{
-                color: '#FFB300',
-                fontSize: 11,
-                marginBottom: 1,
-                textDecoration: 'line-through',
-                textAlign: 'center',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_yearly_original_price')}
-            </div>
-            <div
-              style={{
-                color: '#FF9800',
-                fontSize: 13,
-                marginBottom: 10,
-                textAlign: 'center',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t('premium_yearly_monthly_equiv')}
-            </div>
-          </div>
-          <PremiumButton
-            style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
-            onClick={handleYearlyPremium}
-            disabled={isLoading}
-          >
-            {isLoading ? t('processing') : t('premium_yearly_subscribe_button')}
-          </PremiumButton>
-        </YearlyPremiumCard>
-      </div>
 
       {/* 프리미엄 가입 확인 모달 */}
       <ConfirmModal

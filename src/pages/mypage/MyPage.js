@@ -133,6 +133,8 @@ const Nickname = styled.div`
   text-align: center;
   margin-top: 20px;
   color: ${({ theme }) => theme.text};
+  word-break: keep-all;
+  overflow-wrap: break-word;
 `;
 
 const PremiumStatus = styled.div`
@@ -148,13 +150,15 @@ const PremiumStatus = styled.div`
   font-size: 14px;
   font-weight: 400;
   // box-shadow: ${({ isPremium }) => isPremium ? '0 2px 8px rgba(228, 98, 98, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'};
+  word-break: keep-all;
+  overflow-wrap: break-word;
 `;
 
 const MenuGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0px;
-  margin-top: 30px;
+  margin-top: 10px;
   margin-bottom: 30px;
   width: 100%;
 `;
@@ -191,6 +195,8 @@ const MenuLabel = styled.span`
   font-weight: 500;
   color: ${({ theme }) => theme.menuText};
   margin-top: 2px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 `;
 
 const Info = styled.div`
@@ -198,6 +204,8 @@ const Info = styled.div`
   color: #888;
   margin-bottom: 32px;
   text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 `;
 
 const EditProfileCard = styled.div`
@@ -406,6 +414,46 @@ const StatLabel = styled.span`
   font-size: 14px;
   color: #888;
   font-weight: 500;
+`;
+
+const PremiumUpgradeCard = styled.div`
+  margin: 20px auto;
+  max-width: 400px;
+  background: linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%);
+  border-radius: 16px;
+  padding: 18px 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 216, 155, 0.4);
+  transition: all 0.2s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 216, 155, 0.5);
+  }
+`;
+
+const PremiumUpgradeContent = styled.div`
+  position: relative;
+  z-index: 1;
 `;
 
 /**
@@ -815,8 +863,8 @@ function MyPage({ user }) {
         ) : (
           <>
             <ProfileContainer>
-              <ProfileImage 
-                src={getSafeProfileImageUrl(user?.photoURL)} 
+              <ProfileImage
+                src={getSafeProfileImageUrl(user?.photoURL)}
                 alt="Profile"
                 onError={(e) => handleImageError(e)}
               />
@@ -853,6 +901,56 @@ function MyPage({ user }) {
                 </>
               )}
             </PremiumStatus>
+
+            {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 */}
+            {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+              <PremiumUpgradeCard onClick={() => navigate('/my/shop')}>
+                <PremiumUpgradeContent>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '20px' }}>👑</span>
+                    <span style={{
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      color: '#8B6914',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word'
+                    }}>
+                      {t('premium_benefits')}
+                    </span>
+                    <span style={{ fontSize: '20px' }}>👑</span>
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: 'rgba(139, 105, 20, 0.85)',
+                    lineHeight: '1.4',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>광고 제거</span>
+                    <span>·</span>
+                    <span>AI 일기</span>
+                    <span>·</span>
+                    <span>주간 무료 포션</span>
+                    <span>·</span>
+                    <span>프리미엄 스티커</span>
+                  </div>
+                  <div style={{
+                    background: 'white',
+                    color: '#D4A017',
+                    padding: '10px 30px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '15px',
+                    display: 'inline-block',
+                  }}>
+                    가입하기
+                  </div>
+                </PremiumUpgradeContent>
+              </PremiumUpgradeCard>
+            )}
 
             {/* 프리미엄 해지 버튼 제거 */}
 

@@ -17,8 +17,8 @@ export const lightTheme = {
     secondary: '#cb6565', // 보조 포인트 컬러(버튼 hover 등)
     border: '#f1f1f1', // 카드/컨테이너 테두리 색상
     cardShadow: '0 2px 8px rgba(0,0,0,0.06)', // 카드 그림자
-    cardGradient: 'linear-gradient(135deg, #aee2ff 0%, #6db3f2 100%)', // 카드 그라디언트(홈 등)
-    writeCardGradient: 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)', // 일기쓰기 버튼 그라디언트
+    cardGradient: 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)', // 카드 그라디언트(홈 등) - Cerulean
+    writeCardGradient: 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)', // 일기쓰기 버튼 그라디언트
     menuText: '#222', // 메뉴 텍스트 색상 (라이트)
     menuHover: '#e0e0e0', // 메뉴 버튼 hover 배경색 (라이트)
     primaryBlue: '#4F8CFF', // 산뜻한 파랑(버튼)

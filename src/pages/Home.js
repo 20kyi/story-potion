@@ -16,6 +16,7 @@ import { toast } from '../components/ui/Toast';
 import { getPointPolicy } from '../utils/appConfig';
 import { checkWeeklyBonus } from '../utils/weeklyBonus';
 import { useTranslation } from '../LanguageContext';
+import { motion } from 'framer-motion';
 
 
 const Container = styled.div`
@@ -56,7 +57,7 @@ const MainButtonRow = styled.div`
 const RecentDiaryCard = styled.div`
   flex: 1;
   min-width: 0;
-  background: ${({ theme }) => theme.cardGradient || 'linear-gradient(135deg, #aee2ff 0%, #6db3f2 100%)'};
+  background: ${({ theme }) => theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)'};
   border-radius: 28px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.07);
   min-height: 150px;
@@ -77,9 +78,9 @@ const WriteDiaryButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: ${({ theme }) => theme.writeCardGradient || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'};
+  background: ${({ theme }) => theme.writeCardGradient || 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)'};
   border-radius: 28px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 16px rgba(201, 154, 154, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,7 +88,7 @@ const WriteDiaryButton = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s;
   gap: 10px;
-  &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.13); }
+  &:hover { box-shadow: 0 6px 20px rgba(201, 154, 154, 0.4); }
 `;
 /* 일기 쓰기 버튼 텍스트 */
 const MainButtonText = styled.div`
@@ -114,6 +115,33 @@ const DiaryPreviewImage = styled.img`
   border-radius: 12px;
   object-fit: cover;
 `;
+
+/* 일기 최근 미리보기 이미지 대체 영역 */
+const DiaryPreviewImagePlaceholder = styled.div`
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed rgba(44, 62, 80, 0.3);
+`;
+
+const DiaryPreviewImagePlaceholderIcon = styled.div`
+  font-size: 32px;
+  opacity: 0.6;
+`;
+
+const DiaryPreviewImagePlaceholderText = styled.div`
+  font-size: 13px;
+  color: #2C3E50;
+  opacity: 0.7;
+  text-align: center;
+  font-weight: 500;
+`;
 /* 일기 최근 미리보기 텍스트 */
 const DiaryPreviewTextContainer = styled.div`
   flex: 1;
@@ -125,8 +153,8 @@ const DiaryPreviewTextContainer = styled.div`
 const DiaryPreviewDate = styled.div`
   font-size: 12px;
   opacity: 0.8;
-  color: #fff;
-  margin-bottom: 4px;
+  color: #2C3E50;
+  margin-bottom: 8px;
   // @media (min-width: 768px) {
   //   font-size: 14px;
   // }
@@ -135,7 +163,7 @@ const DiaryPreviewDate = styled.div`
 const DiaryPreviewTitle = styled.div`
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #1A1A1A;
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -148,7 +176,7 @@ const DiaryPreviewTitle = styled.div`
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
   font-size: 14px;
-  color: #fff;
+  color: #2C3E50;
   opacity: 0.9;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -158,7 +186,8 @@ const DiaryPreviewContent = styled.div`
   line-height: 1.4;
   width: 100%;
   word-break: keep-all;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  white-space: normal;
   // @media (min-width: 768px) {
   //   font-size: 16px;
   // }
@@ -197,10 +226,11 @@ const ContentGrid = styled.div`
 /* 일기 최근 미리보기 영역 */
 const SectionLabel = styled.div`
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin-bottom: 10px;
   margin-top: 10px;
+  padding-left: 10px;
   // @media (min-width: 768px) {
   //   font-size: 24px;
   // }
@@ -412,7 +442,7 @@ const CarouselContainer = styled.div`
   max-width: 600px;
   margin: 0 auto;
   // padding: 0;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
   .slick-dots {
     bottom: -35px;
     li {
@@ -433,6 +463,111 @@ const CarouselContainer = styled.div`
   }
   .slick-list {
     margin: 0 -5px;
+  }
+`;
+
+const PremiumBanner = styled(motion.div)`
+  background: linear-gradient(135deg, #ffe29f 0%, #ffc371 100%);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  color: #8B4513;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 226, 159, 0.4);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const PremiumBannerContent = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  
+  @media (max-width: 480px) {
+    flex-direction: row;
+    gap: 8px;
+  }
+`;
+
+const PremiumBannerLeft = styled.div`
+  flex: 1;
+  min-width: 0;
+  
+  @media (max-width: 480px) {
+    flex: 1;
+  }
+`;
+
+const PremiumBannerTitle = styled.div`
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  
+  @media (max-width: 480px) {
+    font-size: 16px;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+`;
+
+const PremiumBannerDesc = styled.div`
+  font-size: 14px;
+  opacity: 0.9;
+  line-height: 1.4;
+  color: #8B4513;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  
+  @media (max-width: 480px) {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+`;
+
+const PremiumBannerButton = styled.div`
+  background: white;
+  color: #8B4513;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  
+  @media (max-width: 480px) {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  ${PremiumBanner}:hover & {
+    transform: scale(1.05);
   }
 `;
 const CarouselSlide = styled.div`
@@ -498,6 +633,10 @@ function Home({ user }) {
   const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [premiumStatus, setPremiumStatus] = useState({
+    isMonthlyPremium: false,
+    isYearlyPremium: false,
+  });
 
 
   // 포션 데이터 (표시는 locale로)
@@ -622,7 +761,12 @@ function Home({ user }) {
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
-          setOwnedPotions(userDoc.data().potions || {});
+          const userData = userDoc.data();
+          setOwnedPotions(userData.potions || {});
+          setPremiumStatus({
+            isMonthlyPremium: userData.isMonthlyPremium || false,
+            isYearlyPremium: userData.isYearlyPremium || false,
+          });
         }
       } catch (error) {
         console.error('포션 정보 조회 실패:', error);
@@ -703,6 +847,29 @@ function Home({ user }) {
         </Slider>
       </CarouselContainer>
 
+      {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 */}
+      {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+        <PremiumBanner
+          onClick={() => navigate('/my/shop')}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <PremiumBannerContent>
+            <PremiumBannerLeft>
+              <PremiumBannerTitle>
+                👑 {t('premium_benefits')} 👑
+              </PremiumBannerTitle>
+              <PremiumBannerDesc>
+                광고 제거, AI 일기, 주간 무료 포션, 프리미엄 스티커 등 다양한 혜택을 만나보세요!
+              </PremiumBannerDesc>
+            </PremiumBannerLeft>
+            <PremiumBannerButton>
+              {t('premium_monthly_subscribe_button')}
+            </PremiumBannerButton>
+          </PremiumBannerContent>
+        </PremiumBanner>
+      )}
+
 
 
       <ContentGrid>
@@ -711,13 +878,18 @@ function Home({ user }) {
           <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
             {recentDiaries.length > 0 && recentDiaries[0] ? (
               <DiaryPreviewContainer>
-                {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 && (
+                {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
                   <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
+                ) : (
+                  <DiaryPreviewImagePlaceholder>
+                    <DiaryPreviewImagePlaceholderIcon>📷</DiaryPreviewImagePlaceholderIcon>
+                    <DiaryPreviewImagePlaceholderText>오늘의 사진을 찍어보세요</DiaryPreviewImagePlaceholderText>
+                  </DiaryPreviewImagePlaceholder>
                 )}
                 <DiaryPreviewTextContainer>
                   <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
                   <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent lineClamp={recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? 3 : 6}>{recentDiaries[0].content}</DiaryPreviewContent>
+                  <DiaryPreviewContent lineClamp={3}>{recentDiaries[0].content}</DiaryPreviewContent>
                 </DiaryPreviewTextContainer>
               </DiaryPreviewContainer>
             ) : (
