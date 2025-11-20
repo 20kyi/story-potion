@@ -6,8 +6,6 @@ import { createUserWithEmailAndPassword, updateProfile, signOut, fetchSignInMeth
 import { auth } from '../firebase';
 import { setDoc, doc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { Keyboard } from '@capacitor/keyboard';
-import { Capacitor } from '@capacitor/core';
 import {
   initializeRecaptchaForSignup,
   sendSMSCodeForSignup,
@@ -22,7 +20,7 @@ const Container = styled.div`
   background-color: #fff;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 40px 20px 200px 20px;
 `;
 
 const ContentWrapper = styled.div`
@@ -33,6 +31,7 @@ const ContentWrapper = styled.div`
   min-height: 100vh;
   padding-top: 0;
   width: 100%;
+  overflow-y: auto;
   @media (min-width: 1024px) {
     flex-direction: row;
     justify-content: space-between;
@@ -96,10 +95,9 @@ const StepIndicator = styled.div`
   justify-content: center;
 `;
 
-const StepDot = styled.div`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+const StepLine = styled.div`
+  width: 40px;
+  height: 2px;
   background-color: ${props => props.active ? '#e46262' : '#ddd'};
   transition: background-color 0.3s;
 `;
@@ -348,7 +346,6 @@ function Signup() {
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [smsSent, setSmsSent] = useState(false);
   const [smsLoading, setSmsLoading] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
@@ -379,19 +376,8 @@ function Signup() {
   }, [navigate]);
 
   useEffect(() => {
-    let onShow, onHide;
-    if (Capacitor.getPlatform() !== 'web') {
-      onShow = Keyboard.addListener('keyboardWillShow', (info) => {
-        setKeyboardHeight(info.keyboardHeight);
-      });
-      onHide = Keyboard.addListener('keyboardWillHide', () => {
-        setKeyboardHeight(0);
-      });
-    }
+    // cleanup: email check timeout
     return () => {
-      if (onShow) onShow.remove();
-      if (onHide) onHide.remove();
-      // cleanup: email check timeout
       if (emailCheckTimeoutRef.current) {
         clearTimeout(emailCheckTimeoutRef.current);
       }
@@ -777,13 +763,11 @@ function Signup() {
   const renderStepIndicator = () => {
     return (
       <StepIndicator>
-        <StepNumber active={currentStep === 1}>1</StepNumber>
-        <StepDot active={currentStep >= 2} />
-        <StepDot active={currentStep >= 2} />
-        <StepNumber active={currentStep === 2}>2</StepNumber>
-        <StepDot active={currentStep >= 3} />
-        <StepDot active={currentStep >= 3} />
-        <StepNumber active={currentStep === 3}>3</StepNumber>
+        <StepNumber active={currentStep >= 1}>1</StepNumber>
+        <StepLine active={currentStep >= 2} />
+        <StepNumber active={currentStep >= 2}>2</StepNumber>
+        <StepLine active={currentStep >= 3} />
+        <StepNumber active={currentStep >= 3}>3</StepNumber>
       </StepIndicator>
     );
   };
@@ -978,7 +962,7 @@ function Signup() {
   );
 
   return (
-    <div ref={mainRef} style={{ paddingBottom: keyboardHeight }}>
+    <div ref={mainRef}>
       <Container>
         <ContentWrapper>
           <LogoSection>
