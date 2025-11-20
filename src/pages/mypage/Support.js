@@ -14,8 +14,7 @@ function Support() {
                 navigate('/my/notice');
                 break;
             case 'faq':
-                // FAQ 페이지로 이동 (추후 구현)
-                alert('FAQ 기능은 준비 중입니다.');
+                navigate('/my/faq');
                 break;
             case 'inquiry':
                 // 문의하기 페이지로 이동 (추후 구현)

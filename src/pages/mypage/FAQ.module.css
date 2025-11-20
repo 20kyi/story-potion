@@ -1,0 +1,145 @@
+.faqContainer {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.faqList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.categorySection {
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.categoryHeader {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.categoryIcon {
+    font-size: 20px;
+    margin-right: 12px;
+}
+
+.categoryTitle {
+    flex: 1;
+    color: #222;
+}
+
+.chevron {
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.2s;
+}
+
+.categoryContent {
+    padding: 0;
+    margin-left: 32px;
+}
+
+.faqItem {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.faqItem:last-child {
+    border-bottom: none;
+}
+
+.question {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.questionText {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+    line-height: 1.5;
+}
+
+.itemChevron {
+    font-size: 10px;
+    color: #999;
+    margin-left: 12px;
+    transition: transform 0.2s;
+}
+
+.answer {
+    display: flex;
+    padding: 16px 0;
+    gap: 8px;
+}
+
+.answerLabel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e46262;
+    flex-shrink: 0;
+}
+
+.answerText {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    white-space: pre-line;
+}
+
+/* 다크 모드 지원 */
+body.dark .categorySection {
+    border-bottom-color: #333;
+}
+
+body.dark .categoryTitle {
+    color: #fff;
+}
+
+body.dark .chevron {
+    color: #aaa;
+}
+
+body.dark .categoryContent {
+    border-top-color: #444;
+}
+
+body.dark .faqItem {
+    border-bottom-color: #444;
+}
+
+body.dark .question {
+    background: #2a2a2a;
+}
+
+body.dark .question:hover {
+    background: #333;
+}
+
+body.dark .questionText {
+    color: #fff;
+}
+
+body.dark .itemChevron {
+    color: #aaa;
+}
+
+body.dark .answer {
+    background: #222;
+}
+
+body.dark .answerText {
+    color: #ccc;
+}
+
