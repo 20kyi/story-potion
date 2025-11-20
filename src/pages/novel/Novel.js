@@ -302,7 +302,7 @@ const WeekTitle = styled.h3`
     line-height: 1.2;
   }
 `;
-
+// 일기 진행도 UI 컴포넌트
 const DateRange = styled.p`
   color: #666;
   font-size: 11px;
@@ -343,6 +343,7 @@ const DayIndicator = styled.div`
 const CreateButton = styled.button`
   width: 100%;
   margin: 0;
+  margin-top: 2px;
   background-color: ${({ children, completed, theme, isFree }) => {
         if (isFree) return 'transparent';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
@@ -365,8 +366,8 @@ const CreateButton = styled.button`
         return 'none';
     }};
   border-radius: 10px;
-  padding: 12px;
-  font-size: ${({ isFree }) => isFree ? '12px' : '14px'};
+  padding: 8px;
+  font-size: ${({ isFree }) => isFree ? '12px' : '12px'};
   cursor: pointer;
   opacity: 1;
   transition: all 0.2s ease;
@@ -1028,11 +1029,7 @@ const Novel = ({ user }) => {
                                     >
                                         {isCompleted
                                             ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? (
-                                                <>
-                                                    <span>👑</span>
-                                                    <span style={{ margin: '0 4px' }}>{t('novel_generate_free_button')}</span>
-                                                    <span>👑</span>
-                                                </>
+                                                t('novel_generate_free_button')
                                             ) : t('novel_create'))
                                             : t('novel_fill_diary')}
                                     </CreateButton>

@@ -209,8 +209,9 @@ const SectionLabel = styled.div`
 const MyNovelRow = styled.div`
   display: flex;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   overflow-x: auto;
+  justify-content: flex-start;
   // padding-bottom: 8px;
   &::-webkit-scrollbar {
     display: none;
@@ -301,6 +302,27 @@ const MyNovelBox = styled.div`
   cursor: pointer;
   gap: 18px;
   margin-bottom: 10px;
+`;
+
+const MoreButton = styled.button`
+  width: 100%;
+  padding: 0;
+  background-color: transparent;
+  color: ${({ theme }) => theme.primary || '#cb6565'};
+  border: none;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  // margin-top: 16px;
+  text-align: center;
+  &:hover {
+    opacity: 0.8;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 
@@ -448,7 +470,7 @@ const sliderSettings = {
 const TabBar = styled.div`
   display: flex;
   gap: 0;
-  margin: 18px 0 10px 0;
+  margin: 18px 0 0 0;
   border-bottom: 1.5px solid #f0caca;
 `;
 const TabButton = styled.button`
@@ -606,7 +628,7 @@ function Home({ user }) {
     };
 
     fetchUnreadCount();
-    
+
     // 실시간 업데이트를 위한 구독 (선택사항)
     const interval = setInterval(fetchUnreadCount, 30000); // 30초마다 체크
     return () => clearInterval(interval);
@@ -628,12 +650,12 @@ function Home({ user }) {
 
   return (
     <Container>
-      <Header 
-        user={user} 
+      <Header
+        user={user}
         onNotificationClick={() => setNotificationModalOpen(true)}
         hasUnreadNotifications={unreadNotificationCount > 0}
       />
-      <NotificationModal 
+      <NotificationModal
         isOpen={notificationModalOpen}
         onClose={() => setNotificationModalOpen(false)}
         user={user}
@@ -714,12 +736,30 @@ function Home({ user }) {
           <>
             <MyNovelRow>
               {recentNovels.length > 0 ?
-                recentNovels.map(novel => (
-                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
-                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                    <MyNovelTitle>{novel.title}</MyNovelTitle>
-                  </MyNovelBox>
-                ))
+                <>
+                  {recentNovels.map(novel => (
+                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
+                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                      <MyNovelTitle>{novel.title}</MyNovelTitle>
+                    </MyNovelBox>
+                  ))}
+                  {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
+                    <MyNovelBox key={`placeholder-${idx}`}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '180px',
+                        aspectRatio: '2/3',
+                        background: '#E5E5E5',
+                        borderRadius: '15px',
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }} />
+                      <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_novel')}</MyNovelTitle>
+                    </MyNovelBox>
+                  ))}
+                </>
                 :
                 Array(3).fill(null).map((_, idx) => (
                   <MyNovelBox key={`placeholder-${idx}`}>
@@ -727,7 +767,7 @@ function Home({ user }) {
                       width: '100%',
                       maxWidth: '180px',
                       aspectRatio: '2/3',
-                      background: '#fdd2d2',
+                      background: '#E5E5E5',
                       borderRadius: '15px',
                       display: 'block',
                       marginLeft: 'auto',
@@ -745,13 +785,31 @@ function Home({ user }) {
           <>
             <MyNovelRow>
               {purchasedNovels.length > 0 ?
-                purchasedNovels.map(novel => (
-                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}>
-                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                    <MyNovelTitle>{novel.title}</MyNovelTitle>
-                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
-                  </MyNovelBox>
-                ))
+                <>
+                  {purchasedNovels.map(novel => (
+                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}>
+                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                      <MyNovelTitle>{novel.title}</MyNovelTitle>
+                      <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
+                    </MyNovelBox>
+                  ))}
+                  {Array(3 - purchasedNovels.length).fill(null).map((_, idx) => (
+                    <MyNovelBox key={`purchased-placeholder-${idx}`}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '180px',
+                        aspectRatio: '2/3',
+                        background: '#E5E5E5',
+                        borderRadius: '15px',
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }} />
+                      <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_purchased_novel')}</MyNovelTitle>
+                    </MyNovelBox>
+                  ))}
+                </>
                 :
                 Array(3).fill(null).map((_, idx) => (
                   <MyNovelBox key={`purchased-placeholder-${idx}`}>
@@ -759,7 +817,7 @@ function Home({ user }) {
                       width: '100%',
                       maxWidth: '180px',
                       aspectRatio: '2/3',
-                      background: '#fdd2d2',
+                      background: '#E5E5E5',
                       borderRadius: '15px',
                       display: 'block',
                       marginLeft: 'auto',
@@ -771,6 +829,11 @@ function Home({ user }) {
                 ))
               }
             </MyNovelRow>
+            {purchasedNovels.length > 0 && (
+              <MoreButton onClick={() => navigate('/purchased-novels')}>
+                {t('home_see_more')}
+              </MoreButton>
+            )}
           </>
         )}
         {activeTab === 'potion' && (

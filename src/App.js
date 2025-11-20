@@ -52,6 +52,7 @@ import './utils/updateGoogleProfileImages'; // 구글 프로필 이미지 업데
 import './utils/fixGoogleProfiles'; // 구글 프로필 문제 해결 스크립트 로드
 import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크립트 로드
 import FriendNovelList from './pages/novel/FriendNovelList';
+import PurchasedNovels from './pages/novel/PurchasedNovels';
 import AppInfo from './pages/mypage/AppInfo';
 import { inAppPurchaseService } from './utils/inAppPurchase';
 import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
@@ -102,6 +103,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/profile-fix" element={user ? <ProfileFix user={user} /> : <Navigate to="/login" />} />
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
+                <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
