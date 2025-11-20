@@ -323,6 +323,39 @@ const EmptyPotionText = styled.div`
   text-align: center;
 `;
 
+const EmptyStateContainer = styled.div`
+  width: 100%;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 180px;
+`;
+
+const EmptyStateIcon = styled.div`
+  font-size: 36px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+`;
+
+const EmptyStateTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+  margin-bottom: 2px;
+`;
+
+const EmptyStateDesc = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  text-align: center;
+  line-height: 1.5;
+  opacity: 0.8;
+`;
+
 const MyNovelBox = styled.div`
   flex: 1;
   min-width: 0;
@@ -927,58 +960,44 @@ function Home({ user }) {
         {/* 탭별 내용 */}
         {activeTab === 'my' && (
           <>
-            <MyNovelRow>
-              {recentNovels.length > 0 ?
-                <>
-                  {recentNovels.map(novel => (
-                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
-                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                      <MyNovelTitle>{novel.title}</MyNovelTitle>
-                    </MyNovelBox>
-                  ))}
-                  {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
-                    <MyNovelBox key={`placeholder-${idx}`}>
-                      <div style={{
-                        width: '100%',
-                        maxWidth: '180px',
-                        aspectRatio: '2/3',
-                        background: '#E5E5E5',
-                        borderRadius: '15px',
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                      }} />
-                      <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_novel')}</MyNovelTitle>
-                    </MyNovelBox>
-                  ))}
-                </>
-                :
-                Array(3).fill(null).map((_, idx) => (
+            {recentNovels.length > 0 ? (
+              <MyNovelRow>
+                {recentNovels.map(novel => (
+                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
+                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                    <MyNovelTitle>{novel.title}</MyNovelTitle>
+                  </MyNovelBox>
+                ))}
+                {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
                   <MyNovelBox key={`placeholder-${idx}`}>
                     <div style={{
                       width: '100%',
                       maxWidth: '180px',
                       aspectRatio: '2/3',
-                      background: '#E5E5E5',
+                      background: 'transparent',
                       borderRadius: '15px',
                       display: 'block',
                       marginLeft: 'auto',
                       marginRight: 'auto',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                     }} />
-                    <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_novel')}</MyNovelTitle>
                   </MyNovelBox>
-                ))
-              }
-            </MyNovelRow>
+                ))}
+              </MyNovelRow>
+            ) : (
+              <EmptyStateContainer>
+                <EmptyStateIcon>📖</EmptyStateIcon>
+                <EmptyStateTitle>{t('home_no_novel_title')}</EmptyStateTitle>
+                <EmptyStateDesc>{t('home_no_novel_desc')}</EmptyStateDesc>
+              </EmptyStateContainer>
+            )}
           </>
         )}
         {activeTab === 'purchased' && (
           <>
-            <MyNovelRow>
-              {purchasedNovels.length > 0 ?
-                <>
+            {purchasedNovels.length > 0 ? (
+              <>
+                <MyNovelRow>
                   {purchasedNovels.map(novel => (
                     <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
                       state: { returnPath: '/' }
@@ -994,71 +1013,57 @@ function Home({ user }) {
                         width: '100%',
                         maxWidth: '180px',
                         aspectRatio: '2/3',
-                        background: '#E5E5E5',
+                        background: 'transparent',
                         borderRadius: '15px',
                         display: 'block',
                         marginLeft: 'auto',
                         marginRight: 'auto',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                       }} />
-                      <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_purchased_novel')}</MyNovelTitle>
                     </MyNovelBox>
                   ))}
-                </>
-                :
-                Array(3).fill(null).map((_, idx) => (
-                  <MyNovelBox key={`purchased-placeholder-${idx}`}>
-                    <div style={{
-                      width: '100%',
-                      maxWidth: '180px',
-                      aspectRatio: '2/3',
-                      background: '#E5E5E5',
-                      borderRadius: '15px',
-                      display: 'block',
-                      marginLeft: 'auto',
-                      marginRight: 'auto',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                    }} />
-                    <MyNovelTitle style={{ color: '#aaa' }}>{t('home_no_purchased_novel')}</MyNovelTitle>
-                  </MyNovelBox>
-                ))
-              }
-            </MyNovelRow>
-            {purchasedNovels.length > 0 && (
-              <MoreButton onClick={() => navigate('/purchased-novels')}>
-                {t('home_see_more')}
-              </MoreButton>
+                </MyNovelRow>
+                <MoreButton onClick={() => navigate('/purchased-novels')}>
+                  {t('home_see_more')}
+                </MoreButton>
+              </>
+            ) : (
+              <EmptyStateContainer>
+                <EmptyStateIcon>📚</EmptyStateIcon>
+                <EmptyStateTitle>{t('home_no_purchased_novel_title')}</EmptyStateTitle>
+                <EmptyStateDesc>{t('home_no_purchased_novel_desc')}</EmptyStateDesc>
+              </EmptyStateContainer>
             )}
           </>
         )}
         {activeTab === 'potion' && (
           <>
-            <PotionSection>
-              <PotionRow>
-                {potionData.map(potion => {
-                  const count = ownedPotions[potion.id] || 0;
-                  return count > 0 ? (
-                    <PotionCard
-                      key={potion.id}
-                      onClick={() => navigate('/my/potion-shop')}
-                      title={`${t(potion.key)} ${t('potion') || ''} ${count}`}
-                    >
-                      <PotionImage src={potion.image} alt={t(potion.key)} />
-                      <PotionCount>{count}</PotionCount>
-                      <PotionName>{t(potion.key)}</PotionName>
-                    </PotionCard>
-                  ) : null;
-                })}
-                {Object.values(ownedPotions).every(count => !count || count <= 0) && (
-                  <EmptyPotionCard>
-                    <EmptyPotionText>{t('home_no_potion')}</EmptyPotionText>
-                    <EmptyPotionText style={{ fontSize: '10px', marginTop: '4px' }}>
-                      {t('home_buy_potion')}
-                    </EmptyPotionText>
-                  </EmptyPotionCard>
-                )}
-              </PotionRow>
-            </PotionSection>
+            {Object.values(ownedPotions).some(count => count && count > 0) ? (
+              <PotionSection>
+                <PotionRow>
+                  {potionData.map(potion => {
+                    const count = ownedPotions[potion.id] || 0;
+                    return count > 0 ? (
+                      <PotionCard
+                        key={potion.id}
+                        onClick={() => navigate('/my/potion-shop')}
+                        title={`${t(potion.key)} ${t('potion') || ''} ${count}`}
+                      >
+                        <PotionImage src={potion.image} alt={t(potion.key)} />
+                        <PotionCount>{count}</PotionCount>
+                        <PotionName>{t(potion.key)}</PotionName>
+                      </PotionCard>
+                    ) : null;
+                  })}
+                </PotionRow>
+              </PotionSection>
+            ) : (
+              <EmptyStateContainer>
+                <EmptyStateIcon>🧪</EmptyStateIcon>
+                <EmptyStateTitle>{t('home_no_potion_title')}</EmptyStateTitle>
+                <EmptyStateDesc>{t('home_no_potion_desc')}</EmptyStateDesc>
+              </EmptyStateContainer>
+            )}
           </>
         )}
       </ContentGrid>
