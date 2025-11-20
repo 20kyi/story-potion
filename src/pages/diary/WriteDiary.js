@@ -6,6 +6,7 @@ import Navigation from '../../components/Navigation';
 import { db, storage } from '../../firebase';
 import { doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import imageCompression from 'browser-image-compression';
 import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -15,7 +16,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { getPointPolicy } from '../../utils/appConfig';
 import { checkWeeklyBonus } from '../../utils/weeklyBonus';
-import { useTranslation } from '../../LanguageContext';
+import { useTranslation, useLanguage } from '../../LanguageContext';
 import { createPointEarnNotification } from '../../utils/notificationService';
 
 // 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
@@ -246,6 +247,142 @@ const ImageViewerNext = styled(ImageViewerNav)`
   right: 20px;
 `;
 
+// AI 보강 모달 스타일
+const EnhanceModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+`;
+
+const EnhanceModalContent = styled.div`
+  background-color: ${props => props.isDark ? '#2a2a2a' : '#fff'};
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+`;
+
+const EnhanceModalHeader = styled.div`
+  padding: 20px;
+  border-bottom: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const EnhanceModalTitle = styled.h2`
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: ${props => props.isDark ? '#fff' : '#222'};
+`;
+
+const EnhanceModalClose = styled.button`
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: ${props => props.isDark ? '#fff' : '#666'};
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  
+  &:hover {
+    background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
+  }
+`;
+
+const EnhanceModalBody = styled.div`
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const EnhanceSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const EnhanceLabel = styled.label`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${props => props.isDark ? '#aaa' : '#666'};
+`;
+
+const EnhanceText = styled.div`
+  padding: 12px;
+  background-color: ${props => props.isDark ? '#1a1a1a' : '#f8f8f8'};
+  border-radius: 8px;
+  min-height: 150px;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+  color: ${props => props.isDark ? '#fff' : '#222'};
+  font-size: 15px;
+`;
+
+const EnhanceModalFooter = styled.div`
+  padding: 20px;
+  border-top: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+`;
+
+const EnhanceButton = styled.button`
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const EnhanceApplyButton = styled(EnhanceButton)`
+  background-color: #cb6565;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: #b85555;
+  }
+`;
+
+const EnhanceCancelButton = styled(EnhanceButton)`
+  background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
+  color: ${props => props.isDark ? '#fff' : '#222'};
+  
+  &:hover:not(:disabled) {
+    background-color: ${props => props.isDark ? '#555' : '#e0e0e0'};
+  }
+`;
 
 // 스티커 관련 스타일 컴포넌트들
 
@@ -533,6 +670,12 @@ function WriteDiary({ user }) {
     const containerRef = useRef();
     const [isPremium, setIsPremium] = useState(false);
     const { t } = useTranslation();
+    const { language } = useLanguage();
+
+    // AI 보강 관련 state
+    const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
+    const [enhancedContent, setEnhancedContent] = useState('');
+    const [isEnhancing, setIsEnhancing] = useState(false);
 
     // 스티커 관련 state
     const [stickers, setStickers] = useState([]);
@@ -1377,6 +1520,49 @@ function WriteDiary({ user }) {
         }
     };
 
+    // AI 보강 함수
+    const handleEnhanceDiary = async () => {
+        if (!diary.content || diary.content.trim().length < 10) {
+            toast.showToast('일기 내용이 너무 짧습니다. 최소 10자 이상 작성해주세요.', 'info');
+            return;
+        }
+
+        if (!isPremium) {
+            toast.showToast('이 기능은 프리미엄 회원만 사용할 수 있습니다.', 'error');
+            return;
+        }
+
+        setIsEnhancing(true);
+        try {
+            const functions = getFunctions();
+            const enhanceDiary = httpsCallable(functions, 'enhanceDiary', { timeout: 60000 });
+            const currentLanguage = language === 'en' ? 'en' : 'ko';
+
+            const result = await enhanceDiary({
+                diaryContent: diary.content,
+                language: currentLanguage
+            });
+
+            if (result.data?.enhancedContent) {
+                setEnhancedContent(result.data.enhancedContent);
+                setIsEnhanceModalOpen(true);
+            } else {
+                toast.showToast('AI 보강에 실패했습니다.', 'error');
+            }
+        } catch (enhanceError) {
+            console.error('AI 보강 실패:', enhanceError);
+            let errorMessage = 'AI 보강에 실패했습니다.';
+            if (enhanceError.code === 'permission-denied') {
+                errorMessage = '이 기능은 프리미엄 회원만 사용할 수 있습니다.';
+            } else if (enhanceError.message) {
+                errorMessage = enhanceError.message;
+            }
+            toast.showToast(errorMessage, 'error');
+        } finally {
+            setIsEnhancing(false);
+        }
+    };
+
     // handleSubmit 함수 재정의 (컴포넌트 내부에 추가)
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -1485,6 +1671,7 @@ function WriteDiary({ user }) {
                 imageUrls: finalImageUrlsResult,
                 updatedAt: new Date(),
             });
+
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
             toast.showToast(t('diary_save_failed'), 'error');
@@ -1501,7 +1688,7 @@ function WriteDiary({ user }) {
                     <button
                         style={styles.actionButton}
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isEnhancing}
                     >
                         {isSubmitting ? t('diary_saving') : (isEditMode ? t('diary_update') : t('diary_save'))}
                     </button>
@@ -1980,6 +2167,58 @@ function WriteDiary({ user }) {
                     ))}
                 </ContentContainer>
 
+                {/* AI 보완하기 버튼 (프리미엄 회원만) */}
+                {isPremium && diary.content.trim().length >= 10 && (
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        marginBottom: '20px',
+                        marginTop: '-10px'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={handleEnhanceDiary}
+                            disabled={isEnhancing || isSubmitting}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 20px',
+                                backgroundColor: isDark ? '#3a3a3a' : '#fff',
+                                border: `1px solid ${isDark ? '#555' : '#ddd'}`,
+                                borderRadius: '8px',
+                                color: isDark ? '#fff' : '#222',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                cursor: (isEnhancing || isSubmitting) ? 'not-allowed' : 'pointer',
+                                opacity: (isEnhancing || isSubmitting) ? 0.6 : 1,
+                                transition: 'all 0.2s',
+                                boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!isEnhancing && !isSubmitting) {
+                                    e.target.style.backgroundColor = isDark ? '#4a4a4a' : '#f5f5f5';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = isDark ? '#3a3a3a' : '#fff';
+                            }}
+                        >
+                            {isEnhancing ? (
+                                <>
+                                    <span>⏳</span>
+                                    <span>AI 보완 중...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>✨</span>
+                                    <span>AI로 보완하기</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
+
                 {/* 스티커 패널 */}
                 {isStickerPanelOpen && (
                     <>
@@ -2071,6 +2310,51 @@ function WriteDiary({ user }) {
                             )}
                         </ImageViewerContent>
                     </ImageViewerModal>
+                )}
+
+                {/* AI 보강 모달 */}
+                {isEnhanceModalOpen && (
+                    <EnhanceModal onClick={() => setIsEnhanceModalOpen(false)}>
+                        <EnhanceModalContent isDark={isDark} onClick={(e) => e.stopPropagation()}>
+                            <EnhanceModalHeader isDark={isDark}>
+                                <EnhanceModalTitle isDark={isDark}>✨ AI로 보강된 일기</EnhanceModalTitle>
+                                <EnhanceModalClose isDark={isDark} onClick={() => {
+                                    setIsEnhanceModalOpen(false);
+                                }}>
+                                    ×
+                                </EnhanceModalClose>
+                            </EnhanceModalHeader>
+                            <EnhanceModalBody>
+                                <EnhanceSection>
+                                    <EnhanceLabel isDark={isDark}>원본 일기</EnhanceLabel>
+                                    <EnhanceText isDark={isDark}>{diary.content}</EnhanceText>
+                                </EnhanceSection>
+                                <EnhanceSection>
+                                    <EnhanceLabel isDark={isDark}>보강된 일기</EnhanceLabel>
+                                    <EnhanceText isDark={isDark}>{enhancedContent}</EnhanceText>
+                                </EnhanceSection>
+                            </EnhanceModalBody>
+                            <EnhanceModalFooter isDark={isDark}>
+                                <EnhanceCancelButton
+                                    isDark={isDark}
+                                    onClick={() => {
+                                        setIsEnhanceModalOpen(false);
+                                    }}
+                                >
+                                    원본 유지
+                                </EnhanceCancelButton>
+                                <EnhanceApplyButton
+                                    onClick={() => {
+                                        setDiary(prev => ({ ...prev, content: enhancedContent }));
+                                        toast.showToast('AI 일기가 수정되었습니다!', 'success');
+                                        setIsEnhanceModalOpen(false);
+                                    }}
+                                >
+                                    AI 일기 선택
+                                </EnhanceApplyButton>
+                            </EnhanceModalFooter>
+                        </EnhanceModalContent>
+                    </EnhanceModal>
                 )}
 
                 <Navigation />

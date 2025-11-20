@@ -551,6 +551,158 @@ ${diaryContents}`;
     }
 });
 
+// 프리미엄 회원 일기 AI 일기기 함수
+exports.enhanceDiary = functions.runWith({
+    timeoutSeconds: 60,
+    memory: '512MB'
+}).https.onCall(async (data, context) => {
+    try {
+        console.log("=== enhanceDiary 함수 호출 시작 ===");
+        console.log("요청 시간:", new Date().toISOString());
+        console.log("사용자 ID:", context.auth?.uid || "인증되지 않음");
+
+        if (!context.auth) {
+            console.error("❌ 인증되지 않은 사용자");
+            throw new functions.https.HttpsError(
+                "unauthenticated",
+                "ai 일기를 작성하려면 로그인이 필요합니다.",
+            );
+        }
+
+        const { diaryContent, language } = data;
+        console.log("요청 데이터:", {
+            diaryContentLength: diaryContent?.length || 0,
+            language: language
+        });
+
+        if (!diaryContent || diaryContent.trim().length < 10) {
+            console.error("❌ 일기 내용이 너무 짧습니다.");
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "일기 내용이 필요합니다.",
+            );
+        }
+
+        // 프리미엄 회원 확인
+        const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "사용자 정보를 찾을 수 없습니다.",
+            );
+        }
+
+        const userData = userDoc.data();
+        const isPremium = userData.isMonthlyPremium || userData.isYearlyPremium;
+
+        if (!isPremium) {
+            throw new functions.https.HttpsError(
+                "permission-denied",
+                "이 기능은 프리미엄 회원만 사용할 수 있습니다.",
+            );
+        }
+
+        try {
+            // OpenAI 클라이언트 확인
+            if (!openai) {
+                const apiKey = functions.config().openai?.key;
+                console.error("❌ OpenAI 클라이언트가 초기화되지 않았습니다.");
+                throw new functions.https.HttpsError(
+                    "failed-precondition",
+                    "OpenAI API 키가 설정되지 않았습니다. 관리자에게 문의하세요.",
+                );
+            }
+
+            const targetLanguage = language === 'en' ? 'en' : 'ko';
+            const isEnglish = targetLanguage === 'en';
+
+            // ai일기 프롬프트 생성
+            const enhancePrompt = isEnglish
+                ? `Please enhance the following diary entry by:
+- Adding more descriptive details and emotions
+- Expanding on thoughts and feelings
+- Making the writing more vivid and engaging
+- Keeping the original meaning and tone
+- Writing in a natural, flowing style
+
+Please return only the enhanced diary content without any explanations or additional text.
+
+[Original Diary]
+${diaryContent}`
+                : `아래 일기 내용을 더 풍성하고 생생하게 보강해주세요:
+- 사용자가 준 키워드들은 반드시 모두 포함한다.
+- 단순 나열이 아니라, 하나의 하루 일기로 자연스럽게 연결한다.
+- 현실적인 일기 톤으로 작성하고, 과한 비유나 과장된 소설톤은 금지.
+- 분량은 250~400자 정도의 자연스러운 일기 형식으로 작성한다.
+- 키워드의 의미를 억지로 왜곡하지 않는다.
+- 문장의 끝은 항상 ‘~했다’, ‘~이었다’, ‘~같았다’, ‘~하려고 했다’처럼 서술형 일기체로 마무리한다.
+- 전체 톤은 일기장에 기록하는 담백하고 차분한 문체로 유지한다.
+- 과장된 소설톤은 금지하고, 현실적인 하루 기록처럼 작성한다.
+- 출력에는 일기 내용만 작성하고, 추가 설명은 포함하지 않는다.
+- 절대로 ‘~했어’ 같은 반말 구어체나 존댓말을 사용하지 않는다.
+
+[원본 일기]
+${diaryContent}`;
+
+            console.log("OpenAI API 호출 시작 (ai 일기)...");
+            const response = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                messages: [{ role: "user", content: enhancePrompt }],
+                temperature: 0.7,
+                max_tokens: 2000,
+            });
+
+            if (!response?.choices?.[0]?.message?.content) {
+                throw new Error("ai 일기 응답이 올바르지 않습니다.");
+            }
+
+            const enhancedContent = response.choices[0].message.content.trim();
+            console.log("ai 일기 완료, 길이:", enhancedContent.length);
+
+            return { enhancedContent };
+        } catch (error) {
+            console.error("ai 일기 실패 - 상세 에러:", {
+                message: error.message,
+                statusCode: error.statusCode,
+                status: error.status,
+                responseStatus: error.response?.status,
+                errorType: error.constructor?.name
+            });
+
+            const statusCode = error.statusCode || error.status || error.response?.status;
+            if (statusCode === 429) {
+                throw new functions.https.HttpsError(
+                    "resource-exhausted",
+                    "OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요."
+                );
+            }
+            if (statusCode === 401) {
+                throw new functions.https.HttpsError(
+                    "unauthenticated",
+                    "OpenAI API 키가 유효하지 않습니다."
+                );
+            }
+            throw new functions.https.HttpsError(
+                "internal",
+                `ai 일기 실패: ${error.message || error.toString()}`
+            );
+        }
+    } catch (outerError) {
+        console.error("=== 최상위 레벨 에러 발생 ===");
+        console.error("에러 타입:", outerError.constructor?.name);
+        console.error("에러 메시지:", outerError.message);
+
+        if (outerError instanceof functions.https.HttpsError) {
+            throw outerError;
+        }
+
+        throw new functions.https.HttpsError(
+            "internal",
+            `ai 일기 중 오류가 발생했습니다: ${outerError.message || "알 수 없는 오류"}`,
+        );
+    }
+});
+
 // 일기 작성 리마인더 예약 푸시 함수
 exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(async (context) => {
     const utcNow = DateTime.now().setZone('UTC');
