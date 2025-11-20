@@ -223,10 +223,10 @@ function FriendNovelList({ user }) {
                     orderBy('createdAt', 'desc')
                 );
                 const querySnapshot = await getDocs(q);
-                // 클라이언트 측에서 비공개 소설 필터링 (isPublic이 false가 아닌 것만)
+                // 클라이언트 측에서 비공개/삭제된 소설 필터링
                 const fetchedNovels = querySnapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(novel => novel.isPublic !== false); // undefined나 true는 통과
+                    .filter(novel => novel.isPublic !== false && novel.deleted !== true); // 공개되고 삭제되지 않은 소설만
                 setNovels(fetchedNovels);
 
                 // 구매 여부 확인
@@ -305,6 +305,13 @@ function FriendNovelList({ user }) {
                 }
                 // 결제 기록 저장
                 transaction.set(viewedRef, { viewedAt: new Date() });
+            });
+            // 구매한 소설 데이터를 사용자별 purchasedNovels 컬렉션에 백업 저장
+            const purchasedNovelRef = doc(db, 'users', user.uid, 'purchasedNovels', novel.id);
+            await setDoc(purchasedNovelRef, {
+                ...novel,
+                purchasedAt: Timestamp.now(),
+                originalNovelId: novel.id
             });
             // 포인트 사용 내역 기록
             await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {

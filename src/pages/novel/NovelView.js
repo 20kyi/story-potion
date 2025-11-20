@@ -272,6 +272,26 @@ function NovelView({ user }) {
                     return;
                 }
 
+                // 구매 기록 확인 (구매한 소설은 삭제/비공개 상태와 관계없이 접근 가능)
+                const viewedRef = fsDoc(db, 'users', user.uid, 'viewedNovels', fetchedNovel.id);
+                const viewedSnap = await getFsDoc(viewedRef);
+                if (viewedSnap.exists()) {
+                    // 구매한 소설인 경우, 삭제되었거나 비공개여도 접근 가능
+                    // 삭제된 소설인 경우 백업 데이터에서 가져오기
+                    if (fetchedNovel.deleted === true) {
+                        const purchasedNovelRef = fsDoc(db, 'users', user.uid, 'purchasedNovels', fetchedNovel.id);
+                        const purchasedNovelSnap = await getFsDoc(purchasedNovelRef);
+                        if (purchasedNovelSnap.exists()) {
+                            const purchasedNovelData = purchasedNovelSnap.data();
+                            setNovel({ ...purchasedNovelData, id: purchasedNovelSnap.id });
+                            setAccessGranted(true);
+                            return;
+                        }
+                    }
+                    setAccessGranted(true);
+                    return;
+                }
+
                 // 비공개 소설인 경우 친구도 접근 불가
                 if (fetchedNovel.isPublic === false) {
                     setError(t('novel_private') || '이 소설은 비공개입니다.');
@@ -283,13 +303,6 @@ function NovelView({ user }) {
                 const friendshipSnap = await getFsDoc(friendshipRef);
                 if (!friendshipSnap.exists()) {
                     setError(t('friend_only'));
-                    return;
-                }
-                // 친구 소설: 결제 기록 확인
-                const viewedRef = fsDoc(db, 'users', user.uid, 'viewedNovels', fetchedNovel.id);
-                const viewedSnap = await getFsDoc(viewedRef);
-                if (viewedSnap.exists()) {
-                    setAccessGranted(true);
                     return;
                 }
                 // 트랜잭션: 포인트 차감/지급 (모든 읽기 먼저)
@@ -314,6 +327,13 @@ function NovelView({ user }) {
                         transaction.set(viewedRef, { viewedAt: new Date() });
                     });
                     setAccessGranted(true);
+                    // 구매한 소설 데이터를 사용자별 purchasedNovels 컬렉션에 백업 저장
+                    const purchasedNovelRef = doc(db, 'users', user.uid, 'purchasedNovels', fetchedNovel.id);
+                    await setDoc(purchasedNovelRef, {
+                        ...fetchedNovel,
+                        purchasedAt: Timestamp.now(),
+                        originalNovelId: fetchedNovel.id
+                    });
                     // 소설 주인(저자) 포인트 적립 내역 기록
                     await addDoc(collection(db, 'users', fetchedNovel.userId, 'pointHistory'), {
                         type: 'earn',
@@ -378,7 +398,11 @@ function NovelView({ user }) {
         if (!novel || !novel.id) return;
         if (!window.confirm(t('novel_delete_confirm'))) return;
         try {
-            await deleteDoc(doc(db, 'novels', novel.id));
+            // 실제 삭제 대신 deleted 플래그 설정 (구매한 사용자들이 계속 접근할 수 있도록)
+            await updateDoc(doc(db, 'novels', novel.id), {
+                deleted: true,
+                deletedAt: Timestamp.now()
+            });
             alert(t('novel_deleted'));
             navigate('/novel', { state: { novelDeleted: true } });
         } catch (error) {

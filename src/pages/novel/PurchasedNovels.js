@@ -239,9 +239,29 @@ function PurchasedNovels({ user }) {
                     viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
                 );
                 
+                // 백업 데이터(purchasedNovels)도 함께 조회
+                const purchasedNovelsRef = collection(db, 'users', user.uid, 'purchasedNovels');
+                const purchasedNovelsSnapshot = await getDocs(purchasedNovelsRef);
+                const purchasedNovelsMap = {};
+                purchasedNovelsSnapshot.docs.forEach(doc => {
+                    purchasedNovelsMap[doc.id] = { id: doc.id, ...doc.data() };
+                });
+                
                 let purchased = novelDocs
                     .map((snap, idx) => {
-                        if (!snap.exists()) return null;
+                        const novelId = viewedNovelsData[idx].novelId;
+                        // 소설이 삭제되었거나 존재하지 않는 경우 백업 데이터 사용
+                        if (!snap.exists() || snap.data().deleted === true) {
+                            const backupNovel = purchasedNovelsMap[novelId];
+                            if (backupNovel) {
+                                return {
+                                    ...backupNovel,
+                                    purchasedAt: viewedNovelsData[idx].viewedAt,
+                                    isDeleted: true // 삭제된 소설임을 표시
+                                };
+                            }
+                            return null;
+                        }
                         return {
                             ...snap.data(),
                             id: snap.id,
