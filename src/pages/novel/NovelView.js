@@ -9,6 +9,8 @@ import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransacti
 import { getFsDoc as getDocFS } from 'firebase/firestore';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { createNovelPurchaseNotification, createPointEarnNotification } from '../../utils/notificationService';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import AlertModal from '../../components/ui/AlertModal';
 
 const Container = styled.div`
   display: flex;
@@ -180,6 +182,16 @@ const CoverHint = styled.div`
   font-family: inherit;
 `;
 
+const PurchaseNotice = styled.div`
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  margin-top: 16px;
+  padding: 0 20px;
+  line-height: 1.4;
+  font-family: inherit;
+`;
+
 function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
@@ -193,6 +205,9 @@ function NovelView({ user }) {
     const [accessGranted, setAccessGranted] = useState(false);
     const [purchaseCount, setPurchaseCount] = useState(0);
     const [showCoverView, setShowCoverView] = useState(true); // 표지 보기 모드로 시작
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [privateConfirmOpen, setPrivateConfirmOpen] = useState(false);
+    const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
@@ -394,24 +409,45 @@ function NovelView({ user }) {
         return `${novel.month}월 ${novel.weekNum}주차 소설`;
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!novel || !novel.id) return;
-        if (!window.confirm(t('novel_delete_confirm'))) return;
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        setDeleteConfirmOpen(false);
+        if (!novel || !novel.id) return;
         try {
             // 실제 삭제 대신 deleted 플래그 설정 (구매한 사용자들이 계속 접근할 수 있도록)
             await updateDoc(doc(db, 'novels', novel.id), {
                 deleted: true,
                 deletedAt: Timestamp.now()
             });
-            alert(t('novel_deleted'));
-            navigate('/novel', { state: { novelDeleted: true } });
+            setAlertModal({
+                open: true,
+                title: '',
+                message: t('novel_deleted')
+            });
+            setTimeout(() => {
+                navigate('/novel', { state: { novelDeleted: true } });
+            }, 1000);
         } catch (error) {
-            alert(t('novel_delete_failed'));
+            setAlertModal({
+                open: true,
+                title: '',
+                message: t('novel_delete_failed')
+            });
         }
     };
 
     const handleTogglePublic = async () => {
         if (!novel || !novel.id) return;
+        // 비공개로 전환하는 경우에만 안내
+        if (novel.isPublic !== false) {
+            setPrivateConfirmOpen(true);
+            return;
+        }
+        // 공개로 전환하는 경우 바로 실행
         const newIsPublic = !novel.isPublic;
         try {
             await updateDoc(doc(db, 'novels', novel.id), {
@@ -420,7 +456,30 @@ function NovelView({ user }) {
             setNovel({ ...novel, isPublic: newIsPublic });
         } catch (error) {
             console.error('공개 설정 변경 실패:', error);
-            alert('공개 설정 변경에 실패했습니다.');
+            setAlertModal({
+                open: true,
+                title: '',
+                message: '공개 설정 변경에 실패했습니다.'
+            });
+        }
+    };
+
+    const confirmTogglePrivate = async () => {
+        setPrivateConfirmOpen(false);
+        if (!novel || !novel.id) return;
+        const newIsPublic = false;
+        try {
+            await updateDoc(doc(db, 'novels', novel.id), {
+                isPublic: newIsPublic
+            });
+            setNovel({ ...novel, isPublic: newIsPublic });
+        } catch (error) {
+            console.error('공개 설정 변경 실패:', error);
+            setAlertModal({
+                open: true,
+                title: '',
+                message: '공개 설정 변경에 실패했습니다.'
+            });
         }
     };
 
@@ -456,6 +515,10 @@ function NovelView({ user }) {
                     />
                     <CoverTitle>{novel.title}</CoverTitle>
                     {/* <CoverHint>표지를 터치하거나 클릭하여 소설을 읽으세요</CoverHint> */}
+                    {/* 구매 전 안내 문구 (본인 소설이 아니고 접근 권한이 없을 때만) */}
+                    {novel.userId !== user.uid && !accessGranted && (
+                        <PurchaseNotice>{t('novel_purchase_notice')}</PurchaseNotice>
+                    )}
                 </CoverViewContainer>
                 <Navigation />
             </Container>
@@ -466,6 +529,28 @@ function NovelView({ user }) {
     return (
         <Container>
             <Header user={user} />
+            <ConfirmModal
+                open={deleteConfirmOpen}
+                title={t('novel_delete_confirm')}
+                description={t('novel_delete_warning')}
+                onCancel={() => setDeleteConfirmOpen(false)}
+                onConfirm={confirmDelete}
+                confirmText={t('confirm')}
+            />
+            <ConfirmModal
+                open={privateConfirmOpen}
+                title="소설 비공개 전환"
+                description={`${t('novel_private_warning')}\n\n계속하시겠습니까?`}
+                onCancel={() => setPrivateConfirmOpen(false)}
+                onConfirm={confirmTogglePrivate}
+                confirmText={t('confirm')}
+            />
+            <AlertModal
+                open={alertModal.open}
+                title={alertModal.title}
+                message={alertModal.message}
+                onClose={() => setAlertModal({ open: false, title: '', message: '' })}
+            />
             <NovelHeader>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelInfo>

@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, orderBy, doc, getDoc, runTransaction
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import AlertModal from '../../components/ui/AlertModal';
 import { useTheme } from '../../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
 import { createNovelUrl } from '../../utils/novelUtils';
@@ -197,6 +198,7 @@ function FriendNovelList({ user }) {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [pendingNovel, setPendingNovel] = useState(null);
     const [friendInfo, setFriendInfo] = useState(null); // 친구 정보 상태 추가
+    const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
 
     useEffect(() => {
         if (!userId) {
@@ -281,7 +283,11 @@ function FriendNovelList({ user }) {
     const handlePurchase = async (novel) => {
         setConfirmOpen(false);
         if (!user) {
-            alert(t('friend_novel_login_required'));
+            setAlertModal({
+                open: true,
+                title: '',
+                message: t('friend_novel_login_required')
+            });
             return;
         }
         setLoadingNovelId(novel.id);
@@ -339,9 +345,17 @@ function FriendNovelList({ user }) {
                 novel.title
             );
             setPurchased((prev) => ({ ...prev, [novel.id]: true }));
-            alert(t('friend_novel_buy_success'));
+            setAlertModal({
+                open: true,
+                title: '',
+                message: t('friend_novel_buy_success')
+            });
         } catch (e) {
-            alert(e.message || t('friend_novel_buy_failed'));
+            setAlertModal({
+                open: true,
+                title: '',
+                message: e.message || t('friend_novel_buy_failed')
+            });
         } finally {
             setLoadingNovelId(null);
         }
@@ -353,10 +367,16 @@ function FriendNovelList({ user }) {
             <ConfirmModal
                 open={confirmOpen}
                 title={t('friend_novel_buy_confirm_title')}
-                description={t('friend_novel_buy_confirm_desc')}
+                description={`${t('friend_novel_buy_confirm_desc')}\n\n${t('novel_purchase_notice')}`}
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={() => handlePurchase(pendingNovel)}
                 confirmText={t('confirm')}
+            />
+            <AlertModal
+                open={alertModal.open}
+                title={alertModal.title}
+                message={alertModal.message}
+                onClose={() => setAlertModal({ open: false, title: '', message: '' })}
             />
             {(!userId) ? (
                 <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
