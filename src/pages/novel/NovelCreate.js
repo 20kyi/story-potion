@@ -662,12 +662,16 @@ function NovelCreate({ user }) {
     // 소설 저장하기 함수 추가
     const handleSaveNovel = async () => {
         if (!isNovelGenerated || isNovelSaved) return;
+        // week 필드에 년도 포함 (year, month, weekNum이 모두 있는 경우)
+        const weekValue = (year && month && weekNum) 
+            ? `${year}년 ${month}월 ${weekNum}주차` 
+            : (week || '');
         // undefined/null/함수 등 비정상 값 제거 및 안전한 값 할당
         const newNovel = {
             userId: user?.uid || '',
             title: title || '',
             imageUrl: generatedImageUrl || '',
-            week: week || '',
+            week: weekValue,
             dateRange: dateRange || '',
             genre: selectedGenre || '',
             content: content || '',

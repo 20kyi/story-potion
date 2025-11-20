@@ -512,12 +512,14 @@ const Novel = ({ user }) => {
                 const newNovelsMap = {};
                 novelSnapshot.forEach(doc => {
                     const novel = doc.data();
-                    if (novel.week) { // week 정보가 있는 소설만 맵에 추가
+                    // year, month, weekNum이 모두 있는 경우에만 맵에 추가
+                    if (novel.year && novel.month && novel.weekNum) {
+                        const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
                         // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
-                        if (!newNovelsMap[novel.week]) {
-                            newNovelsMap[novel.week] = [];
+                        if (!newNovelsMap[weekKey]) {
+                            newNovelsMap[weekKey] = [];
                         }
-                        newNovelsMap[novel.week].push({ id: doc.id, ...novel });
+                        newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                     }
                 });
                 setNovelsMap(newNovelsMap);
@@ -533,7 +535,7 @@ const Novel = ({ user }) => {
                 freeNovelHistorySnapshot.forEach(doc => {
                     const record = doc.data();
                     if (record.year && record.month && record.weekNum) {
-                        const key = `${record.month}월 ${record.weekNum}주차`;
+                        const key = `${record.year}년 ${record.month}월 ${record.weekNum}주차`;
                         newFreeNovelHistoryMap[key] = true;
                     }
                 });
@@ -600,12 +602,14 @@ const Novel = ({ user }) => {
                     const newNovelsMap = {};
                     novelSnapshot.forEach(doc => {
                         const novel = doc.data();
-                        if (novel.week) { // week 정보가 있는 소설만 맵에 추가
+                        // year, month, weekNum이 모두 있는 경우에만 맵에 추가
+                        if (novel.year && novel.month && novel.weekNum) {
+                            const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
                             // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
-                            if (!newNovelsMap[novel.week]) {
-                                newNovelsMap[novel.week] = [];
+                            if (!newNovelsMap[weekKey]) {
+                                newNovelsMap[weekKey] = [];
                             }
-                            newNovelsMap[novel.week].push({ id: doc.id, ...novel });
+                            newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                         }
                     });
                     setNovelsMap(newNovelsMap);
@@ -621,7 +625,7 @@ const Novel = ({ user }) => {
                     freeNovelHistorySnapshot.forEach(doc => {
                         const record = doc.data();
                         if (record.year && record.month && record.weekNum) {
-                            const key = `${record.month}월 ${record.weekNum}주차`;
+                            const key = `${record.year}년 ${record.month}월 ${record.weekNum}주차`;
                             newFreeNovelHistoryMap[key] = true;
                         }
                     });
@@ -755,7 +759,7 @@ const Novel = ({ user }) => {
 
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
-        const weekKey = `${month}월 ${week.weekNum}주차`;
+        const weekKey = `${year}년 ${month}월 ${week.weekNum}주차`;
         const novelsForWeek = novelsMap[weekKey] || [];
         const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
 
@@ -937,7 +941,7 @@ const Novel = ({ user }) => {
                     {weeks.map((week) => {
                         const progress = weeklyProgress[week.weekNum] || 0;
                         const isCompleted = progress >= 100;
-                        const weekKey = `${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
+                        const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
                         const novelsForWeek = novelsMap[weekKey] || [];
                         const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
                         const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
