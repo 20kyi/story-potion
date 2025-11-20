@@ -164,7 +164,7 @@ const DiaryPreviewTitle = styled.div`
   font-size: 16px;
   font-weight: 600;
   color: #1A1A1A;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
