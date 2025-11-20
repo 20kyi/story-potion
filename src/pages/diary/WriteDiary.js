@@ -2369,7 +2369,7 @@ function WriteDiary({ user }) {
                     <EnhanceModal onClick={() => setIsEnhanceModalOpen(false)}>
                         <EnhanceModalContent isDark={isDark} onClick={(e) => e.stopPropagation()}>
                             <EnhanceModalHeader isDark={isDark}>
-                                <EnhanceModalTitle isDark={isDark}>✨ AI로 보강된 일기</EnhanceModalTitle>
+                                <EnhanceModalTitle isDark={isDark}>✨ AI로 생성한 일기</EnhanceModalTitle>
                                 <EnhanceModalClose isDark={isDark} onClick={() => {
                                     setIsEnhanceModalOpen(false);
                                 }}>
@@ -2382,7 +2382,7 @@ function WriteDiary({ user }) {
                                     <EnhanceText isDark={isDark}>{diary.content}</EnhanceText>
                                 </EnhanceSection>
                                 <EnhanceSection>
-                                    <EnhanceLabel isDark={isDark}>보강된 일기</EnhanceLabel>
+                                    <EnhanceLabel isDark={isDark}>AI로 생성한 일기</EnhanceLabel>
                                     <EnhanceText isDark={isDark}>{enhancedContent}</EnhanceText>
                                 </EnhanceSection>
                             </EnhanceModalBody>

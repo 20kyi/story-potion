@@ -296,6 +296,7 @@
     "diary_emotion_top_angry": "In {{month}}, you felt angry many times. Please be kind to your heart.",
     "diary_emotion_top_cry": "In {{month}}, you had many sad moments. Tough times will pass soon.",
     "diary_emotion_top_empty": "Your heart for {{month}} is still empty.",
+    "diary_emotion_top_no_diary": "Ready to start your story in {{month}}?",
     "diary_no_more": "No more diaries.",
     "diary_swipe_back": "(Swipe left to go back to the previous diary)",
     "confirm": "Confirm",

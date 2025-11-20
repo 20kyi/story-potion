@@ -185,7 +185,7 @@ const EmotionStatsContainer = styled.div`
 
 const TopMessage = styled.div`
   text-align: center;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 500;
   margin-bottom: 18px;
   color: #7c6f6f;
@@ -493,16 +493,29 @@ function Diary({ user }) {
 
     // 상단 문구 (이번 달 감정 요약 - 감정별 다른 멘트)
     const getTopMessage = () => {
+        // 언어별로 월 표시
+        const monthLabel = language === 'en'
+            ? currentDate.toLocaleDateString('en-US', { month: 'long' })
+            : `${currentDate.getMonth() + 1}`;
+
+        // 현재 달의 일기가 있는지 확인
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const hasDiaryInMonth = diaries.some(diary => {
+            const diaryDate = new Date(diary.date);
+            return diaryDate.getFullYear() === year && diaryDate.getMonth() === month;
+        });
+
+        // 일기를 전혀 작성하지 않은 달인 경우
+        if (!hasDiaryInMonth) {
+            return t('diary_emotion_top_no_diary', { month: monthLabel });
+        }
+
         const { percent } = getEmotionBarData();
         const emotionEntries = Object.entries(percent)
             .filter(([k]) => k !== 'empty')
             .sort((a, b) => b[1] - a[1]);
         const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : 'empty';
-
-        // 언어별로 월 표시
-        const monthLabel = language === 'en'
-            ? currentDate.toLocaleDateString('en-US', { month: 'long' })
-            : `${currentDate.getMonth() + 1}`;
 
         const keyMap = {
             love: 'diary_emotion_top_love',

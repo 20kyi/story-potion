@@ -306,6 +306,7 @@
     "diary_emotion_top_angry": "{{month}}월, 화남이 많았어요. 내 마음을 토닥여주세요",
     "diary_emotion_top_cry": "{{month}}월, 슬픔이 많았군요. 힘든 순간도 곧 지나갈 거예요",
     "diary_emotion_top_empty": "{{month}}월의 마음은 비어있어요",
+    "diary_emotion_top_no_diary": "{{month}}월의 이야기를 시작해볼까요?",
     "diary_no_more": "더이상 일기가 없습니다.",
     "diary_swipe_back": "(왼쪽으로 스와이프하면 이전 일기로 돌아갑니다)",
     "confirm": "확인",
