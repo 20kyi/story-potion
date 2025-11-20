@@ -670,6 +670,7 @@ function WriteDiary({ user }) {
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
     const [isPremium, setIsPremium] = useState(false);
+    const [imageLimitExtended, setImageLimitExtended] = useState(false); // 프리미엄 회원이었을 때 작성한 일기인지 여부
     const { t } = useTranslation();
     const { language } = useLanguage();
 
@@ -917,6 +918,8 @@ function WriteDiary({ user }) {
             setStickerCounter(existingDiary.stickers ? existingDiary.stickers.length : 0);
             setIsEditMode(true);
             setExistingDiaryId(diaryId);
+            // 프리미엄 회원이었을 때 작성한 일기인지 확인
+            setImageLimitExtended(existingDiary.imageLimitExtended || false);
         } else {
             // Reset form if no diary exists for the new date
             setDiary({
@@ -933,6 +936,7 @@ function WriteDiary({ user }) {
             setStickerCounter(0);
             setIsEditMode(false);
             setExistingDiaryId(null);
+            setImageLimitExtended(false);
         }
     };
 
@@ -955,10 +959,10 @@ function WriteDiary({ user }) {
     const handleImageUpload = async (e) => {
         const newFiles = Array.from(e.target.files);
         const totalImages = imagePreview.length + newFiles.length;
-        const maxImages = isPremium ? 4 : 1;
+        const maxImages = (isPremium || imageLimitExtended) ? 4 : 1;
 
         if (totalImages > maxImages) {
-            if (!isPremium) {
+            if (!(isPremium || imageLimitExtended)) {
                 toast.showToast(t('image_limit_premium_required'), 'info');
             } else {
                 toast.showToast(t('image_limit_max'), 'error');
@@ -1585,12 +1589,19 @@ function WriteDiary({ user }) {
                 emotion: diary.emotion,
                 mood: diary.mood,
                 stickers: stickers,
+                imageLimitExtended: isPremium, // 프리미엄 회원이 작성한 일기는 imageLimitExtended로 표시
                 createdAt: new Date(),
             };
             let diaryRef;
             if (isEditMode && existingDiaryId) {
                 diaryRef = doc(db, 'diaries', existingDiaryId);
-                await setDoc(diaryRef, { ...diaryData, updatedAt: new Date() }, { merge: true });
+                // 기존 일기의 imageLimitExtended는 유지하되, 현재 프리미엄 회원이거나 기존에 imageLimitExtended가 true였으면 유지
+                const updateData = { ...diaryData, updatedAt: new Date() };
+                // 기존에 imageLimitExtended가 true였거나, 현재 프리미엄 회원이면 true로 유지
+                if (imageLimitExtended || isPremium) {
+                    updateData.imageLimitExtended = true;
+                }
+                await setDoc(diaryRef, updateData, { merge: true });
                 toast.showToast(t('diary_updated'), 'success');
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
@@ -1670,10 +1681,15 @@ function WriteDiary({ user }) {
                 }
             }
             // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
-            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), {
+            const imageUpdateData = {
                 imageUrls: finalImageUrlsResult,
                 updatedAt: new Date(),
-            });
+            };
+            // 사진이 4개까지 업로드된 일기는 imageLimitExtended를 true로 설정
+            if (finalImageUrlsResult.length >= 4) {
+                imageUpdateData.imageLimitExtended = true;
+            }
+            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
 
             navigate(`/diary/date/${formatDateToString(selectedDate)}`);
         } catch (error) {
@@ -1897,7 +1913,7 @@ function WriteDiary({ user }) {
                         accept="image/*"
                         onChange={handleImageUpload}
                         style={{ display: 'none' }}
-                        disabled={isPremium ? imagePreview.length >= 4 : imagePreview.length >= 1}
+                        disabled={(isPremium || imageLimitExtended) ? imagePreview.length >= 4 : imagePreview.length >= 1}
                     />
                     <ImagePreviewContainer
                         style={{
@@ -1960,12 +1976,12 @@ function WriteDiary({ user }) {
                             </ImagePreviewBox>
                         ))}
                         {/* 사진 추가 버튼 */}
-                        {(isPremium && imagePreview.length < 4) || (!isPremium && imagePreview.length < 1) ? (
+                        {((isPremium || imageLimitExtended) && imagePreview.length < 4) || (!(isPremium || imageLimitExtended) && imagePreview.length < 1) ? (
                             <UploadLabel htmlFor="image-upload">
                                 <span className="icon">📸</span>
                                 {t('image_add')}
                             </UploadLabel>
-                        ) : !isPremium && imagePreview.length === 1 ? (
+                        ) : !(isPremium || imageLimitExtended) && imagePreview.length === 1 ? (
                             <button
                                 type="button"
                                 onClick={() => navigate('/my/shop')}
@@ -2031,11 +2047,11 @@ function WriteDiary({ user }) {
                             fontWeight: 500,
                             letterSpacing: '-0.3px',
                         }}>
-                            ({imagePreview.length}/{isPremium ? 4 : 1})
+                            ({imagePreview.length}/{(isPremium || imageLimitExtended) ? 4 : 1})
                         </span>
                     </div>
                     {/* 프리미엄 사용자 최대 사진 제한 안내 */}
-                    {isPremium && imagePreview.length >= 4 && (
+                    {(isPremium || imageLimitExtended) && imagePreview.length >= 4 && (
                         <div style={{
                             marginTop: 12,
                             padding: '8px 12px',
