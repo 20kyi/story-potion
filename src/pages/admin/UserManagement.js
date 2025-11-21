@@ -247,25 +247,32 @@ const Input = styled.input`
 `;
 
 const Select = styled.select`
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#ddd'};
   border-radius: 4px;
   margin: 5px;
-  font-size: 14px;
+  font-size: 13px;
   background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }) => theme.theme === 'dark' ? '#fff' : '#333'} !important;
+  height: 32px;
+  box-sizing: border-box;
   
   &:focus {
     outline: none;
     border-color: #3498f3;
   }
   
+  option {
+    background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
+    color: ${({ theme }) => theme.theme === 'dark' ? '#fff' : '#333'} !important;
+  }
+  
   @media (max-width: 768px) {
-    padding: 12px;
-    font-size: 16px;
+    padding: 6px 10px;
+    font-size: 13px;
     margin: 4px 0;
     width: 100%;
-    min-height: 44px;
+    height: 32px;
     box-sizing: border-box;
   }
 `;
@@ -451,8 +458,8 @@ const EmptyMobileCard = styled.div`
 
 const MobileCardHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-start;
+  align-items: center;
   margin-bottom: 12px;
 `;
 
@@ -648,18 +655,73 @@ function UserManagement({ user }) {
     }
   };
 
+  // 프리미엄 간단 표시 (모바일용)
+  const getPremiumText = (user) => {
+    if (user.isYearlyPremium) return '연간';
+    if (user.isMonthlyPremium) return '월간';
+    return '일반';
+  };
+
+  // 프리미엄 색상 가져오기
+  const getPremiumColor = (user) => {
+    if (user.isYearlyPremium) return '#FFC300'; // 금색
+    if (user.isMonthlyPremium) return '#3498db'; // 파란색
+    return '#95a5a6'; // 회색
+  };
+
   // Firestore에서 유저 목록 불러오기 (페이지네이션/정렬/검색)
   const loadUsersPage = async (opts = {}) => {
     setLoading(true);
     try {
+      // 프리미엄이나 상태 정렬은 클라이언트 사이드에서 처리
+      const needsClientSort = orderByField === 'premium' || orderByField === 'status';
+      const firestoreOrderBy = needsClientSort ? 'createdAt' : orderByField; // 기본값 사용
+
       const { users: loadedUsers, lastDoc: newLastDoc } = await getUsersWithQuery({
-        limit: pageLimit,
-        orderBy: orderByField,
-        orderDir,
+        limit: needsClientSort ? 1000 : pageLimit, // 클라이언트 정렬을 위해 더 많이 가져옴
+        orderBy: firestoreOrderBy,
+        orderDir: needsClientSort ? 'desc' : orderDir,
         startAfter: opts.startAfter || null,
         where: opts.where || []
       });
-      setUsers(loadedUsers);
+
+      // 클라이언트 사이드 정렬
+      let finalUsers = loadedUsers;
+      if (needsClientSort) {
+        finalUsers = [...loadedUsers].sort((a, b) => {
+          let aVal, bVal;
+
+          if (orderByField === 'premium') {
+            // 프리미엄: 연간(3) > 월간(2) > 일반(1)
+            const getPremiumValue = (user) => {
+              if (user.isYearlyPremium) return 3;
+              if (user.isMonthlyPremium) return 2;
+              return 1;
+            };
+            aVal = getPremiumValue(a);
+            bVal = getPremiumValue(b);
+          } else if (orderByField === 'status') {
+            // 상태: 정상(3) > 정지(2) > 탈퇴(1)
+            const getStatusValue = (status) => {
+              if (!status || status === '정상') return 3;
+              if (status === '정지') return 2;
+              if (status === '탈퇴') return 1;
+              return 0;
+            };
+            aVal = getStatusValue(a.status);
+            bVal = getStatusValue(b.status);
+          }
+
+          if (aVal === bVal) return 0;
+          const comparison = aVal > bVal ? 1 : -1;
+          return orderDir === 'desc' ? -comparison : comparison;
+        });
+
+        // 페이지네이션 적용
+        finalUsers = finalUsers.slice(0, pageLimit);
+      }
+
+      setUsers(finalUsers);
 
       if (opts.isNext) {
         // 다음 페이지로 이동: 현재 lastDoc을 스택에 저장하고 새로운 lastDoc 설정
@@ -714,10 +776,14 @@ function UserManagement({ user }) {
     // eslint-disable-next-line
   }, [orderByField, orderDir]);
 
-  // 정렬 변경 핸들러
-  const handleSort = (field) => {
-    if (orderByField === field) setOrderDir(orderDir === 'desc' ? 'asc' : 'desc');
-    else setOrderByField(field);
+  // 정렬 기준 변경 핸들러
+  const handleSortFieldChange = (field) => {
+    setOrderByField(field);
+  };
+
+  // 정렬 방향 변경 핸들러
+  const handleSortDirChange = (dir) => {
+    setOrderDir(dir);
   };
 
   // 다음/이전 페이지
@@ -1188,8 +1254,8 @@ function UserManagement({ user }) {
       ]);
       setUserActivity({
         diaries: diariesSnap.docs.map(d => d.data()),
-        novels: novelsSnap.docs.map(d => d.data()),
-        comments: commentsSnap.docs.map(d => d.data()),
+        novels: novelsSnap.docs.map(n => n.data()),
+        comments: commentsSnap.docs.map(c => c.data()),
       });
     } catch (e) {
       setUserActivity({ diaries: [], novels: [], comments: [] });
@@ -1480,38 +1546,55 @@ function UserManagement({ user }) {
           <AccordionIcon theme={theme} isOpen={openSections.userList}>▼</AccordionIcon>
         </SectionTitle>
         <SectionContent isOpen={openSections.userList}>
-          <ButtonGroup theme={theme}>
-            <ButtonGroupTitle theme={theme}>표시 설정</ButtonGroupTitle>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-              <label style={{ color: theme.text, fontSize: '14px', whiteSpace: 'nowrap' }}>페이지당 표시 개수:</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <Select
+              theme={theme}
+              value={pageLimit}
+              onChange={(e) => {
+                const newLimit = parseInt(e.target.value);
+                setPageLimit(newLimit);
+                // 목록 다시 로드
+                setTimeout(() => {
+                  loadUsersPage();
+                }, 100);
+              }}
+              style={{ width: '100px', flex: '0 0 auto' }}
+            >
+              <option value={5}>5개</option>
+              <option value={10}>10개</option>
+              <option value={20}>20개</option>
+              <option value={30}>30개</option>
+              <option value={50}>50개</option>
+              <option value={100}>100개</option>
+            </Select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flex: '1 1 auto' }}>
               <Select
                 theme={theme}
-                value={pageLimit}
+                value={orderByField}
                 onChange={(e) => {
-                  const newLimit = parseInt(e.target.value);
-                  setPageLimit(newLimit);
-                  // 목록 다시 로드
-                  setTimeout(() => {
-                    loadUsersPage();
-                  }, 100);
+                  handleSortFieldChange(e.target.value);
                 }}
-                style={{ width: '120px' }}
+                style={{ flex: '1 1 auto', minWidth: '120px' }}
               >
-                <option value={5}>5개</option>
-                <option value={10}>10개</option>
-                <option value={20}>20개</option>
-                <option value={30}>30개</option>
-                <option value={50}>50개</option>
-                <option value={100}>100개</option>
+                <option value="createdAt">가입일</option>
+                <option value="point">포인트</option>
+                <option value="displayName">이름</option>
+                <option value="premium">프리미엄</option>
+                <option value="status">상태</option>
+              </Select>
+              <Select
+                theme={theme}
+                value={orderDir}
+                onChange={(e) => {
+                  handleSortDirChange(e.target.value);
+                }}
+                style={{ flex: '1 1 auto', minWidth: '100px' }}
+              >
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
               </Select>
             </div>
-          </ButtonGroup>
-          <ButtonGroup theme={theme} style={{ marginTop: '10px' }}>
-            <ButtonGroupTitle theme={theme}>정렬 옵션</ButtonGroupTitle>
-            <Button onClick={() => handleSort('createdAt')}>가입일 정렬</Button>
-            <Button onClick={() => handleSort('point')}>포인트 정렬</Button>
-            <Button onClick={() => handleSort('displayName')}>이름 정렬</Button>
-          </ButtonGroup>
+          </div>
 
           {/* 데스크톱 테이블 */}
           <div style={{ overflowX: 'auto' }}>
@@ -1519,7 +1602,6 @@ function UserManagement({ user }) {
               <TableHeader theme={theme}>
                 <tr>
                   <TableHeaderCell theme={theme}>닉네임</TableHeaderCell>
-                  <TableHeaderCell theme={theme}>이메일</TableHeaderCell>
                   <TableHeaderCell theme={theme}>프리미엄</TableHeaderCell>
                   <TableHeaderCell theme={theme}>포인트</TableHeaderCell>
                   <TableHeaderCell theme={theme}>상태</TableHeaderCell>
@@ -1530,10 +1612,28 @@ function UserManagement({ user }) {
                 {users.map((user) => (
                   <TableRow key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
                     <TableCell theme={theme}>
-                      <strong>{user.displayName || '이름 없음'}</strong>
-                    </TableCell>
-                    <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
-                      {user.email}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <img
+                          src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=32`}
+                          alt={user.displayName || 'User'}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            flexShrink: 0
+                          }}
+                          onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=32`;
+                          }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <strong style={{ lineHeight: '1.2' }}>{user.displayName || '이름 없음'}</strong>
+                          <div style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666', lineHeight: '1.2' }}>
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell theme={theme}>
                       {renderPremiumBadge(user)}
@@ -1552,7 +1652,7 @@ function UserManagement({ user }) {
                 {/* 빈 행 추가 (10명 미만일 때) */}
                 {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
                   <EmptyTableRow key={`empty-${index}`} theme={theme}>
-                    <EmptyTableCell theme={theme} colSpan={6} style={{ textAlign: 'center' }}>
+                    <EmptyTableCell theme={theme} colSpan={5} style={{ textAlign: 'center' }}>
                       -
                     </EmptyTableCell>
                   </EmptyTableRow>
@@ -1566,19 +1666,60 @@ function UserManagement({ user }) {
             {users.map((user) => (
               <MobileUserCard key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
                 <MobileCardHeader>
-                  <div>
-                    <MobileCardTitle theme={theme}>{user.displayName || '이름 없음'}</MobileCardTitle>
-                    <MobileCardEmail theme={theme}>{user.email}</MobileCardEmail>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                    <img
+                      src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=40`}
+                      alt={user.displayName || 'User'}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        flexShrink: 0
+                      }}
+                      onError={(e) => {
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=40`;
+                      }}
+                    />
+                    <div>
+                      <MobileCardTitle theme={theme}>{user.displayName || '이름 없음'}</MobileCardTitle>
+                      <MobileCardEmail theme={theme}>{user.email}</MobileCardEmail>
+                    </div>
                   </div>
-                  {renderStatusBadge(user.status)}
                 </MobileCardHeader>
-                <MobileCardRow theme={theme}>
-                  <MobileCardLabel theme={theme}>프리미엄</MobileCardLabel>
-                  <MobileCardValue theme={theme}>{renderPremiumBadge(user)}</MobileCardValue>
-                </MobileCardRow>
-                <MobileCardRow theme={theme}>
-                  <MobileCardLabel theme={theme}>포인트</MobileCardLabel>
-                  <MobileCardValue theme={theme} style={{ color: '#3498f3' }}>{user.point || 0}p</MobileCardValue>
+                <MobileCardRow theme={theme} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                  marginBottom: '8px'
+                }}>
+                  <span>{renderStatusBadge(user.status)}</span>
+                  <span style={{
+                    fontSize: '12px',
+                    color: theme.text,
+                    fontWeight: '500'
+                  }}>•</span>
+                  <span style={{
+                    fontSize: '13px',
+                    color: getPremiumColor(user),
+                    fontWeight: '600',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: getPremiumColor(user) === '#FFC300' ? 'rgba(255, 195, 0, 0.15)' :
+                      getPremiumColor(user) === '#3498db' ? 'rgba(52, 152, 219, 0.15)' :
+                        'rgba(149, 165, 166, 0.15)'
+                  }}>{getPremiumText(user)}</span>
+                  <span style={{
+                    fontSize: '12px',
+                    color: theme.text,
+                    fontWeight: '500'
+                  }}>•</span>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#3498f3',
+                    fontWeight: 'bold'
+                  }}>{user.point || 0}p</span>
                 </MobileCardRow>
                 <MobileCardRow theme={theme}>
                   <MobileCardLabel theme={theme}>가입일</MobileCardLabel>
@@ -1614,7 +1755,19 @@ function UserManagement({ user }) {
             gap: 12,
             flexWrap: 'nowrap'
           }}>
-            <Button onClick={handlePrevPage} disabled={pageStack.length === 0}>이전</Button>
+            <Button
+              onClick={handlePrevPage}
+              disabled={pageStack.length === 0}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                minHeight: 'auto',
+                height: '28px',
+                width: '60px'
+              }}
+            >
+              이전
+            </Button>
             <span style={{
               color: theme.text,
               fontSize: '14px',
@@ -1624,7 +1777,19 @@ function UserManagement({ user }) {
             }}>
               {pageStack.length + 1}/{totalUsers ? Math.ceil(totalUsers / pageLimit) : '?'}
             </span>
-            <Button onClick={handleNextPage} disabled={!lastDoc}>다음</Button>
+            <Button
+              onClick={handleNextPage}
+              disabled={!lastDoc}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                minHeight: 'auto',
+                height: '28px',
+                width: '60px'
+              }}
+            >
+              다음
+            </Button>
           </div>
         </SectionContent>
       </Section>
@@ -2306,7 +2471,8 @@ function UserManagement({ user }) {
                 <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#f8f9fa', borderRadius: '8px', fontSize: isMobile ? '14px' : '13px' }}>
                   <div style={{ marginBottom: '6px' }}><b>이메일:</b> {userDetail.email}</div>
                   <div style={{ marginBottom: '6px' }}><b>닉네임:</b> {userDetail.displayName}</div>
-                  <div><b>가입일:</b> {formatDate(userDetail.createdAt)}</div>
+                  <div style={{ marginBottom: '6px' }}><b>가입일:</b> {formatDate(userDetail.createdAt)}</div>
+                  <div><b>최근 접속일:</b> {formatDate(userDetail.lastLoginAt) || '없음'}</div>
                 </div>
 
                 <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#e8f4fd', borderRadius: '8px' }}>
@@ -2401,10 +2567,6 @@ function UserManagement({ user }) {
                   {statusActionStatus && <div style={{ marginTop: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{statusActionStatus.message}</div>}
                 </div>
 
-                <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#f8f9fa', borderRadius: '8px', fontSize: isMobile ? '13px' : '12px' }}>
-                  <div style={{ marginBottom: '6px' }}><b>최근 접속일:</b> {formatDate(userDetail.lastLoginAt)}</div>
-                  <div><b>마지막 활동일:</b> {formatDate(userDetail.lastActivityAt)}</div>
-                </div>
                 <hr />
                 <div><b>최근 일기</b>
                   <ul>{userActivity.diaries.map((d, i) => <li key={i}>{d.title || '(제목 없음)'} <span style={{ color: '#888' }}>{formatDate(d.createdAt)}</span></li>)}</ul>
