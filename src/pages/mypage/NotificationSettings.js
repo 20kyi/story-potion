@@ -136,7 +136,6 @@ function NotificationSettings({ user }) {
                 if (!window.__pushRegListenerAdded) {
                     window.__pushRegListenerAdded = true;
                     await PushNotifications.addListener('registration', async (token) => {
-                        alert('FCM 토큰: ' + token.value + '\nuser: ' + JSON.stringify(user));
                         console.log('FCM 토큰:', token.value, 'user:', user);
                         if (user && token.value) {
                             await saveFcmTokenToFirestore(user.uid, token.value);
