@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
@@ -93,6 +93,72 @@ const SettingLabel = styled.div`
   font-weight: 500;
 `;
 
+const ActionButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+  
+  @media (min-width: 480px) {
+    flex-direction: row;
+    gap: 12px;
+  }
+`;
+
+const ActionButton = styled.button`
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  @media (min-width: 480px) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+  }
+`;
+
+const ReadingModeButton = styled(ActionButton)`
+  background: #cb6565;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(203, 101, 101, 0.3);
+  
+  @media (min-width: 480px) {
+    &:hover {
+      box-shadow: 0 6px 16px rgba(203, 101, 101, 0.4);
+    }
+  }
+`;
+
+const DeleteButton = styled(ActionButton)`
+  background: transparent;
+  color: #e46262;
+  border: 1px solid #e46262;
+  box-shadow: none;
+  
+  @media (min-width: 480px) {
+    &:hover {
+      background: rgba(228, 98, 98, 0.1);
+      box-shadow: 0 2px 8px rgba(228, 98, 98, 0.2);
+    }
+  }
+`;
+
 const ToggleButton = styled.button`
   width: 50px;
   height: 28px;
@@ -124,19 +190,46 @@ const PurchaseCount = styled.div`
 `;
 
 const NovelContent = styled.div`
-  font-size: 16px;
-  line-height: 1.8;
-  color: ${({ theme }) => theme.cardText};
+  font-size: ${({ fontSize }) => fontSize || 16}px;
+  line-height: ${({ lineHeight }) => lineHeight || 1.8};
+  color: ${({ readTheme, theme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return theme.cardText;
+  }};
   white-space: pre-line;
-  padding: 20px;
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  font-family: inherit;
+  padding: ${({ isReadingMode }) => isReadingMode ? '40px 24px' : '20px'};
+  background: ${({ readTheme, theme, isReadingMode }) => {
+    if (isReadingMode) {
+      if (readTheme === 'sepia') return '#f4e8d7';
+      if (readTheme === 'dark') return '#1a1a1a';
+      return '#fefefe';
+    }
+    return theme.card;
+  }};
+  border-radius: ${({ isReadingMode }) => isReadingMode ? '0' : '15px'};
+  font-family: ${({ isReadingMode }) => isReadingMode ? '"Noto Serif KR", "Nanum Myeongjo", serif' : 'inherit'};
+  text-align: ${({ textAlign }) => textAlign || 'left'};
+  max-width: ${({ isReadingMode }) => isReadingMode ? '680px' : '100%'};
+  margin: ${({ isReadingMode }) => isReadingMode ? '0 auto' : '0'};
+  min-height: ${({ isReadingMode }) => isReadingMode ? 'calc(100vh - 80px)' : 'auto'};
+  transition: all 0.3s ease;
 
   /* 다크모드 대응 */
   body.dark & {
-    color: #f1f1f1;
-    background: #232323;
+    color: ${({ readTheme }) => {
+      if (readTheme === 'sepia') return '#5c4b37';
+      if (readTheme === 'dark') return '#e8e8e8';
+      return '#f1f1f1';
+    }};
+    background: ${({ readTheme, isReadingMode }) => {
+      if (isReadingMode) {
+        if (readTheme === 'sepia') return '#f4e8d7';
+        if (readTheme === 'dark') return '#1a1a1a';
+        return '#fefefe';
+      }
+      return '#232323';
+    }};
   }
 `;
 
@@ -192,6 +285,231 @@ const PurchaseNotice = styled.div`
   font-family: inherit;
 `;
 
+// 읽기 모드 컨트롤
+const ReadingModeContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#f4e8d7';
+    if (readTheme === 'dark') return '#1a1a1a';
+    return '#fefefe';
+  }};
+  z-index: 1000;
+  overflow-y: auto;
+  transition: background 0.3s ease;
+`;
+
+const ReadingControls = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
+    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
+    return 'rgba(254, 254, 254, 0.95)';
+  }};
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1001;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+`;
+
+const ControlButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ readTheme }) => {
+      if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
+      if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
+      return 'rgba(0,0,0,0.05)';
+    }};
+  }
+`;
+
+const ControlGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SettingsPanel = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.98)';
+    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.98)';
+    return 'rgba(254, 254, 254, 0.98)';
+  }};
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  z-index: 1001;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  display: ${({ show }) => show ? 'block' : 'none'};
+  transition: all 0.3s ease;
+`;
+
+const ReadingSettingRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const ReadingSettingLabel = styled.label`
+  font-size: 14px;
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  font-weight: 500;
+  min-width: 80px;
+`;
+
+const Slider = styled.input`
+  flex: 1;
+  margin: 0 12px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.2)';
+    if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.2)';
+    return 'rgba(0,0,0,0.1)';
+  }};
+  outline: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${({ readTheme }) => {
+      if (readTheme === 'sepia') return '#8b7355';
+      if (readTheme === 'dark') return '#cb6565';
+      return '#cb6565';
+    }};
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+  
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${({ readTheme }) => {
+      if (readTheme === 'sepia') return '#8b7355';
+      if (readTheme === 'dark') return '#cb6565';
+      return '#cb6565';
+    }};
+    cursor: pointer;
+    border: none;
+  }
+`;
+
+const ThemeButton = styled.button`
+  flex: 1;
+  padding: 10px;
+  border: 2px solid ${({ active, readTheme }) => {
+    if (active) {
+      if (readTheme === 'sepia') return '#8b7355';
+      if (readTheme === 'dark') return '#cb6565';
+      return '#cb6565';
+    }
+    return 'transparent';
+  }};
+  background: ${({ active, readTheme }) => {
+    if (active) {
+      if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.1)';
+      if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.1)';
+      return 'rgba(203, 101, 101, 0.1)';
+    }
+    return 'transparent';
+  }};
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ readTheme }) => {
+      if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
+      if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
+      return 'rgba(0,0,0,0.05)';
+    }};
+  }
+`;
+
+const ThemeGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const ProgressBar = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#8b7355';
+    if (readTheme === 'dark') return '#cb6565';
+    return '#cb6565';
+  }};
+  width: ${({ progress }) => progress}%;
+  z-index: 1002;
+  transition: width 0.1s ease;
+`;
+
+const ValueDisplay = styled.span`
+  font-size: 12px;
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#666';
+  }};
+  min-width: 40px;
+  text-align: right;
+`;
+
 function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
@@ -211,6 +529,17 @@ function NovelView({ user }) {
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
+    
+    // 읽기 모드 관련 상태
+    const [isReadingMode, setIsReadingMode] = useState(false);
+    const [fontSize, setFontSize] = useState(18);
+    const [lineHeight, setLineHeight] = useState(2.0);
+    const [readTheme, setReadTheme] = useState('default'); // 'default', 'sepia', 'dark'
+    const [textAlign, setTextAlign] = useState('left'); // 'left', 'justify'
+    const [showSettings, setShowSettings] = useState(false);
+    const [readingProgress, setReadingProgress] = useState(0);
+    const contentRef = useRef(null);
+    const readingContainerRef = useRef(null);
 
     useEffect(() => {
         if (!user || !id) {
@@ -258,6 +587,7 @@ function NovelView({ user }) {
                 }
                 setNovel(fetchedNovel);
                 setShowCoverView(true); // 소설이 로드될 때마다 표지 보기 모드로 리셋
+                setIsReadingMode(false); // 읽기 모드도 리셋
 
                 // 본인 소설인 경우 구매자 수 조회
                 if (fetchedNovel.userId === user.uid) {
@@ -409,6 +739,26 @@ function NovelView({ user }) {
         return `${novel.month}월 ${novel.weekNum}주차 소설`;
     };
 
+    // 읽기 진행률 계산
+    useEffect(() => {
+        if (!isReadingMode || !readingContainerRef.current) return;
+
+        const container = readingContainerRef.current;
+        const updateProgress = () => {
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight - container.clientHeight;
+            const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            setReadingProgress(Math.min(100, Math.max(0, progress)));
+        };
+
+        container.addEventListener('scroll', updateProgress);
+        updateProgress(); // 초기 진행률 계산
+
+        return () => {
+            container.removeEventListener('scroll', updateProgress);
+        };
+    }, [isReadingMode, novel]);
+
     const handleDelete = () => {
         if (!novel || !novel.id) return;
         setDeleteConfirmOpen(true);
@@ -525,6 +875,112 @@ function NovelView({ user }) {
         );
     }
 
+    // 읽기 모드
+    if (isReadingMode) {
+        return (
+            <>
+                <ProgressBar readTheme={readTheme} progress={readingProgress} />
+                <ReadingModeContainer readTheme={readTheme} ref={readingContainerRef}>
+                    <ReadingControls readTheme={readTheme}>
+                        <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
+                            ←
+                        </ControlButton>
+                        <ControlGroup>
+                            <ControlButton readTheme={readTheme} onClick={() => setShowSettings(!showSettings)}>
+                                ⚙️
+                            </ControlButton>
+                        </ControlGroup>
+                    </ReadingControls>
+                    <div style={{ paddingTop: '60px', paddingBottom: showSettings ? '200px' : '40px' }}>
+                        <NovelContent
+                            ref={contentRef}
+                            fontSize={fontSize}
+                            lineHeight={lineHeight}
+                            readTheme={readTheme}
+                            isReadingMode={true}
+                            textAlign={textAlign}
+                        >
+                            {novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
+아직 내용이 준비되지 않았습니다.`}
+                        </NovelContent>
+                    </div>
+                    <SettingsPanel show={showSettings} readTheme={readTheme}>
+                        <ReadingSettingRow>
+                            <ReadingSettingLabel readTheme={readTheme}>폰트 크기</ReadingSettingLabel>
+                            <Slider
+                                type="range"
+                                min="14"
+                                max="24"
+                                value={fontSize}
+                                onChange={(e) => setFontSize(Number(e.target.value))}
+                                readTheme={readTheme}
+                            />
+                            <ValueDisplay readTheme={readTheme}>{fontSize}px</ValueDisplay>
+                        </ReadingSettingRow>
+                        <ReadingSettingRow>
+                            <ReadingSettingLabel readTheme={readTheme}>줄 간격</ReadingSettingLabel>
+                            <Slider
+                                type="range"
+                                min="1.5"
+                                max="3.0"
+                                step="0.1"
+                                value={lineHeight}
+                                onChange={(e) => setLineHeight(Number(e.target.value))}
+                                readTheme={readTheme}
+                            />
+                            <ValueDisplay readTheme={readTheme}>{lineHeight.toFixed(1)}</ValueDisplay>
+                        </ReadingSettingRow>
+                        <ReadingSettingRow>
+                            <ReadingSettingLabel readTheme={readTheme}>읽기 테마</ReadingSettingLabel>
+                            <ThemeGroup>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={readTheme === 'default'}
+                                    onClick={() => setReadTheme('default')}
+                                >
+                                    기본
+                                </ThemeButton>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={readTheme === 'sepia'}
+                                    onClick={() => setReadTheme('sepia')}
+                                >
+                                    세피아
+                                </ThemeButton>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={readTheme === 'dark'}
+                                    onClick={() => setReadTheme('dark')}
+                                >
+                                    다크
+                                </ThemeButton>
+                            </ThemeGroup>
+                        </ReadingSettingRow>
+                        <ReadingSettingRow>
+                            <ReadingSettingLabel readTheme={readTheme}>정렬</ReadingSettingLabel>
+                            <ThemeGroup>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={textAlign === 'left'}
+                                    onClick={() => setTextAlign('left')}
+                                >
+                                    좌측
+                                </ThemeButton>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={textAlign === 'justify'}
+                                    onClick={() => setTextAlign('justify')}
+                                >
+                                    양쪽
+                                </ThemeButton>
+                            </ThemeGroup>
+                        </ReadingSettingRow>
+                    </SettingsPanel>
+                </ReadingModeContainer>
+            </>
+        );
+    }
+
     // 내용 보기 모드
     return (
         <Container>
@@ -572,14 +1028,27 @@ function NovelView({ user }) {
                                     onClick={handleTogglePublic}
                                 />
                             </SettingRow>
-                            <button onClick={handleDelete} style={{ marginTop: 8, background: '#e46262', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
-                                소설 삭제하기
-                            </button>
                         </NovelSettings>
                     )}
                 </NovelInfo>
             </NovelHeader>
-            <NovelContent>
+            <ActionButtonsContainer>
+                {novel.id && novel.userId === user.uid && (
+                    <DeleteButton onClick={handleDelete}>
+                        🗑️ 소설 삭제하기
+                    </DeleteButton>
+                )}
+                <ReadingModeButton onClick={() => setIsReadingMode(true)}>
+                    📖 읽기 모드로 전환
+                </ReadingModeButton>
+            </ActionButtonsContainer>
+            <NovelContent
+                fontSize={fontSize}
+                lineHeight={lineHeight}
+                readTheme={readTheme}
+                isReadingMode={false}
+                textAlign={textAlign}
+            >
                 {novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
 아직 내용이 준비되지 않았습니다.`}
             </NovelContent>
