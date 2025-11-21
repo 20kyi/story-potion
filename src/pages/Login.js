@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, db } from '../firebase';
 import {
   Container, ContentWrapper, FormSection, LogoSection, Logo, Title,
@@ -57,8 +58,8 @@ function Login() {
   const [findIdLoading, setFindIdLoading] = useState(false);
   const [foundEmail, setFoundEmail] = useState('');
 
-  // 비밀번호 찾기 방법 선택
-  const [resetMethod, setResetMethod] = useState('email'); // 'email', 'sms', 'security'
+  // 비밀번호 찾기 방법 선택 (이메일만 사용)
+  const [resetMethod] = useState('email'); // 이메일 인증만 사용
 
   // SMS 인증 관련 상태
   const [smsPhone, setSmsPhone] = useState('');
@@ -410,7 +411,7 @@ function Login() {
     }
   };
 
-  // 비밀번호 재설정 함수들
+  // 비밀번호 재설정 이메일 발송
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     if (!resetEmail.trim()) {
@@ -444,6 +445,7 @@ function Login() {
       setResetLoading(false);
     }
   };
+
 
   // SMS 인증 코드 발송
   const handleSendSMSCode = async (e) => {
@@ -497,7 +499,6 @@ function Login() {
       if (result.success) {
         setResetMessage('비밀번호가 성공적으로 변경되었습니다.');
         setShowForgotPassword(false);
-        setResetMethod('email');
         setSmsPhone('');
         setSmsCode('');
         setSmsSent(false);
@@ -590,7 +591,6 @@ function Login() {
       if (result.success) {
         setResetMessage('비밀번호가 성공적으로 변경되었습니다.');
         setShowForgotPassword(false);
-        setResetMethod('email');
         setSecurityEmail('');
         setSecurityQuestions([]);
         setSecurityAnswers([]);
@@ -791,520 +791,84 @@ function Login() {
               비밀번호 찾기
             </h3>
 
-            {/* 방법 선택 탭 */}
-            <div style={{
-              display: 'flex',
-              marginBottom: '20px',
-              borderBottom: '1px solid #eee'
-            }}>
-              {[
-                { key: 'email', label: '이메일' },
-                { key: 'sms', label: 'SMS' },
-                { key: 'security', label: '보안질문' }
-              ].map(method => (
-                <button
-                  key={method.key}
-                  onClick={() => setResetMethod(method.key)}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    border: 'none',
-                    background: 'none',
-                    color: resetMethod === method.key ? '#e46262' : '#666',
-                    borderBottom: resetMethod === method.key ? '2px solid #e46262' : 'none',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: resetMethod === method.key ? '600' : '400'
-                  }}
-                >
-                  {method.label}
-                </button>
-              ))}
-            </div>
-
             {/* 이메일 방법 */}
-            {resetMethod === 'email' && (
-              <div>
-                <p style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  가입하신 이메일 주소를 입력하시면<br />
-                  비밀번호 재설정 링크를 보내드립니다.
-                </p>
+            <div>
+              <p style={{
+                margin: '0 0 20px 0',
+                fontSize: '14px',
+                color: '#666',
+                lineHeight: '1.5',
+                textAlign: 'center'
+              }}>
+                가입하신 이메일 주소를 입력하시면<br />
+                비밀번호 재설정 링크를 보내드립니다.
+              </p>
 
-                <form onSubmit={handlePasswordReset}>
-                  <Input
-                    type="email"
-                    placeholder="이메일 주소"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    style={{ marginBottom: '15px' }}
-                  />
+              <form onSubmit={handlePasswordReset}>
+                <Input
+                  type="email"
+                  placeholder="이메일 주소"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  style={{ marginBottom: '15px' }}
+                />
 
-                  {resetMessage && (
-                    <div style={{
-                      padding: '10px',
-                      marginBottom: '15px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      textAlign: 'center',
-                      backgroundColor: resetMessage.includes('발송되었습니다') ? '#d4edda' : '#f8d7da',
-                      color: resetMessage.includes('발송되었습니다') ? '#155724' : '#721c24',
-                      border: `1px solid ${resetMessage.includes('발송되었습니다') ? '#c3e6cb' : '#f5c6cb'}`
-                    }}>
-                      {resetMessage}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setResetEmail('');
-                        setResetMessage('');
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        background: 'white',
-                        color: '#666',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={resetLoading}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: '#e46262',
-                        color: 'white',
-                        cursor: resetLoading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        opacity: resetLoading ? 0.7 : 1
-                      }}
-                    >
-                      {resetLoading ? '발송 중...' : '재설정 이메일 발송'}
-                    </button>
+                {resetMessage && (
+                  <div style={{
+                    padding: '10px',
+                    marginBottom: '15px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    backgroundColor: resetMessage.includes('발송되었습니다') ? '#d4edda' : '#f8d7da',
+                    color: resetMessage.includes('발송되었습니다') ? '#155724' : '#721c24',
+                    border: `1px solid ${resetMessage.includes('발송되었습니다') ? '#c3e6cb' : '#f5c6cb'}`
+                  }}>
+                    {resetMessage}
                   </div>
-                </form>
-              </div>
-            )}
-
-            {/* SMS 방법 */}
-            {resetMethod === 'sms' && (
-              <div>
-                <p style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  휴대폰 번호로 인증 코드를 받아<br />
-                  비밀번호를 재설정합니다.
-                </p>
-
-                {!smsSent ? (
-                  <form onSubmit={handleSendSMSCode}>
-                    <Input
-                      type="tel"
-                      placeholder="휴대폰 번호 (예: 01012345678)"
-                      value={smsPhone}
-                      onChange={(e) => setSmsPhone(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <div id="recaptcha-container"></div>
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('발송되었습니다') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('발송되었습니다') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('발송되었습니다') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowForgotPassword(false);
-                          setSmsPhone('');
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        취소
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={smsLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: smsLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: smsLoading ? 0.7 : 1
-                        }}
-                      >
-                        {smsLoading ? '발송 중...' : '인증 코드 발송'}
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleVerifySMSCode}>
-                    <Input
-                      type="text"
-                      placeholder="인증 코드 6자리"
-                      value={smsCode}
-                      onChange={(e) => setSmsCode(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <Input
-                      type="password"
-                      placeholder="새 비밀번호"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <Input
-                      type="password"
-                      placeholder="새 비밀번호 확인"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('성공') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('성공') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('성공') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSmsSent(false);
-                          setSmsCode('');
-                          setNewPassword('');
-                          setConfirmPassword('');
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        뒤로
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={smsLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: smsLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: smsLoading ? 0.7 : 1
-                        }}
-                      >
-                        {smsLoading ? '확인 중...' : '비밀번호 변경'}
-                      </button>
-                    </div>
-                  </form>
                 )}
-              </div>
-            )}
 
-            {/* 보안 질문 방법 */}
-            {resetMethod === 'security' && (
-              <div>
-                <p style={{
-                  margin: '0 0 20px 0',
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  textAlign: 'center'
-                }}>
-                  보안 질문에 답변하여<br />
-                  비밀번호를 재설정합니다.
-                </p>
-
-                {securityQuestions.length === 0 ? (
-                  <form onSubmit={handleGetSecurityQuestions}>
-                    <Input
-                      type="email"
-                      placeholder="이메일 주소"
-                      value={securityEmail}
-                      onChange={(e) => setSecurityEmail(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('확인') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('확인') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('확인') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowForgotPassword(false);
-                          setSecurityEmail('');
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        취소
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={securityLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: securityLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: securityLoading ? 0.7 : 1
-                        }}
-                      >
-                        {securityLoading ? '확인 중...' : '보안 질문 확인'}
-                      </button>
-                    </div>
-                  </form>
-                ) : !securityVerified ? (
-                  <form onSubmit={handleVerifySecurityAnswers}>
-                    {securityQuestions.map((question, index) => (
-                      <div key={index} style={{ marginBottom: '15px' }}>
-                        <label style={{
-                          display: 'block',
-                          marginBottom: '5px',
-                          fontSize: '14px',
-                          color: '#333',
-                          fontWeight: '500'
-                        }}>
-                          {question.question}
-                        </label>
-                        <Input
-                          type="text"
-                          placeholder="답변을 입력하세요"
-                          value={securityAnswers[index] || ''}
-                          onChange={(e) => {
-                            const newAnswers = [...securityAnswers];
-                            newAnswers[index] = e.target.value;
-                            setSecurityAnswers(newAnswers);
-                          }}
-                        />
-                      </div>
-                    ))}
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('완료') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('완료') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('완료') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSecurityQuestions([]);
-                          setSecurityAnswers([]);
-                          setSecurityEmail('');
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        뒤로
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={securityLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: securityLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: securityLoading ? 0.7 : 1
-                        }}
-                      >
-                        {securityLoading ? '확인 중...' : '답변 확인'}
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleResetPasswordWithSecurity}>
-                    <Input
-                      type="password"
-                      placeholder="새 비밀번호"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-                    <Input
-                      type="password"
-                      placeholder="새 비밀번호 확인"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      style={{ marginBottom: '15px' }}
-                    />
-
-                    {resetMessage && (
-                      <div style={{
-                        padding: '10px',
-                        marginBottom: '15px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: resetMessage.includes('성공') ? '#d4edda' : '#f8d7da',
-                        color: resetMessage.includes('성공') ? '#155724' : '#721c24',
-                        border: `1px solid ${resetMessage.includes('성공') ? '#c3e6cb' : '#f5c6cb'}`
-                      }}>
-                        {resetMessage}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSecurityVerified(false);
-                          setNewPassword('');
-                          setConfirmPassword('');
-                          setResetMessage('');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          background: 'white',
-                          color: '#666',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        뒤로
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={securityLoading}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#e46262',
-                          color: 'white',
-                          cursor: securityLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '14px',
-                          opacity: securityLoading ? 0.7 : 1
-                        }}
-                      >
-                        {securityLoading ? '변경 중...' : '비밀번호 변경'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            )}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmail('');
+                      setResetMessage('');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      background: 'white',
+                      color: '#666',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: '#e46262',
+                      color: 'white',
+                      cursor: resetLoading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      opacity: resetLoading ? 0.7 : 1
+                    }}
+                  >
+                    {resetLoading ? '발송 중...' : '재설정 이메일 발송'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { OpenAI } = require("openai");
 const { DateTime } = require('luxon');
+const nodemailer = require("nodemailer");
 
 admin.initializeApp();
 
@@ -1257,6 +1258,237 @@ exports.sendEventNotification = functions.https.onCall(async (data, context) => 
             'internal',
             '이벤트 알림 발송 중 오류가 발생했습니다.',
             error.message
+        );
+    }
+});
+
+// 비밀번호 재설정을 위한 이메일 인증 코드 발송
+exports.sendPasswordResetCode = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '이메일 주소가 필요합니다.'
+        );
+    }
+
+    try {
+        // 사용자 존재 확인
+        let userRecord;
+        try {
+            userRecord = await admin.auth().getUserByEmail(email);
+        } catch (error) {
+            if (error.code === 'auth/user-not-found') {
+                throw new functions.https.HttpsError(
+                    'not-found',
+                    '해당 이메일로 가입된 계정을 찾을 수 없습니다.'
+                );
+            }
+            throw error;
+        }
+
+        // 6자리 인증 코드 생성
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Firestore에 인증 코드 저장 (5분 만료)
+        const codeRef = admin.firestore().collection('passwordResetCodes').doc();
+        await codeRef.set({
+            email: email,
+            code: code,
+            userId: userRecord.uid,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 5 * 60 * 1000)), // 5분 후 만료
+            used: false
+        });
+
+        // 이메일 발송 (nodemailer 사용)
+        const emailSubject = '[Story Potion] 비밀번호 재설정 인증 코드';
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #e46262; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
+        .code { background-color: #fff; border: 2px solid #e46262; border-radius: 5px; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; color: #e46262; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Story Potion</h1>
+        </div>
+        <div class="content">
+            <h2>비밀번호 재설정 인증 코드</h2>
+            <p>안녕하세요.</p>
+            <p>비밀번호 재설정을 요청하셨습니다. 아래 인증 코드를 입력해주세요.</p>
+            <div class="code">${code}</div>
+            <p>이 코드는 <strong>5분간</strong> 유효합니다.</p>
+            <p>만약 본인이 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.</p>
+        </div>
+        <div class="footer">
+            <p>감사합니다.<br>Story Potion 팀</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+        
+        const emailText = `안녕하세요.
+
+비밀번호 재설정을 요청하셨습니다.
+아래 인증 코드를 입력해주세요.
+
+인증 코드: ${code}
+
+이 코드는 5분간 유효합니다.
+만약 본인이 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.
+
+감사합니다.
+Story Potion 팀`;
+
+        // Gmail SMTP 설정 (Firebase Functions Config에서 설정 필요)
+        // firebase functions:config:set gmail.email="your-email@gmail.com" gmail.password="your-app-password"
+        const gmailEmail = functions.config().gmail?.email;
+        const gmailPassword = functions.config().gmail?.password;
+        
+        if (gmailEmail && gmailPassword) {
+            // nodemailer를 사용한 이메일 발송
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: gmailEmail,
+                    pass: gmailPassword
+                }
+            });
+
+            const mailOptions = {
+                from: `"Story Potion" <${gmailEmail}>`,
+                to: email,
+                subject: emailSubject,
+                text: emailText,
+                html: emailHtml
+            };
+
+            await transporter.sendMail(mailOptions);
+            console.log('이메일 발송 성공:', email);
+        } else {
+            // Gmail 설정이 없으면 Firestore에 저장 (개발 환경)
+            console.warn('Gmail 설정이 없습니다. Firestore에 저장합니다.');
+            await admin.firestore().collection('emailQueue').add({
+                to: email,
+                subject: emailSubject,
+                body: emailText,
+                html: emailHtml,
+                code: code,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                sent: false
+            });
+            
+            // 개발 환경에서는 코드를 반환
+            if (process.env.NODE_ENV === 'development' || !gmailEmail) {
+                console.log('개발 환경 - 인증 코드:', code);
+            }
+        }
+
+        return {
+            success: true,
+            message: '인증 코드가 이메일로 발송되었습니다.',
+            // 개발 환경에서는 코드를 반환 (프로덕션에서는 제거)
+            code: process.env.NODE_ENV === 'development' ? code : undefined
+        };
+    } catch (error) {
+        console.error('이메일 인증 코드 발송 실패:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            '인증 코드 발송에 실패했습니다. 다시 시도해주세요.'
+        );
+    }
+});
+
+// 이메일 인증 코드 확인 및 비밀번호 재설정
+exports.verifyPasswordResetCode = functions.https.onCall(async (data, context) => {
+    const { email, code, newPassword } = data;
+    
+    if (!email || !code || !newPassword) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '이메일, 인증 코드, 새 비밀번호가 모두 필요합니다.'
+        );
+    }
+
+    // 비밀번호 유효성 검사
+    if (newPassword.length < 6) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '비밀번호는 최소 6자 이상이어야 합니다.'
+        );
+    }
+
+    try {
+        // Firestore에서 인증 코드 조회
+        const codesSnapshot = await admin.firestore()
+            .collection('passwordResetCodes')
+            .where('email', '==', email)
+            .where('code', '==', code)
+            .where('used', '==', false)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+
+        if (codesSnapshot.empty) {
+            throw new functions.https.HttpsError(
+                'invalid-argument',
+                '유효하지 않은 인증 코드입니다.'
+            );
+        }
+
+        const codeDoc = codesSnapshot.docs[0];
+        const codeData = codeDoc.data();
+
+        // 만료 시간 확인
+        const expiresAt = codeData.expiresAt.toDate();
+        if (new Date() > expiresAt) {
+            await codeDoc.ref.update({ used: true });
+            throw new functions.https.HttpsError(
+                'deadline-exceeded',
+                '인증 코드가 만료되었습니다. 다시 요청해주세요.'
+            );
+        }
+
+        // 인증 코드 사용 처리
+        await codeDoc.ref.update({ used: true });
+
+        // 비밀번호 재설정
+        await admin.auth().updateUser(codeData.userId, {
+            password: newPassword
+        });
+
+        // Firestore 사용자 정보 업데이트
+        await admin.firestore().collection('users').doc(codeData.userId).update({
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return {
+            success: true,
+            message: '비밀번호가 성공적으로 변경되었습니다.'
+        };
+    } catch (error) {
+        console.error('비밀번호 재설정 실패:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            '비밀번호 재설정에 실패했습니다. 다시 시도해주세요.'
         );
     }
 });
