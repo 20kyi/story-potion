@@ -470,11 +470,7 @@ function MyPage({ user }) {
   const [removeProfileImage, setRemoveProfileImage] = useState(false); // 프로필 이미지 삭제 여부
   const [point, setPoint] = useState(0); // 사용자 포인트
   const [friendCount, setFriendCount] = useState(0); // 친구 수
-  const [premiumStatus, setPremiumStatus] = useState({
-    isMonthlyPremium: false,
-    isYearlyPremium: false,
-    premiumType: null
-  }); // 프리미엄 상태
+  const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
   const [isLoading, setIsLoading] = useState(false);
 
   // 네비게이션 및 테마
@@ -530,7 +526,21 @@ function MyPage({ user }) {
             isYearlyPremium: userData.isYearlyPremium || false,
             premiumType: userData.premiumType || null
           });
+        } else {
+          // 문서가 없는 경우 기본값 설정
+          setPremiumStatus({
+            isMonthlyPremium: false,
+            isYearlyPremium: false,
+            premiumType: null
+          });
         }
+      }).catch(() => {
+        // 에러 발생 시 기본값 설정
+        setPremiumStatus({
+          isMonthlyPremium: false,
+          isYearlyPremium: false,
+          premiumType: null
+        });
       });
     }
   }, [user]);
@@ -898,35 +908,37 @@ function MyPage({ user }) {
             <Nickname>{displayName}{t('user_nim_suffix')}</Nickname>
 
             {/* 프리미엄 상태 표시 */}
-            <PremiumStatus
-              theme={theme}
-              isPremium={premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium}
-            >
-              {premiumStatus.isMonthlyPremium && (
-                <>
-                  <span>💎</span>
-                  {t('premium_monthly')}
-                  <span>💎</span>
-                </>
-              )}
-              {premiumStatus.isYearlyPremium && (
-                <>
-                  <span>👑</span>
-                  {t('premium_yearly')}
-                  <span>👑</span>
-                </>
-              )}
-              {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-                <>
-                  <span>⭐</span>
-                  {t('premium_basic')}
-                  <span>⭐</span>
-                </>
-              )}
-            </PremiumStatus>
+            {premiumStatus && (
+              <PremiumStatus
+                theme={theme}
+                isPremium={premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium}
+              >
+                {premiumStatus.isMonthlyPremium && (
+                  <>
+                    <span>💎</span>
+                    {t('premium_monthly')}
+                    <span>💎</span>
+                  </>
+                )}
+                {premiumStatus.isYearlyPremium && (
+                  <>
+                    <span>👑</span>
+                    {t('premium_yearly')}
+                    <span>👑</span>
+                  </>
+                )}
+                {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+                  <>
+                    <span>⭐</span>
+                    {t('premium_basic')}
+                    <span>⭐</span>
+                  </>
+                )}
+              </PremiumStatus>
+            )}
 
-            {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 */}
-            {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+            {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
+            {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
               <PremiumUpgradeCard onClick={() => navigate('/my/shop')}>
                 <PremiumUpgradeContent>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>

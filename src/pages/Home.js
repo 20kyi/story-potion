@@ -667,10 +667,7 @@ function Home({ user }) {
   const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
-  const [premiumStatus, setPremiumStatus] = useState({
-    isMonthlyPremium: false,
-    isYearlyPremium: false,
-  });
+  const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
 
 
   // 포션 데이터 (표시는 locale로)
@@ -801,9 +798,20 @@ function Home({ user }) {
             isMonthlyPremium: userData.isMonthlyPremium || false,
             isYearlyPremium: userData.isYearlyPremium || false,
           });
+        } else {
+          // 문서가 없는 경우 기본값 설정
+          setPremiumStatus({
+            isMonthlyPremium: false,
+            isYearlyPremium: false,
+          });
         }
       } catch (error) {
         console.error('포션 정보 조회 실패:', error);
+        // 에러 발생 시 기본값 설정
+        setPremiumStatus({
+          isMonthlyPremium: false,
+          isYearlyPremium: false,
+        });
       }
     };
 
@@ -881,8 +889,8 @@ function Home({ user }) {
         </Slider>
       </CarouselContainer>
 
-      {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 */}
-      {!premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+      {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
+      {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
         <PremiumBanner
           onClick={() => navigate('/my/shop')}
           whileHover={{ scale: 1.02 }}
