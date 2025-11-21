@@ -656,6 +656,9 @@ function NovelView({ user }) {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [privateConfirmOpen, setPrivateConfirmOpen] = useState(false);
     const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
+    const [resumeReadingModal, setResumeReadingModal] = useState(false);
+    const [savedScrollPosition, setSavedScrollPosition] = useState(null);
+    const [savedPageIndex, setSavedPageIndex] = useState(null);
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
@@ -872,6 +875,46 @@ function NovelView({ user }) {
         }
         return `${novel.month}월 ${novel.weekNum}주차 소설`;
     };
+
+    // 읽기 위치 저장 (localStorage)
+    useEffect(() => {
+        if (!isReadingMode || !novel?.id) return;
+
+        const saveReadingPosition = () => {
+            if (readingMode === 'scroll' && readingContainerRef.current) {
+                const scrollTop = readingContainerRef.current.scrollTop;
+                if (scrollTop > 100) { // 최소 100px 이상 스크롤한 경우만 저장
+                    localStorage.setItem(`novel_reading_${novel.id}_scroll`, scrollTop.toString());
+                }
+            } else if (readingMode === 'page' && currentPage > 0) {
+                localStorage.setItem(`novel_reading_${novel.id}_page`, currentPage.toString());
+            }
+        };
+
+        // 주기적으로 위치 저장 (5초마다)
+        const interval = setInterval(saveReadingPosition, 5000);
+
+        // 컴포넌트 언마운트 시 저장
+        return () => {
+            clearInterval(interval);
+            saveReadingPosition();
+        };
+    }, [isReadingMode, novel?.id, readingMode, currentPage]);
+
+    // 읽기 모드 진입 시 저장된 위치 확인
+    useEffect(() => {
+        if (!isReadingMode || !novel?.id) return;
+
+        const savedScroll = localStorage.getItem(`novel_reading_${novel.id}_scroll`);
+        const savedPage = localStorage.getItem(`novel_reading_${novel.id}_page`);
+
+        if (savedScroll || savedPage) {
+            setSavedScrollPosition(savedScroll ? parseInt(savedScroll) : null);
+            setSavedPageIndex(savedPage ? parseInt(savedPage) : null);
+            setResumeReadingModal(true);
+        }
+    }, [isReadingMode, novel?.id]);
+
 
     // 읽기 진행률 계산 (스크롤 모드)
     useEffect(() => {
@@ -1113,6 +1156,29 @@ function NovelView({ user }) {
         if (readingMode === 'page') {
             return (
                 <>
+                    <ConfirmModal
+                        open={resumeReadingModal}
+                        title="읽던 곳부터 계속 읽기"
+                        description={savedPageIndex !== null ? `이전에 읽던 ${savedPageIndex + 1}페이지부터 계속 읽으시겠습니까?` : '이전에 읽던 위치부터 계속 읽으시겠습니까?'}
+                        onCancel={() => {
+                            setResumeReadingModal(false);
+                            setSavedScrollPosition(null);
+                            setSavedPageIndex(null);
+                            if (novel?.id) {
+                                localStorage.removeItem(`novel_reading_${novel.id}_scroll`);
+                                localStorage.removeItem(`novel_reading_${novel.id}_page`);
+                            }
+                            setCurrentPage(0);
+                        }}
+                        onConfirm={() => {
+                            setResumeReadingModal(false);
+                            if (savedPageIndex !== null) {
+                                setCurrentPage(savedPageIndex);
+                            }
+                        }}
+                        confirmText="계속 읽기"
+                        cancelText="처음부터"
+                    />
                     <ProgressBar readTheme={readTheme} progress={readingProgress} />
                     <PageViewContainer
                         readTheme={readTheme}
@@ -1294,6 +1360,35 @@ function NovelView({ user }) {
         // 스크롤 모드
         return (
             <>
+                <ConfirmModal
+                    open={resumeReadingModal}
+                    title="읽던 곳부터 계속 읽기"
+                    description="이전에 읽던 위치부터 계속 읽으시겠습니까?"
+                    onCancel={() => {
+                        setResumeReadingModal(false);
+                        setSavedScrollPosition(null);
+                        setSavedPageIndex(null);
+                        if (novel?.id) {
+                            localStorage.removeItem(`novel_reading_${novel.id}_scroll`);
+                            localStorage.removeItem(`novel_reading_${novel.id}_page`);
+                        }
+                        if (readingContainerRef.current) {
+                            readingContainerRef.current.scrollTop = 0;
+                        }
+                    }}
+                    onConfirm={() => {
+                        setResumeReadingModal(false);
+                        if (savedScrollPosition && readingContainerRef.current) {
+                            setTimeout(() => {
+                                if (readingContainerRef.current) {
+                                    readingContainerRef.current.scrollTop = savedScrollPosition;
+                                }
+                            }, 100);
+                        }
+                    }}
+                    confirmText="계속 읽기"
+                    cancelText="처음부터"
+                />
                 <ProgressBar readTheme={readTheme} progress={readingProgress} />
                 <ReadingModeContainer
                     readTheme={readTheme}
