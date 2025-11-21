@@ -95,15 +95,10 @@ const SettingLabel = styled.div`
 
 const ActionButtonsContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
   margin-bottom: 20px;
   padding: 0 4px;
-  
-  @media (min-width: 480px) {
-    flex-direction: row;
-    gap: 12px;
-  }
 `;
 
 const ActionButton = styled.button`
@@ -377,6 +372,7 @@ const ReadingSettingRow = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  flex-wrap: nowrap;
   
   &:last-child {
     margin-bottom: 0;
@@ -392,6 +388,8 @@ const ReadingSettingLabel = styled.label`
   }};
   font-weight: 500;
   min-width: 80px;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;
 
 const Slider = styled.input`
@@ -469,6 +467,8 @@ const ThemeButton = styled.button`
     return '#333';
   }};
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
   
   &:hover {
     background: ${({ readTheme }) => {
@@ -482,6 +482,8 @@ const ThemeButton = styled.button`
 const ThemeGroup = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 `;
 
 const ProgressBar = styled.div`
@@ -508,6 +510,8 @@ const ValueDisplay = styled.span`
   }};
   min-width: 40px;
   text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;
 
 function NovelView({ user }) {
@@ -880,8 +884,17 @@ function NovelView({ user }) {
         return (
             <>
                 <ProgressBar readTheme={readTheme} progress={readingProgress} />
-                <ReadingModeContainer readTheme={readTheme} ref={readingContainerRef}>
-                    <ReadingControls readTheme={readTheme}>
+                <ReadingModeContainer 
+                    readTheme={readTheme} 
+                    ref={readingContainerRef}
+                    onClick={(e) => {
+                        // 설정 패널이나 컨트롤 영역을 클릭한 경우가 아니면 설정창 닫기
+                        if (showSettings && !e.target.closest('[data-settings-area]')) {
+                            setShowSettings(false);
+                        }
+                    }}
+                >
+                    <ReadingControls readTheme={readTheme} data-settings-area>
                         <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
                             ←
                         </ControlButton>
@@ -904,7 +917,7 @@ function NovelView({ user }) {
 아직 내용이 준비되지 않았습니다.`}
                         </NovelContent>
                     </div>
-                    <SettingsPanel show={showSettings} readTheme={readTheme}>
+                    <SettingsPanel show={showSettings} readTheme={readTheme} data-settings-area>
                         <ReadingSettingRow>
                             <ReadingSettingLabel readTheme={readTheme}>폰트 크기</ReadingSettingLabel>
                             <Slider
@@ -1035,11 +1048,11 @@ function NovelView({ user }) {
             <ActionButtonsContainer>
                 {novel.id && novel.userId === user.uid && (
                     <DeleteButton onClick={handleDelete}>
-                        🗑️ 소설 삭제하기
+                        🗑️ 소설 삭제
                     </DeleteButton>
                 )}
                 <ReadingModeButton onClick={() => setIsReadingMode(true)}>
-                    📖 읽기 모드로 전환
+                    📖 읽기 모드
                 </ReadingModeButton>
             </ActionButtonsContainer>
             <NovelContent
