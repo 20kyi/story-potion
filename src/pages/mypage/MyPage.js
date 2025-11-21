@@ -35,7 +35,7 @@ import GearIcon from '../../components/icons/GearIcon';
 import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
@@ -494,6 +494,12 @@ function MyPage({ user }) {
   // 모바일 키보드 높이 (키보드가 올라올 때 화면 조정용)
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // 닉네임 중복 체크 관련 상태
+  const [isNicknameChecking, setIsNicknameChecking] = useState(false);
+  const [isNicknameDuplicate, setIsNicknameDuplicate] = useState(false);
+  const [nicknameError, setNicknameError] = useState('');
+  const [nicknameSuccess, setNicknameSuccess] = useState('');
+
 
   // 사용자 정보가 변경될 때 편집 폼 초기화
   useEffect(() => {
@@ -617,11 +623,86 @@ function MyPage({ user }) {
   };
 
   /**
+   * 닉네임 중복 체크 함수
+   */
+  const checkNicknameDuplicate = async (nickname) => {
+    if (!nickname || !nickname.trim()) {
+      setIsNicknameDuplicate(false);
+      setNicknameError('');
+      setNicknameSuccess('');
+      return;
+    }
+
+    // 현재 사용자의 닉네임과 동일하면 중복이 아님
+    if (nickname.trim() === user?.displayName) {
+      setIsNicknameDuplicate(false);
+      setNicknameError('');
+      setNicknameSuccess('현재 사용 중인 닉네임입니다.');
+      return;
+    }
+
+    setIsNicknameChecking(true);
+    setNicknameError('');
+    setNicknameSuccess('');
+
+    try {
+      const usersRef = collection(db, 'users');
+      const nicknameQuery = query(usersRef, where('displayName', '==', nickname.trim()));
+      const querySnapshot = await getDocs(nicknameQuery);
+
+      if (!querySnapshot.empty) {
+        setIsNicknameDuplicate(true);
+        setNicknameError('이미 사용 중인 닉네임입니다.');
+        setNicknameSuccess('');
+      } else {
+        setIsNicknameDuplicate(false);
+        setNicknameError('');
+        setNicknameSuccess('사용 가능한 닉네임입니다.');
+      }
+    } catch (error) {
+      console.error('닉네임 중복 체크 실패:', error);
+      setIsNicknameDuplicate(true);
+      setNicknameError('닉네임 확인 중 오류가 발생했습니다.');
+      setNicknameSuccess('');
+    } finally {
+      setIsNicknameChecking(false);
+    }
+  };
+
+  /**
    * 프로필 정보 업데이트 처리
    * 이미지 업로드 및 사용자 정보 변경을 Firebase에 반영
    */
   const handleProfileUpdate = async () => {
     if (!user) return;
+
+    // 닉네임이 변경된 경우 중복 체크
+    if (newDisplayName.trim() && newDisplayName.trim() !== user.displayName) {
+      if (isNicknameDuplicate) {
+        alert('이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.');
+        return;
+      }
+
+      // 최종 중복 체크
+      try {
+        const usersRef = collection(db, 'users');
+        const nicknameQuery = query(usersRef, where('displayName', '==', newDisplayName.trim()));
+        const querySnapshot = await getDocs(nicknameQuery);
+
+        if (!querySnapshot.empty) {
+          // 현재 사용자가 아닌 다른 사용자가 사용 중인 경우
+          const isOtherUser = querySnapshot.docs.some(doc => doc.id !== user.uid);
+          if (isOtherUser) {
+            alert('이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('닉네임 중복 체크 실패:', error);
+        alert('닉네임 확인에 실패했습니다. 다시 시도해주세요.');
+        return;
+      }
+    }
 
     try {
       let photoURL = user.photoURL;
@@ -652,6 +733,9 @@ function MyPage({ user }) {
 
       alert('프로필이 성공적으로 업데이트되었습니다.');
       setIsEditing(false);
+      setIsNicknameDuplicate(false);
+      setNicknameError('');
+      setNicknameSuccess('');
     } catch (error) {
       alert('프로필 업데이트에 실패했습니다.');
     }
@@ -751,12 +835,36 @@ function MyPage({ user }) {
                 id="edit-nickname"
                 type="text"
                 value={newDisplayName}
-                onChange={(e) => setNewDisplayName(e.target.value)}
+                onChange={(e) => {
+                  setNewDisplayName(e.target.value);
+                  // 닉네임 변경 시 이전 에러/성공 메시지 초기화
+                  if (isNicknameDuplicate) {
+                    setIsNicknameDuplicate(false);
+                    setNicknameError('');
+                    setNicknameSuccess('');
+                  }
+                }}
                 placeholder="닉네임을 입력하세요"
                 maxLength={20}
                 autoComplete="off"
+                onBlur={(e) => {
+                  const nickname = e.target.value.trim();
+                  if (nickname && nickname !== user?.displayName) {
+                    checkNicknameDuplicate(nickname);
+                  } else if (nickname === user?.displayName) {
+                    setIsNicknameDuplicate(false);
+                    setNicknameError('');
+                    setNicknameSuccess('');
+                  }
+                }}
                 onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+                style={{
+                  borderColor: isNicknameDuplicate ? '#d9534f' : nicknameSuccess ? '#5cb85c' : undefined
+                }}
               />
+              {nicknameError && <div style={{ color: '#d9534f', fontSize: 12, marginTop: 4 }}>{nicknameError}</div>}
+              {nicknameSuccess && !nicknameError && <div style={{ color: '#5cb85c', fontSize: 12, marginTop: 4 }}>{nicknameSuccess}</div>}
+              {isNicknameChecking && <div style={{ color: '#ffa500', fontSize: 12, marginTop: 4 }}>확인 중...</div>}
             </EditInputWrap>
             <EditInputWrap>
               <EditLabel htmlFor="edit-phone">휴대전화 번호</EditLabel>
@@ -834,6 +942,11 @@ function MyPage({ user }) {
                 onClick={async () => {
                   setPwChangeError('');
                   setPwChangeSuccess('');
+                  // 닉네임 중복 체크
+                  if (isNicknameDuplicate || isNicknameChecking) {
+                    alert('이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.');
+                    return;
+                  }
                   // 1. 비밀번호 변경 로직 (입력값이 있을 때만)
                   if (user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (currentPassword || newPassword || confirmPassword)) {
                     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -871,7 +984,7 @@ function MyPage({ user }) {
                   // 2. 프로필(닉네임/사진) 저장 로직
                   await handleProfileUpdate();
                 }}
-                disabled={pwChangeLoading}
+                disabled={pwChangeLoading || isNicknameDuplicate || isNicknameChecking}
               >{t('save')}</EditSaveButton>
             </EditButtonRow>
 

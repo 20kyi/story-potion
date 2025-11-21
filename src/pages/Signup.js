@@ -354,9 +354,12 @@ function Signup() {
   // const [isVerified, setIsVerified] = useState(false);
   const [isEmailChecking, setIsEmailChecking] = useState(false);
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
+  const [isNicknameChecking, setIsNicknameChecking] = useState(false);
+  const [isNicknameDuplicate, setIsNicknameDuplicate] = useState(false);
   const mainRef = useRef();
   const inputRef = useRef();
   const emailCheckTimeoutRef = useRef(null);
+  const nicknameCheckTimeoutRef = useRef(null);
 
   // 라이트 모드 강제 적용
   useEffect(() => {
@@ -382,6 +385,9 @@ function Signup() {
       if (emailCheckTimeoutRef.current) {
         clearTimeout(emailCheckTimeoutRef.current);
       }
+      if (nicknameCheckTimeoutRef.current) {
+        clearTimeout(nicknameCheckTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -390,9 +396,36 @@ function Signup() {
     setFormData(prev => ({ ...prev, [name]: value }));
 
     // 이메일 필드가 아닐 때만 에러 메시지 초기화
-    if (name !== 'email') {
+    if (name !== 'email' && name !== 'nickname') {
       setError('');
       setSuccessMessage('');
+    }
+
+    // 닉네임 변경 시 중복 체크
+    if (name === 'nickname' && currentStep === 1) {
+      // 닉네임 변경 시 이전 중복 상태 초기화
+      if (isNicknameDuplicate) {
+        setIsNicknameDuplicate(false);
+        setError('');
+      }
+      setSuccessMessage('');
+
+      // 기존 타임아웃 취소
+      if (nicknameCheckTimeoutRef.current) {
+        clearTimeout(nicknameCheckTimeoutRef.current);
+      }
+
+      // 닉네임이 입력된 경우에만 체크
+      if (value.trim()) {
+        // debounce: 500ms 후에 체크
+        nicknameCheckTimeoutRef.current = setTimeout(() => {
+          checkNicknameDuplicate(value.trim());
+        }, 500);
+      } else if (!value.trim()) {
+        // 닉네임이 비어있으면 에러 초기화
+        setError('');
+        setIsNicknameDuplicate(false);
+      }
     }
 
     // 이메일 변경 시 중복 체크
@@ -421,6 +454,40 @@ function Signup() {
         setError('');
         setIsEmailDuplicate(false);
       }
+    }
+  };
+
+  // 닉네임 중복 체크 함수
+  const checkNicknameDuplicate = async (nickname) => {
+    if (!nickname) return;
+
+    setIsNicknameChecking(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      // Firestore에서 닉네임 중복 체크
+      const usersRef = collection(db, 'users');
+      const nicknameQuery = query(usersRef, where('displayName', '==', nickname.trim()));
+      const querySnapshot = await getDocs(nicknameQuery);
+
+      if (!querySnapshot.empty) {
+        setIsNicknameDuplicate(true);
+        setError('이미 사용 중인 닉네임입니다.');
+        setSuccessMessage('');
+      } else {
+        setIsNicknameDuplicate(false);
+        setError('');
+        setSuccessMessage('사용 가능한 닉네임입니다.');
+      }
+    } catch (error) {
+      console.error('닉네임 중복 체크 실패:', error);
+      // 에러가 발생하면 안전하게 중복으로 간주
+      setIsNicknameDuplicate(true);
+      setError('닉네임 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setSuccessMessage('');
+    } finally {
+      setIsNicknameChecking(false);
     }
   };
 
@@ -523,8 +590,38 @@ function Signup() {
       setIsEmailChecking(false);
     }
 
-    // 닉네임이 없으면 자동 생성
-    if (!formData.nickname.trim()) {
+    // 닉네임이 입력된 경우 중복 체크
+    if (formData.nickname.trim()) {
+      if (isNicknameDuplicate) {
+        setError('이미 사용 중인 닉네임입니다.');
+        return;
+      }
+
+      setIsNicknameChecking(true);
+      try {
+        const usersRef = collection(db, 'users');
+        const nicknameQuery = query(usersRef, where('displayName', '==', formData.nickname.trim()));
+        const querySnapshot = await getDocs(nicknameQuery);
+
+        if (!querySnapshot.empty) {
+          setError('이미 사용 중인 닉네임입니다.');
+          setIsNicknameDuplicate(true);
+          setIsNicknameChecking(false);
+          return;
+        }
+
+        setIsNicknameDuplicate(false);
+      } catch (error) {
+        console.error('닉네임 중복 체크 실패:', error);
+        setError('닉네임 확인에 실패했습니다. 다시 시도해주세요.');
+        setIsNicknameDuplicate(true);
+        setIsNicknameChecking(false);
+        return;
+      } finally {
+        setIsNicknameChecking(false);
+      }
+    } else {
+      // 닉네임이 없으면 자동 생성
       setFormData(prev => ({ ...prev, nickname: generateRandomNickname() }));
     }
 
@@ -722,9 +819,23 @@ function Signup() {
       const user = userCredential.user;
       const providerId = user.providerData[0]?.providerId || "password";
 
+      // 닉네임 최종 중복 체크 (회원가입 직전)
+      const finalNickname = formData.nickname || generateRandomNickname();
+      if (formData.nickname.trim()) {
+        const usersRef = collection(db, 'users');
+        const nicknameQuery = query(usersRef, where('displayName', '==', finalNickname.trim()));
+        const querySnapshot = await getDocs(nicknameQuery);
+
+        if (!querySnapshot.empty) {
+          setError('이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.');
+          setCurrentStep(1);
+          return;
+        }
+      }
+
       // Firebase Auth의 displayName 설정
       await updateProfile(user, {
-        displayName: formData.nickname || generateRandomNickname(),
+        displayName: finalNickname,
         photoURL: process.env.PUBLIC_URL + '/default-profile.svg'
       });
 
@@ -734,7 +845,7 @@ function Signup() {
       await setDoc(doc(db, "users", user.uid), {
         authProvider: providerId,
         createdAt: new Date(),
-        displayName: formData.nickname || generateRandomNickname(),
+        displayName: finalNickname,
         email: formData.email.trim().toLowerCase(), // 소문자로 정규화하여 저장
         phoneNumber: formData.phoneNumber || '',
         emailVerified: user.emailVerified || false,
@@ -827,6 +938,14 @@ function Signup() {
           value={formData.nickname}
           onChange={handleChange}
           maxLength={20}
+          $hasError={isNicknameDuplicate}
+          $isChecking={isNicknameChecking}
+          onBlur={(e) => {
+            const nickname = e.target.value.trim();
+            if (nickname) {
+              checkNicknameDuplicate(nickname);
+            }
+          }}
           onFocus={e => {
             setTimeout(() => {
               e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -834,11 +953,11 @@ function Signup() {
           }}
         />
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        {successMessage && !error && !isEmailDuplicate && <SuccessMessage>{successMessage}</SuccessMessage>}
+        {successMessage && !error && !isEmailDuplicate && !isNicknameDuplicate && <SuccessMessage>{successMessage}</SuccessMessage>}
         <ButtonContainer>
           <div></div>
-          <Button type="submit" disabled={isEmailDuplicate || isEmailChecking}>
-            {isEmailChecking ? '확인 중...' : '다음으로'}
+          <Button type="submit" disabled={isEmailDuplicate || isEmailChecking || isNicknameDuplicate || isNicknameChecking}>
+            {(isEmailChecking || isNicknameChecking) ? '확인 중...' : '다음으로'}
             <FaArrowRight />
           </Button>
         </ButtonContainer>

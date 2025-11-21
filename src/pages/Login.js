@@ -50,7 +50,7 @@ function Login() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-  
+
   // 아이디 찾기 관련 상태
   const [findIdMethod, setFindIdMethod] = useState('nickname'); // 'nickname'
   const [findIdEmail, setFindIdEmail] = useState(''); // 닉네임 입력용
@@ -85,7 +85,7 @@ function Login() {
   useEffect(() => {
     const originalTheme = document.body.className;
     document.body.className = 'light';
-    
+
     return () => {
       document.body.className = originalTheme;
     };
@@ -624,7 +624,7 @@ function Login() {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('displayName', '==', findIdEmail.trim()));
       const snapshot = await getDocs(q);
-      
+
       if (snapshot.empty) {
         setFindIdMessage('해당 닉네임으로 가입된 계정을 찾을 수 없습니다.');
       } else {
@@ -928,21 +928,21 @@ function Login() {
                 style={{ marginBottom: '15px' }}
               />
 
-                {foundEmail && (
-                  <div style={{
-                    padding: '15px',
-                    marginBottom: '15px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    backgroundColor: '#d4edda',
-                    color: '#155724',
-                    border: '1px solid #c3e6cb'
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
-                    <div>{foundEmail}</div>
-                  </div>
-                )}
+              {foundEmail && (
+                <div style={{
+                  padding: '15px',
+                  marginBottom: '15px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  backgroundColor: '#d4edda',
+                  color: '#155724',
+                  border: '1px solid #c3e6cb'
+                }}>
+                  <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
+                  <div>{foundEmail}</div>
+                </div>
+              )}
 
               {findIdMessage && !foundEmail && (
                 <div style={{
