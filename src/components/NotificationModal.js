@@ -73,10 +73,17 @@ const NotificationList = styled.div`
 
 const NotificationItem = styled.div`
   padding: 16px 24px;
+  padding-left: ${props => props.$isRead ? '24px' : '20px'};
   border-bottom: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   background-color: ${props => props.$isRead ? 'transparent' : props.theme.cardHover || '#f9f9f9'};
+  position: relative;
+  
+  /* 읽지 않은 알림 왼쪽 색상 바 */
+  ${props => !props.$isRead && `
+    border-left: 4px solid ${props.theme.primary || '#cb6565'};
+  `}
   
   &:hover {
     background-color: ${({ theme }) => theme.cardHover || '#f5f5f5'};
@@ -87,10 +94,29 @@ const NotificationItem = styled.div`
   }
 `;
 
+const NotificationItemContent = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+const UnreadIndicator = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.primary || '#cb6565'};
+  flex-shrink: 0;
+  margin-top: 6px;
+`;
+
+const NotificationContent = styled.div`
+  flex: 1;
+`;
+
 const NotificationTitle = styled.div`
   font-size: 16px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text || '#333'};
+  font-weight: ${props => props.$isRead ? '600' : '700'};
+  color: ${({ theme, $isRead }) => $isRead ? (theme.subText || '#666') : (theme.text || '#333')};
   margin-bottom: 6px;
 `;
 
@@ -135,7 +161,7 @@ const ModalFooter = styled.div`
   border-top: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
 `;
 
-function NotificationModal({ isOpen, onClose, user }) {
+function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
@@ -174,11 +200,17 @@ function NotificationModal({ isOpen, onClose, user }) {
     try {
       const notificationRef = doc(db, 'users', user.uid, 'notifications', notificationId);
       await updateDoc(notificationRef, { isRead: true });
-      setNotifications(prev => 
-        prev.map(notif => 
+      setNotifications(prev => {
+        const updated = prev.map(notif => 
           notif.id === notificationId ? { ...notif, isRead: true } : notif
-        )
-      );
+        );
+        // 읽지 않은 알림 개수 계산하여 부모에게 알림
+        const unreadCount = updated.filter(n => !n.isRead).length;
+        if (onNotificationRead) {
+          onNotificationRead(unreadCount);
+        }
+        return updated;
+      });
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
     }
@@ -197,6 +229,10 @@ function NotificationModal({ isOpen, onClose, user }) {
       setNotifications(prev => 
         prev.map(notif => ({ ...notif, isRead: true }))
       );
+      // 모든 알림을 읽었으므로 읽지 않은 알림 개수는 0
+      if (onNotificationRead) {
+        onNotificationRead(0);
+      }
     } catch (error) {
       console.error('모든 알림 읽음 처리 실패:', error);
     }
@@ -246,24 +282,32 @@ function NotificationModal({ isOpen, onClose, user }) {
             notifications.map(notification => {
               // 포인트 적립 알림인 경우 상세 내역 표시
               const showDetail = notification.type === 'point_earn' && notification.data?.reason;
+              const isRead = notification.isRead || false;
               
               return (
                 <NotificationItem
                   key={notification.id}
                   theme={theme}
-                  $isRead={notification.isRead}
+                  $isRead={isRead}
                   onClick={() => markAsRead(notification.id)}
                 >
-                  <NotificationTitle theme={theme}>{notification.title}</NotificationTitle>
-                  <NotificationMessage theme={theme}>
-                    {notification.message}
-                    {showDetail && (
-                      <div style={{ marginTop: '4px', fontSize: '13px', color: theme.subText || '#888' }}>
-                        내역: {notification.data.reason}
-                      </div>
-                    )}
-                  </NotificationMessage>
-                  <NotificationTime theme={theme}>{formatTime(notification.createdAt)}</NotificationTime>
+                  <NotificationItemContent>
+                    {!isRead && <UnreadIndicator theme={theme} />}
+                    <NotificationContent>
+                      <NotificationTitle theme={theme} $isRead={isRead}>
+                        {notification.title}
+                      </NotificationTitle>
+                      <NotificationMessage theme={theme}>
+                        {notification.message}
+                        {showDetail && (
+                          <div style={{ marginTop: '4px', fontSize: '13px', color: theme.subText || '#888' }}>
+                            내역: {notification.data.reason}
+                          </div>
+                        )}
+                      </NotificationMessage>
+                      <NotificationTime theme={theme}>{formatTime(notification.createdAt)}</NotificationTime>
+                    </NotificationContent>
+                  </NotificationItemContent>
                 </NotificationItem>
               );
             })

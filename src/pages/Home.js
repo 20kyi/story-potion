@@ -865,6 +865,7 @@ function Home({ user }) {
         isOpen={notificationModalOpen}
         onClose={() => setNotificationModalOpen(false)}
         user={user}
+        onNotificationRead={(count) => setUnreadNotificationCount(count)}
       />
       <CarouselContainer>
         <Slider {...sliderSettings}>
