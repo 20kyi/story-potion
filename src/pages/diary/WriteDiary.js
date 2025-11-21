@@ -810,13 +810,8 @@ function WriteDiary({ user }) {
 
     useEffect(() => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            const scrollHeight = textareaRef.current.scrollHeight;
-            const minHeight = 300;
-            const maxHeight = window.innerWidth <= 768 ? 800 : 600; // 모바일에서 더 큰 최대 높이
-            const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
-            textareaRef.current.style.height = newHeight + 'px';
-            setContentHeight(newHeight + 32); // padding 고려
+            // 텍스트 변경 시 컨테이너 크기 업데이트 (텍스트 높이만 고려)
+            setTimeout(() => updateContainerSize(), 0);
         }
     }, [diary.content]);
 
@@ -1209,12 +1204,7 @@ function WriteDiary({ user }) {
             height: 60,
             zIndex: stickerCounter
         };
-        setStickers(prev => {
-            const updatedStickers = [...prev, newSticker];
-            // 최신 스티커 데이터로 컨테이너 크기 업데이트
-            setTimeout(() => updateContainerSize(updatedStickers), 0);
-            return updatedStickers;
-        });
+        setStickers(prev => [...prev, newSticker]);
         setStickerCounter(prev => prev + 1);
         setIsStickerPanelOpen(false);
     };
@@ -1234,50 +1224,34 @@ function WriteDiary({ user }) {
             // x 좌표를 경계 내로 제한
             const clampedX = Math.max(minX, Math.min(maxX, x));
 
-            const updatedStickers = prev.map(sticker =>
+            return prev.map(sticker =>
                 sticker.id === stickerId
                     ? { ...sticker, x: clampedX, y }
                     : sticker
             );
-
-            // 최신 스티커 데이터로 컨테이너 크기 업데이트 (가로는 제한)
-            setTimeout(() => updateContainerSize(updatedStickers), 0);
-            return updatedStickers;
         });
     };
 
     const updateStickerSize = (stickerId, width, height) => {
-        setStickers(prev => {
-            const updatedStickers = prev.map(sticker =>
-                sticker.id === stickerId
-                    ? { ...sticker, width, height }
-                    : sticker
-            );
-            // 최신 스티커 데이터로 컨테이너 크기 업데이트
-            setTimeout(() => updateContainerSize(updatedStickers), 0);
-            return updatedStickers;
-        });
+        setStickers(prev => prev.map(sticker =>
+            sticker.id === stickerId
+                ? { ...sticker, width, height }
+                : sticker
+        ));
     };
 
 
 
     const removeSticker = (stickerId) => {
-        setStickers(prev => {
-            const updatedStickers = prev.filter(sticker => sticker.id !== stickerId);
-            // 최신 스티커 데이터로 컨테이너 크기 업데이트
-            setTimeout(() => updateContainerSize(updatedStickers), 0);
-            return updatedStickers;
-        });
+        setStickers(prev => prev.filter(sticker => sticker.id !== stickerId));
     };
 
     const selectSticker = (stickerId) => {
         setSelectedSticker(stickerId);
     };
 
-    // 컨테이너 크기를 스티커 위치에 맞게 업데이트 (가로 크기 확장 방지)
-    const updateContainerSize = (currentStickers = stickers) => {
-        if (currentStickers.length === 0) return;
-
+    // 컨테이너 크기를 텍스트 영역 높이에 맞게 업데이트 (스티커 위치는 무시)
+    const updateContainerSize = () => {
         const padding = 16; // ContentContainer의 padding
         const minHeight = 300; // 최소 높이
 
@@ -1286,13 +1260,25 @@ function WriteDiary({ user }) {
         const containerWidth = isMobile ? Math.min(window.innerWidth - 40, 600) : 600; // 40px는 좌우 마진
         const fixedWidth = `${containerWidth}px`;
 
-        // 모든 스티커의 최대 위치 계산 (가로는 제한)
-        const maxY = Math.max(...currentStickers.map(s => s.y + s.height));
+        // 텍스트 영역의 실제 높이만 고려
+        let textAreaHeight = minHeight;
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            const scrollHeight = textareaRef.current.scrollHeight;
+            const maxHeight = window.innerWidth <= 768 ? 800 : 600;
+            textAreaHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+            textareaRef.current.style.height = textAreaHeight + 'px';
+        }
 
-        // 컨테이너 크기 계산 (가로는 고정, 세로만 동적)
-        const containerHeight = Math.max(minHeight, maxY + padding * 2);
+        // 텍스트 2줄 높이 계산 (font-size: 16px, line-height: 1.6)
+        const fontSize = 16;
+        const lineHeight = 1.6;
+        const twoLinesHeight = fontSize * lineHeight * 2; // 약 51.2px
 
-        console.log('Container size update:', { maxY, containerHeight, isMobile, fixedWidth, containerWidth });
+        // 컨테이너 크기 계산 (텍스트 높이 + 2줄 여백 고려)
+        const containerHeight = Math.max(minHeight, textAreaHeight + padding * 2 + twoLinesHeight);
+
+        console.log('Container size update:', { textAreaHeight, containerHeight, isMobile, fixedWidth, containerWidth });
 
         // ContentContainer의 크기 업데이트 (가로는 고정 픽셀 값)
         const contentContainer = document.querySelector('[data-content-container]');
@@ -1301,6 +1287,9 @@ function WriteDiary({ user }) {
             contentContainer.style.height = `${containerHeight}px`;
             contentContainer.style.maxWidth = '100%'; // 부모 컨테이너를 넘지 않도록
         }
+
+        // contentHeight state도 업데이트
+        setContentHeight(containerHeight);
     };
 
     // 드래그 시작 처리 (마우스 + 터치)

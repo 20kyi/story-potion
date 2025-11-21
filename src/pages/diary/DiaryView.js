@@ -321,26 +321,43 @@ function DiaryView({ user }) {
         };
     }, [selectedImageIndex, diary]);
 
-    // 컨테이너 크기를 스티커 위치에 맞게 업데이트
+    // 컨테이너 크기를 텍스트 영역 높이에 맞게 업데이트 (스티커 위치는 무시)
     const updateContainerSize = () => {
-        if (!diary || !diary.stickers || diary.stickers.length === 0) return;
+        if (!diary) return;
 
         const padding = 16; // ContentContainer의 padding
         const minHeight = 200; // 최소 높이
         const maxContainerWidth = 600; // 최대 컨테이너 너비
 
-        // 모든 스티커의 최대 위치 계산
-        const maxX = Math.max(...diary.stickers.map(s => s.x + s.width));
-        const maxY = Math.max(...diary.stickers.map(s => s.y + s.height));
+        // 텍스트 영역의 실제 높이 가져오기
+        let textContentHeight = minHeight;
+        const contentContainer = document.querySelector('[data-content-container]');
+        if (contentContainer) {
+            const diaryContent = contentContainer.querySelector('p'); // DiaryContent 요소
+            if (diaryContent) {
+                // 텍스트 내용의 실제 높이 계산
+                textContentHeight = Math.max(minHeight, diaryContent.scrollHeight);
+            }
+        }
 
-        // 컨테이너 크기 계산 (패딩 포함, 최대 너비 제한)
-        const containerWidth = Math.min(maxContainerWidth, Math.max(600, maxX + padding * 2));
-        const containerHeight = Math.max(minHeight, maxY + padding * 2);
+        // 텍스트 2줄 높이 계산 (font-size: 16px, line-height: 1.6)
+        const fontSize = 16;
+        const lineHeight = 1.6;
+        const twoLinesHeight = fontSize * lineHeight * 2; // 약 51.2px
 
-        console.log('DiaryView Container size update:', { maxX, maxY, containerWidth, containerHeight });
+        // 컨테이너 너비는 고정 (스티커 위치 무시)
+        const containerWidth = maxContainerWidth;
+
+        // 컨테이너 높이는 텍스트 높이 + 2줄 여백 고려
+        const containerHeight = Math.max(minHeight, textContentHeight + padding * 2 + twoLinesHeight);
+
+        console.log('DiaryView Container size update:', {
+            textContentHeight,
+            containerWidth,
+            containerHeight
+        });
 
         // ContentContainer의 크기 업데이트
-        const contentContainer = document.querySelector('[data-content-container]');
         if (contentContainer) {
             contentContainer.style.width = `${containerWidth}px`;
             contentContainer.style.height = `${containerHeight}px`;
