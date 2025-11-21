@@ -8,9 +8,6 @@ import { setDoc, doc, collection, query, where, getDocs } from "firebase/firesto
 import { db } from "../firebase";
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
-  // initializeRecaptchaForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
-  // sendSMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
-  // verifySMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
   generateRandomNickname
 } from '../utils/signupUtils';
 import { Capacitor } from '@capacitor/core';
@@ -364,12 +361,6 @@ function Signup() {
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  // SMS 인증 관련 상태 (나중에 사용 가능하도록 주석 처리)
-  // const [smsSent, setSmsSent] = useState(false);
-  // const [smsLoading, setSmsLoading] = useState(false);
-  // const [verificationLoading, setVerificationLoading] = useState(false);
-  // const [confirmationResult, setConfirmationResult] = useState(null);
-  // const [isVerified, setIsVerified] = useState(false);
   const [isEmailChecking, setIsEmailChecking] = useState(false);
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
   const [isNicknameChecking, setIsNicknameChecking] = useState(false);
@@ -671,106 +662,6 @@ function Signup() {
     // 휴대폰 번호 입력 후 바로 회원가입 진행
     handleFinalSignup();
   };
-
-  // SMS 코드 발송 (나중에 사용 가능하도록 주석 처리)
-  // const handleSendSMSCode = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!formData.phoneNumber.trim()) {
-  //     setError('휴대폰 번호를 입력해주세요.');
-  //     return;
-  //   }
-
-  //   // 휴대폰 번호 형식 검증 (한국 번호)
-  //   const phoneRegex = /^010\d{8}$|^010-\d{4}-\d{4}$/;
-  //   const cleanPhone = formData.phoneNumber.replace(/-/g, '');
-
-  //   if (!phoneRegex.test(cleanPhone) && !/^\+82/.test(formData.phoneNumber)) {
-  //     setError('올바른 휴대폰 번호를 입력해주세요. (예: 01012345678)');
-  //     return;
-  //   }
-
-  //   setSmsLoading(true);
-  //   setError('');
-  //   setSuccessMessage('');
-
-  //   try {
-  //     // reCAPTCHA 초기화
-  //     let container = document.getElementById('recaptcha-container-signup');
-  //     if (!container) {
-  //       container = document.createElement('div');
-  //       container.id = 'recaptcha-container-signup';
-  //       container.style.display = 'none';
-  //       document.body.appendChild(container);
-  //     }
-  //     initializeRecaptchaForSignup('recaptcha-container-signup');
-
-  //     const result = await sendSMSCodeForSignup(formData.phoneNumber);
-
-  //     if (result.success) {
-  //       setConfirmationResult(result.confirmationResult);
-  //       setSmsSent(true);
-  //       setSuccessMessage('인증 코드가 발송되었습니다.');
-  //     } else {
-  //       setError(result.message || 'SMS 발송에 실패했습니다.');
-  //     }
-  //   } catch (error) {
-  //     console.error('SMS 발송 실패:', error);
-  //     setError('SMS 발송에 실패했습니다. 다시 시도해주세요.');
-  //   } finally {
-  //     setSmsLoading(false);
-  //   }
-  // };
-
-  // SMS 인증 코드 확인 (나중에 사용 가능하도록 주석 처리)
-  // const handleVerifyCode = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!formData.verificationCode.trim()) {
-  //     setError('인증 코드를 입력해주세요.');
-  //     return;
-  //   }
-
-  //   if (formData.verificationCode.length !== 6) {
-  //     setError('인증 코드는 6자리입니다.');
-  //     return;
-  //   }
-
-  //   if (!confirmationResult) {
-  //     setError('먼저 인증 코드를 발송해주세요.');
-  //     return;
-  //   }
-
-  //   setVerificationLoading(true);
-  //   setError('');
-  //   setSuccessMessage('');
-
-  //   try {
-  //     const result = await verifySMSCodeForSignup(confirmationResult, formData.verificationCode);
-
-  //     if (result.success) {
-  //       setIsVerified(true);
-  //       setSuccessMessage('인증이 완료되었습니다.');
-
-  //       // SMS 인증으로 생성된 임시 계정이 있으면 로그아웃
-  //       if (auth.currentUser && auth.currentUser.phoneNumber) {
-  //         await auth.signOut();
-  //       }
-
-  //       // 인증 성공 후 자동으로 회원가입 진행
-  //       setTimeout(() => {
-  //         handleFinalSignup();
-  //       }, 500);
-  //     } else {
-  //       setError(result.message || '인증에 실패했습니다.');
-  //     }
-  //   } catch (error) {
-  //     console.error('인증 실패:', error);
-  //     setError('인증에 실패했습니다. 다시 시도해주세요.');
-  //   } finally {
-  //     setVerificationLoading(false);
-  //   }
-  // };
 
   // 권한 요청 함수
   const requestPermissions = async (user) => {

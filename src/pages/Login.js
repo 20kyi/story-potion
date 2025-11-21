@@ -26,11 +26,6 @@ import { FaEye, FaEyeSlash, FaGoogle, FaApple } from 'react-icons/fa';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import './Login.css';
 import {
-  initializeRecaptcha,
-  sendSMSCode,
-  verifySMSCodeAndResetPassword
-} from '../utils/passwordResetUtils';
-import {
   getUserSecurityQuestions,
   verifySecurityAnswers,
   resetPasswordWithSecurityQuestions,
@@ -60,13 +55,6 @@ function Login() {
 
   // 비밀번호 찾기 방법 선택 (이메일만 사용)
   const [resetMethod] = useState('email'); // 이메일 인증만 사용
-
-  // SMS 인증 관련 상태
-  const [smsPhone, setSmsPhone] = useState('');
-  const [smsCode, setSmsCode] = useState('');
-  const [smsSent, setSmsSent] = useState(false);
-  const [smsLoading, setSmsLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
 
   // 보안 질문 관련 상태
   const [securityEmail, setSecurityEmail] = useState('');
@@ -443,75 +431,6 @@ function Login() {
       }
     } finally {
       setResetLoading(false);
-    }
-  };
-
-
-  // SMS 인증 코드 발송
-  const handleSendSMSCode = async (e) => {
-    e.preventDefault();
-    if (!smsPhone.trim()) {
-      setResetMessage('휴대폰 번호를 입력해주세요.');
-      return;
-    }
-
-    setSmsLoading(true);
-    setResetMessage('');
-
-    try {
-      // reCAPTCHA 초기화
-      initializeRecaptcha('recaptcha-container');
-
-      const result = await sendSMSCode(smsPhone);
-      if (result.success) {
-        setConfirmationResult(result.confirmationResult);
-        setSmsSent(true);
-        setResetMessage('인증 코드가 발송되었습니다.');
-      } else {
-        setResetMessage(result.message);
-      }
-    } catch (error) {
-      console.error('SMS 발송 실패:', error);
-      setResetMessage('SMS 발송에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setSmsLoading(false);
-    }
-  };
-
-  // SMS 인증 코드 확인
-  const handleVerifySMSCode = async (e) => {
-    e.preventDefault();
-    if (!smsCode.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      setResetMessage('모든 필드를 입력해주세요.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setResetMessage('비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
-    setSmsLoading(true);
-    setResetMessage('');
-
-    try {
-      const result = await verifySMSCodeAndResetPassword(confirmationResult, smsCode, newPassword);
-      if (result.success) {
-        setResetMessage('비밀번호가 성공적으로 변경되었습니다.');
-        setShowForgotPassword(false);
-        setSmsPhone('');
-        setSmsCode('');
-        setSmsSent(false);
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        setResetMessage(result.message);
-      }
-    } catch (error) {
-      console.error('SMS 인증 실패:', error);
-      setResetMessage('인증에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setSmsLoading(false);
     }
   };
 
