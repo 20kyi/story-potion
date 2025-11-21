@@ -188,20 +188,20 @@ const NovelContent = styled.div`
   font-size: ${({ fontSize }) => fontSize || 16}px;
   line-height: ${({ lineHeight }) => lineHeight || 1.8};
   color: ${({ readTheme, theme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return theme.cardText;
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return theme.cardText;
+    }};
   white-space: pre-line;
   padding: ${({ isReadingMode }) => isReadingMode ? '40px 24px' : '20px'};
   background: ${({ readTheme, theme, isReadingMode }) => {
-    if (isReadingMode) {
-      if (readTheme === 'sepia') return '#f4e8d7';
-      if (readTheme === 'dark') return '#1a1a1a';
-      return '#fefefe';
-    }
-    return theme.card;
-  }};
+        if (isReadingMode) {
+            if (readTheme === 'sepia') return '#f4e8d7';
+            if (readTheme === 'dark') return '#1a1a1a';
+            return '#fefefe';
+        }
+        return theme.card;
+    }};
   border-radius: ${({ isReadingMode }) => isReadingMode ? '0' : '15px'};
   font-family: ${({ isReadingMode }) => isReadingMode ? '"Noto Serif KR", "Nanum Myeongjo", serif' : 'inherit'};
   text-align: ${({ textAlign }) => textAlign || 'left'};
@@ -213,17 +213,17 @@ const NovelContent = styled.div`
   /* 다크모드 대응 */
   body.dark & {
     color: ${({ readTheme }) => {
-      if (readTheme === 'sepia') return '#5c4b37';
-      if (readTheme === 'dark') return '#e8e8e8';
-      return '#f1f1f1';
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#f1f1f1';
     }};
     background: ${({ readTheme, isReadingMode }) => {
-      if (isReadingMode) {
-        if (readTheme === 'sepia') return '#f4e8d7';
-        if (readTheme === 'dark') return '#1a1a1a';
-        return '#fefefe';
-      }
-      return '#232323';
+        if (isReadingMode) {
+            if (readTheme === 'sepia') return '#f4e8d7';
+            if (readTheme === 'dark') return '#1a1a1a';
+            return '#fefefe';
+        }
+        return '#232323';
     }};
   }
 `;
@@ -288,10 +288,10 @@ const ReadingModeContainer = styled.div`
   right: 0;
   bottom: 0;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#f4e8d7';
-    if (readTheme === 'dark') return '#1a1a1a';
-    return '#fefefe';
-  }};
+        if (readTheme === 'sepia') return '#f4e8d7';
+        if (readTheme === 'dark') return '#1a1a1a';
+        return '#fefefe';
+    }};
   z-index: 1000;
   overflow-y: auto;
   transition: background 0.3s ease;
@@ -303,10 +303,10 @@ const ReadingControls = styled.div`
   left: 0;
   right: 0;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
-    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
-    return 'rgba(254, 254, 254, 0.95)';
-  }};
+        if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
+        if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
+        return 'rgba(254, 254, 254, 0.95)';
+    }};
   backdrop-filter: blur(10px);
   padding: 12px 20px;
   display: flex;
@@ -321,10 +321,10 @@ const ControlButton = styled.button`
   background: none;
   border: none;
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
@@ -336,9 +336,9 @@ const ControlButton = styled.button`
   
   &:hover {
     background: ${({ readTheme }) => {
-      if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
-      if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
-      return 'rgba(0,0,0,0.05)';
+        if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
+        if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
+        return 'rgba(0,0,0,0.05)';
     }};
   }
 `;
@@ -355,10 +355,10 @@ const SettingsPanel = styled.div`
   left: 0;
   right: 0;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.98)';
-    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.98)';
-    return 'rgba(254, 254, 254, 0.98)';
-  }};
+        if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.98)';
+        if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.98)';
+        return 'rgba(254, 254, 254, 0.98)';
+    }};
   backdrop-filter: blur(10px);
   padding: 20px;
   z-index: 1001;
@@ -382,10 +382,10 @@ const ReadingSettingRow = styled.div`
 const ReadingSettingLabel = styled.label`
   font-size: 14px;
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   font-weight: 500;
   min-width: 80px;
   white-space: nowrap;
@@ -400,10 +400,10 @@ const Slider = styled.input`
   height: 6px;
   border-radius: 3px;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.2)';
-    if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.2)';
-    return 'rgba(0,0,0,0.1)';
-  }};
+        if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.2)';
+        if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.2)';
+        return 'rgba(0,0,0,0.1)';
+    }};
   outline: none;
   
   &::-webkit-slider-thumb {
@@ -413,9 +413,9 @@ const Slider = styled.input`
     height: 18px;
     border-radius: 50%;
     background: ${({ readTheme }) => {
-      if (readTheme === 'sepia') return '#8b7355';
-      if (readTheme === 'dark') return '#cb6565';
-      return '#cb6565';
+        if (readTheme === 'sepia') return '#8b7355';
+        if (readTheme === 'dark') return '#cb6565';
+        return '#cb6565';
     }};
     cursor: pointer;
     transition: all 0.2s ease;
@@ -430,9 +430,9 @@ const Slider = styled.input`
     height: 18px;
     border-radius: 50%;
     background: ${({ readTheme }) => {
-      if (readTheme === 'sepia') return '#8b7355';
-      if (readTheme === 'dark') return '#cb6565';
-      return '#cb6565';
+        if (readTheme === 'sepia') return '#8b7355';
+        if (readTheme === 'dark') return '#cb6565';
+        return '#cb6565';
     }};
     cursor: pointer;
     border: none;
@@ -443,38 +443,38 @@ const ThemeButton = styled.button`
   flex: 1;
   padding: 10px;
   border: 2px solid ${({ active, readTheme }) => {
-    if (active) {
-      if (readTheme === 'sepia') return '#8b7355';
-      if (readTheme === 'dark') return '#cb6565';
-      return '#cb6565';
-    }
-    return 'transparent';
-  }};
+        if (active) {
+            if (readTheme === 'sepia') return '#8b7355';
+            if (readTheme === 'dark') return '#cb6565';
+            return '#cb6565';
+        }
+        return 'transparent';
+    }};
   background: ${({ active, readTheme }) => {
-    if (active) {
-      if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.1)';
-      if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.1)';
-      return 'rgba(203, 101, 101, 0.1)';
-    }
-    return 'transparent';
-  }};
+        if (active) {
+            if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.1)';
+            if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.1)';
+            return 'rgba(203, 101, 101, 0.1)';
+        }
+        return 'transparent';
+    }};
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
   
   &:hover {
     background: ${({ readTheme }) => {
-      if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
-      if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
-      return 'rgba(0,0,0,0.05)';
+        if (readTheme === 'sepia') return 'rgba(92, 75, 55, 0.1)';
+        if (readTheme === 'dark') return 'rgba(232, 232, 232, 0.1)';
+        return 'rgba(0,0,0,0.05)';
     }};
   }
 `;
@@ -492,10 +492,10 @@ const ProgressBar = styled.div`
   left: 0;
   height: 3px;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#8b7355';
-    if (readTheme === 'dark') return '#cb6565';
-    return '#cb6565';
-  }};
+        if (readTheme === 'sepia') return '#8b7355';
+        if (readTheme === 'dark') return '#cb6565';
+        return '#cb6565';
+    }};
   width: ${({ progress }) => progress}%;
   z-index: 1002;
   transition: width 0.1s ease;
@@ -504,10 +504,10 @@ const ProgressBar = styled.div`
 const ValueDisplay = styled.span`
   font-size: 12px;
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#666';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#666';
+    }};
   min-width: 40px;
   text-align: right;
   white-space: nowrap;
@@ -522,10 +522,10 @@ const PageViewContainer = styled.div`
   overflow: hidden;
   position: relative;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#f4e8d7';
-    if (readTheme === 'dark') return '#1a1a1a';
-    return '#fefefe';
-  }};
+        if (readTheme === 'sepia') return '#f4e8d7';
+        if (readTheme === 'dark') return '#1a1a1a';
+        return '#fefefe';
+    }};
 `;
 
 const PageWrapper = styled.div`
@@ -536,33 +536,29 @@ const PageWrapper = styled.div`
   position: relative;
   touch-action: pan-y;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#f4e8d7';
-    if (readTheme === 'dark') return '#1a1a1a';
-    return '#fefefe';
-  }};
+        if (readTheme === 'sepia') return '#f4e8d7';
+        if (readTheme === 'dark') return '#1a1a1a';
+        return '#fefefe';
+    }};
 `;
 
 const PageContent = styled.div`
   font-size: ${({ fontSize }) => fontSize || 18}px;
   line-height: ${({ lineHeight }) => lineHeight || 2.0};
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   white-space: pre-line;
   padding: 40px 24px;
-  background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#f4e8d7';
-    if (readTheme === 'dark') return '#1a1a1a';
-    return '#fefefe';
-  }};
+  background: transparent;
   border-radius: 0;
   font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
   text-align: ${({ textAlign }) => textAlign || 'left'};
   max-width: 680px;
   margin: 0 auto;
-  min-height: calc(100vh - 160px);
+  min-height: calc(80vh);
   transition: all 0.3s ease;
 `;
 
@@ -572,10 +568,10 @@ const PageNavigation = styled.div`
   left: 0;
   right: 0;
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
-    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
-    return 'rgba(254, 254, 254, 0.95)';
-  }};
+        if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
+        if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
+        return 'rgba(254, 254, 254, 0.95)';
+    }};
   backdrop-filter: blur(10px);
   padding: 16px 20px;
   display: flex;
@@ -587,16 +583,16 @@ const PageNavigation = styled.div`
 
 const PageButton = styled.button`
   background: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.2)';
-    if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.2)';
-    return 'rgba(203, 101, 101, 0.2)';
-  }};
+        if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.2)';
+        if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.2)';
+        return 'rgba(203, 101, 101, 0.2)';
+    }};
   border: none;
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 16px;
@@ -620,17 +616,17 @@ const PageButton = styled.button`
         if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.3)';
         if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.3)';
         return 'rgba(203, 101, 101, 0.3)';
-      }};
+    }};
     }
   }
 `;
 
 const PageIndicator = styled.div`
   color: ${({ readTheme }) => {
-    if (readTheme === 'sepia') return '#5c4b37';
-    if (readTheme === 'dark') return '#e8e8e8';
-    return '#333';
-  }};
+        if (readTheme === 'sepia') return '#5c4b37';
+        if (readTheme === 'dark') return '#e8e8e8';
+        return '#333';
+    }};
   font-size: 14px;
   font-weight: 500;
   text-align: center;
@@ -656,7 +652,7 @@ function NovelView({ user }) {
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
-    
+
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
     const [fontSize, setFontSize] = useState(18);
@@ -899,15 +895,17 @@ function NovelView({ user }) {
 
         const content = novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
 아직 내용이 준비되지 않았습니다.`;
-        
+
         if (!content.trim()) {
             setPages([]);
             return;
         }
-        
+
         // 페이지 높이 계산 (화면 높이 - 상단 컨트롤 - 하단 네비게이션)
-        const pageHeight = window.innerHeight - 60 - 100; // 상단 60px, 하단 100px
-        
+        // 최소 높이를 화면의 80%로 설정하여 짧은 소설도 충분한 페이지 길이 확보
+        const minPageHeight = window.innerHeight * 0.8;
+        const pageHeight = Math.max(minPageHeight, window.innerHeight - 60 - 100);
+
         // 임시 요소를 만들어서 실제 렌더링 크기를 계산
         const tempDiv = document.createElement('div');
         tempDiv.style.position = 'absolute';
@@ -1109,7 +1107,7 @@ function NovelView({ user }) {
             return (
                 <>
                     <ProgressBar readTheme={readTheme} progress={readingProgress} />
-                    <PageViewContainer 
+                    <PageViewContainer
                         readTheme={readTheme}
                         onClick={(e) => {
                             // 설정 패널이나 컨트롤 영역을 클릭한 경우가 아니면 설정창 닫기
@@ -1128,7 +1126,8 @@ function NovelView({ user }) {
                                 </ControlButton>
                             </ControlGroup>
                         </ReadingControls>
-                        <PageWrapper 
+                        <PageWrapper
+                            readTheme={readTheme}
                             ref={pageContainerRef}
                             onTouchStart={(e) => {
                                 const touch = e.touches[0];
@@ -1140,7 +1139,7 @@ function NovelView({ user }) {
                                 if (!pageContainerRef.current || !pageContainerRef.current.startX) return;
                                 const touch = e.changedTouches[0];
                                 const diffX = pageContainerRef.current.startX - touch.clientX;
-                                
+
                                 if (Math.abs(diffX) > 50) {
                                     if (diffX > 0 && currentPage < pages.length - 1) {
                                         setCurrentPage(currentPage + 1);
@@ -1283,8 +1282,8 @@ function NovelView({ user }) {
         return (
             <>
                 <ProgressBar readTheme={readTheme} progress={readingProgress} />
-                <ReadingModeContainer 
-                    readTheme={readTheme} 
+                <ReadingModeContainer
+                    readTheme={readTheme}
                     ref={readingContainerRef}
                     onClick={(e) => {
                         // 설정 패널이나 컨트롤 영역을 클릭한 경우가 아니면 설정창 닫기
