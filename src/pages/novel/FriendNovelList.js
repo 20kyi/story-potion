@@ -224,6 +224,36 @@ const ActionButtonView = styled(ActionButton)`
   }
 `;
 
+const FilterContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 0 4px;
+`;
+
+const GenreSelect = styled.select`
+  padding: 8px 12px;
+  background: ${({ theme }) => theme.card || '#fff'};
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: ${({ theme }) => theme.text || '#333'};
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  outline: none;
+  
+  &:hover {
+    border-color: #cb6565;
+  }
+  
+  &:focus {
+    border-color: #cb6565;
+  }
+`;
+
 function FriendNovelList({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
@@ -239,6 +269,8 @@ function FriendNovelList({ user }) {
     const [pendingNovel, setPendingNovel] = useState(null);
     const [friendInfo, setFriendInfo] = useState(null); // 친구 정보 상태 추가
     const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
+    const [selectedGenre, setSelectedGenre] = useState('all'); // 장르 필터 상태
+    const [filteredNovels, setFilteredNovels] = useState([]); // 필터링된 소설 목록
 
     useEffect(() => {
         if (!userId) {
@@ -293,6 +325,32 @@ function FriendNovelList({ user }) {
         };
         fetchData();
     }, [userId, user]);
+
+    // 장르별 필터링 로직
+    useEffect(() => {
+        if (!novels || novels.length === 0) {
+            setFilteredNovels([]);
+            return;
+        }
+
+        if (selectedGenre === 'all') {
+            setFilteredNovels(novels);
+        } else {
+            const filtered = novels.filter(novel => novel.genre === selectedGenre);
+            setFilteredNovels(filtered);
+        }
+    }, [novels, selectedGenre]);
+
+    // 사용 가능한 장르 목록 가져오기 (지정된 순서대로)
+    const availableGenres = React.useMemo(() => {
+        const genreOrder = ['로맨스', '역사', '추리', '동화', '판타지', '공포'];
+        const genresInNovels = new Set(novels.map(novel => novel.genre).filter(Boolean));
+
+        // 지정된 순서대로 장르 정렬
+        const sortedGenres = genreOrder.filter(genre => genresInNovels.has(genre));
+
+        return ['all', ...sortedGenres];
+    }, [novels]);
 
     const formatDate = (dateOrTimestamp) => {
         if (!dateOrTimestamp) return '';
@@ -451,11 +509,41 @@ function FriendNovelList({ user }) {
                         </FriendProfileSection>
                     )}
 
+                    {novels.length > 0 && availableGenres.length > 1 && (
+                        <FilterContainer>
+                            <GenreSelect
+                                value={selectedGenre}
+                                onChange={(e) => setSelectedGenre(e.target.value)}
+                                theme={theme}
+                            >
+                                <option value="all">
+                                    {(() => {
+                                        const translated = t('genre_all');
+                                        return translated !== 'genre_all' ? translated : '전체 장르';
+                                    })()}
+                                </option>
+                                {availableGenres.filter(g => g !== 'all').map(genre => {
+                                    // 장르가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
+                                    const genreKey = getGenreKey(genre) || genre;
+                                    const translated = t(`novel_genre_${genreKey}`);
+                                    // 번역 키가 그대로 반환되면 한글 장르 값 그대로 사용
+                                    const displayGenre = translated !== `novel_genre_${genreKey}` ? translated : genre;
+                                    return (
+                                        <option key={genre} value={genre}>
+                                            {displayGenre}
+                                        </option>
+                                    );
+                                })}
+                            </GenreSelect>
+                        </FilterContainer>
+                    )}
                     <NovelListWrapper>
-                        {novels.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>{t('friend_novel_empty')}</div>
+                        {filteredNovels.length === 0 ? (
+                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>
+                                {novels.length === 0 ? t('friend_novel_empty') : (t('genre_no_novel') || '해당 장르의 소설이 없습니다.')}
+                            </div>
                         ) : (
-                            novels.map((novel) => (
+                            filteredNovels.map((novel) => (
                                 <NovelItem
                                     key={novel.id}
                                     onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`) : undefined}
