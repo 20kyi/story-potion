@@ -53,7 +53,7 @@ const ProfileImage = styled.img`
 `;
 
 const Nickname = styled.span`
-  font-size: 18px;
+  font-size: 18px !important;
   color: ${({ theme }) => theme.text};
   font-weight: 500;
 `;
@@ -95,7 +95,7 @@ const NotificationBadge = styled.div`
 `;
 
 const LogoText = styled.span`
-  font-size: 28px;
+  font-size: 28px !important;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: ${({ theme }) => theme.mode === 'dark' ? '#fff' : '#111'};
@@ -112,6 +112,15 @@ const CenterSection = styled.div`
   justify-content: center;
   align-items: center;
   pointer-events: none;
+`;
+
+const TitleText = styled.span`
+  font-size: 20px !important;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 100%;
 `;
 
 const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotifications }) => {
@@ -189,12 +198,12 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
           </BackButton>
         )}
         {isHome && (
-          <LogoText>STORYPOTION</LogoText>
+          <LogoText data-logo="true">STORYPOTION</LogoText>
         )}
       </LeftSection>
       {!isHome && title && (
         <CenterSection>
-          <span style={{ fontSize: 20, fontWeight: 700, lineHeight: '1', display: 'flex', alignItems: 'center', height: '100%' }}>{title}</span>
+          <TitleText>{title}</TitleText>
         </CenterSection>
       )}
       <RightSection>

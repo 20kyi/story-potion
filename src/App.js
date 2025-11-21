@@ -327,13 +327,21 @@ const GlobalStyle = createGlobalStyle`
     * {
         font-family: ${props => props.fontFamily} !important;
     }
+    
+    /* 폰트 크기 적용 - 모든 요소에 직접 적용 */
+    * {
+        font-size: ${props => props.fontSize}px !important;
+    }
+    
+    /* Header와 Navigation은 제외 - 각 요소에 이미 !important로 명시적 폰트 크기가 설정되어 있어 자동으로 override됨 */
+    /* LogoText: 28px, TitleText: 20px, Nickname: 18px, NavText: 12px 등이 이미 !important로 설정되어 있음 */
 `;
 
 function ThemeConsumerWrapper({ children }) {
-    const { actualTheme, fontFamily } = useTheme();
+    const { actualTheme, fontFamily, fontSize } = useTheme();
     return (
         <StyledThemeProvider theme={actualTheme === 'dark' ? darkTheme : lightTheme}>
-            <GlobalStyle fontFamily={fontFamily} />
+            <GlobalStyle fontFamily={fontFamily} fontSize={fontSize} />
             {children}
         </StyledThemeProvider>
     );

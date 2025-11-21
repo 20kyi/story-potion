@@ -317,6 +317,7 @@
     "theme_dark": "Dark",
     "theme_system": "System",
     "font": "Font",
+    "font_size": "Font Size",
     "subscription_manage": "Subscription Management",
     "subscription_next_renewal_date": "Next renewal date:",
     "premium_cancel_notice": "All premium benefits will stop immediately after cancellation.",

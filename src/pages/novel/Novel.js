@@ -278,7 +278,7 @@ const WeeklyGrid = styled.div`
 const WeeklyCard = styled.div`
   background-color: ${({ theme }) => theme.progressCard};
   border-radius: 15px;
-  padding: 20px;
+  padding: 20px 16px;
   flex: 0 0 240px;
   color: ${({ theme }) => theme.cardText};
   min-width: 70px;
@@ -408,27 +408,27 @@ const ButtonGroup = styled.div`
 
 const AddButton = styled.button`
   background-color: transparent;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme, disabled }) => disabled ? theme.mode === 'dark' ? '#666666' : '#999999' : theme.primary};
   border: none;
   padding: 0;
-  font-size: 12px;
-  cursor: pointer;
+  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   transition: all 0.2s ease;
-  font-weight: 600;
-  font-family: inherit;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  line-height: 1.2;
-  white-space: nowrap;
+  border-radius: 4px;
+  opacity: ${({ disabled }) => disabled ? 0.5 : 1};
   &:hover {
-    color: ${({ theme }) => theme.secondary};
-    opacity: 0.96;
-    background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
+    color: ${({ theme, disabled }) => disabled ? theme.mode === 'dark' ? '#666666' : '#999999' : theme.secondary};
+    opacity: ${({ disabled }) => disabled ? 0.5 : 0.96};
+    background-color: ${({ theme, disabled }) => disabled ? 'transparent' : theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
   }
   &:active {
-    transform: scale(0.95);
+    transform: ${({ disabled }) => disabled ? 'none' : 'scale(0.95)'};
   }
+  
+  font-size: 18px;
+  line-height: 1;
 `;
 
 const bannerData = [
@@ -945,8 +945,18 @@ const Novel = ({ user }) => {
                         const novelsForWeek = novelsMap[weekKey] || [];
                         const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
                         const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+                        
+                        // 모든 장르 목록
+                        const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
+                        // 모든 장르의 소설이 생성되었는지 확인
+                        const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
 
                         const handleAddNovel = () => {
+                            // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
+                            if (allGenresCreated) {
+                                return;
+                            }
+                            
                             const weekProgress = weeklyProgress[week.weekNum] || 0;
                             if (weekProgress < 100) {
                                 alert(t('novel_all_diaries_needed'));
@@ -990,8 +1000,12 @@ const Novel = ({ user }) => {
                                 <WeekTitle>
                                     <span>{t('week_num', { num: week.weekNum })}</span>
                                     {firstNovel && isCompleted && (
-                                        <AddButton onClick={handleAddNovel} title="다른 장르의 소설 만들기">
-                                            소설추가
+                                        <AddButton 
+                                            onClick={handleAddNovel} 
+                                            disabled={allGenresCreated}
+                                            title={allGenresCreated ? "모든 장르의 소설을 생성했습니다" : "다른 장르의 소설 만들기"}
+                                        >
+                                            🔮
                                         </AddButton>
                                     )}
                                 </WeekTitle>

@@ -322,6 +322,11 @@ const ReadingControls = styled.div`
   z-index: 1001;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
+  
+  /* 읽기모드 상단바는 폰트 크기 변경에서 제외 */
+  &, & * {
+    font-size: unset !important;
+  }
 `;
 
 const ControlButton = styled.button`
@@ -332,7 +337,7 @@ const ControlButton = styled.button`
         if (readTheme === 'dark') return '#e8e8e8';
         return '#333';
     }};
-  font-size: 20px;
+  font-size: 20px !important;
   cursor: pointer;
   padding: 8px;
   display: flex;

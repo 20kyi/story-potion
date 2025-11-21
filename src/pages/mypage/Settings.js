@@ -21,9 +21,17 @@ const FONT_OPTIONS = [
     { label: '사각사각', value: 'Sagak-sagak, sans-serif' },
 ];
 
+const FONT_SIZE_OPTIONS = [
+    { label: '작게', value: '12' },
+    { label: '작음', value: '14' },
+    { label: '기본', value: '16' },
+    { label: '큼', value: '18' },
+    { label: '크게', value: '20' },
+];
+
 function Settings() {
     const navigate = useNavigate();
-    const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily, actualTheme } = useTheme();
+    const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily, fontSize, setFontSize, actualTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const [open, setOpen] = useState({
         notification: false,
@@ -224,6 +232,38 @@ function Settings() {
                             }}
                         >
                             {FONT_OPTIONS.map(opt => (
+                                <option
+                                    key={opt.value}
+                                    value={opt.value}
+                                    style={{
+                                        backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                        color: actualTheme === 'dark' ? '#f1f1f1' : '#222'
+                                    }}
+                                >
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </li>
+                    {/* 폰트 크기 선택 */}
+                    <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
+                        <span>{t('font_size')}</span>
+                        <select
+                            className="settings-select"
+                            value={fontSize}
+                            onChange={e => setFontSize(e.target.value)}
+                            style={{
+                                marginLeft: 'auto',
+                                width: 160,
+                                fontSize: 18,
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
+                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                            }}
+                        >
+                            {FONT_SIZE_OPTIONS.map(opt => (
                                 <option
                                     key={opt.value}
                                     value={opt.value}

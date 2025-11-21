@@ -28,7 +28,7 @@ const NavButton = styled.button`
 `;
 
 const NavText = styled.span`
-  font-size: 12px;
+  font-size: 12px !important;
   color: ${({ active, theme }) => active ? theme.primary : '#bdbdbd'};
   font-weight: ${({ active }) => active ? 700 : 400};
 `;

@@ -18,6 +18,12 @@ export function ThemeProvider({ children }) {
         return saved ? saved : 'system-ui, sans-serif';
     });
 
+    // 폰트 크기 상태 추가
+    const [fontSize, setFontSize] = useState(() => {
+        const saved = localStorage.getItem('fontSize');
+        return saved ? saved : '16';
+    });
+
     // 시스템 테마 감지
     const getSystemTheme = () => {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -57,6 +63,11 @@ export function ThemeProvider({ children }) {
         localStorage.setItem('fontFamily', fontFamily);
     }, [fontFamily]);
 
+    // 폰트 크기가 변경될 때 localStorage에 저장
+    useEffect(() => {
+        localStorage.setItem('fontSize', fontSize);
+    }, [fontSize]);
+
     const setThemeMode = (mode) => {
         setTheme(mode);
     };
@@ -68,7 +79,9 @@ export function ThemeProvider({ children }) {
             setThemeMode,
             toggleTheme: () => setThemeMode(theme === 'light' ? 'dark' : 'light'),
             fontFamily,
-            setFontFamily
+            setFontFamily,
+            fontSize,
+            setFontSize
         }}>
             {children}
         </ThemeContext.Provider>
