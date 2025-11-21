@@ -27,7 +27,7 @@ const Container = styled.div`
   color: ${({ theme }) => theme.text};
   padding: 20px;
   // padding-top: 30px;
-  padding-bottom: 100px;
+  padding-bottom: 30px;
   margin: 60px auto;
   max-width: 600px;
   overflow-y: auto;
@@ -970,29 +970,34 @@ function Home({ user }) {
         {activeTab === 'my' && (
           <>
             {recentNovels.length > 0 ? (
-              <MyNovelRow>
-                {recentNovels.map(novel => (
-                  <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
-                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                    <MyNovelTitle>{novel.title}</MyNovelTitle>
-                  </MyNovelBox>
-                ))}
-                {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
-                  <MyNovelBox key={`placeholder-${idx}`}>
-                    <div style={{
-                      width: '100%',
-                      maxWidth: '180px',
-                      aspectRatio: '2/3',
-                      background: 'transparent',
-                      borderRadius: '15px',
-                      display: 'block',
-                      marginLeft: 'auto',
-                      marginRight: 'auto',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                    }} />
-                  </MyNovelBox>
-                ))}
-              </MyNovelRow>
+              <>
+                <MyNovelRow>
+                  {recentNovels.map(novel => (
+                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
+                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                      <MyNovelTitle>{novel.title}</MyNovelTitle>
+                    </MyNovelBox>
+                  ))}
+                  {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
+                    <MyNovelBox key={`placeholder-${idx}`}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '180px',
+                        aspectRatio: '2/3',
+                        background: 'transparent',
+                        borderRadius: '15px',
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }} />
+                    </MyNovelBox>
+                  ))}
+                </MyNovelRow>
+                <MoreButton onClick={() => navigate('/my/statistics')}>
+                  {t('home_see_more')}
+                </MoreButton>
+              </>
             ) : (
               <EmptyStateContainer>
                 <EmptyStateIcon>📖</EmptyStateIcon>
