@@ -86,6 +86,47 @@ const PageTitle = styled.h1`
   color: ${({ theme }) => theme.text};
   text-align: center;
   margin-bottom: 30px;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 20px;
+  }
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10;
+  
+  &:hover {
+    background: ${({ theme }) => theme.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'};
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    padding: 6px;
+  }
 `;
 
 const Section = styled.div`
@@ -1487,7 +1528,12 @@ function UserManagement({ user }) {
 
   return (
     <Container theme={theme}>
-      <PageTitle>사용자 관리</PageTitle>
+      <PageTitle theme={theme}>
+        사용자 관리
+        <CloseButton theme={theme} onClick={() => navigate('/my')} title="닫기">
+          ×
+        </CloseButton>
+      </PageTitle>
       
       <Section theme={theme}>
         <SectionTitle theme={theme} onClick={() => toggleSection('googleProfile')}>
