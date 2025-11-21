@@ -57,6 +57,9 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   
   @media (max-width: 768px) {
     padding: 10px;
@@ -177,6 +180,9 @@ const Button = styled.button`
   font-size: 14px;
   min-height: 44px;
   touch-action: manipulation;
+  flex-shrink: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   
   &:hover {
     background: ${props => props.variant === 'danger' ? '#c0392b' : '#2980b9'};
@@ -193,6 +199,7 @@ const Button = styled.button`
     min-height: 48px;
     flex: 1 1 auto;
     min-width: 120px;
+    max-width: calc(100% - 8px);
   }
 `;
 
@@ -515,12 +522,16 @@ const PremiumBadge = styled.span`
 const ButtonGroup = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
   margin-bottom: 15px;
   padding: 15px;
   background: ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#f8f9fa'};
   border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
+  width: 100%;
+  box-sizing: border-box;
   
   @media (max-width: 768px) {
     padding: 12px;
@@ -585,7 +596,7 @@ function UserManagement({ user }) {
 
   // 아코디언 상태 관리
   const [openSections, setOpenSections] = useState({
-    userList: true, // 사용자 목록은 기본적으로 열림
+    userList: false, // 사용자 목록은 기본적으로 닫힘
     profileUpdate: false,
     pointManagement: false,
     debugging: false,
@@ -1496,6 +1507,22 @@ function UserManagement({ user }) {
     setAnnouncementForm({ title: '', content: '' });
   };
 
+  const handleCreateTestMarketingNotification = async () => {
+    setNotificationType('marketing');
+    setNotificationTitle('스토리포션 테스트 마케팅 알림');
+    setNotificationMessage(`안녕하세요, 스토리포션 팀입니다!
+
+이것은 테스트용 마케팅 알림입니다.
+
+새로운 기능과 이벤트 소식을 받아보세요!
+
+감사합니다.
+스토리포션 팀 드림`);
+    setNotificationImageUrl('');
+    setNotificationLinkUrl('');
+    toast.showToast('테스트 마케팅 알림 정보가 입력되었습니다. 발송 버튼을 눌러주세요.', 'success');
+  };
+
   const handleCreateTestAnnouncement = async () => {
     setAnnouncementLoading(true);
     try {
@@ -2267,6 +2294,23 @@ function UserManagement({ user }) {
                 : '이벤트 알림 수신 동의한 사용자에게 알림을 발송합니다.'}
             </div>
 
+            {/* 테스트 마케팅 알림 생성 버튼 */}
+            <div style={{ marginBottom: '15px' }}>
+              <Button
+                onClick={handleCreateTestMarketingNotification}
+                disabled={notificationSending}
+                style={{
+                  backgroundColor: '#9b59b6',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px',
+                  minHeight: isMobile ? '44px' : 'auto'
+                }}
+              >
+                🧪 테스트 마케팅 알림 생성
+              </Button>
+            </div>
+
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
                 알림 유형:
@@ -2394,17 +2438,15 @@ function UserManagement({ user }) {
 
                     const data = result.data;
                     if (data.success) {
-                      toast.showToast(
-                        `${data.message}\n발송: ${data.sentCount}명, 실패: ${data.failureCount}명`,
-                        'success'
-                      );
+                      const successMessage = `✅ 알림 발송 완료!\n\n📊 발송 결과:\n- 성공: ${data.sentCount || 0}명\n- 실패: ${data.failureCount || 0}명\n\n${data.message || ''}`;
+                      toast.showToast(successMessage, 'success');
                       // 폼 초기화
                       setNotificationTitle('');
                       setNotificationMessage('');
                       setNotificationImageUrl('');
                       setNotificationLinkUrl('');
                     } else {
-                      toast.showToast('알림 발송에 실패했습니다.', 'error');
+                      toast.showToast(`❌ 알림 발송 실패\n\n${data.message || '알 수 없는 오류가 발생했습니다.'}`, 'error');
                     }
                   } catch (error) {
                     console.error('알림 발송 오류:', error);
