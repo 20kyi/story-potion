@@ -323,7 +323,7 @@ function FriendNovelList({ user }) {
             await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                 type: 'use',
                 amount: -30,
-                desc: '친구 소설 열람',
+                desc: '친구 소설 구매',
                 novelId: novel.id,
                 createdAt: Timestamp.now(),
             });

@@ -328,6 +328,11 @@ function PointCharge({ user }) {
   const [modal, setModal] = useState(false);
 
   const formatHistoryTitle = (item) => {
+    // desc가 있으면 상세 내역을 우선 표시
+    if (item.desc) {
+      return item.desc;
+    }
+    // desc가 없으면 기본 제목 표시
     switch (item.type) {
       case 'charge':
         return t('point_history_charge_title');
@@ -336,7 +341,7 @@ function PointCharge({ user }) {
       case 'use':
         return t('point_history_use_title');
       default:
-        return item.desc || t('no_data');
+        return t('no_data');
     }
   };
 
@@ -366,11 +371,13 @@ function PointCharge({ user }) {
           const q = query(historyRef, orderBy('createdAt', 'desc'), limit(50));
           const querySnapshot = await getDocs(q);
 
-          const allHistory = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate?.() || new Date()
-          }));
+          const allHistory = querySnapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              createdAt: doc.data().createdAt?.toDate?.() || new Date()
+            }))
+            .filter(item => item.type !== 'gift'); // 선물 내역 제외
 
           const categorized = {
             charge: allHistory.filter(item => item.type === 'charge'),
@@ -502,7 +509,9 @@ function PointCharge({ user }) {
           {currentItems.map((item) => (
             <HistoryItem key={item.id} theme={theme} type={item.type}>
               <HistoryInfo theme={theme}>
-                <HistoryTitle theme={theme}>{formatHistoryTitle(item)}</HistoryTitle>
+                <HistoryTitle theme={theme}>
+                  {formatHistoryTitle(item)}
+                </HistoryTitle>
                 <HistoryDate theme={theme}>{formatDate(item.createdAt)}</HistoryDate>
               </HistoryInfo>
               <HistoryAmount type={item.type} theme={theme}>

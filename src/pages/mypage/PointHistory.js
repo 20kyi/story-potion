@@ -64,7 +64,9 @@ function PointHistory({ user }) {
                 orderBy('createdAt', 'desc')
             );
             const querySnapshot = await getDocs(q);
-            const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const data = querySnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(item => item.type !== 'gift'); // 선물 내역 제외
             setHistory(data);
         };
         fetchHistory();
@@ -149,20 +151,55 @@ function PointHistory({ user }) {
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {history.map(item => (
                             <li key={item.id} style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                padding: '14px 0', borderBottom: `1px solid ${theme.border || '#eee'}`, fontSize: 16
+                                display: 'flex', flexDirection: 'column', gap: '8px',
+                                padding: '16px 0', borderBottom: `1px solid ${theme.border || '#eee'}`
                             }}>
-                                <div>
-                                    <div style={{ fontWeight: 600, color: getTypeColor(item.type) }}>
-                                        {getTypeLabel(item.type)} {item.amount > 0 ? '+' : ''}{item.amount}p
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '12px' }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, color: getTypeColor(item.type), fontSize: '16px', marginBottom: '6px' }}>
+                                            {getTypeLabel(item.type)} {item.amount > 0 ? '+' : ''}{item.amount}p
+                                        </div>
+                                        {item.desc && (
+                                            <div style={{ 
+                                                fontSize: '14px', 
+                                                color: theme.text || '#333', 
+                                                lineHeight: '1.4',
+                                                padding: '6px 10px',
+                                                backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
+                                                borderRadius: '6px',
+                                                display: 'inline-block'
+                                            }}>
+                                                📋 {item.desc}
+                                            </div>
+                                        )}
+                                        {!item.desc && (
+                                            <div style={{ 
+                                                fontSize: '13px', 
+                                                color: theme.subText || '#999',
+                                                fontStyle: 'italic'
+                                            }}>
+                                                내역 없음
+                                            </div>
+                                        )}
                                     </div>
-                                    {/* desc는 내부 코드/고정 문자열이므로 다국어 UI에서는 노출하지 않음 */}
+                                    <div style={{ 
+                                        color: theme.subText || '#aaa', 
+                                        fontSize: '12px',
+                                        whiteSpace: 'nowrap',
+                                        flexShrink: 0
+                                    }}>
+                                        {item.createdAt && typeof item.createdAt.toDate === 'function'
+                                            ? item.createdAt.toDate().toLocaleString('ko-KR', {
+                                                year: 'numeric',
+                                                month: '2-digit',
+                                                day: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })
+                                            : (item.createdAt ? String(item.createdAt) : '')
+                                        }
+                                    </div>
                                 </div>
-                                <div style={{ color: theme.subText || '#aaa', fontSize: 13 }}>{
-                                    item.createdAt && typeof item.createdAt.toDate === 'function'
-                                        ? item.createdAt.toDate().toLocaleString()
-                                        : (item.createdAt ? String(item.createdAt) : '')
-                                }</div>
                             </li>
                         ))}
                     </ul>

@@ -243,18 +243,30 @@ function NotificationModal({ isOpen, onClose, user }) {
           ) : notifications.length === 0 ? (
             <EmptyState theme={theme}>{t('no_notifications') || '알림이 없습니다.'}</EmptyState>
           ) : (
-            notifications.map(notification => (
-              <NotificationItem
-                key={notification.id}
-                theme={theme}
-                $isRead={notification.isRead}
-                onClick={() => markAsRead(notification.id)}
-              >
-                <NotificationTitle theme={theme}>{notification.title}</NotificationTitle>
-                <NotificationMessage theme={theme}>{notification.message}</NotificationMessage>
-                <NotificationTime theme={theme}>{formatTime(notification.createdAt)}</NotificationTime>
-              </NotificationItem>
-            ))
+            notifications.map(notification => {
+              // 포인트 적립 알림인 경우 상세 내역 표시
+              const showDetail = notification.type === 'point_earn' && notification.data?.reason;
+              
+              return (
+                <NotificationItem
+                  key={notification.id}
+                  theme={theme}
+                  $isRead={notification.isRead}
+                  onClick={() => markAsRead(notification.id)}
+                >
+                  <NotificationTitle theme={theme}>{notification.title}</NotificationTitle>
+                  <NotificationMessage theme={theme}>
+                    {notification.message}
+                    {showDetail && (
+                      <div style={{ marginTop: '4px', fontSize: '13px', color: theme.subText || '#888' }}>
+                        내역: {notification.data.reason}
+                      </div>
+                    )}
+                  </NotificationMessage>
+                  <NotificationTime theme={theme}>{formatTime(notification.createdAt)}</NotificationTime>
+                </NotificationItem>
+              );
+            })
           )}
         </NotificationList>
         {unreadCount > 0 && (

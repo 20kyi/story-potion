@@ -1,25 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
-import { notices } from '../../data/notices';
+import { db } from '../../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useTheme } from '../../ThemeContext';
 
 function NoticeDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { actualTheme } = useTheme();
-    const notice = notices.find(n => String(n.id) === String(id));
+    const [notice, setNotice] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // 다크모드에 따른 색상 설정
     const textColor = actualTheme === 'dark' ? '#f1f1f1' : '#222';
     const secondaryTextColor = actualTheme === 'dark' ? '#ccc' : '#888';
     const contentTextColor = actualTheme === 'dark' ? '#e0e0e0' : '#333';
 
+    useEffect(() => {
+        const fetchNotice = async () => {
+            try {
+                const noticeDoc = await getDoc(doc(db, 'announcements', id));
+                if (noticeDoc.exists()) {
+                    const data = noticeDoc.data();
+                    setNotice({
+                        id: noticeDoc.id,
+                        ...data,
+                        date: data.createdAt?.toDate() ? data.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+                    });
+                }
+            } catch (error) {
+                console.error('공지사항 조회 실패:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchNotice();
+        }
+    }, [id]);
+
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="공지사항" />
             <div style={{ maxWidth: 600, margin: '40px auto', marginTop: 50, padding: 24, paddingTop: 40, minHeight: '100vh' }}>
-                {notice ? (
+                {loading ? (
+                    <div style={{ color: secondaryTextColor, textAlign: 'center', marginTop: 80 }}>로딩 중...</div>
+                ) : notice ? (
                     <>
                         <h2 style={{ color: textColor, marginTop: 10, marginBottom: 10, textAlign: 'left', fontWeight: 400, fontSize: '1.1rem' }}>{notice.title}</h2>
                         <div style={{ color: secondaryTextColor, fontSize: 14, textAlign: 'left', marginBottom: 20 }}>{notice.date}</div>

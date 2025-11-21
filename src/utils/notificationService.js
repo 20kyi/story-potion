@@ -47,7 +47,7 @@ export const createPointEarnNotification = async (userId, amount, reason) => {
         userId,
         'point_earn',
         '포인트 적립',
-        `${amount}포인트가 적립되었습니다.`,
+        `${amount}포인트가 적립되었습니다. (${reason})`,
         { amount, reason }
     );
 };

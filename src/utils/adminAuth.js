@@ -7,15 +7,14 @@
 
 // 관리자 이메일 목록 (firestore.rules와 동일하게 유지)
 const ADMIN_EMAILS = [
-  '0521kimyi@gmail.com',  // 메인 관리자
-  'acho1821@gmail.com',   // 메인 관리자
-  '20kyi@naver.com'       // 서브 관리자
+  '0521kimyi@gmail.com',  // 서브 관리자
+  '20kyi@naver.com',      // 메인 관리자
+  'acho1821@gmail.com'    // 서브 관리자
 ];
 
 // 메인 관리자 이메일 목록 (전체 권한)
 const MAIN_ADMIN_EMAILS = [
-  '0521kimyi@gmail.com',  // 메인 관리자
-  'acho1821@gmail.com'    // 메인 관리자
+  '20kyi@naver.com'       // 메인 관리자
 ];
 
 /**
@@ -37,11 +36,11 @@ export const isAdmin = (user) => {
  */
 export const checkAdminAccess = (user) => {
   const hasAccess = isAdmin(user);
-  
+
   if (!hasAccess) {
     console.warn('⚠️ 관리자 권한이 필요한 페이지에 접근했습니다.');
   }
-  
+
   return hasAccess;
 };
 
@@ -103,7 +102,7 @@ if (typeof window !== 'undefined') {
   window.checkAdminAccess = checkAdminAccess;
   window.getAdminEmails = getAdminEmails;
   window.isAdminEmail = isAdminEmail;
-  
+
   console.log('🔐 관리자 권한 체크 함수들이 준비되었습니다!');
   console.log('💡 사용법:');
   console.log('  - isAdmin(user) : 사용자가 관리자인지 확인');

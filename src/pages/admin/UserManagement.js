@@ -41,29 +41,12 @@ import {
 } from '../../utils/updateDefaultProfile';
 import {
   getAllFirestoreUsers,
-  checkAllUserProfiles,
-  fixGoogleUserProfiles
+  checkAllUserProfiles
 } from '../../utils/debugUsers';
-import { requireAdmin, isMainAdmin } from '../../utils/adminAuth';
-import { getFirestore, collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc } from 'firebase/firestore';
+import { requireAdmin, isMainAdmin, isAdmin } from '../../utils/adminAuth';
+import { db } from '../../firebase';
+import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import {
-    checkGoogleUserProfiles, 
-    forceUpdateGoogleUserProfiles, 
-    updateGoogleProfilesByEmail 
-} from '../../utils/fixGoogleProfiles';
-import {
-    checkPotionUsageStats,
-    cleanupPotionUsageHistory,
-    runFullCleanup
-} from '../../utils/runPotionHistoryCleanup';
-import {
-    getPasswordResetRequests,
-    approvePasswordResetRequest,
-    rejectPasswordResetRequest,
-    setTemporaryPassword,
-    resetUserPasswordByAdmin
-} from '../../utils/adminPasswordResetUtils';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -586,47 +569,37 @@ function UserManagement({ user }) {
   const [userDetail, setUserDetail] = useState(null);
   const [userActivity, setUserActivity] = useState({ diaries: [], novels: [], comments: [] });
   const [detailLoading, setDetailLoading] = useState(false);
-  const db = getFirestore();
   const [pointInput, setPointInput] = useState(0);
   const [pointActionLoading, setPointActionLoading] = useState(false);
   const [pointActionStatus, setPointActionStatus] = useState(null);
   const [statusActionLoading, setStatusActionLoading] = useState(false);
   const [statusActionStatus, setStatusActionStatus] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
+
   // 아코디언 상태 관리
   const [openSections, setOpenSections] = useState({
-    googleProfile: false,
     userList: true, // 사용자 목록은 기본적으로 열림
     profileUpdate: false,
     pointManagement: false,
     debugging: false,
-    quickActions: false,
     notifications: false,
-    passwordReset: false,
-    potionCleanup: false
+    announcements: false
   });
-  
+
   const toggleSection = (sectionKey) => {
     setOpenSections(prev => ({
       ...prev,
       [sectionKey]: !prev[sectionKey]
     }));
   };
-  
-  // 비밀번호 재설정 요청 관련 상태
-  const [passwordResetRequests, setPasswordResetRequests] = useState([]);
-  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [adminNote, setAdminNote] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  
+
+
   // 화면 크기 감지
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -639,8 +612,17 @@ function UserManagement({ user }) {
   const [notificationLinkUrl, setNotificationLinkUrl] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
 
+  // 공지사항 관리 상태
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementLoading, setAnnouncementLoading] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '',
+    content: ''
+  });
+
   // 페이지네이션/정렬 상태
-  const [pageLimit] = useState(10);
+  const [pageLimit, setPageLimit] = useState(10);
   const [orderByField, setOrderByField] = useState('createdAt');
   const [orderDir, setOrderDir] = useState('desc');
   const [lastDoc, setLastDoc] = useState(null);
@@ -678,7 +660,7 @@ function UserManagement({ user }) {
         where: opts.where || []
       });
       setUsers(loadedUsers);
-      
+
       if (opts.isNext) {
         // 다음 페이지로 이동: 현재 lastDoc을 스택에 저장하고 새로운 lastDoc 설정
         setPageStack(prev => [...prev, lastDoc]);
@@ -742,10 +724,10 @@ function UserManagement({ user }) {
   const handleNextPage = () => {
     loadUsersPage({ startAfter: lastDoc, isNext: true });
   };
-  
+
   const handlePrevPage = () => {
     if (pageStack.length === 0) return; // 첫 페이지면 아무것도 하지 않음
-    
+
     const prevStack = [...pageStack];
     prevStack.pop();
     const prevLastDoc = prevStack.length > 0 ? prevStack[prevStack.length - 1] : null;
@@ -1015,24 +997,6 @@ function UserManagement({ user }) {
     }
   };
 
-  // 디버깅: 구글 사용자 프로필 복구
-  const handleFixGoogleUserProfiles = async () => {
-    setLoading(true);
-    setStatus({ type: 'info', message: '구글 사용자 프로필 복구 중...' });
-
-    try {
-      const result = await fixGoogleUserProfiles();
-      setDebugInfo(result);
-      setStatus({
-        type: 'success',
-        message: result.message
-      });
-    } catch (error) {
-      setStatus({ type: 'error', message: '구글 사용자 프로필 복구 실패: ' + error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // 디버깅: Firestore 사용자 목록 새로고침
   const handleRefreshFirestoreUsers = async () => {
@@ -1064,7 +1028,7 @@ function UserManagement({ user }) {
 
     try {
       const result = await updateEmptyProfileImages();
-      
+
       if (result.success) {
         setStatus({
           type: 'success',
@@ -1094,7 +1058,7 @@ function UserManagement({ user }) {
 
     try {
       const result = await checkAndUpdateAllProfileImages();
-      
+
       if (result.success) {
         setStatus({
           type: 'success',
@@ -1124,7 +1088,7 @@ function UserManagement({ user }) {
 
     try {
       const result = await updateEmptyDisplayNames();
-      
+
       if (result.success) {
         setStatus({
           type: 'success',
@@ -1154,7 +1118,7 @@ function UserManagement({ user }) {
 
     try {
       const result = await checkAndUpdateAllUserProfiles();
-      
+
       if (result.success) {
         setStatus({
           type: 'success',
@@ -1333,13 +1297,13 @@ function UserManagement({ user }) {
           premiumCancelled: true
         };
       }
-      
+
       const ok = await updateUserData(selectedUser.uid, updateData);
       if (ok) {
         setUserDetail({ ...selectedUser, ...updateData });
-        setStatusActionStatus({ 
-          type: 'success', 
-          message: `프리미엄 상태가 ${premiumType === 'monthly' ? '월간' : premiumType === 'yearly' ? '연간' : '해제'}로 변경되었습니다.` 
+        setStatusActionStatus({
+          type: 'success',
+          message: `프리미엄 상태가 ${premiumType === 'monthly' ? '월간' : premiumType === 'yearly' ? '연간' : '해제'}로 변경되었습니다.`
         });
         // 목록 새로고침
         setTimeout(() => loadUsersPage(), 500);
@@ -1353,176 +1317,150 @@ function UserManagement({ user }) {
     }
   };
 
-  const handleCheckGoogleProfiles = async () => {
-    setLoading(true);
-    setStatus({ type: 'info', message: '구글 사용자 프로필 상태를 확인하는 중...' });
-    
+  // 공지사항 관리 함수들
+  const fetchAnnouncements = async () => {
+    setAnnouncementLoading(true);
     try {
-        const result = await checkGoogleUserProfiles();
-        if (result.success) {
-            setStatus({ 
-                type: 'success', 
-                message: `✅ 확인 완료!\n\n📊 구글 사용자 현황:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 프로필 사진 있음: ${result.hasProfileImage}명\n- 기본 이미지: ${result.hasDefaultImage}명\n- 이미지 없음: ${result.noImage}명\n\n⚠️ 문제가 있는 사용자: ${result.problematicUsers}명`
-            });
-            toast.showToast('구글 사용자 프로필 상태 확인 완료', 'success');
-        } else {
-            setStatus({ type: 'error', message: `❌ 확인 실패: ${result.message}` });
-            toast.showToast('확인에 실패했습니다', 'error');
-        }
+      const announcementsRef = collection(db, 'announcements');
+      const q = query(announcementsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const announcementsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || null
+        };
+      });
+      setAnnouncements(announcementsData);
     } catch (error) {
-        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
-        toast.showToast('오류가 발생했습니다', 'error');
+      console.error('공지사항 조회 실패:', error);
+      toast.showToast('공지사항 조회 실패: ' + error.message, 'error');
     } finally {
-        setLoading(false);
+      setAnnouncementLoading(false);
     }
   };
 
-  const handleForceUpdateProfiles = async () => {
-    setLoading(true);
-    setStatus({ type: 'info', message: '구글 사용자 프로필을 강제로 업데이트하는 중...' });
-    
-    try {
-        const result = await forceUpdateGoogleUserProfiles();
-        if (result.success) {
-            setStatus({ 
-                type: 'success', 
-                message: `✅ 강제 업데이트 완료!\n\n📊 결과:\n- 총 구글 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`
-            });
-            toast.showToast('프로필 강제 업데이트 완료', 'success');
-        } else {
-            setStatus({ type: 'error', message: `❌ 업데이트 실패: ${result.message}` });
-            toast.showToast('업데이트에 실패했습니다', 'error');
-        }
-    } catch (error) {
-        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
-        toast.showToast('오류가 발생했습니다', 'error');
-    } finally {
-        setLoading(false);
+  useEffect(() => {
+    if (user && isAdmin(user)) {
+      fetchAnnouncements();
     }
-  };
+  }, [user]);
 
-  const handleUpdateByEmail = async () => {
-    setLoading(true);
-    setStatus({ type: 'info', message: '이메일 기반으로 구글 사용자 프로필을 업데이트하는 중...' });
-    
-    try {
-        const result = await updateGoogleProfilesByEmail();
-        if (result.success) {
-            setStatus({ 
-                type: 'success', 
-                message: `✅ 이메일 기반 업데이트 완료!\n\n📊 결과:\n- 총 구글 이메일 사용자: ${result.totalGoogleUsers}명\n- 업데이트된 사용자: ${result.updatedCount}명\n\n${result.message}`
-            });
-            toast.showToast('이메일 기반 프로필 업데이트 완료', 'success');
-        } else {
-            setStatus({ type: 'error', message: `❌ 업데이트 실패: ${result.message}` });
-            toast.showToast('업데이트에 실패했습니다', 'error');
-        }
-    } catch (error) {
-        setStatus({ type: 'error', message: `❌ 오류 발생: ${error.message}` });
-        toast.showToast('오류가 발생했습니다', 'error');
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  // 비밀번호 재설정 요청 관리 함수들
-  const handleLoadPasswordResetRequests = async () => {
-    setPasswordResetLoading(true);
-    try {
-      const result = await getPasswordResetRequests();
-      if (result.success) {
-        setPasswordResetRequests(result.requests);
-        setStatus({ type: 'success', message: `비밀번호 재설정 요청 ${result.requests.length}개를 불러왔습니다.` });
-      } else {
-        setStatus({ type: 'error', message: result.message });
-      }
-    } catch (error) {
-      setStatus({ type: 'error', message: `비밀번호 재설정 요청 불러오기 실패: ${error.message}` });
-    } finally {
-      setPasswordResetLoading(false);
-    }
-  };
-
-  const handleApproveRequest = async (requestId) => {
-    setPasswordResetLoading(true);
-    try {
-      const result = await approvePasswordResetRequest(requestId, adminNote);
-      if (result.success) {
-        setStatus({ 
-          type: 'success', 
-          message: `요청이 승인되었습니다. 임시 비밀번호: ${result.temporaryPassword}` 
-        });
-        // 요청 목록 새로고침
-        await handleLoadPasswordResetRequests();
-      } else {
-        setStatus({ type: 'error', message: result.message });
-      }
-    } catch (error) {
-      setStatus({ type: 'error', message: `요청 승인 실패: ${error.message}` });
-    } finally {
-      setPasswordResetLoading(false);
-    }
-  };
-
-  const handleRejectRequest = async (requestId) => {
-    setPasswordResetLoading(true);
-    try {
-      const result = await rejectPasswordResetRequest(requestId, adminNote);
-      if (result.success) {
-        setStatus({ type: 'success', message: '요청이 거부되었습니다.' });
-        // 요청 목록 새로고침
-        await handleLoadPasswordResetRequests();
-      } else {
-        setStatus({ type: 'error', message: result.message });
-      }
-    } catch (error) {
-      setStatus({ type: 'error', message: `요청 거부 실패: ${error.message}` });
-    } finally {
-      setPasswordResetLoading(false);
-    }
-  };
-
-  const handleSetTemporaryPassword = async (email) => {
-    setPasswordResetLoading(true);
-    try {
-      const result = await setTemporaryPassword(email);
-      if (result.success) {
-        setStatus({ 
-          type: 'success', 
-          message: `임시 비밀번호가 설정되었습니다: ${result.temporaryPassword}` 
-        });
-      } else {
-        setStatus({ type: 'error', message: result.message });
-      }
-    } catch (error) {
-      setStatus({ type: 'error', message: `임시 비밀번호 설정 실패: ${error.message}` });
-    } finally {
-      setPasswordResetLoading(false);
-    }
-  };
-
-  const handleResetUserPassword = async (email) => {
-    if (!newPassword.trim()) {
-      setStatus({ type: 'error', message: '새 비밀번호를 입력해주세요.' });
+  const handleCreateAnnouncement = async () => {
+    if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
+      toast.showToast('제목과 내용을 입력해주세요.', 'error');
       return;
     }
 
-    setPasswordResetLoading(true);
+    setAnnouncementLoading(true);
     try {
-      const result = await resetUserPasswordByAdmin(email, newPassword);
-      if (result.success) {
-        setStatus({ 
-          type: 'success', 
-          message: `비밀번호가 재설정되었습니다: ${result.newPassword}` 
-        });
-        setNewPassword('');
-      } else {
-        setStatus({ type: 'error', message: result.message });
-      }
+      await addDoc(collection(db, 'announcements'), {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      toast.showToast('공지사항이 생성되었습니다.', 'success');
+      setAnnouncementForm({ title: '', content: '' });
+      fetchAnnouncements();
     } catch (error) {
-      setStatus({ type: 'error', message: `비밀번호 재설정 실패: ${error.message}` });
+      console.error('공지사항 생성 실패:', error);
+      toast.showToast('공지사항 생성 실패: ' + error.message, 'error');
     } finally {
-      setPasswordResetLoading(false);
+      setAnnouncementLoading(false);
+    }
+  };
+
+  const handleEditAnnouncement = (announcement) => {
+    setEditingAnnouncement(announcement);
+    setAnnouncementForm({
+      title: announcement.title,
+      content: announcement.content
+    });
+  };
+
+  const handleUpdateAnnouncement = async () => {
+    if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
+      toast.showToast('제목과 내용을 입력해주세요.', 'error');
+      return;
+    }
+
+    setAnnouncementLoading(true);
+    try {
+      const announcementRef = doc(db, 'announcements', editingAnnouncement.id);
+      await updateDoc(announcementRef, {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        updatedAt: Timestamp.now()
+      });
+      toast.showToast('공지사항이 수정되었습니다.', 'success');
+      setEditingAnnouncement(null);
+      setAnnouncementForm({ title: '', content: '' });
+      fetchAnnouncements();
+    } catch (error) {
+      console.error('공지사항 수정 실패:', error);
+      toast.showToast('공지사항 수정 실패: ' + error.message, 'error');
+    } finally {
+      setAnnouncementLoading(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId) => {
+    if (!window.confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    setAnnouncementLoading(true);
+    try {
+      await deleteDoc(doc(db, 'announcements', announcementId));
+      toast.showToast('공지사항이 삭제되었습니다.', 'success');
+      fetchAnnouncements();
+    } catch (error) {
+      console.error('공지사항 삭제 실패:', error);
+      toast.showToast('공지사항 삭제 실패: ' + error.message, 'error');
+    } finally {
+      setAnnouncementLoading(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingAnnouncement(null);
+    setAnnouncementForm({ title: '', content: '' });
+  };
+
+  const handleCreateTestAnnouncement = async () => {
+    setAnnouncementLoading(true);
+    try {
+      const testAnnouncement = {
+        title: '테스트 공지사항',
+        content: `안녕하세요, 스토리포션 팀입니다.
+
+이것은 테스트용 공지사항입니다.
+
+테스트 내용:
+- 공지사항 기능 테스트
+- 관리자 페이지에서 생성 가능
+- 사용자 페이지에서 확인 가능
+
+감사합니다.
+스토리포션 팀 드림`
+      };
+
+      await addDoc(collection(db, 'announcements'), {
+        title: testAnnouncement.title,
+        content: testAnnouncement.content,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      toast.showToast('테스트 공지사항이 생성되었습니다.', 'success');
+      fetchAnnouncements();
+    } catch (error) {
+      console.error('테스트 공지사항 생성 실패:', error);
+      toast.showToast('테스트 공지사항 생성 실패: ' + error.message, 'error');
+    } finally {
+      setAnnouncementLoading(false);
     }
   };
 
@@ -1534,183 +1472,160 @@ function UserManagement({ user }) {
           ×
         </CloseButton>
       </PageTitle>
-      
-      <Section theme={theme}>
-        <SectionTitle theme={theme} onClick={() => toggleSection('googleProfile')}>
-          <span>구글 사용자 프로필 관리</span>
-          <AccordionIcon theme={theme} isOpen={openSections.googleProfile}>▼</AccordionIcon>
-        </SectionTitle>
-        <SectionContent isOpen={openSections.googleProfile}>
-          <InfoText theme={theme}>
-              구글 연동 회원들의 프로필 이미지가 기본 이미지로 표시되는 문제를 해결할 수 있습니다.
-              아래 버튼들을 순서대로 실행해보세요.
-          </InfoText>
-          
-          <ButtonGroup theme={theme}>
-            <ButtonGroupTitle theme={theme}>구글 프로필 관리</ButtonGroupTitle>
-            <Button 
-                onClick={handleCheckGoogleProfiles}
-                disabled={loading}
-            >
-                1. 구글 사용자 프로필 상태 확인
-            </Button>
-            
-            <Button 
-                onClick={handleForceUpdateProfiles}
-                disabled={loading}
-            >
-                2. 구글 사용자 프로필 강제 업데이트
-            </Button>
-            
-            <Button 
-                onClick={handleUpdateByEmail}
-                disabled={loading}
-            >
-                3. 이메일 기반 프로필 업데이트
-            </Button>
-          </ButtonGroup>
-          
-          {loading && (
-              <LoadingText>처리 중...</LoadingText>
-          )}
-          
-          {status && (
-              <StatusText theme={theme}>
-                  <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
-                      {typeof status === 'string' ? status : status.message}
-                  </pre>
-              </StatusText>
-          )}
-        </SectionContent>
-      </Section>
 
-      {/* 사용자 목록 */}
+      {/* 사용자 목록 - 모든 관리자 */}
       <Section theme={theme}>
         <SectionTitle theme={theme} onClick={() => toggleSection('userList')}>
-          <span>👥 사용자 목록 ({users.length}명)</span>
+          <span>👥 사용자 목록</span>
           <AccordionIcon theme={theme} isOpen={openSections.userList}>▼</AccordionIcon>
         </SectionTitle>
         <SectionContent isOpen={openSections.userList}>
-        <ButtonGroup theme={theme}>
-          <ButtonGroupTitle theme={theme}>정렬 옵션</ButtonGroupTitle>
-          <Button onClick={() => handleSort('createdAt')}>가입일 정렬</Button>
-          <Button onClick={() => handleSort('point')}>포인트 정렬</Button>
-          <Button onClick={() => handleSort('displayName')}>이름 정렬</Button>
-        </ButtonGroup>
-        
-        {/* 데스크톱 테이블 */}
-        <div style={{ overflowX: 'auto' }}>
-          <UserTable theme={theme}>
-            <TableHeader theme={theme}>
-              <tr>
-                <TableHeaderCell theme={theme}>닉네임</TableHeaderCell>
-                <TableHeaderCell theme={theme}>이메일</TableHeaderCell>
-                <TableHeaderCell theme={theme}>프리미엄</TableHeaderCell>
-                <TableHeaderCell theme={theme}>포인트</TableHeaderCell>
-                <TableHeaderCell theme={theme}>상태</TableHeaderCell>
-                <TableHeaderCell theme={theme}>가입일</TableHeaderCell>
-              </tr>
-            </TableHeader>
-            <tbody>
-              {users.map((user) => (
-                <TableRow key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
-                  <TableCell theme={theme}>
-                    <strong>{user.displayName || '이름 없음'}</strong>
-                  </TableCell>
-                  <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
-                    {user.email}
-                  </TableCell>
-                  <TableCell theme={theme}>
-                    {renderPremiumBadge(user)}
-                  </TableCell>
-                  <TableCell theme={theme}>
-                    <span style={{ color: '#3498f3', fontWeight: 'bold' }}>{user.point || 0}p</span>
-                  </TableCell>
-                  <TableCell theme={theme}>
-                    {renderStatusBadge(user.status)}
-                  </TableCell>
-                  <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
-                    {formatDate(user.createdAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {/* 빈 행 추가 (10명 미만일 때) */}
-              {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
-                <EmptyTableRow key={`empty-${index}`} theme={theme}>
-                  <EmptyTableCell theme={theme} colSpan={6} style={{ textAlign: 'center' }}>
-                    -
-                  </EmptyTableCell>
-                </EmptyTableRow>
-              ))}
-            </tbody>
-          </UserTable>
-        </div>
-        
-        {/* 모바일 카드 */}
-        <MobileCardContainer>
-          {users.map((user) => (
-            <MobileUserCard key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
-              <MobileCardHeader>
-                <div>
-                  <MobileCardTitle theme={theme}>{user.displayName || '이름 없음'}</MobileCardTitle>
-                  <MobileCardEmail theme={theme}>{user.email}</MobileCardEmail>
+          <ButtonGroup theme={theme}>
+            <ButtonGroupTitle theme={theme}>표시 설정</ButtonGroupTitle>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              <label style={{ color: theme.text, fontSize: '14px', whiteSpace: 'nowrap' }}>페이지당 표시 개수:</label>
+              <Select
+                theme={theme}
+                value={pageLimit}
+                onChange={(e) => {
+                  const newLimit = parseInt(e.target.value);
+                  setPageLimit(newLimit);
+                  // 목록 다시 로드
+                  setTimeout(() => {
+                    loadUsersPage();
+                  }, 100);
+                }}
+                style={{ width: '120px' }}
+              >
+                <option value={5}>5개</option>
+                <option value={10}>10개</option>
+                <option value={20}>20개</option>
+                <option value={30}>30개</option>
+                <option value={50}>50개</option>
+                <option value={100}>100개</option>
+              </Select>
+            </div>
+          </ButtonGroup>
+          <ButtonGroup theme={theme} style={{ marginTop: '10px' }}>
+            <ButtonGroupTitle theme={theme}>정렬 옵션</ButtonGroupTitle>
+            <Button onClick={() => handleSort('createdAt')}>가입일 정렬</Button>
+            <Button onClick={() => handleSort('point')}>포인트 정렬</Button>
+            <Button onClick={() => handleSort('displayName')}>이름 정렬</Button>
+          </ButtonGroup>
+
+          {/* 데스크톱 테이블 */}
+          <div style={{ overflowX: 'auto' }}>
+            <UserTable theme={theme}>
+              <TableHeader theme={theme}>
+                <tr>
+                  <TableHeaderCell theme={theme}>닉네임</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>이메일</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>프리미엄</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>포인트</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>상태</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>가입일</TableHeaderCell>
+                </tr>
+              </TableHeader>
+              <tbody>
+                {users.map((user) => (
+                  <TableRow key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
+                    <TableCell theme={theme}>
+                      <strong>{user.displayName || '이름 없음'}</strong>
+                    </TableCell>
+                    <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
+                      {user.email}
+                    </TableCell>
+                    <TableCell theme={theme}>
+                      {renderPremiumBadge(user)}
+                    </TableCell>
+                    <TableCell theme={theme}>
+                      <span style={{ color: '#3498f3', fontWeight: 'bold' }}>{user.point || 0}p</span>
+                    </TableCell>
+                    <TableCell theme={theme}>
+                      {renderStatusBadge(user.status)}
+                    </TableCell>
+                    <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
+                      {formatDate(user.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {/* 빈 행 추가 (10명 미만일 때) */}
+                {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
+                  <EmptyTableRow key={`empty-${index}`} theme={theme}>
+                    <EmptyTableCell theme={theme} colSpan={6} style={{ textAlign: 'center' }}>
+                      -
+                    </EmptyTableCell>
+                  </EmptyTableRow>
+                ))}
+              </tbody>
+            </UserTable>
+          </div>
+
+          {/* 모바일 카드 */}
+          <MobileCardContainer>
+            {users.map((user) => (
+              <MobileUserCard key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
+                <MobileCardHeader>
+                  <div>
+                    <MobileCardTitle theme={theme}>{user.displayName || '이름 없음'}</MobileCardTitle>
+                    <MobileCardEmail theme={theme}>{user.email}</MobileCardEmail>
+                  </div>
+                  {renderStatusBadge(user.status)}
+                </MobileCardHeader>
+                <MobileCardRow theme={theme}>
+                  <MobileCardLabel theme={theme}>프리미엄</MobileCardLabel>
+                  <MobileCardValue theme={theme}>{renderPremiumBadge(user)}</MobileCardValue>
+                </MobileCardRow>
+                <MobileCardRow theme={theme}>
+                  <MobileCardLabel theme={theme}>포인트</MobileCardLabel>
+                  <MobileCardValue theme={theme} style={{ color: '#3498f3' }}>{user.point || 0}p</MobileCardValue>
+                </MobileCardRow>
+                <MobileCardRow theme={theme}>
+                  <MobileCardLabel theme={theme}>가입일</MobileCardLabel>
+                  <MobileCardValue theme={theme} style={{ fontSize: '12px' }}>{formatDate(user.createdAt)}</MobileCardValue>
+                </MobileCardRow>
+              </MobileUserCard>
+            ))}
+            {/* 빈 카드 추가 (10명 미만일 때) */}
+            {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
+              <EmptyMobileCard key={`empty-mobile-${index}`} theme={theme}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: theme.theme === 'dark' ? '#555' : '#ccc',
+                  fontSize: '14px'
+                }}>
+                  -
                 </div>
-                {renderStatusBadge(user.status)}
-              </MobileCardHeader>
-              <MobileCardRow theme={theme}>
-                <MobileCardLabel theme={theme}>프리미엄</MobileCardLabel>
-                <MobileCardValue theme={theme}>{renderPremiumBadge(user)}</MobileCardValue>
-              </MobileCardRow>
-              <MobileCardRow theme={theme}>
-                <MobileCardLabel theme={theme}>포인트</MobileCardLabel>
-                <MobileCardValue theme={theme} style={{ color: '#3498f3' }}>{user.point || 0}p</MobileCardValue>
-              </MobileCardRow>
-              <MobileCardRow theme={theme}>
-                <MobileCardLabel theme={theme}>가입일</MobileCardLabel>
-                <MobileCardValue theme={theme} style={{ fontSize: '12px' }}>{formatDate(user.createdAt)}</MobileCardValue>
-              </MobileCardRow>
-            </MobileUserCard>
-          ))}
-          {/* 빈 카드 추가 (10명 미만일 때) */}
-          {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
-            <EmptyMobileCard key={`empty-mobile-${index}`} theme={theme}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                height: '100%',
-                color: theme.theme === 'dark' ? '#555' : '#ccc',
-                fontSize: '14px'
-              }}>
-                -
-              </div>
-            </EmptyMobileCard>
-          ))}
-        </MobileCardContainer>
-        
-        {users.length === 0 && (
-          <div style={{ textAlign: 'center', color: theme.theme === 'dark' ? '#bdc3c7' : '#666', padding: '20px' }}>사용자가 없습니다.</div>
-        )}
-        <div style={{ 
-          marginTop: 8, 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          gap: 12,
-          flexWrap: 'nowrap'
-        }}>
-          <Button onClick={handlePrevPage} disabled={pageStack.length === 0}>이전</Button>
-          <span style={{ 
-            color: theme.text, 
-            fontSize: '14px', 
-            fontWeight: '500',
-            padding: '0 12px',
-            whiteSpace: 'nowrap'
+              </EmptyMobileCard>
+            ))}
+          </MobileCardContainer>
+
+          {users.length === 0 && (
+            <div style={{ textAlign: 'center', color: theme.theme === 'dark' ? '#bdc3c7' : '#666', padding: '20px' }}>사용자가 없습니다.</div>
+          )}
+          <div style={{
+            marginTop: 8,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'nowrap'
           }}>
-            {pageStack.length + 1}/{totalUsers ? Math.ceil(totalUsers / pageLimit) : '?'}
-          </span>
-          <Button onClick={handleNextPage} disabled={!lastDoc}>다음</Button>
-        </div>
+            <Button onClick={handlePrevPage} disabled={pageStack.length === 0}>이전</Button>
+            <span style={{
+              color: theme.text,
+              fontSize: '14px',
+              fontWeight: '500',
+              padding: '0 12px',
+              whiteSpace: 'nowrap'
+            }}>
+              {pageStack.length + 1}/{totalUsers ? Math.ceil(totalUsers / pageLimit) : '?'}
+            </span>
+            <Button onClick={handleNextPage} disabled={!lastDoc}>다음</Button>
+          </div>
         </SectionContent>
       </Section>
 
@@ -1834,157 +1749,341 @@ function UserManagement({ user }) {
         </Section>
       )}
 
-      {/* 디버깅 */}
-      <Section theme={theme}>
-        <SectionTitle theme={theme} onClick={() => toggleSection('debugging')}>
-          <span>🔧 디버깅</span>
-          <AccordionIcon theme={theme} isOpen={openSections.debugging}>▼</AccordionIcon>
-        </SectionTitle>
-        <SectionContent isOpen={openSections.debugging}>
-          <ButtonGroup theme={theme}>
-            <ButtonGroupTitle theme={theme}>디버깅 도구</ButtonGroupTitle>
-            <Button
-              onClick={handleCheckAllUserProfiles}
-              disabled={loading}
-              style={{ backgroundColor: '#34495e' }}
-            >
-              {loading ? '확인 중...' : '사용자 프로필 상태 확인'}
-            </Button>
-
-            <Button
-              onClick={handleFixGoogleUserProfiles}
-              disabled={loading}
-              style={{ backgroundColor: '#8e44ad' }}
-            >
-              {loading ? '복구 중...' : '구글 사용자 프로필 복구'}
-            </Button>
-
-            <Button
-              onClick={handleRefreshFirestoreUsers}
-              disabled={loading}
-              style={{ backgroundColor: '#16a085' }}
-            >
-              {loading ? '새로고침 중...' : 'Firestore 새로고침'}
-            </Button>
-          </ButtonGroup>
-
-        {/* 디버깅 결과 표시 */}
-        {debugInfo && (
-          <div style={{
-            background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa',
-            padding: '15px',
-            borderRadius: '5px',
-            marginTop: '15px',
-            fontSize: '14px',
-            border: theme.theme === 'dark' ? '1px solid #2c3e50' : '1px solid #dee2e6',
-            color: theme.text
-          }}>
-            <strong>🔍 디버깅 결과:</strong><br />
-            {debugInfo.missingUsers && debugInfo.missingUsers.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <strong style={{ color: '#e74c3c' }}>❌ 누락된 사용자 ({debugInfo.missingUsers.length}명):</strong><br />
-                {debugInfo.missingUsers.map((user, index) => (
-                  <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
-                    • {user.email} (UID: {user.uid})
-                    {user.error && <span style={{ color: '#e74c3c' }}> - 오류: {user.error}</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {debugInfo.existingUsers && debugInfo.existingUsers.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <strong style={{ color: '#27ae60' }}>✅ 존재하는 사용자 ({debugInfo.existingUsers.length}명):</strong><br />
-                {debugInfo.existingUsers.map((user, index) => (
-                  <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
-                    • {user.email} (UID: {user.uid})
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {debugInfo.issues && debugInfo.issues.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <strong style={{ color: '#e67e22' }}>⚠️ 문제점:</strong><br />
-                {debugInfo.issues.map((issue, index) => (
-                  <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
-                    • {issue}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {debugInfo.solutions && debugInfo.solutions.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <strong style={{ color: '#3498db' }}>💡 해결방법:</strong><br />
-                {debugInfo.solutions.map((solution, index) => (
-                  <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
-                    • {solution}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        </SectionContent>
-      </Section>
-
-      {/* 빠른 액션 - 메인 관리자만 */}
+      {/* 디버깅 - 메인 관리자만 */}
       {isMainAdmin(user) && (
         <Section theme={theme}>
-          <SectionTitle theme={theme} onClick={() => toggleSection('quickActions')}>
-            <span>⚡ 빠른 액션</span>
-            <AccordionIcon theme={theme} isOpen={openSections.quickActions}>▼</AccordionIcon>
+          <SectionTitle theme={theme} onClick={() => toggleSection('debugging')}>
+            <span>🔧 디버깅</span>
+            <AccordionIcon theme={theme} isOpen={openSections.debugging}>▼</AccordionIcon>
           </SectionTitle>
-          <SectionContent isOpen={openSections.quickActions}>
+          <SectionContent isOpen={openSections.debugging}>
             <ButtonGroup theme={theme}>
-              <ButtonGroupTitle theme={theme}>빠른 작업</ButtonGroupTitle>
+              <ButtonGroupTitle theme={theme}>디버깅 도구</ButtonGroupTitle>
               <Button
-                onClick={async () => {
-                  const result = await migrationExamples.createSampleUsers();
-                  setStatus({ type: 'success', message: `샘플 사용자 생성: 성공 ${result.success}명` });
-                  await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
-                }}
+                onClick={handleCheckAllUserProfiles}
                 disabled={loading}
+                style={{ backgroundColor: '#34495e' }}
               >
-                샘플 10명 생성
+                {loading ? '확인 중...' : '사용자 프로필 상태 확인'}
               </Button>
 
-              <Button
-                onClick={async () => {
-                  const activeUsers = await migrationExamples.getActiveUsers();
-                  setUsers(activeUsers);
-                  setStatus({ type: 'success', message: `활성 사용자: ${activeUsers.length}명` });
-                }}
-                disabled={loading}
-              >
-                활성 사용자만
-              </Button>
 
               <Button
-                onClick={async () => {
-                  const highPointUsers = await migrationExamples.getHighPointUsers();
-                  setUsers(highPointUsers);
-                  setStatus({ type: 'success', message: `고포인트 사용자: ${highPointUsers.length}명` });
-                }}
+                onClick={handleRefreshFirestoreUsers}
                 disabled={loading}
+                style={{ backgroundColor: '#16a085' }}
               >
-                고포인트 사용자
-              </Button>
-
-              <Button
-                onClick={async () => {
-                  const result = await pointUpdateExamples.give500PointsToZeroUsers();
-                  setStatus({ type: 'success', message: `500포인트 지급: 성공 ${result.success}명` });
-                  await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
-                  await handleLoadPointsStats();
-                }}
-                disabled={loading}
-                style={{ backgroundColor: '#e74c3c' }}
-              >
-                500p 즉시 지급
+                {loading ? '새로고침 중...' : 'Firestore 새로고침'}
               </Button>
             </ButtonGroup>
+
+            {/* 디버깅 결과 표시 */}
+            {debugInfo && (
+              <div style={{
+                background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa',
+                padding: '15px',
+                borderRadius: '5px',
+                marginTop: '15px',
+                fontSize: '14px',
+                border: theme.theme === 'dark' ? '1px solid #2c3e50' : '1px solid #dee2e6',
+                color: theme.text
+              }}>
+                <strong>🔍 디버깅 결과:</strong><br />
+                {debugInfo.missingUsers && debugInfo.missingUsers.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <strong style={{ color: '#e74c3c' }}>❌ 누락된 사용자 ({debugInfo.missingUsers.length}명):</strong><br />
+                    {debugInfo.missingUsers.map((user, index) => (
+                      <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
+                        • {user.email} (UID: {user.uid})
+                        {user.error && <span style={{ color: '#e74c3c' }}> - 오류: {user.error}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {debugInfo.existingUsers && debugInfo.existingUsers.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <strong style={{ color: '#27ae60' }}>✅ 존재하는 사용자 ({debugInfo.existingUsers.length}명):</strong><br />
+                    {debugInfo.existingUsers.map((user, index) => (
+                      <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
+                        • {user.email} (UID: {user.uid})
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {debugInfo.issues && debugInfo.issues.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <strong style={{ color: '#e67e22' }}>⚠️ 문제점:</strong><br />
+                    {debugInfo.issues.map((issue, index) => (
+                      <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
+                        • {issue}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {debugInfo.solutions && debugInfo.solutions.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <strong style={{ color: '#3498db' }}>💡 해결방법:</strong><br />
+                    {debugInfo.solutions.map((solution, index) => (
+                      <div key={index} style={{ marginLeft: '10px', marginTop: '5px' }}>
+                        • {solution}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </SectionContent>
+        </Section>
+      )}
+
+      {/* 공지사항 관리 - 모든 관리자 */}
+      {isAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme} onClick={() => toggleSection('announcements')}>
+            <span>📢 공지사항 관리</span>
+            <AccordionIcon theme={theme} isOpen={openSections.announcements}>▼</AccordionIcon>
+          </SectionTitle>
+          <SectionContent isOpen={openSections.announcements}>
+            <InfoText theme={theme}>
+              공지사항을 생성, 수정, 삭제할 수 있습니다. 공지사항은 사용자 페이지의 공지사항 목록에 표시됩니다.
+            </InfoText>
+
+            {/* 테스트 공지사항 생성 버튼 */}
+            <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+              <Button
+                onClick={handleCreateTestAnnouncement}
+                disabled={announcementLoading}
+                style={{
+                  backgroundColor: '#9b59b6',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px',
+                  minHeight: isMobile ? '44px' : 'auto'
+                }}
+              >
+                {announcementLoading ? '생성 중...' : '🧪 테스트 공지사항 생성'}
+              </Button>
+            </div>
+
+            {/* 공지사항 작성/수정 폼 */}
+            <div style={{
+              marginBottom: '20px',
+              padding: isMobile ? '12px' : '15px',
+              border: `1px solid ${theme.border || '#ddd'}`,
+              borderRadius: '8px',
+              backgroundColor: theme.theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9'
+            }}>
+              <h3 style={{ color: theme.text, marginBottom: isMobile ? '12px' : '15px', fontSize: isMobile ? '15px' : '16px' }}>
+                {editingAnnouncement ? '공지사항 수정' : '새 공지사항 작성'}
+              </h3>
+              <div style={{ marginBottom: isMobile ? '12px' : '10px' }}>
+                <label style={{ display: 'block', color: theme.text, marginBottom: '5px', fontSize: isMobile ? '13px' : '14px' }}>제목</label>
+                <input
+                  type="text"
+                  value={announcementForm.title}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                  placeholder="공지사항 제목을 입력하세요"
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px' : '8px',
+                    borderRadius: '4px',
+                    border: `1px solid ${theme.border || '#ddd'}`,
+                    backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                    color: theme.text,
+                    fontSize: isMobile ? '15px' : '14px',
+                    minHeight: isMobile ? '44px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: isMobile ? '15px' : '15px' }}>
+                <label style={{ display: 'block', color: theme.text, marginBottom: '5px', fontSize: isMobile ? '13px' : '14px' }}>내용</label>
+                <textarea
+                  value={announcementForm.content}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
+                  placeholder="공지사항 내용을 입력하세요"
+                  rows={isMobile ? 6 : 8}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px' : '8px',
+                    borderRadius: '4px',
+                    border: `1px solid ${theme.border || '#ddd'}`,
+                    backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                    color: theme.text,
+                    fontSize: isMobile ? '15px' : '14px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: isMobile ? '8px' : '10px', flexDirection: isMobile ? 'column' : 'row' }}>
+                {editingAnnouncement ? (
+                  <>
+                    <Button
+                      onClick={handleUpdateAnnouncement}
+                      disabled={announcementLoading}
+                      style={{
+                        backgroundColor: '#3498db',
+                        flex: 1,
+                        fontSize: isMobile ? '14px' : '13px',
+                        padding: isMobile ? '12px' : '8px',
+                        minHeight: isMobile ? '44px' : 'auto'
+                      }}
+                    >
+                      {announcementLoading ? '수정 중...' : '수정하기'}
+                    </Button>
+                    <Button
+                      onClick={cancelEdit}
+                      disabled={announcementLoading}
+                      style={{
+                        backgroundColor: '#95a5a6',
+                        flex: 1,
+                        fontSize: isMobile ? '14px' : '13px',
+                        padding: isMobile ? '12px' : '8px',
+                        minHeight: isMobile ? '44px' : 'auto'
+                      }}
+                    >
+                      취소
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleCreateAnnouncement}
+                    disabled={announcementLoading}
+                    style={{
+                      backgroundColor: '#27ae60',
+                      width: '100%',
+                      fontSize: isMobile ? '14px' : '13px',
+                      padding: isMobile ? '12px' : '8px',
+                      minHeight: isMobile ? '44px' : 'auto'
+                    }}
+                  >
+                    {announcementLoading ? '생성 중...' : '공지사항 생성'}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* 공지사항 목록 */}
+            <div>
+              <h3 style={{ color: theme.text, marginBottom: isMobile ? '12px' : '15px', fontSize: isMobile ? '15px' : '16px' }}>
+                공지사항 목록 ({announcements.length}개)
+              </h3>
+              {announcementLoading && announcements.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: isMobile ? '30px 20px' : '20px', color: theme.subText || '#888', fontSize: isMobile ? '14px' : '13px' }}>
+                  로딩 중...
+                </div>
+              ) : announcements.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: isMobile ? '30px 20px' : '20px', color: theme.subText || '#888', fontSize: isMobile ? '14px' : '13px' }}>
+                  등록된 공지사항이 없습니다.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '10px' }}>
+                  {announcements.map((announcement) => (
+                    <div
+                      key={announcement.id}
+                      style={{
+                        padding: isMobile ? '12px' : '15px',
+                        border: `1px solid ${theme.border || '#ddd'}`,
+                        borderRadius: '8px',
+                        backgroundColor: theme.theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        justifyContent: 'space-between',
+                        alignItems: isMobile ? 'flex-start' : 'flex-start',
+                        marginBottom: isMobile ? '12px' : '10px',
+                        gap: isMobile ? '10px' : '0'
+                      }}>
+                        <div style={{ flex: 1, width: '100%' }}>
+                          <h4 style={{
+                            color: theme.text,
+                            margin: '0 0 5px 0',
+                            fontSize: isMobile ? '15px' : '16px',
+                            fontWeight: 'bold',
+                            wordBreak: 'break-word'
+                          }}>
+                            {announcement.title}
+                          </h4>
+                          <div style={{
+                            color: theme.subText || '#888',
+                            fontSize: isMobile ? '11px' : '12px',
+                            lineHeight: '1.4'
+                          }}>
+                            작성일: {announcement.createdAt.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            {announcement.updatedAt && (() => {
+                              const updatedAt = announcement.updatedAt?.toDate ? announcement.updatedAt.toDate() : announcement.updatedAt;
+                              const createdAt = announcement.createdAt;
+                              if (updatedAt && createdAt && updatedAt.getTime() !== createdAt.getTime()) {
+                                return (
+                                  <div style={{ marginTop: isMobile ? '4px' : '0', marginLeft: isMobile ? '0' : '10px' }}>
+                                    (수정일: {updatedAt.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })})
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          gap: isMobile ? '8px' : '5px',
+                          width: isMobile ? '100%' : 'auto',
+                          marginTop: isMobile ? '0' : '0'
+                        }}>
+                          <Button
+                            onClick={() => handleEditAnnouncement(announcement)}
+                            disabled={announcementLoading || editingAnnouncement?.id === announcement.id}
+                            style={{
+                              backgroundColor: '#3498db',
+                              padding: isMobile ? '10px 12px' : '5px 10px',
+                              fontSize: isMobile ? '13px' : '12px',
+                              flex: isMobile ? 1 : 'none',
+                              minHeight: isMobile ? '40px' : 'auto'
+                            }}
+                          >
+                            수정
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteAnnouncement(announcement.id)}
+                            disabled={announcementLoading}
+                            style={{
+                              backgroundColor: '#e74c3c',
+                              padding: isMobile ? '10px 12px' : '5px 10px',
+                              fontSize: isMobile ? '13px' : '12px',
+                              flex: isMobile ? 1 : 'none',
+                              minHeight: isMobile ? '40px' : 'auto'
+                            }}
+                          >
+                            삭제
+                          </Button>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          color: theme.text,
+                          fontSize: isMobile ? '13px' : '14px',
+                          lineHeight: '1.6',
+                          whiteSpace: 'pre-wrap',
+                          maxHeight: isMobile ? '120px' : '100px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          wordBreak: 'break-word'
+                        }}
+                      >
+                        {announcement.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </SectionContent>
         </Section>
       )}
@@ -1998,460 +2097,187 @@ function UserManagement({ user }) {
           </SectionTitle>
           <SectionContent isOpen={openSections.notifications}>
             <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
-              {notificationType === 'marketing' 
+              {notificationType === 'marketing'
                 ? '마케팅 알림 수신 동의한 사용자에게 알림을 발송합니다.'
                 : '이벤트 알림 수신 동의한 사용자에게 알림을 발송합니다.'}
             </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
-              알림 유형:
-            </label>
-            <select
-              value={notificationType}
-              onChange={(e) => setNotificationType(e.target.value)}
-              style={{
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                width: '200px',
-                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
-                color: theme.text
-              }}
-            >
-              <option value="marketing">마케팅 알림</option>
-              <option value="event">이벤트 알림</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
-              제목 <span style={{ color: '#e74c3c' }}>*</span>:
-            </label>
-            <input
-              type="text"
-              value={notificationTitle}
-              onChange={(e) => setNotificationTitle(e.target.value)}
-              placeholder="알림 제목을 입력하세요"
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
-                color: theme.text
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
-              메시지 <span style={{ color: '#e74c3c' }}>*</span>:
-            </label>
-            <textarea
-              value={notificationMessage}
-              onChange={(e) => setNotificationMessage(e.target.value)}
-              placeholder="알림 메시지를 입력하세요"
-              rows={4}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
-                color: theme.text,
-                resize: 'vertical'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
-              이미지 URL (선택):
-            </label>
-            <input
-              type="url"
-              value={notificationImageUrl}
-              onChange={(e) => setNotificationImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
-                color: theme.text
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
-              링크 URL (선택):
-            </label>
-            <input
-              type="url"
-              value={notificationLinkUrl}
-              onChange={(e) => setNotificationLinkUrl(e.target.value)}
-              placeholder="https://example.com"
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
-                color: theme.text
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <Button
-              onClick={async () => {
-                if (!notificationTitle.trim() || !notificationMessage.trim()) {
-                  toast.show('제목과 메시지는 필수입니다.', 'error');
-                  return;
-                }
-
-                setNotificationSending(true);
-                try {
-                  const functions = getFunctions();
-                  const sendNotification = httpsCallable(
-                    functions,
-                    notificationType === 'marketing' ? 'sendMarketingNotification' : 'sendEventNotification'
-                  );
-
-                  const result = await sendNotification({
-                    title: notificationTitle,
-                    message: notificationMessage,
-                    imageUrl: notificationImageUrl || undefined,
-                    linkUrl: notificationLinkUrl || undefined
-                  });
-
-                  const data = result.data;
-                  if (data.success) {
-                    toast.show(
-                      `${data.message}\n발송: ${data.sentCount}명, 실패: ${data.failureCount}명`,
-                      'success'
-                    );
-                    // 폼 초기화
-                    setNotificationTitle('');
-                    setNotificationMessage('');
-                    setNotificationImageUrl('');
-                    setNotificationLinkUrl('');
-                  } else {
-                    toast.show('알림 발송에 실패했습니다.', 'error');
-                  }
-                } catch (error) {
-                  console.error('알림 발송 오류:', error);
-                  toast.show(
-                    error.message || '알림 발송 중 오류가 발생했습니다.',
-                    'error'
-                  );
-                } finally {
-                  setNotificationSending(false);
-                }
-              }}
-              disabled={notificationSending || !notificationTitle.trim() || !notificationMessage.trim()}
-              style={{ 
-                backgroundColor: notificationType === 'marketing' ? '#e74c3c' : '#3498db',
-                width: '100%'
-              }}
-            >
-              {notificationSending 
-                ? '발송 중...' 
-                : `${notificationType === 'marketing' ? '마케팅' : '이벤트'} 알림 발송`}
-            </Button>
-          </div>
-          </SectionContent>
-        </Section>
-      )}
-
-      {/* 비밀번호 재설정 요청 관리 */}
-      <Section theme={theme}>
-        <SectionTitle theme={theme} onClick={() => toggleSection('passwordReset')}>
-          <span>🔐 비밀번호 재설정 요청 관리</span>
-          <AccordionIcon theme={theme} isOpen={openSections.passwordReset}>▼</AccordionIcon>
-        </SectionTitle>
-        <SectionContent isOpen={openSections.passwordReset}>
-          <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
-            사용자가 관리자 문의로 요청한 비밀번호 재설정을 처리합니다.
-          </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <Button
-            onClick={handleLoadPasswordResetRequests}
-            disabled={passwordResetLoading}
-            style={{ backgroundColor: '#3498db' }}
-          >
-            {passwordResetLoading ? '불러오는 중...' : '비밀번호 재설정 요청 목록'}
-          </Button>
-        </div>
-
-        {/* 요청 목록 */}
-        {passwordResetRequests.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ color: theme.text, marginBottom: '10px' }}>요청 목록 ({passwordResetRequests.length}개)</h4>
-            {passwordResetRequests.map((request, index) => (
-              <div
-                key={request.id}
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+                알림 유형:
+              </label>
+              <select
+                value={notificationType}
+                onChange={(e) => setNotificationType(e.target.value)}
                 style={{
+                  padding: '8px',
+                  borderRadius: '4px',
                   border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '15px',
-                  marginBottom: '10px',
-                  backgroundColor: theme.theme === 'dark' ? '#34495e' : '#f8f9fa'
+                  width: '200px',
+                  backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                  color: theme.text
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div>
-                    <strong style={{ color: theme.text }}>{request.displayName}</strong>
-                    <div style={{ color: theme.subText || '#666', fontSize: '12px' }}>{request.email}</div>
-                    <div style={{ color: theme.subText || '#666', fontSize: '12px' }}>요청 ID: {request.requestId}</div>
-                  </div>
-                  <span style={{
-                    background: request.status === 'pending' ? '#f39c12' : 
-                               request.status === 'approved' ? '#27ae60' : '#e74c3c',
-                    color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    {request.status === 'pending' ? '대기중' : 
-                     request.status === 'approved' ? '승인됨' : '거부됨'}
-                  </span>
-                </div>
-                
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ color: theme.text, marginBottom: '5px' }}><strong>사유:</strong></div>
-                  <div style={{ color: theme.subText || '#666', fontSize: '14px' }}>{request.reason}</div>
-                </div>
-
-                {request.additionalInfo && (
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{ color: theme.text, marginBottom: '5px' }}><strong>추가 정보:</strong></div>
-                    <div style={{ color: theme.subText || '#666', fontSize: '14px' }}>{request.additionalInfo}</div>
-                  </div>
-                )}
-
-                <div style={{ color: theme.subText || '#666', fontSize: '12px', marginBottom: '10px' }}>
-                  요청일: {request.createdAt?.toDate?.()?.toLocaleString() || '알 수 없음'}
-                </div>
-
-                {request.status === 'pending' && (
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="관리자 메모 (선택사항)"
-                      value={adminNote}
-                      onChange={(e) => setAdminNote(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </div>
-                )}
-
-                {request.status === 'pending' && (
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <Button
-                      onClick={() => handleApproveRequest(request.requestId)}
-                      disabled={passwordResetLoading}
-                      style={{ backgroundColor: '#27ae60', flex: 1 }}
-                    >
-                      {passwordResetLoading ? '처리 중...' : '승인'}
-                    </Button>
-                    <Button
-                      onClick={() => handleRejectRequest(request.requestId)}
-                      disabled={passwordResetLoading}
-                      style={{ backgroundColor: '#e74c3c', flex: 1 }}
-                    >
-                      {passwordResetLoading ? '처리 중...' : '거부'}
-                    </Button>
-                  </div>
-                )}
-
-                {request.status === 'approved' && (
-                  <div style={{
-                    background: '#d4edda',
-                    border: '1px solid #c3e6cb',
-                    borderRadius: '4px',
-                    padding: '10px',
-                    marginTop: '10px'
-                  }}>
-                    <div style={{ color: '#155724', fontSize: '14px' }}>
-                      <strong>승인됨</strong> - 사용자에게 임시 비밀번호를 안전하게 전달해주세요.
-                    </div>
-                  </div>
-                )}
-
-                {request.status === 'rejected' && request.adminNote && (
-                  <div style={{
-                    background: '#f8d7da',
-                    border: '1px solid #f5c6cb',
-                    borderRadius: '4px',
-                    padding: '10px',
-                    marginTop: '10px'
-                  }}>
-                    <div style={{ color: '#721c24', fontSize: '14px' }}>
-                      <strong>거부 사유:</strong> {request.adminNote}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 직접 비밀번호 재설정 */}
-        <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
-          <h4 style={{ color: theme.text, marginBottom: '10px' }}>직접 비밀번호 재설정</h4>
-          <div style={{ marginBottom: '10px' }}>
-            <input
-              type="email"
-              placeholder="사용자 이메일"
-              value={selectedRequest?.email || ''}
-              onChange={(e) => setSelectedRequest({ email: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                marginBottom: '10px',
-                fontSize: '14px'
-              }}
-            />
-            <input
-              type="password"
-              placeholder="새 비밀번호"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                marginBottom: '10px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Button
-              onClick={() => handleSetTemporaryPassword(selectedRequest?.email)}
-              disabled={passwordResetLoading || !selectedRequest?.email}
-              style={{ backgroundColor: '#f39c12', flex: 1 }}
-            >
-              {passwordResetLoading ? '처리 중...' : '임시 비밀번호 생성'}
-            </Button>
-            <Button
-              onClick={() => handleResetUserPassword(selectedRequest?.email)}
-              disabled={passwordResetLoading || !selectedRequest?.email || !newPassword}
-              style={{ backgroundColor: '#9b59b6', flex: 1 }}
-            >
-              {passwordResetLoading ? '처리 중...' : '비밀번호 직접 설정'}
-            </Button>
-          </div>
-        </div>
-        </SectionContent>
-      </Section>
-
-      {/* 포션 사용 내역 정리 - 메인 관리자만 */}
-      {isMainAdmin(user) && (
-        <Section theme={theme}>
-          <SectionTitle theme={theme} onClick={() => toggleSection('potionCleanup')}>
-            <span>🧹 포션 사용 내역 정리</span>
-            <AccordionIcon theme={theme} isOpen={openSections.potionCleanup}>▼</AccordionIcon>
-          </SectionTitle>
-          <SectionContent isOpen={openSections.potionCleanup}>
-            <div style={{ marginBottom: '15px', color: theme.subText || '#888', fontSize: '14px' }}>
-              포션 사용은 포인트를 차감하지 않으므로 포인트 내역에서 제거합니다.
+                <option value="marketing">마케팅 알림</option>
+                <option value="event">이벤트 알림</option>
+              </select>
             </div>
-            <ButtonGroup theme={theme}>
-              <ButtonGroupTitle theme={theme}>포션 내역 관리</ButtonGroupTitle>
-              <Button
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    const stats = await checkPotionUsageStats();
-                    setStatus({ 
-                      type: 'success', 
-                      message: `포션 사용 내역 통계: ${stats.usersWithPotionUsage}명의 사용자, 총 ${stats.totalPotionUsage}개 내역` 
-                    });
-                  } catch (error) {
-                    setStatus({ type: 'error', message: `통계 조회 실패: ${error.message}` });
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading}
-                style={{ backgroundColor: '#3498db' }}
-              >
-                {loading ? '통계 확인 중...' : '포션 사용 내역 통계'}
-              </Button>
 
-              <Button
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    const result = await cleanupPotionUsageHistory();
-                    setStatus({ 
-                      type: 'success', 
-                      message: `포션 사용 내역 삭제 완료: ${result.processedUsers}명 처리, ${result.totalDeleted}개 삭제` 
-                    });
-                  } catch (error) {
-                    setStatus({ type: 'error', message: `삭제 실패: ${error.message}` });
-                  } finally {
-                    setLoading(false);
-                  }
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+                제목 <span style={{ color: '#e74c3c' }}>*</span>:
+              </label>
+              <input
+                type="text"
+                value={notificationTitle}
+                onChange={(e) => setNotificationTitle(e.target.value)}
+                placeholder="알림 제목을 입력하세요"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                  color: theme.text
                 }}
-                disabled={loading}
-                style={{ backgroundColor: '#e74c3c' }}
-              >
-                {loading ? '삭제 중...' : '포션 사용 내역 삭제'}
-              </Button>
+              />
+            </div>
 
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+                메시지 <span style={{ color: '#e74c3c' }}>*</span>:
+              </label>
+              <textarea
+                value={notificationMessage}
+                onChange={(e) => setNotificationMessage(e.target.value)}
+                placeholder="알림 메시지를 입력하세요"
+                rows={4}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                  color: theme.text,
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+                이미지 URL (선택):
+              </label>
+              <input
+                type="url"
+                value={notificationImageUrl}
+                onChange={(e) => setNotificationImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                  color: theme.text
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: theme.text }}>
+                링크 URL (선택):
+              </label>
+              <input
+                type="url"
+                value={notificationLinkUrl}
+                onChange={(e) => setNotificationLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: theme.theme === 'dark' ? '#2c3e50' : 'white',
+                  color: theme.text
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
               <Button
                 onClick={async () => {
+                  if (!notificationTitle.trim() || !notificationMessage.trim()) {
+                    toast.showToast('제목과 메시지는 필수입니다.', 'error');
+                    return;
+                  }
+
+                  setNotificationSending(true);
                   try {
-                    setLoading(true);
-                    const result = await runFullCleanup();
-                    setStatus({ 
-                      type: 'success', 
-                      message: `전체 정리 완료: 삭제 전 ${result.stats.totalPotionUsage}개 → 삭제 후 ${result.afterStats.totalPotionUsage}개 (${result.deleted.totalDeleted}개 삭제)` 
+                    const functions = getFunctions();
+                    const sendNotification = httpsCallable(
+                      functions,
+                      notificationType === 'marketing' ? 'sendMarketingNotification' : 'sendEventNotification'
+                    );
+
+                    const result = await sendNotification({
+                      title: notificationTitle,
+                      message: notificationMessage,
+                      imageUrl: notificationImageUrl || undefined,
+                      linkUrl: notificationLinkUrl || undefined
                     });
+
+                    const data = result.data;
+                    if (data.success) {
+                      toast.showToast(
+                        `${data.message}\n발송: ${data.sentCount}명, 실패: ${data.failureCount}명`,
+                        'success'
+                      );
+                      // 폼 초기화
+                      setNotificationTitle('');
+                      setNotificationMessage('');
+                      setNotificationImageUrl('');
+                      setNotificationLinkUrl('');
+                    } else {
+                      toast.showToast('알림 발송에 실패했습니다.', 'error');
+                    }
                   } catch (error) {
-                    setStatus({ type: 'error', message: `전체 정리 실패: ${error.message}` });
+                    console.error('알림 발송 오류:', error);
+                    toast.showToast(
+                      error.message || '알림 발송 중 오류가 발생했습니다.',
+                      'error'
+                    );
                   } finally {
-                    setLoading(false);
+                    setNotificationSending(false);
                   }
                 }}
-                disabled={loading}
-                style={{ backgroundColor: '#9b59b6' }}
+                disabled={notificationSending || !notificationTitle.trim() || !notificationMessage.trim()}
+                style={{
+                  backgroundColor: notificationType === 'marketing' ? '#e74c3c' : '#3498db',
+                  width: '100%'
+                }}
               >
-                {loading ? '전체 정리 중...' : '전체 정리 (통계+삭제)'}
+                {notificationSending
+                  ? '발송 중...'
+                  : `${notificationType === 'marketing' ? '마케팅' : '이벤트'} 알림 발송`}
               </Button>
-            </ButtonGroup>
+            </div>
           </SectionContent>
         </Section>
       )}
 
       {/* 유저 상세 정보 모달 */}
       {selectedUser && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          width: '100vw', 
-          height: '100vh', 
-          background: 'rgba(0,0,0,0.3)', 
-          zIndex: 1000, 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           padding: isMobile ? '10px' : '20px',
           boxSizing: 'border-box'
@@ -2471,7 +2297,7 @@ function UserManagement({ user }) {
             boxSizing: 'border-box',
             border: theme.theme === 'dark' ? '1px solid #34495e' : 'none'
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ 
+            <h2 style={{
               fontSize: isMobile ? '18px' : '20px',
               marginBottom: isMobile ? '12px' : '16px'
             }}>유저 상세 정보</h2>
@@ -2487,72 +2313,76 @@ function UserManagement({ user }) {
                   <div style={{ marginBottom: '8px' }}>
                     <b>포인트:</b> <span style={{ color: '#3498f3', fontWeight: 'bold', fontSize: isMobile ? '20px' : '18px' }}>{userDetail.point || 0}p</span>
                   </div>
-                  <div style={{ margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input 
-                      type="number" 
-                      value={pointInput} 
-                      onChange={e => setPointInput(Number(e.target.value))} 
-                      placeholder="포인트 입력"
-                      style={{ 
-                        flex: isMobile ? '1 1 100%' : '0 0 100px',
-                        padding: isMobile ? '12px' : '6px', 
-                        borderRadius: '4px', 
-                        border: '1px solid #ddd',
-                        fontSize: isMobile ? '16px' : '14px',
-                        minHeight: isMobile ? '44px' : 'auto'
-                      }} 
-                    />
-                    <Button onClick={() => handlePointChange(pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>지급</Button>
-                    <Button onClick={() => handlePointChange(-pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', background: '#e74c3c', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>차감</Button>
-                    {pointActionStatus && <span style={{ width: '100%', marginTop: 8, color: pointActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{pointActionStatus.message}</span>}
-                  </div>
+                  {isMainAdmin(user) && (
+                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type="number"
+                        value={pointInput}
+                        onChange={e => setPointInput(Number(e.target.value))}
+                        placeholder="포인트 입력"
+                        style={{
+                          flex: isMobile ? '1 1 100%' : '0 0 100px',
+                          padding: isMobile ? '12px' : '6px',
+                          borderRadius: '4px',
+                          border: '1px solid #ddd',
+                          fontSize: isMobile ? '16px' : '14px',
+                          minHeight: isMobile ? '44px' : 'auto'
+                        }}
+                      />
+                      <Button onClick={() => handlePointChange(pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>지급</Button>
+                      <Button onClick={() => handlePointChange(-pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', background: '#e74c3c', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>차감</Button>
+                      {pointActionStatus && <span style={{ width: '100%', marginTop: 8, color: pointActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{pointActionStatus.message}</span>}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#fff3cd', borderRadius: '8px' }}>
                   <div style={{ marginBottom: '8px' }}>
                     <b>프리미엄 상태:</b> {renderPremiumBadge(userDetail)}
                   </div>
-                  <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <Button 
-                      onClick={() => handleTogglePremium('monthly')} 
-                      disabled={statusActionLoading} 
-                      style={{ 
-                        background: userDetail.isMonthlyPremium ? '#e74c3c' : '#3498db',
-                        fontSize: isMobile ? '13px' : '12px',
-                        padding: isMobile ? '10px 12px' : '6px 12px',
-                        flex: isMobile ? '1 1 100%' : 'auto'
-                      }}
-                    >
-                      {userDetail.isMonthlyPremium ? '월간 프리미엄 해제' : '월간 프리미엄 설정'}
-                    </Button>
-                    <Button 
-                      onClick={() => handleTogglePremium('yearly')} 
-                      disabled={statusActionLoading} 
-                      style={{ 
-                        background: userDetail.isYearlyPremium ? '#e74c3c' : '#FFC300',
-                        fontSize: isMobile ? '13px' : '12px',
-                        padding: isMobile ? '10px 12px' : '6px 12px',
-                        color: userDetail.isYearlyPremium ? 'white' : 'black',
-                        flex: isMobile ? '1 1 100%' : 'auto'
-                      }}
-                    >
-                      {userDetail.isYearlyPremium ? '연간 프리미엄 해제' : '연간 프리미엄 설정'}
-                    </Button>
-                    {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (
-                      <Button 
-                        onClick={() => handleTogglePremium('remove')} 
-                        disabled={statusActionLoading} 
-                        style={{ 
-                          background: '#95a5a6',
+                  {isMainAdmin(user) && (
+                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <Button
+                        onClick={() => handleTogglePremium('monthly')}
+                        disabled={statusActionLoading}
+                        style={{
+                          background: userDetail.isMonthlyPremium ? '#e74c3c' : '#3498db',
                           fontSize: isMobile ? '13px' : '12px',
                           padding: isMobile ? '10px 12px' : '6px 12px',
                           flex: isMobile ? '1 1 100%' : 'auto'
                         }}
                       >
-                        프리미엄 해제
+                        {userDetail.isMonthlyPremium ? '월간 프리미엄 해제' : '월간 프리미엄 설정'}
                       </Button>
-                    )}
-                  </div>
+                      <Button
+                        onClick={() => handleTogglePremium('yearly')}
+                        disabled={statusActionLoading}
+                        style={{
+                          background: userDetail.isYearlyPremium ? '#e74c3c' : '#FFC300',
+                          fontSize: isMobile ? '13px' : '12px',
+                          padding: isMobile ? '10px 12px' : '6px 12px',
+                          color: userDetail.isYearlyPremium ? 'white' : 'black',
+                          flex: isMobile ? '1 1 100%' : 'auto'
+                        }}
+                      >
+                        {userDetail.isYearlyPremium ? '연간 프리미엄 해제' : '연간 프리미엄 설정'}
+                      </Button>
+                      {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (
+                        <Button
+                          onClick={() => handleTogglePremium('remove')}
+                          disabled={statusActionLoading}
+                          style={{
+                            background: '#95a5a6',
+                            fontSize: isMobile ? '13px' : '12px',
+                            padding: isMobile ? '10px 12px' : '6px 12px',
+                            flex: isMobile ? '1 1 100%' : 'auto'
+                          }}
+                        >
+                          프리미엄 해제
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   {statusActionStatus && <div style={{ marginTop: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{statusActionStatus.message}</div>}
                 </div>
 
@@ -2560,12 +2390,14 @@ function UserManagement({ user }) {
                   <div style={{ marginBottom: '8px' }}>
                     <b>상태:</b> {renderStatusBadge(userDetail.status)}
                   </div>
-                  <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <Button onClick={handleToggleStatus} disabled={statusActionLoading} style={{ background: '#f39c12', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>
-                      {userDetail.status === '정지' ? '정지 해제' : '계정 정지'}
-                    </Button>
-                    <Button onClick={handleDeleteUser} disabled={statusActionLoading} style={{ background: '#e74c3c', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>계정 삭제</Button>
-                  </div>
+                  {isMainAdmin(user) && (
+                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <Button onClick={handleToggleStatus} disabled={statusActionLoading} style={{ background: '#f39c12', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>
+                        {userDetail.status === '정지' ? '정지 해제' : '계정 정지'}
+                      </Button>
+                      <Button onClick={handleDeleteUser} disabled={statusActionLoading} style={{ background: '#e74c3c', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>계정 삭제</Button>
+                    </div>
+                  )}
                   {statusActionStatus && <div style={{ marginTop: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{statusActionStatus.message}</div>}
                 </div>
 
