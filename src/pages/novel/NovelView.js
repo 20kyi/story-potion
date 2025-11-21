@@ -665,13 +665,28 @@ function NovelView({ user }) {
 
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
-    const [fontSize, setFontSize] = useState(18);
-    const [lineHeight, setLineHeight] = useState(2.0);
-    const [readTheme, setReadTheme] = useState('default'); // 'default', 'sepia', 'dark'
-    const [textAlign, setTextAlign] = useState('left'); // 'left', 'justify'
+    const [fontSize, setFontSize] = useState(() => {
+        const saved = localStorage.getItem('novel_reading_fontSize');
+        return saved ? parseInt(saved) : 18;
+    });
+    const [lineHeight, setLineHeight] = useState(() => {
+        const saved = localStorage.getItem('novel_reading_lineHeight');
+        return saved ? parseFloat(saved) : 2.0;
+    });
+    const [readTheme, setReadTheme] = useState(() => {
+        const saved = localStorage.getItem('novel_reading_theme');
+        return saved || 'default';
+    });
+    const [textAlign, setTextAlign] = useState(() => {
+        const saved = localStorage.getItem('novel_reading_textAlign');
+        return saved || 'left';
+    });
     const [showSettings, setShowSettings] = useState(false);
     const [readingProgress, setReadingProgress] = useState(0);
-    const [readingMode, setReadingMode] = useState('scroll'); // 'scroll', 'page'
+    const [readingMode, setReadingMode] = useState(() => {
+        const saved = localStorage.getItem('novel_reading_mode');
+        return saved || 'scroll';
+    });
     const [currentPage, setCurrentPage] = useState(0);
     const [pages, setPages] = useState([]);
     const contentRef = useRef(null);
@@ -846,6 +861,27 @@ function NovelView({ user }) {
 
         fetchNovel();
     }, [id, user, targetUserId]);
+
+    // 읽기 모드 설정 저장
+    useEffect(() => {
+        localStorage.setItem('novel_reading_fontSize', fontSize.toString());
+    }, [fontSize]);
+
+    useEffect(() => {
+        localStorage.setItem('novel_reading_lineHeight', lineHeight.toString());
+    }, [lineHeight]);
+
+    useEffect(() => {
+        localStorage.setItem('novel_reading_theme', readTheme);
+    }, [readTheme]);
+
+    useEffect(() => {
+        localStorage.setItem('novel_reading_textAlign', textAlign);
+    }, [textAlign]);
+
+    useEffect(() => {
+        localStorage.setItem('novel_reading_mode', readingMode);
+    }, [readingMode]);
 
     const formatDate = (timestamp) => {
         if (!timestamp) return t('no_data');
