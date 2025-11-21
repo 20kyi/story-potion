@@ -1031,13 +1031,14 @@ function Signup() {
       <Title>계정 만들기</Title>
       <Subtitle>이메일과 닉네임을 입력해주세요</Subtitle>
       {renderStepIndicator()}
-      <Form onSubmit={handleStep1Next}>
+      <Form onSubmit={handleStep1Next} autoComplete="off">
         <Input
           type="email"
           name="email"
           placeholder="이메일"
           value={formData.email}
           onChange={handleChange}
+          autoComplete="off"
           onBlur={(e) => {
             const email = e.target.value.trim();
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1062,6 +1063,7 @@ function Signup() {
             placeholder="닉네임"
             value={formData.nickname}
             onChange={handleChange}
+            autoComplete="off"
             maxLength={20}
             $hasError={isNicknameDuplicate}
             $isChecking={isNicknameChecking}
@@ -1096,7 +1098,7 @@ function Signup() {
       <Title>비밀번호 설정</Title>
       <Subtitle>비밀번호를 입력해주세요</Subtitle>
       {renderStepIndicator()}
-      <Form onSubmit={handleStep2Next}>
+      <Form onSubmit={handleStep2Next} autoComplete="off">
         <PasswordContainer>
           <PasswordInput
             type={passwordShown ? "text" : "password"}
@@ -1104,6 +1106,7 @@ function Signup() {
             placeholder="비밀번호"
             value={formData.password}
             onChange={handleChange}
+            autoComplete="new-password"
             required
             onFocus={e => {
               setTimeout(() => {
@@ -1122,6 +1125,7 @@ function Signup() {
             placeholder="비밀번호 확인"
             value={formData.confirmPassword}
             onChange={handleChange}
+            autoComplete="new-password"
             required
             onFocus={e => {
               setTimeout(() => {
@@ -1149,7 +1153,7 @@ function Signup() {
       <Title>휴대폰 번호 입력</Title>
       <Subtitle>휴대폰 번호를 입력해주세요</Subtitle>
       {renderStepIndicator()}
-      <Form onSubmit={handleStep3Next}>
+      <Form onSubmit={handleStep3Next} autoComplete="off">
         <InputWrapper>
           <OptionalLabel>[선택]</OptionalLabel>
           <Input
@@ -1172,6 +1176,7 @@ function Signup() {
               setError('');
               setSuccessMessage('');
             }}
+            autoComplete="off"
             maxLength={13}
             onFocus={e => {
               setTimeout(() => {
