@@ -50,7 +50,8 @@ const SectionContent = styled.div`
 
 const EditTextarea = styled.textarea`
   width: 100%;
-  min-height: 400px;
+  min-height: 600px;
+  height: calc(100vh - 200px);
   padding: 16px;
   font-size: 14px;
   color: ${({ theme }) => theme.text || '#222'};
@@ -61,6 +62,11 @@ const EditTextarea = styled.textarea`
   font-family: inherit;
   resize: vertical;
   outline: none;
+  
+  @media (max-width: 768px) {
+    height: calc(100vh - 180px);
+    min-height: 400px;
+  }
   
   &:focus {
     border-color: #e46262;
