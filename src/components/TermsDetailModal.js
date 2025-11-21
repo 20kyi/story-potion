@@ -137,7 +137,7 @@ const ListItem = styled.li`
 
 const termsContent = {
   service: {
-    title: '서비스 이용약관',
+    // title: '서비스 이용약관',
     content: `제1조 목적
 
 본 약관은 Story Potion(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.

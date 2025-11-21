@@ -58,6 +58,8 @@ import './utils/runPotionHistoryCleanup'; // 포션 사용 내역 정리 스크�
 import FriendNovelList from './pages/novel/FriendNovelList';
 import PurchasedNovels from './pages/novel/PurchasedNovels';
 import AppInfo from './pages/mypage/AppInfo';
+import TermsOfService from './pages/mypage/TermsOfService';
+import PrivacyPolicy from './pages/mypage/PrivacyPolicy';
 import { inAppPurchaseService } from './utils/inAppPurchase';
 import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
 import LoadingScreen from './components/LoadingScreen';
@@ -98,6 +100,8 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/app-info" element={user ? <AppInfo user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/terms-of-service" element={user ? <TermsOfService user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/privacy-policy" element={user ? <PrivacyPolicy user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notification-settings" element={user ? <NotificationSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />

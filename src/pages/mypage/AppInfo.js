@@ -651,14 +651,14 @@ function AppInfo({ user }) {
 
           <InfoItem theme={theme}>
             <InfoLabel theme={theme}>{t('terms_of_use')}</InfoLabel>
-            <ActionButton onClick={() => alert(t('terms_link_alert'))}>
+            <ActionButton onClick={() => navigate('/my/terms-of-service')}>
               {t('view')}
             </ActionButton>
           </InfoItem>
 
           <InfoItem theme={theme}>
             <InfoLabel theme={theme}>{t('privacy_policy')}</InfoLabel>
-            <ActionButton onClick={() => alert(t('privacy_link_alert'))}>
+            <ActionButton onClick={() => navigate('/my/privacy-policy')}>
               {t('view')}
             </ActionButton>
           </InfoItem>
