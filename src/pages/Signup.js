@@ -374,6 +374,7 @@ function Signup() {
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
   const [isNicknameChecking, setIsNicknameChecking] = useState(false);
   const [isNicknameDuplicate, setIsNicknameDuplicate] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const mainRef = useRef();
   const inputRef = useRef();
   const emailCheckTimeoutRef = useRef(null);
@@ -563,98 +564,64 @@ function Signup() {
   // 1단계: 이메일 & 닉네임 검증
   const handleStep1Next = async (e) => {
     e.preventDefault();
+
+    // 중복 클릭 방지
+    if (isSubmitting || isEmailChecking || isNicknameChecking) {
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
 
+    // 이메일 필수 입력 검증
     if (!formData.email.trim()) {
       setError('이메일을 입력해주세요.');
       return;
     }
 
-    // 이메일 중복 체크 (한 번 더 확인)
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+
+    // 이미 검증 중이면 대기
+    if (isEmailChecking || isNicknameChecking) {
+      return;
+    }
+
+    // 이미 중복으로 확인된 경우
     if (isEmailDuplicate) {
       setError('이미 사용 중인 이메일입니다.');
       return;
     }
 
-    setIsEmailChecking(true);
-    try {
-      // 1. Firebase Auth에서 이메일 중복 체크
-      const signInMethods = await fetchSignInMethodsForEmail(auth, formData.email.trim());
-
-      if (signInMethods && signInMethods.length > 0) {
-        setError('이미 사용 중인 이메일입니다.');
-        setIsEmailDuplicate(true);
-        setIsEmailChecking(false);
-        return; // 중복이면 절대 진행하지 않음
-      }
-
-      // 2. Firestore에서도 이메일 중복 체크
-      const usersRef = collection(db, 'users');
-      const emailQuery = query(usersRef, where('email', '==', formData.email.trim().toLowerCase()));
-      const querySnapshot = await getDocs(emailQuery);
-
-      if (!querySnapshot.empty) {
-        setError('이미 사용 중인 이메일입니다.');
-        setIsEmailDuplicate(true);
-        setIsEmailChecking(false);
-        return; // 중복이면 절대 진행하지 않음
-      }
-
-      // 중복이 아닌 경우 상태 업데이트
-      setIsEmailDuplicate(false);
-    } catch (error) {
-      console.error('이메일 중복 체크 실패:', error);
-      // 체크 실패 시 진행하지 않음 (안전하게)
-      setError('이메일 확인에 실패했습니다. 다시 시도해주세요.');
-      setIsEmailDuplicate(true); // 안전을 위해 중복으로 간주
-      setIsEmailChecking(false);
+    // 닉네임이 입력된 경우 중복 여부 확인
+    if (formData.nickname.trim() && isNicknameDuplicate) {
+      setError('이미 사용 중인 닉네임입니다.');
       return;
-    } finally {
-      setIsEmailChecking(false);
     }
 
-    // 닉네임이 입력된 경우 중복 체크
-    if (formData.nickname.trim()) {
-      if (isNicknameDuplicate) {
-        setError('이미 사용 중인 닉네임입니다.');
-        return;
-      }
-
-      setIsNicknameChecking(true);
-      try {
-        const usersRef = collection(db, 'users');
-        const nicknameQuery = query(usersRef, where('displayName', '==', formData.nickname.trim()));
-        const querySnapshot = await getDocs(nicknameQuery);
-
-        if (!querySnapshot.empty) {
-          setError('이미 사용 중인 닉네임입니다.');
-          setIsNicknameDuplicate(true);
-          setIsNicknameChecking(false);
-          return;
-        }
-
-        setIsNicknameDuplicate(false);
-      } catch (error) {
-        console.error('닉네임 중복 체크 실패:', error);
-        setError('닉네임 확인에 실패했습니다. 다시 시도해주세요.');
-        setIsNicknameDuplicate(true);
-        setIsNicknameChecking(false);
-        return;
-      } finally {
-        setIsNicknameChecking(false);
-      }
-    } else {
-      // 닉네임이 없으면 자동 생성
+    // 닉네임이 없으면 자동 생성
+    if (!formData.nickname.trim()) {
       setFormData(prev => ({ ...prev, nickname: generateRandomNickname() }));
     }
 
+    // 모든 검증이 완료되었으므로 바로 다음 단계로 이동
+    setIsSubmitting(false);
     setCurrentStep(2);
   };
 
   // 2단계: 비밀번호 검증
   const handleStep2Next = (e) => {
     e.preventDefault();
+
+    // 중복 클릭 방지
+    if (isSubmitting) {
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
 
@@ -673,12 +640,19 @@ function Signup() {
       return;
     }
 
+    // 검증 통과 시 바로 다음 단계로 이동
     setCurrentStep(3);
   };
 
   // 3단계: 휴대폰 번호 입력 및 회원가입 진행
   const handleStep3Next = (e) => {
     e.preventDefault();
+
+    // 중복 클릭 방지
+    if (isSubmitting) {
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
 
@@ -850,6 +824,7 @@ function Signup() {
   // 최종 회원가입 처리
   const handleFinalSignup = async () => {
     setError('');
+    setIsSubmitting(true);
 
     // 최종 이메일 중복 체크 (중요!)
     try {
@@ -871,12 +846,14 @@ function Signup() {
         setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
         setIsEmailDuplicate(true);
         setCurrentStep(1); // 1단계로 돌아가기
+        setIsSubmitting(false);
         return;
       } else if (!querySnapshot.empty) {
         // Firestore에만 있는 경우
         setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
         setIsEmailDuplicate(true);
         setCurrentStep(1); // 1단계로 돌아가기
+        setIsSubmitting(false);
         return;
       }
     } catch (error) {
@@ -884,6 +861,7 @@ function Signup() {
       // 체크 실패 시에도 진행하지 않음 (안전하게)
       setError('이메일 확인에 실패했습니다. 다시 시도해주세요.');
       setIsEmailDuplicate(true);
+      setIsSubmitting(false);
       return;
     }
 
@@ -918,6 +896,7 @@ function Signup() {
               setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
               setIsEmailDuplicate(true);
               setCurrentStep(1);
+              setIsSubmitting(false);
               return;
             }
           } catch (functionError) {
@@ -926,6 +905,7 @@ function Signup() {
             setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
             setIsEmailDuplicate(true);
             setCurrentStep(1);
+            setIsSubmitting(false);
             return;
           }
         } else {
@@ -946,6 +926,7 @@ function Signup() {
         if (!querySnapshot.empty) {
           setError('이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.');
           setCurrentStep(1);
+          setIsSubmitting(false);
           return;
         }
       }
@@ -995,9 +976,11 @@ function Signup() {
       await requestPermissions(user);
 
       alert('회원가입이 완료되었습니다!');
+      setIsSubmitting(false);
       navigate('/login');
     } catch (error) {
       console.error('회원가입 실패:', error);
+      setIsSubmitting(false);
       switch (error.code) {
         case 'auth/email-already-in-use':
           setError('이미 사용 중인 이메일입니다.');
@@ -1084,8 +1067,8 @@ function Signup() {
         {successMessage && !error && !isEmailDuplicate && !isNicknameDuplicate && <SuccessMessage>{successMessage}</SuccessMessage>}
         <ButtonContainer>
           <div></div>
-          <Button type="submit" disabled={isEmailDuplicate || isEmailChecking || isNicknameDuplicate || isNicknameChecking}>
-            {(isEmailChecking || isNicknameChecking) ? '확인 중...' : '다음으로'}
+          <Button type="submit" disabled={isEmailDuplicate || isEmailChecking || isNicknameDuplicate || isNicknameChecking || isSubmitting}>
+            {(isEmailChecking || isNicknameChecking || isSubmitting) ? '확인 중...' : '다음으로'}
             <FaArrowRight />
           </Button>
         </ButtonContainer>
@@ -1139,10 +1122,12 @@ function Signup() {
         </PasswordContainer>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <ButtonContainer>
-          <BackButton type="button" onClick={() => setCurrentStep(1)}>
+          <BackButton type="button" onClick={() => setCurrentStep(1)} disabled={isSubmitting}>
             <FaArrowLeft /> 이전으로
           </BackButton>
-          <Button type="submit">다음으로 <FaArrowRight /></Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? '처리 중...' : '다음으로'} <FaArrowRight />
+          </Button>
         </ButtonContainer>
       </Form>
     </>
@@ -1190,11 +1175,11 @@ function Signup() {
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
         <ButtonContainer>
-          <BackButton type="button" onClick={() => setCurrentStep(2)}>
+          <BackButton type="button" onClick={() => setCurrentStep(2)} disabled={isSubmitting}>
             <FaArrowLeft /> 이전으로
           </BackButton>
-          <Button type="submit">
-            가입 완료
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? '처리 중...' : '가입 완료'}
             <FaArrowRight />
           </Button>
         </ButtonContainer>
