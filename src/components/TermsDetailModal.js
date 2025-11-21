@@ -25,6 +25,11 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  
+  body.dark & {
+    background-color: #2a2a2a;
+    color: #fff;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -33,6 +38,10 @@ const ModalHeader = styled.div`
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #f1f1f1;
+  
+  body.dark & {
+    border-bottom: 1px solid #444;
+  }
 `;
 
 const ModalTitle = styled.h2`
@@ -40,6 +49,10 @@ const ModalTitle = styled.h2`
   font-size: 20px;
   font-weight: 600;
   color: #222;
+  
+  body.dark & {
+    color: #fff;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -60,6 +73,14 @@ const CloseButton = styled.button`
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
+  
+  body.dark & {
+    color: #ccc;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
 `;
 
 const ModalBody = styled.div`
@@ -69,6 +90,10 @@ const ModalBody = styled.div`
   color: #222;
   line-height: 1.8;
   font-size: 14px;
+  
+  body.dark & {
+    color: #ccc;
+  }
 `;
 
 const Section = styled.div`
@@ -84,6 +109,10 @@ const SectionTitle = styled.h3`
   font-weight: 600;
   margin: 0 0 12px 0;
   color: #222;
+  
+  body.dark & {
+    color: #fff;
+  }
 `;
 
 const SectionContent = styled.div`
@@ -91,6 +120,10 @@ const SectionContent = styled.div`
   color: #222;
   white-space: pre-line;
   line-height: 1.8;
+  
+  body.dark & {
+    color: #ccc;
+  }
 `;
 
 const List = styled.ul`

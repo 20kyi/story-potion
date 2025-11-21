@@ -33,6 +33,11 @@
     animation: modalPop 0.22s cubic-bezier(.4, 1.6, .6, 1);
 }
 
+body.dark .confirm-modal-container {
+    background: #2a2a2a;
+    color: #fff;
+}
+
 @keyframes modalPop {
     from {
         transform: translateY(40px) scale(0.96);
@@ -49,12 +54,21 @@
     margin: 0 0 10px 0;
     font-size: 1rem;
     font-weight: 600;
+    color: #333;
+}
+
+body.dark .confirm-modal-title {
+    color: #fff;
 }
 
 .confirm-modal-desc {
     margin: 0 0 22px 0;
     font-size: 13px;
     color: #444;
+}
+
+body.dark .confirm-modal-desc {
+    color: #ccc;
 }
 
 .confirm-modal-actions {
@@ -81,6 +95,15 @@
 
 .confirm-modal-btn.cancel:hover {
     background: #e0e0e0;
+}
+
+body.dark .confirm-modal-btn.cancel {
+    background: #3a3a3a;
+    color: #ccc;
+}
+
+body.dark .confirm-modal-btn.cancel:hover {
+    background: #4a4a4a;
 }
 
 .confirm-modal-btn.delete {
