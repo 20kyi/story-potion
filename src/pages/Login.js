@@ -52,11 +52,11 @@ function Login() {
   const [resetLoading, setResetLoading] = useState(false);
 
   // 아이디 찾기 관련 상태
-  const [findIdMethod, setFindIdMethod] = useState('nickname'); // 'nickname'
-  const [findIdEmail, setFindIdEmail] = useState(''); // 닉네임 입력용
+  const [findIdMethod, setFindIdMethod] = useState('nickname'); // 'nickname' or 'phone'
+  const [findIdInput, setFindIdInput] = useState(''); // 닉네임 또는 휴대전화번호 입력용
   const [findIdMessage, setFindIdMessage] = useState('');
   const [findIdLoading, setFindIdLoading] = useState(false);
-  const [foundEmail, setFoundEmail] = useState('');
+  const [foundEmails, setFoundEmails] = useState([]); // 여러 계정의 이메일 배열
 
   // 비밀번호 찾기 방법 선택 (이메일만 사용)
   const [resetMethod] = useState('email'); // 이메일 인증만 사용
@@ -608,35 +608,61 @@ function Login() {
     }
   };
 
-  // 아이디 찾기 (닉네임으로)
-  const handleFindIdByNickname = async (e) => {
+  // 아이디 찾기 (닉네임 또는 휴대전화번호로)
+  const handleFindId = async (e) => {
     e.preventDefault();
-    if (!findIdEmail.trim()) {
-      setFindIdMessage('닉네임을 입력해주세요.');
+    if (!findIdInput.trim()) {
+      setFindIdMessage(findIdMethod === 'nickname' ? '닉네임을 입력해주세요.' : '휴대전화번호를 입력해주세요.');
       return;
     }
 
     setFindIdLoading(true);
     setFindIdMessage('');
-    setFoundEmail('');
+    setFoundEmails([]);
 
     try {
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('displayName', '==', findIdEmail.trim()));
+      let q;
+
+      if (findIdMethod === 'nickname') {
+        q = query(usersRef, where('displayName', '==', findIdInput.trim()));
+      } else {
+        // 휴대전화번호로 검색 (형식 통일: - 제거 후 검색)
+        const phoneNumber = findIdInput.trim().replace(/-/g, '');
+        q = query(usersRef, where('phoneNumber', '==', phoneNumber));
+      }
+
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        setFindIdMessage('해당 닉네임으로 가입된 계정을 찾을 수 없습니다.');
+        setFindIdMessage(findIdMethod === 'nickname'
+          ? '해당 닉네임으로 가입된 계정을 찾을 수 없습니다.'
+          : '해당 휴대전화번호로 가입된 계정을 찾을 수 없습니다.');
       } else {
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
-        // 이메일의 일부를 마스킹하여 표시
-        const email = userData.email || '';
-        const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, (match, p1, p2, p3) => {
-          return p1 + '*'.repeat(Math.min(p2.length, 4)) + p3;
-        }) : '';
-        setFoundEmail(maskedEmail);
-        setFindIdMessage('아이디를 찾았습니다.');
+        // 여러 계정이 있을 수 있으므로 모든 계정의 이메일을 수집
+        const emails = [];
+        snapshot.forEach((doc) => {
+          const userData = doc.data();
+          const email = userData.email || '';
+          if (email) {
+            // 이메일의 일부를 마스킹하여 표시
+            const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, (match, p1, p2, p3) => {
+              return p1 + '*'.repeat(Math.min(p2.length, 4)) + p3;
+            });
+            emails.push(maskedEmail);
+          }
+        });
+
+        if (emails.length > 0) {
+          setFoundEmails(emails);
+          if (emails.length === 1) {
+            setFindIdMessage('아이디를 찾았습니다.');
+          } else {
+            setFindIdMessage(`해당 정보로 가입된 계정이 ${emails.length}개 발견되었습니다.`);
+          }
+        } else {
+          setFindIdMessage('이메일 정보를 찾을 수 없습니다.');
+        }
       }
     } catch (error) {
       console.error('아이디 찾기 실패:', error);
@@ -907,8 +933,63 @@ function Login() {
               아이디 찾기
             </h3>
 
-            {/* 닉네임 방법 */}
-            <form onSubmit={handleFindIdByNickname}>
+            {/* 아이디 찾기 방법 선택 */}
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginBottom: '20px',
+              borderBottom: '1px solid #eee',
+              paddingBottom: '15px'
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setFindIdMethod('nickname');
+                  setFindIdInput('');
+                  setFindIdMessage('');
+                  setFoundEmails([]);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: findIdMethod === 'nickname' ? '#e46262' : '#f5f5f5',
+                  color: findIdMethod === 'nickname' ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: findIdMethod === 'nickname' ? '600' : '400',
+                  transition: 'all 0.3s'
+                }}
+              >
+                닉네임
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFindIdMethod('phone');
+                  setFindIdInput('');
+                  setFindIdMessage('');
+                  setFoundEmails([]);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: findIdMethod === 'phone' ? '#e46262' : '#f5f5f5',
+                  color: findIdMethod === 'phone' ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: findIdMethod === 'phone' ? '600' : '400',
+                  transition: 'all 0.3s'
+                }}
+              >
+                휴대전화번호
+              </button>
+            </div>
+
+            <form onSubmit={handleFindId}>
               <p style={{
                 margin: '0 0 20px 0',
                 fontSize: '14px',
@@ -916,19 +997,38 @@ function Login() {
                 lineHeight: '1.5',
                 textAlign: 'center'
               }}>
-                가입하신 닉네임을 입력하시면<br />
-                아이디(이메일)를 찾아드립니다.
+                {findIdMethod === 'nickname'
+                  ? <>가입하신 닉네임을 입력하시면<br />아이디(이메일)를 찾아드립니다.</>
+                  : <>가입하신 휴대전화번호를 입력하시면<br />아이디(이메일)를 찾아드립니다.</>
+                }
               </p>
 
               <Input
-                type="text"
-                placeholder="닉네임"
-                value={findIdEmail}
-                onChange={(e) => setFindIdEmail(e.target.value)}
-                style={{ marginBottom: '15px' }}
+                type={findIdMethod === 'phone' ? 'tel' : 'text'}
+                placeholder={findIdMethod === 'nickname' ? '닉네임' : '휴대전화번호 (- 없이 입력)'}
+                value={findIdInput}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  // 휴대전화번호 입력 시 자동 포맷팅
+                  if (findIdMethod === 'phone') {
+                    value = value.replace(/[^0-9]/g, '');
+                    if (value.length > 3 && value.length <= 7) {
+                      value = value.slice(0, 3) + '-' + value.slice(3);
+                    } else if (value.length > 7) {
+                      value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                    }
+                  }
+                  setFindIdInput(value);
+                }}
+                style={{
+                  marginBottom: '15px',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}
+                maxLength={findIdMethod === 'phone' ? 13 : undefined}
               />
 
-              {foundEmail && (
+              {foundEmails.length > 0 && (
                 <div style={{
                   padding: '15px',
                   marginBottom: '15px',
@@ -939,12 +1039,22 @@ function Login() {
                   color: '#155724',
                   border: '1px solid #c3e6cb'
                 }}>
-                  <div style={{ fontWeight: '600', marginBottom: '5px' }}>찾은 아이디</div>
-                  <div>{foundEmail}</div>
+                  <div style={{ fontWeight: '600', marginBottom: '10px' }}>
+                    {foundEmails.length === 1 ? '찾은 아이디' : `찾은 아이디 (${foundEmails.length}개)`}
+                  </div>
+                  {foundEmails.map((email, index) => (
+                    <div key={index} style={{
+                      marginBottom: index < foundEmails.length - 1 ? '8px' : '0',
+                      padding: index < foundEmails.length - 1 ? '8px 0' : '0',
+                      borderBottom: index < foundEmails.length - 1 ? '1px solid #c3e6cb' : 'none'
+                    }}>
+                      {email}
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {findIdMessage && !foundEmail && (
+              {findIdMessage && foundEmails.length === 0 && (
                 <div style={{
                   padding: '10px',
                   marginBottom: '15px',
@@ -964,9 +1074,10 @@ function Login() {
                   type="button"
                   onClick={() => {
                     setShowFindId(false);
-                    setFindIdEmail('');
+                    setFindIdInput('');
                     setFindIdMessage('');
-                    setFoundEmail('');
+                    setFoundEmails([]);
+                    setFindIdMethod('nickname');
                   }}
                   style={{
                     flex: 1,

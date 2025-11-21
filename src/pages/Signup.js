@@ -335,6 +335,20 @@ const SkipLink = styled.button`
   }
 `;
 
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+`;
+
+const OptionalLabel = styled.span`
+  font-size: 6px;
+  color: #999;
+  font-weight: 400;
+  margin-left: 12px;
+`;
+
 function Signup() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -827,7 +841,7 @@ function Signup() {
       // 웹에서는 input type="file"을 사용하므로 별도 권한 요청 불필요
       // 모바일 앱에서는 프로필 이미지 업로드 시 자동으로 권한 요청됨
       // Android의 경우 AndroidManifest.xml에 권한이 선언되어 있어야 함
-      
+
     } catch (error) {
       console.error('권한 요청 중 오류 발생:', error);
     }
@@ -875,7 +889,7 @@ function Signup() {
 
     try {
       let userCredential;
-      
+
       try {
         // 회원가입 시도
         userCredential = await createUserWithEmailAndPassword(
@@ -891,7 +905,7 @@ function Signup() {
             const functions = getFunctions();
             const deleteOrphanAuthAccount = httpsCallable(functions, 'deleteOrphanAuthAccount');
             const result = await deleteOrphanAuthAccount({ email: formData.email.trim() });
-            
+
             if (result.data.success) {
               // Auth 계정 삭제 성공, 다시 회원가입 시도
               userCredential = await createUserWithEmailAndPassword(
@@ -945,12 +959,15 @@ function Signup() {
       // 약관 동의 정보 가져오기
       const termsAgreement = JSON.parse(sessionStorage.getItem('termsAgreement') || '{}');
 
+      // 휴대전화번호에서 하이픈 제거하여 저장 (일관성 유지)
+      const cleanPhoneNumber = formData.phoneNumber ? formData.phoneNumber.replace(/-/g, '') : '';
+
       await setDoc(doc(db, "users", user.uid), {
         authProvider: providerId,
         createdAt: new Date(),
         displayName: finalNickname,
         email: formData.email.trim().toLowerCase(), // 소문자로 정규화하여 저장
-        phoneNumber: formData.phoneNumber || '',
+        phoneNumber: cleanPhoneNumber,
         emailVerified: user.emailVerified || false,
         eventEnabled: false,
         fcmToken: "",
@@ -1037,27 +1054,30 @@ function Signup() {
             }, 100);
           }}
         />
-        <Input
-          type="text"
-          name="nickname"
-          placeholder="닉네임 (선택사항)"
-          value={formData.nickname}
-          onChange={handleChange}
-          maxLength={20}
-          $hasError={isNicknameDuplicate}
-          $isChecking={isNicknameChecking}
-          onBlur={(e) => {
-            const nickname = e.target.value.trim();
-            if (nickname) {
-              checkNicknameDuplicate(nickname);
-            }
-          }}
-          onFocus={e => {
-            setTimeout(() => {
-              e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-        />
+        <InputWrapper>
+          <OptionalLabel>[선택]</OptionalLabel>
+          <Input
+            type="text"
+            name="nickname"
+            placeholder="닉네임"
+            value={formData.nickname}
+            onChange={handleChange}
+            maxLength={20}
+            $hasError={isNicknameDuplicate}
+            $isChecking={isNicknameChecking}
+            onBlur={(e) => {
+              const nickname = e.target.value.trim();
+              if (nickname) {
+                checkNicknameDuplicate(nickname);
+              }
+            }}
+            onFocus={e => {
+              setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 100);
+            }}
+          />
+        </InputWrapper>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {successMessage && !error && !isEmailDuplicate && !isNicknameDuplicate && <SuccessMessage>{successMessage}</SuccessMessage>}
         <ButtonContainer>
@@ -1127,27 +1147,39 @@ function Signup() {
   const renderStep3 = () => (
     <>
       <Title>휴대폰 번호 입력</Title>
-      <Subtitle>휴대폰 번호를 입력해주세요 (선택사항)</Subtitle>
+      <Subtitle>휴대폰 번호를 입력해주세요</Subtitle>
       {renderStepIndicator()}
       <Form onSubmit={handleStep3Next}>
-        <Input
-          type="tel"
-          name="phoneNumber"
-          placeholder="휴대전화 (예: 01012345678, 선택사항)"
-          value={formData.phoneNumber}
-          onChange={(e) => {
-            // 숫자와 하이픈만 허용
-            const value = e.target.value.replace(/[^0-9-]/g, '');
-            setFormData(prev => ({ ...prev, phoneNumber: value }));
-            setError('');
-            setSuccessMessage('');
-          }}
-          onFocus={e => {
-            setTimeout(() => {
-              e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-        />
+        <InputWrapper>
+          <OptionalLabel>[선택]</OptionalLabel>
+          <Input
+            type="tel"
+            name="phoneNumber"
+            placeholder="휴대전화 (- 없이 입력)"
+            value={formData.phoneNumber}
+            onChange={(e) => {
+              // 휴대전화번호 입력 시 자동 포맷팅
+              let value = e.target.value;
+              // 숫자만 추출
+              value = value.replace(/[^0-9]/g, '');
+              // 자동 하이픈 추가
+              if (value.length > 3 && value.length <= 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+              } else if (value.length > 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+              }
+              setFormData(prev => ({ ...prev, phoneNumber: value }));
+              setError('');
+              setSuccessMessage('');
+            }}
+            maxLength={13}
+            onFocus={e => {
+              setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 100);
+            }}
+          />
+        </InputWrapper>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
