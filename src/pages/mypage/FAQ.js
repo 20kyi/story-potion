@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import styles from './FAQ.module.css';
 import { useTranslation } from '../../LanguageContext';
+import { useTheme } from '../../ThemeContext';
+import { db } from '../../firebase';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { isAdmin } from '../../utils/adminAuth';
+import { FaEdit, FaTrash, FaMinus } from 'react-icons/fa';
 
 const FAQ_DATA = [
     {
@@ -187,11 +193,419 @@ const FAQ_DATA = [
     }
 ];
 
-function FAQ() {
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 0;
+  
+  @media (min-width: 768px) {
+    padding: 20px;
+  }
+`;
+
+const ModalContent = styled.div`
+  background-color: ${({ theme }) => theme.card || '#fff'};
+  border-radius: 0;
+  width: 100%;
+  height: 100vh;
+  max-width: 900px;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    height: auto;
+    max-height: 90vh;
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  
+  @media (min-width: 768px) {
+    padding: 20px 24px;
+  }
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text || '#333'};
+  
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: ${({ theme }) => theme.text || '#666'};
+  cursor: pointer;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+  
+  @media (min-width: 768px) {
+    font-size: 24px;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+  
+  &:hover {
+    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+  }
+  
+  &:active {
+    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+  }
+`;
+
+const ModalBody = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+  
+  @media (min-width: 768px) {
+    padding: 24px;
+  }
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  
+  @media (min-width: 768px) {
+    margin-bottom: 20px;
+  }
+`;
+
+const Label = styled.label`
+  display: block;
+  color: ${({ theme }) => theme.text || '#333'};
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 22px;
+  line-height: 22px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  background: ${({ theme }) => theme.card || '#fff'};
+  color: ${({ theme }) => theme.text || '#333'};
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  
+  @media (min-width: 768px) {
+    padding: 12px;
+    font-size: 15px;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+`;
+
+
+const Textarea = styled.textarea`
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  background: ${({ theme }) => theme.card || '#fff'};
+  color: ${({ theme }) => theme.text || '#333'};
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: 1.6;
+  -webkit-appearance: none;
+  
+  @media (min-width: 768px) {
+    padding: 12px;
+    font-size: 15px;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+`;
+
+const CategorySection = styled.div`
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.card || '#fff'};
+  
+  @media (min-width: 768px) {
+    margin-bottom: 24px;
+    padding: 20px;
+  }
+`;
+
+const CategoryHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+`;
+
+
+const DeleteButton = styled.button`
+  background: none;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 8px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
+  
+  @media (min-width: 768px) {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px;
+    font-size: 14px;
+  }
+  
+  &:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+  
+  &:active {
+    background-color: rgba(231, 76, 60, 0.2);
+    transform: scale(0.95);
+  }
+`;
+
+const AddButton = styled.button`
+  background-color: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  flex: 2;
+  
+  @media (min-width: 768px) {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: auto;
+  }
+  
+  &:hover {
+    background-color: #229954;
+  }
+  
+  &:active {
+    background-color: #229954;
+    transform: scale(0.98);
+  }
+`;
+
+const CategoryActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  gap: 12px;
+`;
+
+const CategoryDeleteButton = styled.button`
+  background: none;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  @media (min-width: 768px) {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: auto;
+  }
+  
+  &:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+  
+  &:active {
+    background-color: rgba(231, 76, 60, 0.2);
+    transform: scale(0.98);
+  }
+`;
+
+const ItemCard = styled.div`
+  padding: 16px;
+  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: ${({ theme }) => theme.card || '#fff'};
+`;
+
+const ItemHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const ItemNumber = styled.span`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text || '#333'};
+  font-weight: 600;
+  
+  @media (min-width: 768px) {
+    font-size: 13px;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  
+  @media (min-width: 768px) {
+    padding: 20px 24px;
+  }
+`;
+
+const Button = styled.button`
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+  
+  @media (min-width: 768px) {
+    padding: 12px;
+    font-size: 15px;
+    min-height: auto;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+`;
+
+const SaveButton = styled(Button)`
+  background-color: #3498db;
+  color: #fff;
+  
+  &:hover:not(:disabled) {
+    background-color: #2980b9;
+  }
+`;
+
+const CancelButton = styled(Button)`
+  background-color: #95a5a6;
+  color: #fff;
+  
+  &:hover:not(:disabled) {
+    background-color: #7f8c8d;
+  }
+`;
+
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.text || '#222'};
+  border-radius: 50%;
+  transition: background 0.2s;
+  font-size: 16px;
+  
+  &:hover {
+    background: ${({ theme }) => theme.cardHover || 'rgba(0, 0, 0, 0.05)'};
+  }
+`;
+
+function FAQ({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { actualTheme } = useTheme();
     const [openCategories, setOpenCategories] = useState({});
     const [openItems, setOpenItems] = useState({});
+    const [faqData, setFaqData] = useState(FAQ_DATA);
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
+    const isAdminUser = user && isAdmin(user);
 
     const toggleCategory = (categoryIndex) => {
         setOpenCategories(prev => ({
@@ -208,12 +622,172 @@ function FAQ() {
         }));
     };
 
+    useEffect(() => {
+        const fetchFAQ = async () => {
+            try {
+                const faqDoc = await getDoc(doc(db, 'config', 'faq'));
+                if (faqDoc.exists() && faqDoc.data().data) {
+                    setFaqData(faqDoc.data().data);
+                }
+            } catch (error) {
+                console.error('FAQ 조회 실패:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFAQ();
+    }, []);
+
+    const handleEdit = () => {
+        if (!isAdminUser) {
+            alert('관리자 권한이 필요합니다.');
+            return;
+        }
+        // 깊은 복사
+        setEditForm(JSON.parse(JSON.stringify(faqData)));
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditForm([]);
+    };
+
+    const handleSave = async () => {
+        if (!isAdminUser) {
+            alert('관리자 권한이 필요합니다.');
+            return;
+        }
+
+        // 유효성 검사
+        for (let i = 0; i < editForm.length; i++) {
+            const category = editForm[i];
+            if (!category.category || !category.icon) {
+                alert(`${i + 1}번째 카테고리를 입력해주세요. (예: 📌 카테고리명)`);
+                return;
+            }
+            if (!category.items || category.items.length === 0) {
+                alert(`${category.category} 카테고리에 최소 1개 이상의 질문을 추가해주세요.`);
+                return;
+            }
+            for (let j = 0; j < category.items.length; j++) {
+                const item = category.items[j];
+                if (!item.question || !item.answer) {
+                    alert(`${category.category} 카테고리의 ${j + 1}번째 질문/답변을 모두 입력해주세요.`);
+                    return;
+                }
+            }
+        }
+
+        setIsSaving(true);
+        try {
+            const faqRef = doc(db, 'config', 'faq');
+            await setDoc(faqRef, {
+                data: editForm,
+                updatedAt: Timestamp.now(),
+                updatedBy: user.email
+            }, { merge: true });
+
+            setFaqData(editForm);
+            alert('FAQ가 수정되었습니다.');
+            setIsEditing(false);
+        } catch (error) {
+            console.error('FAQ 수정 실패:', error);
+            alert('FAQ 수정에 실패했습니다: ' + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCategoryChange = (index, value) => {
+        const newForm = [...editForm];
+        // "📌 카테고리명" 형식에서 아이콘과 카테고리명 분리
+        const trimmedValue = value.trim();
+        const iconMatch = trimmedValue.match(/^([^\s]+)\s+(.+)$/);
+        
+        if (iconMatch) {
+            newForm[index] = { 
+                ...newForm[index], 
+                icon: iconMatch[1],
+                category: iconMatch[2]
+            };
+        } else {
+            // 아이콘만 입력된 경우
+            newForm[index] = { 
+                ...newForm[index], 
+                icon: trimmedValue || '📌',
+                category: newForm[index].category || ''
+            };
+        }
+        setEditForm(newForm);
+    };
+    
+    const getCategoryDisplayValue = (category) => {
+        return `${category.icon || '📌'} ${category.category || ''}`.trim();
+    };
+
+    const handleItemChange = (categoryIndex, itemIndex, field, value) => {
+        const newForm = [...editForm];
+        newForm[categoryIndex].items[itemIndex] = {
+            ...newForm[categoryIndex].items[itemIndex],
+            [field]: value
+        };
+        setEditForm(newForm);
+    };
+
+    const handleAddCategory = () => {
+        setEditForm([...editForm, {
+            category: '',
+            icon: '📌',
+            items: [{ question: '', answer: '' }]
+        }]);
+    };
+
+    const handleDeleteCategory = (index) => {
+        if (window.confirm('이 카테고리를 삭제하시겠습니까?')) {
+            const newForm = editForm.filter((_, i) => i !== index);
+            setEditForm(newForm);
+        }
+    };
+
+    const handleAddItem = (categoryIndex) => {
+        const newForm = [...editForm];
+        newForm[categoryIndex].items.push({ question: '', answer: '' });
+        setEditForm(newForm);
+    };
+
+    const handleDeleteItem = (categoryIndex, itemIndex) => {
+        if (window.confirm('이 질문을 삭제하시겠습니까?')) {
+            const newForm = [...editForm];
+            newForm[categoryIndex].items = newForm[categoryIndex].items.filter((_, i) => i !== itemIndex);
+            setEditForm(newForm);
+        }
+    };
+
+    const theme = actualTheme === 'dark'
+        ? { text: '#fff', card: '#2a2a2a', cardHover: '#333', border: '#444' }
+        : { text: '#222', card: '#fff', cardHover: '#f5f5f5', border: '#e0e0e0' };
+
     return (
         <>
-            <Header leftAction={() => navigate(-1)} leftIconType="back" title="FAQ" />
+            <Header 
+                user={user}
+                title="FAQ"
+                rightActions={
+                    isAdminUser ? (
+                        <EditButton theme={theme} onClick={handleEdit} title="수정">
+                            <FaEdit />
+                        </EditButton>
+                    ) : null
+                }
+            />
             <div className={styles.faqContainer}>
-                <div className={styles.faqList}>
-                    {FAQ_DATA.map((category, categoryIndex) => (
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>로딩 중...</div>
+                ) : (
+                    <div className={styles.faqList}>
+                        {faqData.map((category, categoryIndex) => (
                         <div key={categoryIndex} className={styles.categorySection}>
                             <div
                                 className={styles.categoryHeader}
@@ -257,9 +831,91 @@ function FAQ() {
                                 </div>
                             )}
                         </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
+
+            {/* 수정 모달 */}
+            {isEditing && (
+                <ModalOverlay onClick={handleCancel}>
+                    <ModalContent theme={theme} onClick={(e) => e.stopPropagation()}>
+                        <ModalHeader theme={theme}>
+                            <ModalTitle theme={theme}>FAQ 수정</ModalTitle>
+                            <CloseButton theme={theme} onClick={handleCancel}>×</CloseButton>
+                        </ModalHeader>
+                        <ModalBody>
+                            {editForm.map((category, categoryIndex) => (
+                                <CategorySection key={categoryIndex} theme={theme}>
+                                    <CategoryHeader>
+                                        <FormGroup style={{ flex: 1, marginBottom: 0 }}>
+                                            <Label theme={theme}>카테고리 (아이콘 + 이름)</Label>
+                                            <Input
+                                                theme={theme}
+                                                type="text"
+                                                value={getCategoryDisplayValue(category)}
+                                                onChange={(e) => handleCategoryChange(categoryIndex, e.target.value)}
+                                                placeholder="예: 📌 계정 & 기본 기능"
+                                            />
+                                        </FormGroup>
+                                    </CategoryHeader>
+
+                                    {category.items.map((item, itemIndex) => (
+                                        <ItemCard key={itemIndex} theme={theme}>
+                                            <ItemHeader>
+                                                <ItemNumber theme={theme}>질문 {itemIndex + 1}</ItemNumber>
+                                                <DeleteButton onClick={() => handleDeleteItem(categoryIndex, itemIndex)} title="질문 삭제">
+                                                    <FaMinus />
+                                                </DeleteButton>
+                                            </ItemHeader>
+                                            <FormGroup>
+                                                <Label theme={theme}>질문</Label>
+                                                <Textarea
+                                                    theme={theme}
+                                                    value={item.question}
+                                                    onChange={(e) => handleItemChange(categoryIndex, itemIndex, 'question', e.target.value)}
+                                                    placeholder="질문을 입력하세요"
+                                                    style={{ minHeight: '80px' }}
+                                                />
+                                            </FormGroup>
+                                            <FormGroup>
+                                                <Label theme={theme}>답변</Label>
+                                                <Textarea
+                                                    theme={theme}
+                                                    value={item.answer}
+                                                    onChange={(e) => handleItemChange(categoryIndex, itemIndex, 'answer', e.target.value)}
+                                                    placeholder="답변을 입력하세요 (줄바꿈은 \n으로 표시됩니다)"
+                                                />
+                                            </FormGroup>
+                                        </ItemCard>
+                                    ))}
+
+                                    <CategoryActions>
+                                        <CategoryDeleteButton onClick={() => handleDeleteCategory(categoryIndex)} title="카테고리 삭제">
+                                            <FaTrash />
+                                        </CategoryDeleteButton>
+                                        <AddButton onClick={() => handleAddItem(categoryIndex)}>
+                                            + 질문 추가
+                                        </AddButton>
+                                    </CategoryActions>
+                                </CategorySection>
+                            ))}
+
+                            <AddButton onClick={handleAddCategory} style={{ marginTop: '20px' }}>
+                                + 카테고리 추가
+                            </AddButton>
+                        </ModalBody>
+                        <ButtonContainer theme={theme}>
+                            <CancelButton theme={theme} onClick={handleCancel} disabled={isSaving}>
+                                취소
+                            </CancelButton>
+                            <SaveButton theme={theme} onClick={handleSave} disabled={isSaving}>
+                                {isSaving ? '저장 중...' : '저장'}
+                            </SaveButton>
+                        </ButtonContainer>
+                    </ModalContent>
+                </ModalOverlay>
+            )}
         </>
     );
 }
