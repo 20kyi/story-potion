@@ -13,3 +13,4 @@ const GridIcon = ({ width = 24, height = 24, color = '#181725' }) => (
 
 export default GridIcon;
 
+

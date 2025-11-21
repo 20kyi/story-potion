@@ -514,6 +514,129 @@ const ValueDisplay = styled.span`
   flex-shrink: 0;
 `;
 
+// 페이지 넘기기 스타일
+const PageViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#f4e8d7';
+    if (readTheme === 'dark') return '#1a1a1a';
+    return '#fefefe';
+  }};
+`;
+
+const PageWrapper = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 60px;
+  padding-bottom: 60px;
+  position: relative;
+  touch-action: pan-y;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#f4e8d7';
+    if (readTheme === 'dark') return '#1a1a1a';
+    return '#fefefe';
+  }};
+`;
+
+const PageContent = styled.div`
+  font-size: ${({ fontSize }) => fontSize || 18}px;
+  line-height: ${({ lineHeight }) => lineHeight || 2.0};
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  white-space: pre-line;
+  padding: 40px 24px;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#f4e8d7';
+    if (readTheme === 'dark') return '#1a1a1a';
+    return '#fefefe';
+  }};
+  border-radius: 0;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  text-align: ${({ textAlign }) => textAlign || 'left'};
+  max-width: 680px;
+  margin: 0 auto;
+  min-height: calc(100vh - 160px);
+  transition: all 0.3s ease;
+`;
+
+const PageNavigation = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return 'rgba(244, 232, 215, 0.95)';
+    if (readTheme === 'dark') return 'rgba(26, 26, 26, 0.95)';
+    return 'rgba(254, 254, 254, 0.95)';
+  }};
+  backdrop-filter: blur(10px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1001;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+`;
+
+const PageButton = styled.button`
+  background: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.2)';
+    if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.2)';
+    return 'rgba(203, 101, 101, 0.2)';
+  }};
+  border: none;
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  
+  &:not(:disabled):active {
+    transform: scale(0.95);
+  }
+  
+  @media (min-width: 480px) {
+    &:not(:disabled):hover {
+      background: ${({ readTheme }) => {
+        if (readTheme === 'sepia') return 'rgba(139, 115, 85, 0.3)';
+        if (readTheme === 'dark') return 'rgba(203, 101, 101, 0.3)';
+        return 'rgba(203, 101, 101, 0.3)';
+      }};
+    }
+  }
+`;
+
+const PageIndicator = styled.div`
+  color: ${({ readTheme }) => {
+    if (readTheme === 'sepia') return '#5c4b37';
+    if (readTheme === 'dark') return '#e8e8e8';
+    return '#333';
+  }};
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  flex: 1;
+`;
+
 function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
@@ -542,8 +665,12 @@ function NovelView({ user }) {
     const [textAlign, setTextAlign] = useState('left'); // 'left', 'justify'
     const [showSettings, setShowSettings] = useState(false);
     const [readingProgress, setReadingProgress] = useState(0);
+    const [readingMode, setReadingMode] = useState('scroll'); // 'scroll', 'page'
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pages, setPages] = useState([]);
     const contentRef = useRef(null);
     const readingContainerRef = useRef(null);
+    const pageContainerRef = useRef(null);
 
     useEffect(() => {
         if (!user || !id) {
@@ -743,9 +870,9 @@ function NovelView({ user }) {
         return `${novel.month}월 ${novel.weekNum}주차 소설`;
     };
 
-    // 읽기 진행률 계산
+    // 읽기 진행률 계산 (스크롤 모드)
     useEffect(() => {
-        if (!isReadingMode || !readingContainerRef.current) return;
+        if (!isReadingMode || !readingContainerRef.current || readingMode !== 'scroll') return;
 
         const container = readingContainerRef.current;
         const updateProgress = () => {
@@ -761,7 +888,103 @@ function NovelView({ user }) {
         return () => {
             container.removeEventListener('scroll', updateProgress);
         };
-    }, [isReadingMode, novel]);
+    }, [isReadingMode, novel, readingMode]);
+
+    // 텍스트를 페이지로 나누기
+    useEffect(() => {
+        if (!novel || readingMode !== 'page') {
+            setPages([]);
+            return;
+        }
+
+        const content = novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
+아직 내용이 준비되지 않았습니다.`;
+        
+        if (!content.trim()) {
+            setPages([]);
+            return;
+        }
+        
+        // 페이지 높이 계산 (화면 높이 - 상단 컨트롤 - 하단 네비게이션)
+        const pageHeight = window.innerHeight - 60 - 100; // 상단 60px, 하단 100px
+        
+        // 임시 요소를 만들어서 실제 렌더링 크기를 계산
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.visibility = 'hidden';
+        tempDiv.style.width = '680px';
+        tempDiv.style.padding = '40px 32px';
+        tempDiv.style.fontSize = `${fontSize}px`;
+        tempDiv.style.lineHeight = `${lineHeight}`;
+        tempDiv.style.fontFamily = '"Noto Serif KR", "Nanum Myeongjo", serif';
+        tempDiv.style.whiteSpace = 'pre-line';
+        tempDiv.style.textAlign = textAlign;
+        tempDiv.style.boxSizing = 'border-box';
+        document.body.appendChild(tempDiv);
+
+        const lines = content.split('\n');
+        const pages = [];
+        let currentPage = '';
+        let currentHeight = 0;
+
+        lines.forEach((line, lineIndex) => {
+            const testText = currentPage + (currentPage ? '\n' : '') + line;
+            tempDiv.textContent = testText;
+            const height = tempDiv.scrollHeight;
+
+            if (height > pageHeight && currentPage.trim()) {
+                // 현재 페이지가 꽉 찼으므로 저장하고 새 페이지 시작
+                pages.push(currentPage.trim());
+                currentPage = line;
+                tempDiv.textContent = line;
+                currentHeight = tempDiv.scrollHeight;
+            } else {
+                // 현재 페이지에 추가
+                currentPage = testText;
+                currentHeight = height;
+            }
+        });
+
+        // 마지막 페이지 추가
+        if (currentPage.trim()) {
+            pages.push(currentPage.trim());
+        }
+
+        // 페이지가 없으면 전체 내용을 하나의 페이지로
+        if (pages.length === 0 && content.trim()) {
+            pages.push(content.trim());
+        }
+
+        document.body.removeChild(tempDiv);
+        setPages(pages);
+        setCurrentPage(0);
+    }, [novel, fontSize, lineHeight, textAlign, readingMode]);
+
+    // 페이지 모드에서 진행률 계산
+    useEffect(() => {
+        if (readingMode === 'page' && pages.length > 0) {
+            const progress = ((currentPage + 1) / pages.length) * 100;
+            setReadingProgress(Math.min(100, Math.max(0, progress)));
+        }
+    }, [currentPage, pages.length, readingMode]);
+
+    // 키보드 이벤트 (페이지 모드에서 좌우 화살표 키로 페이지 전환)
+    useEffect(() => {
+        if (!isReadingMode || readingMode !== 'page') return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowLeft' && currentPage > 0) {
+                setCurrentPage(currentPage - 1);
+            } else if (e.key === 'ArrowRight' && currentPage < pages.length - 1) {
+                setCurrentPage(currentPage + 1);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isReadingMode, readingMode, currentPage, pages.length]);
 
     const handleDelete = () => {
         if (!novel || !novel.id) return;
@@ -881,6 +1104,182 @@ function NovelView({ user }) {
 
     // 읽기 모드
     if (isReadingMode) {
+        // 페이지 넘기기 모드
+        if (readingMode === 'page') {
+            return (
+                <>
+                    <ProgressBar readTheme={readTheme} progress={readingProgress} />
+                    <PageViewContainer 
+                        readTheme={readTheme}
+                        onClick={(e) => {
+                            // 설정 패널이나 컨트롤 영역을 클릭한 경우가 아니면 설정창 닫기
+                            if (showSettings && !e.target.closest('[data-settings-area]')) {
+                                setShowSettings(false);
+                            }
+                        }}
+                    >
+                        <ReadingControls readTheme={readTheme} data-settings-area>
+                            <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
+                                ←
+                            </ControlButton>
+                            <ControlGroup>
+                                <ControlButton readTheme={readTheme} onClick={() => setShowSettings(!showSettings)}>
+                                    ⚙️
+                                </ControlButton>
+                            </ControlGroup>
+                        </ReadingControls>
+                        <PageWrapper 
+                            ref={pageContainerRef}
+                            onTouchStart={(e) => {
+                                const touch = e.touches[0];
+                                if (pageContainerRef.current) {
+                                    pageContainerRef.current.startX = touch.clientX;
+                                }
+                            }}
+                            onTouchEnd={(e) => {
+                                if (!pageContainerRef.current || !pageContainerRef.current.startX) return;
+                                const touch = e.changedTouches[0];
+                                const diffX = pageContainerRef.current.startX - touch.clientX;
+                                
+                                if (Math.abs(diffX) > 50) {
+                                    if (diffX > 0 && currentPage < pages.length - 1) {
+                                        setCurrentPage(currentPage + 1);
+                                    } else if (diffX < 0 && currentPage > 0) {
+                                        setCurrentPage(currentPage - 1);
+                                    }
+                                }
+                                if (pageContainerRef.current) {
+                                    pageContainerRef.current.startX = null;
+                                }
+                            }}
+                        >
+                            {pages.length > 0 && (
+                                <PageContent
+                                    fontSize={fontSize}
+                                    lineHeight={lineHeight}
+                                    readTheme={readTheme}
+                                    textAlign={textAlign}
+                                >
+                                    {pages[currentPage] || ''}
+                                </PageContent>
+                            )}
+                        </PageWrapper>
+                        <PageNavigation readTheme={readTheme} data-settings-area>
+                            <PageButton
+                                readTheme={readTheme}
+                                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                                disabled={currentPage === 0}
+                            >
+                                이전
+                            </PageButton>
+                            <PageIndicator readTheme={readTheme}>
+                                {pages.length > 0 ? `${currentPage + 1} / ${pages.length}` : '0 / 0'}
+                            </PageIndicator>
+                            <PageButton
+                                readTheme={readTheme}
+                                onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                                disabled={currentPage >= pages.length - 1}
+                            >
+                                다음
+                            </PageButton>
+                        </PageNavigation>
+                        <SettingsPanel show={showSettings} readTheme={readTheme} data-settings-area>
+                            <ReadingSettingRow>
+                                <ReadingSettingLabel readTheme={readTheme}>폰트 크기</ReadingSettingLabel>
+                                <Slider
+                                    type="range"
+                                    min="14"
+                                    max="24"
+                                    value={fontSize}
+                                    onChange={(e) => setFontSize(Number(e.target.value))}
+                                    readTheme={readTheme}
+                                />
+                                <ValueDisplay readTheme={readTheme}>{fontSize}px</ValueDisplay>
+                            </ReadingSettingRow>
+                            <ReadingSettingRow>
+                                <ReadingSettingLabel readTheme={readTheme}>줄 간격</ReadingSettingLabel>
+                                <Slider
+                                    type="range"
+                                    min="1.5"
+                                    max="3.0"
+                                    step="0.1"
+                                    value={lineHeight}
+                                    onChange={(e) => setLineHeight(Number(e.target.value))}
+                                    readTheme={readTheme}
+                                />
+                                <ValueDisplay readTheme={readTheme}>{lineHeight.toFixed(1)}</ValueDisplay>
+                            </ReadingSettingRow>
+                            <ReadingSettingRow>
+                                <ReadingSettingLabel readTheme={readTheme}>읽기 테마</ReadingSettingLabel>
+                                <ThemeGroup>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={readTheme === 'default'}
+                                        onClick={() => setReadTheme('default')}
+                                    >
+                                        기본
+                                    </ThemeButton>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={readTheme === 'sepia'}
+                                        onClick={() => setReadTheme('sepia')}
+                                    >
+                                        세피아
+                                    </ThemeButton>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={readTheme === 'dark'}
+                                        onClick={() => setReadTheme('dark')}
+                                    >
+                                        다크
+                                    </ThemeButton>
+                                </ThemeGroup>
+                            </ReadingSettingRow>
+                            <ReadingSettingRow>
+                                <ReadingSettingLabel readTheme={readTheme}>정렬</ReadingSettingLabel>
+                                <ThemeGroup>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={textAlign === 'left'}
+                                        onClick={() => setTextAlign('left')}
+                                    >
+                                        좌측
+                                    </ThemeButton>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={textAlign === 'justify'}
+                                        onClick={() => setTextAlign('justify')}
+                                    >
+                                        양쪽
+                                    </ThemeButton>
+                                </ThemeGroup>
+                            </ReadingSettingRow>
+                            <ReadingSettingRow>
+                                <ReadingSettingLabel readTheme={readTheme}>읽기 방식</ReadingSettingLabel>
+                                <ThemeGroup>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={readingMode === 'scroll'}
+                                        onClick={() => setReadingMode('scroll')}
+                                    >
+                                        스크롤
+                                    </ThemeButton>
+                                    <ThemeButton
+                                        readTheme={readTheme}
+                                        active={readingMode === 'page'}
+                                        onClick={() => setReadingMode('page')}
+                                    >
+                                        페이지
+                                    </ThemeButton>
+                                </ThemeGroup>
+                            </ReadingSettingRow>
+                        </SettingsPanel>
+                    </PageViewContainer>
+                </>
+            );
+        }
+
+        // 스크롤 모드
         return (
             <>
                 <ProgressBar readTheme={readTheme} progress={readingProgress} />
@@ -904,7 +1303,7 @@ function NovelView({ user }) {
                             </ControlButton>
                         </ControlGroup>
                     </ReadingControls>
-                    <div style={{ paddingTop: '60px', paddingBottom: showSettings ? '200px' : '40px' }}>
+                    <div style={{ paddingTop: '60px', paddingBottom: showSettings ? '200px' : '60px' }}>
                         <NovelContent
                             ref={contentRef}
                             fontSize={fontSize}
@@ -985,6 +1384,25 @@ function NovelView({ user }) {
                                     onClick={() => setTextAlign('justify')}
                                 >
                                     양쪽
+                                </ThemeButton>
+                            </ThemeGroup>
+                        </ReadingSettingRow>
+                        <ReadingSettingRow>
+                            <ReadingSettingLabel readTheme={readTheme}>읽기 방식</ReadingSettingLabel>
+                            <ThemeGroup>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={readingMode === 'scroll'}
+                                    onClick={() => setReadingMode('scroll')}
+                                >
+                                    스크롤
+                                </ThemeButton>
+                                <ThemeButton
+                                    readTheme={readTheme}
+                                    active={readingMode === 'page'}
+                                    onClick={() => setReadingMode('page')}
+                                >
+                                    페이지
                                 </ThemeButton>
                             </ThemeGroup>
                         </ReadingSettingRow>
