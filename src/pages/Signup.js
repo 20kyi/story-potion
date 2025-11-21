@@ -6,12 +6,16 @@ import { createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEma
 import { auth } from '../firebase';
 import { setDoc, doc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   // initializeRecaptchaForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
   // sendSMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
   // verifySMSCodeForSignup, // SMS 인증 기능 숨김 (나중에 사용 가능)
   generateRandomNickname
 } from '../utils/signupUtils';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import pushNotificationManager from '../utils/pushNotification';
 
 const Container = styled.div`
   display: flex;
@@ -503,24 +507,30 @@ function Signup() {
       // 1. Firebase Auth에서 이메일 중복 체크
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
 
-      if (signInMethods && signInMethods.length > 0) {
-        setIsEmailDuplicate(true);
-        setError('이미 사용 중인 이메일입니다.');
-        setSuccessMessage('');
-        setIsEmailChecking(false);
-        return;
-      }
-
       // 2. Firestore에서도 이메일 중복 체크
       const usersRef = collection(db, 'users');
       const emailQuery = query(usersRef, where('email', '==', email.trim().toLowerCase()));
       const querySnapshot = await getDocs(emailQuery);
 
-      if (!querySnapshot.empty) {
+      // Auth에 있지만 Firestore에 없는 경우 (탈퇴한 회원)
+      if (signInMethods && signInMethods.length > 0 && querySnapshot.empty) {
+        // 탈퇴한 회원의 Auth 계정이 남아있는 경우
+        // 사용 가능하다고 표시 (회원가입 시 처리)
+        setIsEmailDuplicate(false);
+        setError('');
+        setSuccessMessage('사용 가능한 이메일입니다. (이전 계정 정보가 정리됩니다)');
+      } else if (signInMethods && signInMethods.length > 0) {
+        // Auth와 Firestore 모두에 있는 경우
+        setIsEmailDuplicate(true);
+        setError('이미 사용 중인 이메일입니다.');
+        setSuccessMessage('');
+      } else if (!querySnapshot.empty) {
+        // Firestore에만 있는 경우
         setIsEmailDuplicate(true);
         setError('이미 사용 중인 이메일입니다.');
         setSuccessMessage('');
       } else {
+        // 둘 다 없는 경우
         setIsEmailDuplicate(false);
         setError('');
         setSuccessMessage('사용 가능한 이메일입니다.');
@@ -774,6 +784,55 @@ function Signup() {
   //   }
   // };
 
+  // 권한 요청 함수
+  const requestPermissions = async (user) => {
+    try {
+      // 1. 알림 권한 요청
+      if (Capacitor.getPlatform() !== 'web') {
+        // 모바일 앱 환경
+        try {
+          const permStatus = await PushNotifications.requestPermissions();
+          if (permStatus.receive === 'granted') {
+            await PushNotifications.register();
+            // FCM 토큰 저장을 위한 리스너 등록
+            if (!window.__pushRegListenerAdded) {
+              window.__pushRegListenerAdded = true;
+              await PushNotifications.addListener('registration', async (token) => {
+                console.log('FCM 토큰:', token.value);
+                if (user && token.value) {
+                  try {
+                    await setDoc(doc(db, "users", user.uid), { fcmToken: token.value }, { merge: true });
+                    console.log('FCM 토큰 Firestore 저장 완료:', token.value);
+                  } catch (error) {
+                    console.error('FCM 토큰 Firestore 저장 실패:', error);
+                  }
+                }
+              });
+            }
+            await pushNotificationManager.subscribeToPush();
+          }
+        } catch (error) {
+          console.error('알림 권한 요청 실패:', error);
+        }
+      } else {
+        // 웹 환경
+        try {
+          await pushNotificationManager.requestPermission();
+        } catch (error) {
+          console.error('알림 권한 요청 실패:', error);
+        }
+      }
+
+      // 2. 사진 접근 권한 요청 (모바일 앱 환경)
+      // 웹에서는 input type="file"을 사용하므로 별도 권한 요청 불필요
+      // 모바일 앱에서는 프로필 이미지 업로드 시 자동으로 권한 요청됨
+      // Android의 경우 AndroidManifest.xml에 권한이 선언되어 있어야 함
+      
+    } catch (error) {
+      console.error('권한 요청 중 오류 발생:', error);
+    }
+  };
+
   // 최종 회원가입 처리
   const handleFinalSignup = async () => {
     setError('');
@@ -783,19 +842,24 @@ function Signup() {
       // 1. Firebase Auth에서 이메일 중복 체크
       const signInMethods = await fetchSignInMethodsForEmail(auth, formData.email.trim());
 
-      if (signInMethods && signInMethods.length > 0) {
-        setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
-        setIsEmailDuplicate(true);
-        setCurrentStep(1); // 1단계로 돌아가기
-        return;
-      }
-
       // 2. Firestore에서도 이메일 중복 체크
       const usersRef = collection(db, 'users');
       const emailQuery = query(usersRef, where('email', '==', formData.email.trim().toLowerCase()));
       const querySnapshot = await getDocs(emailQuery);
 
-      if (!querySnapshot.empty) {
+      // Auth에 있지만 Firestore에 없는 경우 (탈퇴한 회원)
+      if (signInMethods && signInMethods.length > 0 && querySnapshot.empty) {
+        // 탈퇴한 회원의 Auth 계정이 남아있는 경우
+        // 회원가입을 진행하되, 기존 Auth 계정은 무시하고 새로 생성
+        console.log('탈퇴한 회원의 Auth 계정이 남아있습니다. 새 계정을 생성합니다.');
+      } else if (signInMethods && signInMethods.length > 0) {
+        // Auth와 Firestore 모두에 있는 경우
+        setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
+        setIsEmailDuplicate(true);
+        setCurrentStep(1); // 1단계로 돌아가기
+        return;
+      } else if (!querySnapshot.empty) {
+        // Firestore에만 있는 경우
         setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
         setIsEmailDuplicate(true);
         setCurrentStep(1); // 1단계로 돌아가기
@@ -810,11 +874,50 @@ function Signup() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email.trim(),
-        formData.password
-      );
+      let userCredential;
+      
+      try {
+        // 회원가입 시도
+        userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email.trim(),
+          formData.password
+        );
+      } catch (createError) {
+        if (createError.code === 'auth/email-already-in-use') {
+          // Auth에 계정이 있지만 Firestore에는 없는 경우 (탈퇴한 회원)
+          // Firebase Functions를 통해 Auth 계정 삭제 시도
+          try {
+            const functions = getFunctions();
+            const deleteOrphanAuthAccount = httpsCallable(functions, 'deleteOrphanAuthAccount');
+            const result = await deleteOrphanAuthAccount({ email: formData.email.trim() });
+            
+            if (result.data.success) {
+              // Auth 계정 삭제 성공, 다시 회원가입 시도
+              userCredential = await createUserWithEmailAndPassword(
+                auth,
+                formData.email.trim(),
+                formData.password
+              );
+            } else {
+              // Functions가 없거나 실패한 경우
+              setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
+              setIsEmailDuplicate(true);
+              setCurrentStep(1);
+              return;
+            }
+          } catch (functionError) {
+            console.error('Firebase Functions 호출 실패:', functionError);
+            // Functions가 없거나 실패한 경우
+            setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
+            setIsEmailDuplicate(true);
+            setCurrentStep(1);
+            return;
+          }
+        } else {
+          throw createError;
+        }
+      }
 
       const user = userCredential.user;
       const providerId = user.providerData[0]?.providerId || "password";
@@ -870,6 +973,9 @@ function Signup() {
 
       // 약관 동의 정보 세션에서 제거
       sessionStorage.removeItem('termsAgreement');
+
+      // 회원가입 완료 후 권한 요청
+      await requestPermissions(user);
 
       alert('회원가입이 완료되었습니다!');
       navigate('/login');

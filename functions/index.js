@@ -1492,3 +1492,97 @@ exports.verifyPasswordResetCode = functions.https.onCall(async (data, context) =
         );
     }
 });
+
+// 고아 Auth 계정 삭제 (Firestore에 없지만 Auth에 남아있는 계정)
+exports.deleteOrphanAuthAccount = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', '이메일이 필요합니다.');
+    }
+
+    try {
+        // 1. Firestore에서 사용자 확인
+        const firestore = admin.firestore();
+        const usersSnapshot = await firestore
+            .collection('users')
+            .where('email', '==', email.toLowerCase())
+            .limit(1)
+            .get();
+
+        // Firestore에 사용자가 있으면 삭제하지 않음
+        if (!usersSnapshot.empty) {
+            return {
+                success: false,
+                message: 'Firestore에 사용자가 존재합니다.'
+            };
+        }
+
+        // 2. Firebase Auth에서 사용자 찾기
+        let authUser;
+        try {
+            authUser = await admin.auth().getUserByEmail(email);
+        } catch (error) {
+            if (error.code === 'auth/user-not-found') {
+                return {
+                    success: false,
+                    message: 'Auth에 사용자가 없습니다.'
+                };
+            }
+            throw error;
+        }
+
+        // 3. Auth 계정 삭제
+        await admin.auth().deleteUser(authUser.uid);
+
+        return {
+            success: true,
+            message: '고아 Auth 계정이 삭제되었습니다.',
+            uid: authUser.uid
+        };
+    } catch (error) {
+        console.error('고아 Auth 계정 삭제 실패:', error);
+        throw new functions.https.HttpsError('internal', '계정 삭제 중 오류가 발생했습니다.');
+    }
+});
+
+// 여러 Auth 계정 일괄 삭제 (관리자용)
+exports.deleteAuthAccounts = functions.https.onCall(async (data, context) => {
+    const { userIds } = data;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', '사용자 ID 목록이 필요합니다.');
+    }
+
+    try {
+        const results = {
+            total: userIds.length,
+            success: 0,
+            failed: 0,
+            errors: []
+        };
+
+        for (const userId of userIds) {
+            try {
+                await admin.auth().deleteUser(userId);
+                results.success++;
+            } catch (error) {
+                results.failed++;
+                results.errors.push({
+                    userId,
+                    error: error.message
+                });
+                console.error(`사용자 ${userId} Auth 계정 삭제 실패:`, error);
+            }
+        }
+
+        return {
+            success: true,
+            ...results,
+            message: `Auth 계정 삭제 완료: 성공 ${results.success}명, 실패 ${results.failed}명`
+        };
+    } catch (error) {
+        console.error('Auth 계정 일괄 삭제 실패:', error);
+        throw new functions.https.HttpsError('internal', '계정 삭제 중 오류가 발생했습니다.');
+    }
+});

@@ -43,6 +43,12 @@ import {
   getAllFirestoreUsers,
   checkAllUserProfiles
 } from '../../utils/debugUsers';
+import {
+  findInactiveUsers,
+  findOldInactiveUsers,
+  cleanupDeletedUsers,
+  cleanupInactiveUsers
+} from '../../utils/cleanupDeletedUsers';
 import { requireAdmin, isMainAdmin, isAdmin } from '../../utils/adminAuth';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
@@ -601,8 +607,11 @@ function UserManagement({ user }) {
     pointManagement: false,
     debugging: false,
     notifications: false,
-    announcements: false
+    announcements: false,
+    cleanupUsers: false
   });
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState(null);
 
   const toggleSection = (sectionKey) => {
     setOpenSections(prev => ({
@@ -1339,6 +1348,115 @@ function UserManagement({ user }) {
       setStatusActionStatus({ type: 'error', message: '계정 삭제 오류: ' + e.message });
     } finally {
       setStatusActionLoading(false);
+    }
+  };
+
+  // 탈퇴한 회원 찾기
+  const handleFindInactiveUsers = async () => {
+    setCleanupLoading(true);
+    setCleanupResult(null);
+    try {
+      const result = await findInactiveUsers();
+      setCleanupResult(result);
+      if (result.success) {
+        toast.showToast(`${result.count}명의 비활성 사용자를 찾았습니다.`, 'success');
+      } else {
+        toast.showToast('비활성 사용자 조회 실패: ' + result.message, 'error');
+      }
+    } catch (error) {
+      setCleanupResult({ success: false, error: error.message });
+      toast.showToast('오류 발생: ' + error.message, 'error');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  // 오래된 비활성 사용자 찾기
+  const handleFindOldInactiveUsers = async (days = 365) => {
+    setCleanupLoading(true);
+    setCleanupResult(null);
+    try {
+      const result = await findOldInactiveUsers(days);
+      setCleanupResult(result);
+      if (result.success) {
+        toast.showToast(`${result.count}명의 오래된 비활성 사용자를 찾았습니다.`, 'success');
+      } else {
+        toast.showToast('오래된 비활성 사용자 조회 실패: ' + result.message, 'error');
+      }
+    } catch (error) {
+      setCleanupResult({ success: false, error: error.message });
+      toast.showToast('오류 발생: ' + error.message, 'error');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  // 탈퇴한 회원 정리 실행
+  const handleCleanupDeletedUsers = async (dryRun = false) => {
+    if (!cleanupResult || !cleanupResult.users || cleanupResult.users.length === 0) {
+      toast.showToast('먼저 탈퇴한 회원을 찾아주세요.', 'error');
+      return;
+    }
+
+    const confirmMessage = dryRun
+      ? `[DRY RUN] ${cleanupResult.users.length}명의 탈퇴한 회원을 정리하시겠습니까? (실제 삭제는 수행하지 않습니다)`
+      : `정말로 ${cleanupResult.users.length}명의 탈퇴한 회원을 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setCleanupLoading(true);
+    try {
+      const userIds = cleanupResult.users.map(u => u.uid);
+      const result = await cleanupDeletedUsers(userIds, { dryRun });
+
+      if (result.success) {
+        toast.showToast(
+          dryRun
+            ? `[DRY RUN] ${result.success}명의 사용자 정리 예정`
+            : `탈퇴한 회원 정리 완료: 성공 ${result.success}명, 실패 ${result.failed}명`,
+          'success'
+        );
+        setCleanupResult(null); // 결과 초기화
+        loadUsersPage(); // 목록 새로고침
+      } else {
+        toast.showToast('탈퇴한 회원 정리 실패: ' + result.message, 'error');
+      }
+    } catch (error) {
+      toast.showToast('오류 발생: ' + error.message, 'error');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  // 자동 정리 (비활성 + 오래된 사용자)
+  const handleAutoCleanup = async (daysInactive = 365, dryRun = false) => {
+    const confirmMessage = dryRun
+      ? `[DRY RUN] ${daysInactive}일 이상 로그인하지 않은 비활성 사용자를 자동으로 정리하시겠습니까? (실제 삭제는 수행하지 않습니다)`
+      : `정말로 ${daysInactive}일 이상 로그인하지 않은 비활성 사용자를 자동으로 정리하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setCleanupLoading(true);
+    setCleanupResult(null);
+    try {
+      const result = await cleanupInactiveUsers({ daysInactive, dryRun });
+
+      if (result.success) {
+        toast.showToast(
+          dryRun
+            ? `[DRY RUN] ${result.count || 0}명의 사용자 정리 예정`
+            : `자동 정리 완료: 성공 ${result.success}명, 실패 ${result.failed}명`,
+          'success'
+        );
+        loadUsersPage(); // 목록 새로고침
+      } else {
+        toast.showToast('자동 정리 실패: ' + result.message, 'error');
+      }
+      setCleanupResult(result);
+    } catch (error) {
+      toast.showToast('오류 발생: ' + error.message, 'error');
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -2468,6 +2586,160 @@ function UserManagement({ user }) {
                   ? '발송 중...'
                   : `${notificationType === 'marketing' ? '마케팅' : '이벤트'} 알림 발송`}
               </Button>
+            </div>
+          </SectionContent>
+        </Section>
+      )}
+
+      {/* 탈퇴한 회원 정리 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme} onClick={() => toggleSection('cleanupUsers')}>
+            <span>🗑️ 탈퇴한 회원 정리</span>
+            <AccordionIcon theme={theme} isOpen={openSections.cleanupUsers}>▼</AccordionIcon>
+          </SectionTitle>
+          <SectionContent isOpen={openSections.cleanupUsers}>
+            <InfoText theme={theme}>
+              Firebase에 남아있는 탈퇴한 회원들을 찾아서 정리할 수 있습니다.
+              <br />
+              <strong style={{ color: '#e74c3c' }}>⚠️ 주의: 이 작업은 되돌릴 수 없습니다!</strong>
+            </InfoText>
+
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* 비활성 사용자 찾기 */}
+              <Button
+                onClick={handleFindInactiveUsers}
+                disabled={cleanupLoading}
+                style={{
+                  backgroundColor: '#3498db',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px'
+                }}
+              >
+                {cleanupLoading ? '조회 중...' : '🔍 비활성 사용자 찾기 (isActive=false)'}
+              </Button>
+
+              {/* 오래된 비활성 사용자 찾기 */}
+              <Button
+                onClick={() => handleFindOldInactiveUsers(365)}
+                disabled={cleanupLoading}
+                style={{
+                  backgroundColor: '#9b59b6',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px'
+                }}
+              >
+                {cleanupLoading ? '조회 중...' : '🔍 오래된 비활성 사용자 찾기 (1년 이상 미로그인)'}
+              </Button>
+
+              {/* 자동 정리 (DRY RUN) */}
+              <Button
+                onClick={() => handleAutoCleanup(365, true)}
+                disabled={cleanupLoading}
+                style={{
+                  backgroundColor: '#f39c12',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px'
+                }}
+              >
+                {cleanupLoading ? '실행 중...' : '🧪 자동 정리 테스트 (DRY RUN)'}
+              </Button>
+
+              {/* 자동 정리 (실제 삭제) */}
+              <Button
+                onClick={() => handleAutoCleanup(365, false)}
+                disabled={cleanupLoading}
+                style={{
+                  backgroundColor: '#e74c3c',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px'
+                }}
+              >
+                {cleanupLoading ? '정리 중...' : '🗑️ 자동 정리 실행 (1년 이상 미로그인)'}
+              </Button>
+
+              {/* 찾은 사용자 정리 (DRY RUN) */}
+              {cleanupResult && cleanupResult.users && cleanupResult.users.length > 0 && (
+                <>
+                  <div style={{
+                    marginTop: '15px',
+                    padding: '10px',
+                    background: '#f8f9fa',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd'
+                  }}>
+                    <div style={{ marginBottom: '10px', fontWeight: 'bold', color: theme.text }}>
+                      찾은 사용자: {cleanupResult.users.length}명
+                    </div>
+                    {cleanupResult.users.slice(0, 5).map((u, idx) => (
+                      <div key={idx} style={{ fontSize: '12px', color: theme.subText || '#666', marginBottom: '5px' }}>
+                        - {u.email || u.displayName || u.uid}
+                        {u.lastLoginAt && ` (마지막 로그인: ${new Date(u.lastLoginAt).toLocaleDateString()})`}
+                      </div>
+                    ))}
+                    {cleanupResult.users.length > 5 && (
+                      <div style={{ fontSize: '12px', color: theme.subText || '#666' }}>
+                        ... 외 {cleanupResult.users.length - 5}명
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={() => handleCleanupDeletedUsers(true)}
+                    disabled={cleanupLoading}
+                    style={{
+                      backgroundColor: '#f39c12',
+                      width: '100%',
+                      fontSize: isMobile ? '14px' : '13px',
+                      padding: isMobile ? '12px' : '8px',
+                      marginTop: '10px'
+                    }}
+                  >
+                    {cleanupLoading ? '테스트 중...' : `🧪 정리 테스트 (DRY RUN) - ${cleanupResult.users.length}명`}
+                  </Button>
+
+                  <Button
+                    onClick={() => handleCleanupDeletedUsers(false)}
+                    disabled={cleanupLoading}
+                    style={{
+                      backgroundColor: '#e74c3c',
+                      width: '100%',
+                      fontSize: isMobile ? '14px' : '13px',
+                      padding: isMobile ? '12px' : '8px'
+                    }}
+                  >
+                    {cleanupLoading ? '정리 중...' : `🗑️ 정리 실행 - ${cleanupResult.users.length}명`}
+                  </Button>
+                </>
+              )}
+
+              {/* 결과 표시 */}
+              {cleanupResult && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '10px',
+                  background: cleanupResult.success ? '#d4edda' : '#f8d7da',
+                  borderRadius: '8px',
+                  border: `1px solid ${cleanupResult.success ? '#c3e6cb' : '#f5c6cb'}`,
+                  color: cleanupResult.success ? '#155724' : '#721c24'
+                }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {cleanupResult.success ? '✅ 성공' : '❌ 실패'}
+                  </div>
+                  <div style={{ fontSize: '13px' }}>
+                    {cleanupResult.message || cleanupResult.error}
+                  </div>
+                  {cleanupResult.success && cleanupResult.deletedCount !== undefined && (
+                    <div style={{ fontSize: '13px', marginTop: '5px' }}>
+                      삭제된 항목: {cleanupResult.deletedCount}개
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </SectionContent>
         </Section>
