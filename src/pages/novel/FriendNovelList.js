@@ -9,7 +9,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import AlertModal from '../../components/ui/AlertModal';
 import { useTheme } from '../../ThemeContext';
 import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileImageUtils';
-import { createNovelUrl } from '../../utils/novelUtils';
+import { createNovelUrl, getGenreKey } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { createNovelPurchaseNotification, createPointEarnNotification } from '../../utils/notificationService';
 
@@ -131,7 +131,14 @@ const NovelTitle = styled.div`
 const NovelDate = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.cardSubText};
+  margin-bottom: 6px;
+`;
+
+const NovelGenre = styled.div`
+  font-size: 13px;
+  color: ${({ theme }) => theme.cardSubText || '#888'};
   margin-bottom: 14px;
+  font-weight: 500;
 `;
 
 const NovelContent = styled.div`
@@ -143,6 +150,39 @@ const NovelContent = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 0;
+  filter: ${props => props.$blurred ? 'blur(4px)' : 'none'};    // 블러 효과
+  opacity: ${props => props.$blurred ? '0.6' : '1'};    // 투명도
+  user-select: ${props => props.$blurred ? 'none' : 'auto'};    // 텍스트 선택 금지
+  pointer-events: none;    // 텍스트 직접 클릭은 방지
+`;
+
+const NovelContentWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  cursor: ${props => props.$clickable ? 'pointer' : 'default'};
+`;
+
+const LockOverlay = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+  pointer-events: auto;
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text || '#333'};
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+`;
+
+const LockIcon = styled.span`
+  font-size: 24px;
 `;
 
 // 버튼 스타일 개선: 카드 하단 전체 너비, 더 큼직하게
@@ -220,7 +260,7 @@ function FriendNovelList({ user }) {
                 // 소설 목록 가져오기 (공개 소설만)
                 const novelsRef = collection(db, 'novels');
                 const q = query(
-                    novelsRef, 
+                    novelsRef,
                     where('userId', '==', userId),
                     orderBy('createdAt', 'desc')
                 );
@@ -272,6 +312,16 @@ function FriendNovelList({ user }) {
         }
 
         return `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+    };
+
+    const getDisplayGenre = (genre) => {
+        if (!genre) return '';
+        // genre가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
+        const genreKey = getGenreKey(genre) || genre;
+        const translationKey = `novel_genre_${genreKey}`;
+        const translated = t(translationKey);
+        // 번역 키가 그대로 반환되면 장르 값 그대로 사용
+        return translated !== translationKey ? translated : genre;
     };
 
     // 구매 버튼 클릭 시 모달 오픈
@@ -388,8 +438,8 @@ function FriendNovelList({ user }) {
                     {friendInfo && (
                         <FriendProfileSection theme={theme}>
                             <ProfileContainer>
-                                <ProfileImage 
-                                    src={getSafeProfileImageUrl(friendInfo.photoURL)} 
+                                <ProfileImage
+                                    src={getSafeProfileImageUrl(friendInfo.photoURL)}
                                     alt="Friend Profile"
                                     onError={(e) => handleImageError(e)}
                                 />
@@ -408,7 +458,15 @@ function FriendNovelList({ user }) {
                             novels.map((novel) => (
                                 <NovelItem
                                     key={novel.id}
-                                    style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', flexDirection: 'column', padding: 0 }}
+                                    onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`) : undefined}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        position: 'relative',
+                                        flexDirection: 'column',
+                                        padding: 0,
+                                        cursor: purchased[novel.id] ? 'pointer' : 'default'
+                                    }}
                                 >
                                     <div style={{ display: 'flex', width: '100%', padding: 16 }}>
                                         <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
@@ -423,23 +481,28 @@ function FriendNovelList({ user }) {
                                                     })()
                                                     : `${novel.month}월 ${novel.weekNum}주차 소설`}
                                             </NovelDate>
-                                            <NovelContent>{novel.content}</NovelContent>
+                                            {novel.genre && (
+                                                <NovelGenre>{getDisplayGenre(novel.genre)}</NovelGenre>
+                                            )}
+                                            <NovelContentWrapper
+                                                $clickable={!purchased[novel.id]}
+                                                onClick={!purchased[novel.id] ? (e) => {
+                                                    e.stopPropagation();
+                                                    handlePurchaseClick(novel);
+                                                } : undefined}
+                                            >
+                                                <NovelContent $blurred={!purchased[novel.id]}>
+                                                    {novel.content}
+                                                </NovelContent>
+                                                {!purchased[novel.id] && (
+                                                    <LockOverlay>
+                                                        <LockIcon>🔒</LockIcon>
+                                                        <span>30P로 구매</span>
+                                                    </LockOverlay>
+                                                )}
+                                            </NovelContentWrapper>
                                         </div>
                                     </div>
-                                        {purchased[novel.id] ? (
-                                        <ActionButtonView
-                                            onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`)}
-                                        >
-                                            {t('friend_novel_view')}
-                                        </ActionButtonView>
-                                    ) : (
-                                        <ActionButton
-                                            onClick={() => handlePurchaseClick(novel)}
-                                            disabled={loadingNovelId === novel.id}
-                                            >
-                                            {loadingNovelId === novel.id ? t('friend_novel_buying') : t('friend_novel_buy')}
-                                        </ActionButton>
-                                    )}
                                 </NovelItem>
                             ))
                         )}
