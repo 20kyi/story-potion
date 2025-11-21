@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
+import BackIcon from '../../components/icons/BackIcon';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { parseNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
@@ -187,9 +188,12 @@ const PurchaseCount = styled.div`
 const NovelContent = styled.div`
   font-size: ${({ fontSize }) => fontSize || 16}px;
   line-height: ${({ lineHeight }) => lineHeight || 1.8};
-  color: ${({ readTheme, theme }) => {
-        if (readTheme === 'sepia') return '#5c4b37';
-        if (readTheme === 'dark') return '#e8e8e8';
+  color: ${({ readTheme, theme, isReadingMode }) => {
+        if (isReadingMode) {
+            if (readTheme === 'sepia') return '#5c4b37';
+            if (readTheme === 'dark') return '#e8e8e8';
+            return '#333';
+        }
         return theme.cardText;
     }};
   white-space: pre-line;
@@ -204,7 +208,7 @@ const NovelContent = styled.div`
     }};
   border-radius: ${({ isReadingMode }) => isReadingMode ? '0' : '15px'};
   font-family: ${({ isReadingMode }) => isReadingMode ? '"Noto Serif KR", "Nanum Myeongjo", serif' : 'inherit'};
-  text-align: ${({ textAlign }) => textAlign || 'left'};
+  text-align: ${({ textAlign, isReadingMode }) => isReadingMode ? (textAlign || 'left') : 'left'};
   max-width: ${({ isReadingMode }) => isReadingMode ? '680px' : '100%'};
   margin: ${({ isReadingMode }) => isReadingMode ? '0 auto' : '0'};
   min-height: ${({ isReadingMode }) => isReadingMode ? 'calc(100vh - 80px)' : 'auto'};
@@ -212,9 +216,12 @@ const NovelContent = styled.div`
 
   /* 다크모드 대응 */
   body.dark & {
-    color: ${({ readTheme }) => {
-        if (readTheme === 'sepia') return '#5c4b37';
-        if (readTheme === 'dark') return '#e8e8e8';
+    color: ${({ readTheme, isReadingMode }) => {
+        if (isReadingMode) {
+            if (readTheme === 'sepia') return '#5c4b37';
+            if (readTheme === 'dark') return '#e8e8e8';
+            return '#333';
+        }
         return '#f1f1f1';
     }};
     background: ${({ readTheme, isReadingMode }) => {
@@ -1117,8 +1124,14 @@ function NovelView({ user }) {
                         }}
                     >
                         <ReadingControls readTheme={readTheme} data-settings-area>
-                            <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
-                                ←
+                            <ControlButton readTheme={readTheme} onClick={() => {
+                                setShowSettings(false);
+                                setIsReadingMode(false);
+                            }}>
+                                <BackIcon
+                                    size={20}
+                                    color={readTheme === 'sepia' ? '#5c4b37' : readTheme === 'dark' ? '#e8e8e8' : '#333'}
+                                />
                             </ControlButton>
                             <ControlGroup>
                                 <ControlButton readTheme={readTheme} onClick={() => setShowSettings(!showSettings)}>
@@ -1294,7 +1307,10 @@ function NovelView({ user }) {
                 >
                     <ReadingControls readTheme={readTheme} data-settings-area>
                         <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
-                            ←
+                            <BackIcon
+                                size={20}
+                                color={readTheme === 'sepia' ? '#5c4b37' : readTheme === 'dark' ? '#e8e8e8' : '#333'}
+                            />
                         </ControlButton>
                         <ControlGroup>
                             <ControlButton readTheme={readTheme} onClick={() => setShowSettings(!showSettings)}>
@@ -1473,11 +1489,7 @@ function NovelView({ user }) {
                 </ReadingModeButton>
             </ActionButtonsContainer>
             <NovelContent
-                fontSize={fontSize}
-                lineHeight={lineHeight}
-                readTheme={readTheme}
                 isReadingMode={false}
-                textAlign={textAlign}
             >
                 {novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
 아직 내용이 준비되지 않았습니다.`}
