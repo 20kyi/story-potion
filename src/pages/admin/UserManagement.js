@@ -391,6 +391,40 @@ const MobileCardContainer = styled.div`
   }
 `;
 
+const EmptyTableRow = styled.tr`
+  border-bottom: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'};
+  height: 60px;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const EmptyTableCell = styled.td`
+  padding: 12px;
+  color: ${({ theme }) => theme.theme === 'dark' ? '#555' : '#ccc'};
+  font-style: italic;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const EmptyMobileCard = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: block;
+    background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
+    border: 1px dashed ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'};
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+    min-height: 120px;
+  }
+`;
+
 const MobileCardHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -603,9 +637,32 @@ function UserManagement({ user }) {
         where: opts.where || []
       });
       setUsers(loadedUsers);
-      setLastDoc(newLastDoc);
-      if (opts.isNext) setPageStack([...pageStack, lastDoc]);
-      if (opts.isPrev) setLastDoc(pageStack[pageStack.length - 2] || null);
+      
+      if (opts.isNext) {
+        // 다음 페이지로 이동: 현재 lastDoc을 스택에 저장하고 새로운 lastDoc 설정
+        setPageStack(prev => [...prev, lastDoc]);
+        setLastDoc(newLastDoc);
+      } else if (opts.isPrev) {
+        // 이전 페이지로 이동: 스택에서 마지막 항목 제거
+        setPageStack(prev => {
+          const newStack = [...prev];
+          newStack.pop();
+          // 첫 페이지로 돌아간 경우: newLastDoc 사용 (다음 페이지로 갈 수 있도록)
+          // 그 외: 스택의 마지막 항목 사용
+          if (newStack.length === 0) {
+            // 첫 페이지로 돌아간 경우
+            setLastDoc(newLastDoc);
+          } else {
+            // 중간 페이지로 돌아간 경우
+            setLastDoc(newStack[newStack.length - 1]);
+          }
+          return newStack;
+        });
+      } else {
+        // 일반 로드 (정렬 변경 등): 스택 초기화하고 새로운 lastDoc 설정
+        setPageStack([]);
+        setLastDoc(newLastDoc);
+      }
     } catch (e) {
       setStatus({ type: 'error', message: '유저 목록 불러오기 실패: ' + e.message });
     } finally {
@@ -641,12 +698,17 @@ function UserManagement({ user }) {
   };
 
   // 다음/이전 페이지
-  const handleNextPage = () => loadUsersPage({ startAfter: lastDoc, isNext: true });
+  const handleNextPage = () => {
+    loadUsersPage({ startAfter: lastDoc, isNext: true });
+  };
+  
   const handlePrevPage = () => {
+    if (pageStack.length === 0) return; // 첫 페이지면 아무것도 하지 않음
+    
     const prevStack = [...pageStack];
     prevStack.pop();
-    setPageStack(prevStack);
-    loadUsersPage({ startAfter: prevStack[prevStack.length - 1] || null, isPrev: true });
+    const prevLastDoc = prevStack.length > 0 ? prevStack[prevStack.length - 1] : null;
+    loadUsersPage({ startAfter: prevLastDoc, isPrev: true });
   };
 
   // 샘플 사용자 생성 및 저장
@@ -1526,6 +1588,14 @@ function UserManagement({ user }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {/* 빈 행 추가 (10명 미만일 때) */}
+              {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
+                <EmptyTableRow key={`empty-${index}`} theme={theme}>
+                  <EmptyTableCell theme={theme} colSpan={6} style={{ textAlign: 'center' }}>
+                    -
+                  </EmptyTableCell>
+                </EmptyTableRow>
+              ))}
             </tbody>
           </UserTable>
         </div>
@@ -1554,6 +1624,21 @@ function UserManagement({ user }) {
                 <MobileCardValue theme={theme} style={{ fontSize: '12px' }}>{formatDate(user.createdAt)}</MobileCardValue>
               </MobileCardRow>
             </MobileUserCard>
+          ))}
+          {/* 빈 카드 추가 (10명 미만일 때) */}
+          {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
+            <EmptyMobileCard key={`empty-mobile-${index}`} theme={theme}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                height: '100%',
+                color: theme.theme === 'dark' ? '#555' : '#ccc',
+                fontSize: '14px'
+              }}>
+                -
+              </div>
+            </EmptyMobileCard>
           ))}
         </MobileCardContainer>
         
