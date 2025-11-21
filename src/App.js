@@ -60,6 +60,8 @@ import PurchasedNovels from './pages/novel/PurchasedNovels';
 import AppInfo from './pages/mypage/AppInfo';
 import { inAppPurchaseService } from './utils/inAppPurchase';
 import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
+import LoadingScreen from './components/LoadingScreen';
+import LoadingTest from './pages/LoadingTest';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -71,7 +73,9 @@ const AppLayout = ({ user, isLoading }) => {
         window.scrollTo(0, 0);
     }, [location.pathname]);
 
-    if (isLoading) return <div>로딩 중...</div>;
+    if (isLoading) {
+        return <LoadingScreen fullscreen={true} darkMode={false} text="로딩 중..." />;
+    }
 
     return (
         <div className="App">
@@ -113,6 +117,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
+                <Route path="/loading-test" element={user ? <LoadingTest user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
         </div>
