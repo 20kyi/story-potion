@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
+// import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile, getRedirectResult } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
@@ -134,10 +135,30 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // Firebase Auth redirect 결과 처리 (모바일 환경)
+        const handleRedirectResult = async () => {
+            if (Capacitor.getPlatform() !== 'web') {
+                try {
+                    const redirectResult = await getRedirectResult(auth);
+                    if (redirectResult) {
+                        console.log('✅ Firebase Auth redirect 결과 처리됨');
+                    }
+                } catch (error) {
+                    // redirect 결과가 없거나 이미 처리된 경우 (정상)
+                    console.log('Redirect 결과 없음 또는 이미 처리됨');
+                }
+            }
+        };
+
+        handleRedirectResult();
+
+        // 커스텀 OAuth 플로우 사용하므로 getRedirectResult는 사용하지 않음
+        // (localhost 문제 방지)
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
             setIsLoading(false);
-            
+
             // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
             if (user?.uid) {
                 try {
@@ -165,8 +186,8 @@ function App() {
                                     const currentUser = auth.currentUser;
                                     if (currentUser && token.value) {
                                         try {
-                                            await setDoc(doc(db, "users", currentUser.uid), { 
-                                                fcmToken: token.value 
+                                            await setDoc(doc(db, "users", currentUser.uid), {
+                                                fcmToken: token.value
                                             }, { merge: true });
                                             console.log('앱 FCM 토큰 Firestore 저장 완료:', token.value);
                                         } catch (error) {
@@ -192,8 +213,11 @@ function App() {
             }
         });
 
-        // 🔐 딥링크 리디렉션 처리
+        // 🔐 딥링크 및 HTTPS 리디렉션 처리
         CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+            console.log('🔗 appUrlOpen 이벤트 발생:', url);
+
+            // 커스텀 스킴 처리 (storypotion://auth)
             if (url.startsWith('storypotion://auth')) {
                 const hash = url.split('#')[1];
                 const params = new URLSearchParams(hash);
@@ -265,10 +289,108 @@ function App() {
                             }
                         }
 
-                        console.log('✅ Firebase 로그인 성공');
+                        console.log('✅ Firebase 로그인 성공 (커스텀 스킴)');
                     } catch (error) {
                         console.error('❌ Firebase 로그인 실패:', error);
                     }
+                }
+            }
+
+            // HTTPS redirect URI 처리 (Firebase의 공식 redirect URI)
+            if (url.includes('story-potion.firebaseapp.com/__/auth/handler') ||
+                url.includes('storypotion.firebaseapp.com/__/auth/handler')) {
+                console.log('🔗 HTTPS redirect URI 감지:', url);
+
+                try {
+                    // URL에서 id_token 추출
+                    let idToken = null;
+
+                    // Fragment (#) 방식
+                    if (url.includes('#')) {
+                        const hash = url.split('#')[1];
+                        const params = new URLSearchParams(hash);
+                        idToken = params.get('id_token');
+                    }
+
+                    // Query (? ) 방식 (백업)
+                    if (!idToken && url.includes('?')) {
+                        const query = url.split('?')[1].split('#')[0];
+                        const params = new URLSearchParams(query);
+                        idToken = params.get('id_token');
+                    }
+
+                    if (idToken) {
+                        console.log('✅ id_token 추출 성공');
+                        const credential = GoogleAuthProvider.credential(idToken);
+                        const result = await signInWithCredential(auth, credential);
+
+                        // 구글 로그인 성공 후 사용자 정보 처리 (App.js의 기존 로직 재사용)
+                        const user = result.user;
+                        const userRef = doc(db, 'users', user.uid);
+                        const userSnap = await getDoc(userRef);
+
+                        if (!userSnap.exists()) {
+                            const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
+                            const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
+
+                            await updateProfile(user, {
+                                displayName: googleDisplayName,
+                                photoURL: googlePhotoURL
+                            });
+
+                            await setDoc(userRef, {
+                                email: user.email || '',
+                                displayName: googleDisplayName,
+                                photoURL: googlePhotoURL,
+                                point: 100,
+                                createdAt: new Date(),
+                                authProvider: 'google.com',
+                                emailVerified: user.emailVerified || false,
+                                isActive: true,
+                                lastLoginAt: new Date(),
+                                updatedAt: new Date()
+                            });
+
+                            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                                type: 'earn',
+                                amount: 100,
+                                desc: '회원가입 축하 포인트',
+                                createdAt: new Date()
+                            });
+                        } else {
+                            const userData = userSnap.data();
+                            if (userData.status === '정지') {
+                                console.error('❌ 정지된 계정입니다.');
+                                await auth.signOut();
+                                return;
+                            }
+
+                            if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
+                                const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
+                                await updateDoc(userRef, {
+                                    photoURL: googlePhotoURL,
+                                    authProvider: 'google.com',
+                                    lastLoginAt: new Date(),
+                                    updatedAt: new Date()
+                                });
+
+                                await updateProfile(user, {
+                                    photoURL: googlePhotoURL
+                                });
+                            } else {
+                                await updateDoc(userRef, {
+                                    lastLoginAt: new Date(),
+                                    updatedAt: new Date()
+                                });
+                            }
+                        }
+
+                        console.log('✅ Firebase 로그인 성공 (HTTPS redirect)');
+                    } else {
+                        console.error('❌ id_token을 찾을 수 없습니다. URL:', url);
+                    }
+                } catch (error) {
+                    console.error('❌ HTTPS redirect 처리 실패:', error);
                 }
             }
         });
@@ -301,14 +423,14 @@ function App() {
         let pushReceivedListener = null;
         let pushActionListener = null;
         let localNotificationListener = null;
-        
+
         if (Capacitor.getPlatform() !== 'web') {
             // 포그라운드에서 푸시 알림 수신 시 처리 (한 번만 등록)
             if (!window.__pushReceivedListenerAdded) {
                 window.__pushReceivedListenerAdded = true;
                 pushReceivedListener = PushNotifications.addListener('pushNotificationReceived', async (notification) => {
                     console.log('포그라운드 푸시 알림 수신:', notification);
-                    
+
                     // 포그라운드에서도 LocalNotifications로 시스템 알림 표시
                     try {
                         const permissionStatus = await LocalNotifications.requestPermissions();
@@ -342,7 +464,7 @@ function App() {
                 pushActionListener = PushNotifications.addListener('pushNotificationActionPerformed', async (action) => {
                     console.log('푸시 알림 액션:', action);
                     const data = action.notification.data;
-                    
+
                     // 리마인더 알림인 경우 일기 작성 페이지로 이동
                     if (data?.type === 'diary_reminder') {
                         window.location.href = '/write-diary';
@@ -356,7 +478,7 @@ function App() {
                 localNotificationListener = LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
                     console.log('로컬 알림 액션:', action);
                     const data = action.notification.extra;
-                    
+
                     // 리마인더 알림인 경우 일기 작성 페이지로 이동
                     if (data?.type === 'diary_reminder') {
                         window.location.href = '/write-diary';

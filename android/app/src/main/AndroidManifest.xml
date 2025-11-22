@@ -40,7 +40,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                      android:host="storypotion.firebaseapp.com"/> <!-- ← 여기에 네 프로젝트 ID 넣기 -->
+                      android:host="story-potion.firebaseapp.com"/> <!-- Firebase 프로젝트의 authDomain -->
             </intent-filter>
         </activity>
 

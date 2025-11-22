@@ -91,94 +91,7 @@ function Login() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isMobile) {
-      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-        console.log('appUrlOpen 이벤트 발생! url:', url);
-        if (url && url.startsWith('storypotion://auth')) {
-          const hash = url.split('#')[1];
-          const params = new URLSearchParams(hash);
-          const idToken = params.get('id_token');
-          if (idToken) {
-            console.log('id_token 추출 성공:', idToken);
-            try {
-              const credential = GoogleAuthProvider.credential(idToken);
-              const result = await signInWithCredential(auth, credential);
-
-              // 구글 로그인 성공 후 사용자 정보 처리
-              const user = result.user;
-              const userRef = doc(db, 'users', user.uid);
-              const userSnap = await getDoc(userRef);
-
-              if (!userSnap.exists()) {
-                // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
-                const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-                const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-
-                // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
-                await updateProfile(user, {
-                  displayName: googleDisplayName,
-                  photoURL: googlePhotoURL
-                });
-
-                await setDoc(userRef, {
-                  email: user.email || '',
-                  displayName: googleDisplayName,
-                  photoURL: googlePhotoURL,
-                  point: 100,
-                  createdAt: new Date(),
-                  authProvider: 'google.com',
-                  emailVerified: user.emailVerified || false,
-                  isActive: true,
-                  lastLoginAt: new Date(),
-                  updatedAt: new Date()
-                });
-
-                // 회원가입 축하 포인트 히스토리 추가
-                await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-                  type: 'earn',
-                  amount: 100,
-                  desc: '회원가입 축하 포인트',
-                  createdAt: new Date()
-                });
-              } else {
-                const userData = userSnap.data();
-                if (userData.status === '정지') {
-                  setError('정지된 계정입니다. 관리자에게 문의하세요.');
-                  await auth.signOut();
-                  return;
-                }
-
-                // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
-                if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-                  const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-                  await updateDoc(userRef, {
-                    photoURL: googlePhotoURL,
-                    authProvider: 'google.com',
-                    lastLoginAt: new Date(),
-                    updatedAt: new Date()
-                  });
-
-                  // Firebase Auth도 업데이트
-                  await updateProfile(user, {
-                    photoURL: googlePhotoURL
-                  });
-                }
-              }
-
-              navigate('/');
-            } catch (e) {
-              console.error('Firebase 로그인 실패:', e);
-              setError('로그인 실패. 다시 시도해주세요.');
-            }
-          } else {
-            console.error('id_token 없음. URL:', url);
-            setError('로그인 실패: 토큰이 없습니다.');
-          }
-        }
-      });
-    }
-  }, []);
+  // HTTPS redirect URI를 사용하는 커스텀 OAuth 플로우
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -248,94 +161,136 @@ function Login() {
     }
   };
 
+  // Google 로그인 성공 후 사용자 정보 처리 공통 함수
+  const handleGoogleLoginSuccess = async (user) => {
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      // 신규 사용자 - 구글 프로필 정보 사용
+      const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
+      const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
+
+      // Firebase Auth 프로필 업데이트
+      await updateProfile(user, {
+        displayName: googleDisplayName,
+        photoURL: googlePhotoURL
+      });
+
+      // Firestore에 사용자 정보 저장
+      await setDoc(userRef, {
+        email: user.email || '',
+        displayName: googleDisplayName,
+        photoURL: googlePhotoURL,
+        point: 100,
+        createdAt: new Date(),
+        authProvider: 'google.com',
+        emailVerified: user.emailVerified || false,
+        isActive: true,
+        lastLoginAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      // 회원가입 축하 포인트 히스토리 추가
+      await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+        type: 'earn',
+        amount: 100,
+        desc: '회원가입 축하 포인트',
+        createdAt: new Date()
+      });
+    } else {
+      // 기존 사용자
+      const userData = userSnap.data();
+
+      if (userData.status === '정지') {
+        setError('정지된 계정입니다. 관리자에게 문의하세요.');
+        await auth.signOut();
+        return;
+      }
+
+      // 프로필 이미지 업데이트 (비어있거나 기본 이미지인 경우)
+      if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
+        const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
+        await updateDoc(userRef, {
+          photoURL: googlePhotoURL,
+          authProvider: 'google.com',
+          lastLoginAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        await updateProfile(user, {
+          photoURL: googlePhotoURL
+        });
+      } else {
+        // 마지막 로그인 시간만 업데이트
+        await updateDoc(userRef, {
+          lastLoginAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+  };
+
   const handleSocialLogin = async () => {
     console.log('구글 로그인 버튼 클릭됨');
-    const androidClientId = '607033226027-srdkp30ievjn5kjms4ds25n727muanh9.apps.googleusercontent.com';
-    const redirectUri = 'storypotion://auth';
-    const nonce = Math.random().toString(36).substring(2);
-
-    const authUrl =
-      'https://accounts.google.com/o/oauth2/v2/auth?' +
-      `client_id=${androidClientId}` +
-      `&redirect_uri=${redirectUri}` +
-      `&response_type=code` +
-      `&scope=openid%20email%20profile` +
-      `&nonce=${nonce}` +
-      `&prompt=consent`;
 
     try {
       if (isMobile) {
-        console.log('모바일 환경, 브라우저 오픈 시도');
+        // 모바일: HTTPS redirect URI를 사용하는 커스텀 OAuth 플로우
+        console.log('모바일 환경, HTTPS redirect URI 사용');
+
+        // Firebase 프로젝트의 웹 OAuth 클라이언트 ID 사용
+        const webClientId = '607033226027-8f2q1anu11vdm5usbdcv418um9jsvk1e.apps.googleusercontent.com';
+        // // 모바일 앱에서는 커스텀 URL 스킴 사용 (localhost 문제 방지)
+        // const redirectUri = 'storypotion://auth';
+        // Firebase의 공식 redirect URI 사용 (localhost 문제 없음)
+        const redirectUri = 'https://story-potion.firebaseapp.com/__/auth/handler';
+
+
+        // nonce 생성 (보안을 위해)
+        const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        // state 생성 (CSRF 방지)
+        const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        // 세션 스토리지에 저장 (리디렉션 후 확인용)
+        sessionStorage.setItem('google_oauth_state', state);
+        sessionStorage.setItem('google_oauth_nonce', nonce);
+
+        // OAuth URL 생성 (Authorization Code Flow with PKCE)
+        // 모바일에서는 id_token을 직접 받는 방식 사용
+        const authUrl =
+          'https://accounts.google.com/o/oauth2/v2/auth?' +
+          `client_id=${webClientId}` +
+          `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+          `&response_type=id_token` +
+          `&scope=openid%20email%20profile` +
+          `&nonce=${nonce}` +
+          `&state=${state}` +
+          `&prompt=consent`;
+
+        console.log('OAuth URL 생성 완료, 브라우저 열기');
         await Browser.open({ url: authUrl });
-        console.log('브라우저 오픈 성공');
+        console.log('브라우저 열기 성공');
+        // 리디렉션은 App.js에서 HTTPS URI로 처리됨
       } else {
+        // 웹: popup 사용
         console.log('웹 환경, signInWithPopup 시도');
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({
+          prompt: 'select_account'
+        });
         const result = await signInWithPopup(auth, provider);
-        // 소셜 로그인 성공 시 users/{userId} 문서 자동 생성
-        const user = result.user;
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          // 구글 프로필 정보 사용 (displayName과 photoURL 모두 구글에서 가져온 값 사용)
-          const googleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-          const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-
-          // Firebase Auth의 프로필 정보 업데이트 (구글 정보 유지)
-          await updateProfile(user, {
-            displayName: googleDisplayName,
-            photoURL: googlePhotoURL
-          });
-
-          await setDoc(userRef, {
-            email: user.email || '',
-            displayName: googleDisplayName,
-            photoURL: googlePhotoURL,
-            point: 100,
-            createdAt: new Date(),
-            authProvider: 'google.com',
-            emailVerified: user.emailVerified || false,
-            isActive: true,
-            lastLoginAt: new Date(),
-            updatedAt: new Date()
-          });
-
-          // 회원가입 축하 포인트 히스토리 추가
-          await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-            type: 'earn',
-            amount: 100,
-            desc: '회원가입 축하 포인트',
-            createdAt: new Date()
-          });
-        } else {
-          const userData = userSnap.data();
-          if (userData.status === '정지') {
-            setError('정지된 계정입니다. 관리자에게 문의하세요.');
-            await auth.signOut();
-            return;
-          }
-
-          // 기존 사용자의 경우 구글 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
-          if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-            const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-            await updateDoc(userRef, {
-              photoURL: googlePhotoURL,
-              authProvider: 'google.com',
-              lastLoginAt: new Date(),
-              updatedAt: new Date()
-            });
-
-            // Firebase Auth도 업데이트
-            await updateProfile(user, {
-              photoURL: googlePhotoURL
-            });
-          }
-        }
+        await handleGoogleLoginSuccess(result.user);
         navigate('/');
       }
     } catch (e) {
       console.error('Google 로그인 실패:', e);
-      setError('Google 로그인에 실패했습니다.');
+      setError('Google 로그인에 실패했습니다: ' + (e.message || '알 수 없는 오류'));
     }
   };
 
