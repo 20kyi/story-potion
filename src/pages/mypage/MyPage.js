@@ -48,7 +48,7 @@ import AppInfoIcon from '../../components/icons/AppInfoIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
-import { getFriendsList } from '../../utils/friendSystem';
+import { getFriendsList, subscribeToFriendRequests } from '../../utils/friendSystem';
 import { useTranslation } from '../../LanguageContext';
 
 // 관리자 아이콘 추가
@@ -397,6 +397,7 @@ const StatItem = styled.div`
   align-items: center;
   cursor: pointer;
   transition: opacity 0.2s ease;
+  position: relative;
 
   &:hover {
     opacity: 0.8;
@@ -414,6 +415,16 @@ const StatLabel = styled.span`
   font-size: 14px;
   color: #888;
   font-weight: 500;
+`;
+
+const FriendRequestBadge = styled.span`
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #e74c3c;
+  border-radius: 50%;
+  width: 6px;
+  height: 6px;
 `;
 
 const PremiumUpgradeCard = styled.div`
@@ -472,6 +483,7 @@ function MyPage({ user }) {
   const [friendCount, setFriendCount] = useState(0); // 친구 수
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFriendRequest, setHasFriendRequest] = useState(false); // 친구 요청 존재 여부
 
   // 네비게이션 및 테마
   const navigate = useNavigate();
@@ -564,6 +576,17 @@ function MyPage({ user }) {
         }
       };
       fetchFriendCount();
+    }
+  }, [user]);
+
+  // 친구 요청 실시간 감지
+  useEffect(() => {
+    if (user?.uid) {
+      const unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
+        const pendingRequests = requests.filter(req => req.status === 'pending');
+        setHasFriendRequest(pendingRequests.length > 0);
+      });
+      return unsubscribe;
     }
   }, [user]);
 
@@ -1111,6 +1134,7 @@ function MyPage({ user }) {
               <StatItem onClick={() => navigate('/my/friend')}>
                 <StatNumber>{friendCount}</StatNumber>
                 <StatLabel>{t('friends')}</StatLabel>
+                {hasFriendRequest && <FriendRequestBadge theme={theme} />}
               </StatItem>
 
             </StatsContainer>

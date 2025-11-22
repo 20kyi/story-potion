@@ -28,7 +28,6 @@ export const sendFriendRequestNotification = async (fromUserId, toUserId) => {
 
         // 알림 데이터 생성
         const notificationData = {
-            userId: toUserId,
             type: 'friend_request',
             title: '새로운 친구 요청',
             message: `${fromUser.displayName || '사용자'}님이 친구 요청을 보냈습니다.`,
@@ -41,8 +40,8 @@ export const sendFriendRequestNotification = async (fromUserId, toUserId) => {
             createdAt: Timestamp.now()
         };
 
-        // 알림 저장
-        await addDoc(collection(db, 'notifications'), notificationData);
+        // 알림 저장 (users/{userId}/notifications 서브컬렉션에 저장)
+        await addDoc(collection(db, 'users', toUserId, 'notifications'), notificationData);
 
         console.log('친구 요청 알림 전송 완료:', notificationData);
         return true;
@@ -74,7 +73,6 @@ export const sendFriendRequestAcceptedNotification = async (fromUserId, toUserId
 
         // 알림 데이터 생성
         const notificationData = {
-            userId: toUserId,
             type: 'friend_accepted',
             title: '친구 요청이 수락되었습니다',
             message: `${fromUser.displayName || '사용자'}님이 친구 요청을 수락했습니다.`,
@@ -87,8 +85,8 @@ export const sendFriendRequestAcceptedNotification = async (fromUserId, toUserId
             createdAt: Timestamp.now()
         };
 
-        // 알림 저장
-        await addDoc(collection(db, 'notifications'), notificationData);
+        // 알림 저장 (users/{userId}/notifications 서브컬렉션에 저장)
+        await addDoc(collection(db, 'users', toUserId, 'notifications'), notificationData);
 
         console.log('친구 요청 수락 알림 전송 완료:', notificationData);
         return true;
@@ -120,7 +118,6 @@ export const sendFriendRemovedNotification = async (fromUserId, toUserId) => {
 
         // 알림 데이터 생성
         const notificationData = {
-            userId: toUserId,
             type: 'friend_removed',
             title: '친구가 삭제되었습니다',
             message: `${fromUser.displayName || '사용자'}님이 친구 목록에서 삭제되었습니다.`,
@@ -133,8 +130,8 @@ export const sendFriendRemovedNotification = async (fromUserId, toUserId) => {
             createdAt: Timestamp.now()
         };
 
-        // 알림 저장
-        await addDoc(collection(db, 'notifications'), notificationData);
+        // 알림 저장 (users/{userId}/notifications 서브컬렉션에 저장)
+        await addDoc(collection(db, 'users', toUserId, 'notifications'), notificationData);
 
         console.log('친구 삭제 알림 전송 완료:', notificationData);
         return true;

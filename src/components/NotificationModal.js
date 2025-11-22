@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useTranslation } from '../LanguageContext';
@@ -164,6 +165,7 @@ const ModalFooter = styled.div`
 function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { actualTheme } = useTheme();
   const theme = actualTheme === 'dark' ? { card: '#2a2a2a', text: '#fff', subText: '#aaa', border: '#444', cardHover: '#333', primary: '#cb6565' } : { card: '#fff', text: '#333', subText: '#666', border: '#e0e0e0', cardHover: '#f5f5f5', primary: '#cb6565' };
@@ -194,7 +196,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
     }
   };
 
-  const markAsRead = async (notificationId) => {
+  const markAsRead = async (notificationId, notification) => {
     if (!user) return;
     
     try {
@@ -211,6 +213,12 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
         }
         return updated;
       });
+
+      // 친구 요청/수락 알림인 경우 친구 페이지로 이동
+      if (notification && (notification.type === 'friend_request' || notification.type === 'friend_accepted')) {
+        onClose();
+        navigate('/my/friend');
+      }
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
     }
@@ -289,7 +297,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
                   key={notification.id}
                   theme={theme}
                   $isRead={isRead}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => markAsRead(notification.id, notification)}
                 >
                   <NotificationItemContent>
                     {!isRead && <UnreadIndicator theme={theme} />}
