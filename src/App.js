@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -224,13 +224,21 @@ function App() {
                                 email: user.email || '',
                                 displayName: googleDisplayName,
                                 photoURL: googlePhotoURL,
-                                point: 0,
+                                point: 100,
                                 createdAt: new Date(),
                                 authProvider: 'google.com',
                                 emailVerified: user.emailVerified || false,
                                 isActive: true,
                                 lastLoginAt: new Date(),
                                 updatedAt: new Date()
+                            });
+
+                            // 회원가입 축하 포인트 히스토리 추가
+                            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                                type: 'earn',
+                                amount: 100,
+                                desc: '회원가입 축하 포인트',
+                                createdAt: new Date()
                             });
                         } else {
                             const userData = userSnap.data();

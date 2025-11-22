@@ -13,7 +13,7 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, db } from '../firebase';
 import {
@@ -125,13 +125,21 @@ function Login() {
                   email: user.email || '',
                   displayName: googleDisplayName,
                   photoURL: googlePhotoURL,
-                  point: 0,
+                  point: 100,
                   createdAt: new Date(),
                   authProvider: 'google.com',
                   emailVerified: user.emailVerified || false,
                   isActive: true,
                   lastLoginAt: new Date(),
                   updatedAt: new Date()
+                });
+
+                // 회원가입 축하 포인트 히스토리 추가
+                await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                  type: 'earn',
+                  amount: 100,
+                  desc: '회원가입 축하 포인트',
+                  createdAt: new Date()
                 });
               } else {
                 const userData = userSnap.data();
@@ -283,13 +291,21 @@ function Login() {
             email: user.email || '',
             displayName: googleDisplayName,
             photoURL: googlePhotoURL,
-            point: 0,
+            point: 100,
             createdAt: new Date(),
             authProvider: 'google.com',
             emailVerified: user.emailVerified || false,
             isActive: true,
             lastLoginAt: new Date(),
             updatedAt: new Date()
+          });
+
+          // 회원가입 축하 포인트 히스토리 추가
+          await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+            type: 'earn',
+            amount: 100,
+            desc: '회원가입 축하 포인트',
+            createdAt: new Date()
           });
         } else {
           const userData = userSnap.data();
