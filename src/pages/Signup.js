@@ -678,13 +678,17 @@ function Signup() {
               window.__pushRegListenerAdded = true;
               await PushNotifications.addListener('registration', async (token) => {
                 console.log('FCM 토큰:', token.value);
-                if (user && token.value) {
+                // auth.currentUser를 사용하여 항상 최신 사용자 정보 가져오기
+                const currentUser = auth.currentUser;
+                if (currentUser && token.value) {
                   try {
-                    await setDoc(doc(db, "users", user.uid), { fcmToken: token.value }, { merge: true });
+                    await setDoc(doc(db, "users", currentUser.uid), { fcmToken: token.value }, { merge: true });
                     console.log('FCM 토큰 Firestore 저장 완료:', token.value);
                   } catch (error) {
                     console.error('FCM 토큰 Firestore 저장 실패:', error);
                   }
+                } else {
+                  console.warn('FCM 토큰이 발급되었지만 사용자가 로그인하지 않았습니다.');
                 }
               });
             }

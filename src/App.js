@@ -8,6 +8,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 // 페이지 및 컴포넌트 임포트 생략 (기존 그대로)
 import Home from './pages/Home';
@@ -160,15 +161,19 @@ function App() {
                                 window.__pushRegListenerAdded = true;
                                 PushNotifications.addListener('registration', async (token) => {
                                     console.log('FCM 토큰 발급:', token.value);
-                                    if (user && token.value) {
+                                    // auth.currentUser를 사용하여 항상 최신 사용자 정보 가져오기
+                                    const currentUser = auth.currentUser;
+                                    if (currentUser && token.value) {
                                         try {
-                                            await setDoc(doc(db, "users", user.uid), { 
+                                            await setDoc(doc(db, "users", currentUser.uid), { 
                                                 fcmToken: token.value 
                                             }, { merge: true });
                                             console.log('앱 FCM 토큰 Firestore 저장 완료:', token.value);
                                         } catch (error) {
                                             console.error('FCM 토큰 Firestore 저장 실패:', error);
                                         }
+                                    } else {
+                                        console.warn('FCM 토큰이 발급되었지만 사용자가 로그인하지 않았습니다.');
                                     }
                                 });
 
@@ -285,12 +290,71 @@ function App() {
         }
 
         // FCM 푸시 알림 수신 리스너 등록 (모바일 환경에서만)
+        let pushReceivedListener = null;
+        let pushActionListener = null;
+        let localNotificationListener = null;
+        
         if (Capacitor.getPlatform() !== 'web') {
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('푸시 알림 수신:', notification);
-                // TODO: 필요시 Toast 등으로 표시
-                alert(notification.title + '\n' + notification.body);
-            });
+            // 포그라운드에서 푸시 알림 수신 시 처리 (한 번만 등록)
+            if (!window.__pushReceivedListenerAdded) {
+                window.__pushReceivedListenerAdded = true;
+                pushReceivedListener = PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+                    console.log('포그라운드 푸시 알림 수신:', notification);
+                    
+                    // 포그라운드에서도 LocalNotifications로 시스템 알림 표시
+                    try {
+                        const permissionStatus = await LocalNotifications.requestPermissions();
+                        if (permissionStatus.display === 'granted') {
+                            await LocalNotifications.schedule({
+                                notifications: [{
+                                    title: notification.title || '일기 작성 리마인더',
+                                    body: notification.body || notification.data?.message || '오늘의 일기를 잊지 마세요!',
+                                    id: Math.floor(Math.random() * 1000000),
+                                    sound: 'default',
+                                    extra: notification.data || {},
+                                }]
+                            });
+                            console.log('포그라운드 알림 표시 완료');
+                        } else {
+                            console.warn('LocalNotifications 권한이 없습니다.');
+                            // LocalNotifications 권한이 없으면 fallback으로 alert 사용
+                            alert((notification.title || '일기 작성 리마인더') + '\n' + (notification.body || notification.data?.message || '오늘의 일기를 잊지 마세요!'));
+                        }
+                    } catch (error) {
+                        console.error('포그라운드 알림 표시 실패:', error);
+                        // LocalNotifications 실패 시 fallback으로 alert 사용
+                        alert((notification.title || '일기 작성 리마인더') + '\n' + (notification.body || notification.data?.message || '오늘의 일기를 잊지 마세요!'));
+                    }
+                });
+            }
+
+            // 알림 클릭/액션 처리 (한 번만 등록)
+            if (!window.__pushActionListenerAdded) {
+                window.__pushActionListenerAdded = true;
+                pushActionListener = PushNotifications.addListener('pushNotificationActionPerformed', async (action) => {
+                    console.log('푸시 알림 액션:', action);
+                    const data = action.notification.data;
+                    
+                    // 리마인더 알림인 경우 일기 작성 페이지로 이동
+                    if (data?.type === 'diary_reminder') {
+                        window.location.href = '/write-diary';
+                    }
+                });
+            }
+
+            // LocalNotifications 클릭 처리 (한 번만 등록)
+            if (!window.__localNotificationListenerAdded) {
+                window.__localNotificationListenerAdded = true;
+                localNotificationListener = LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+                    console.log('로컬 알림 액션:', action);
+                    const data = action.notification.extra;
+                    
+                    // 리마인더 알림인 경우 일기 작성 페이지로 이동
+                    if (data?.type === 'diary_reminder') {
+                        window.location.href = '/write-diary';
+                    }
+                });
+            }
         }
 
         // 인앱 결제 초기화 (모바일 환경에서만)
@@ -304,7 +368,19 @@ function App() {
             });
         }
 
-        return () => unsubscribe();
+        // 컴포넌트 언마운트 시 리스너 정리
+        return () => {
+            unsubscribe();
+            if (pushReceivedListener) {
+                pushReceivedListener.remove();
+            }
+            if (pushActionListener) {
+                pushActionListener.remove();
+            }
+            if (localNotificationListener) {
+                localNotificationListener.remove();
+            }
+        };
     }, []);
 
     if (Capacitor.getPlatform() !== 'web') {

@@ -86,6 +86,27 @@ function NotificationSettings({ user }) {
                     });
                     setEventEnabled(!!data.eventEnabled);
                     setMarketingEnabled(!!data.marketingEnabled);
+
+                    // 모바일 앱에서 FCM 토큰 확인 및 현재 사용자로 동기화
+                    if (Capacitor.getPlatform() !== 'web') {
+                        try {
+                            const permStatus = await PushNotifications.checkPermissions();
+                            if (permStatus.receive === 'granted') {
+                                // 기존 토큰이 있으면 현재 사용자로 재저장
+                                if (data.fcmToken) {
+                                    const currentUser = auth.currentUser;
+                                    if (currentUser && currentUser.uid === user.uid) {
+                                        await saveFcmTokenToFirestore(currentUser.uid, data.fcmToken);
+                                        console.log('알림 설정 로드 시 FCM 토큰 현재 사용자로 동기화 완료');
+                                    }
+                                }
+                                // 토큰 재등록 시도 (registration 이벤트로 현재 사용자로 저장됨)
+                                await PushNotifications.register();
+                            }
+                        } catch (error) {
+                            console.error('알림 설정 로드 시 FCM 토큰 동기화 중 오류:', error);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('알림 설정 Firestore 불러오기 실패:', error);
@@ -136,10 +157,14 @@ function NotificationSettings({ user }) {
                 if (!window.__pushRegListenerAdded) {
                     window.__pushRegListenerAdded = true;
                     await PushNotifications.addListener('registration', async (token) => {
-                        console.log('FCM 토큰:', token.value, 'user:', user);
-                        if (user && token.value) {
-                            await saveFcmTokenToFirestore(user.uid, token.value);
+                        console.log('FCM 토큰:', token.value);
+                        // auth.currentUser를 사용하여 항상 최신 사용자 정보 가져오기
+                        const currentUser = auth.currentUser;
+                        if (currentUser && token.value) {
+                            await saveFcmTokenToFirestore(currentUser.uid, token.value);
                             console.log('앱 FCM 토큰 Firestore 저장 완료:', token.value);
+                        } else {
+                            console.warn('FCM 토큰이 발급되었지만 사용자가 로그인하지 않았습니다.');
                         }
                     });
                 }
@@ -220,7 +245,29 @@ function NotificationSettings({ user }) {
                     } catch (error) {
                         console.error('FCM 토큰 Firestore 저장 중 오류:', error);
                     }
-                } // 앱 환경에서는 이미 registration 리스너에서 저장됨
+                } else {
+                    // 모바일 앱 환경: 현재 사용자로 토큰 재저장 확인
+                    try {
+                        const permStatus = await PushNotifications.checkPermissions();
+                        if (permStatus.receive === 'granted') {
+                            // 토큰이 재발급되면 registration 리스너에서 자동으로 저장됨
+                            // 명시적으로 재등록하여 현재 사용자로 토큰 저장 보장
+                            await PushNotifications.register();
+                            console.log('모바일 앱 FCM 토큰 재등록 시도 (현재 사용자로 저장됨)');
+
+                            // Firestore에서 기존 토큰 확인 및 업데이트 시도
+                            const userDocRef = doc(db, "users", user.uid);
+                            const userDocSnap = await getDoc(userDocRef);
+                            if (userDocSnap.exists() && userDocSnap.data().fcmToken) {
+                                // 기존 토큰이 있으면 현재 사용자로 명시적으로 저장
+                                await saveFcmTokenToFirestore(user.uid, userDocSnap.data().fcmToken);
+                                console.log('기존 FCM 토큰을 현재 사용자로 재저장 완료');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('모바일 앱 FCM 토큰 저장 확인 중 오류:', error);
+                    }
+                }
             } else {
                 alert('알림 설정 저장에 실패했습니다.');
             }
