@@ -348,7 +348,7 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'transparent';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
-        if (children === '소설 만들기') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
+        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
@@ -356,7 +356,7 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        if (children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
@@ -364,7 +364,7 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
         if (isFree) return '2px solid #e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-        if (children === '소설 만들기') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
+        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
         return 'none';
     }};
@@ -377,8 +377,7 @@ const CreateButton = styled.button`
   font-weight: 700;
   font-family: inherit;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   box-shadow: ${({ children }) =>
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
@@ -386,14 +385,14 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'rgba(228, 163, 13, 0.1)';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
-        if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
+        if (children === '소설 만들기' || children === '다른 소설 생성') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
     color: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
-        if (children === '일기 채우기' || children === '소설 만들기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
+        if (children === '일기 채우기' || children === '소설 만들기' || children === '다른 소설 생성') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
         return '#fff';
     }};
     opacity: ${({ disabled }) => disabled ? 0.6 : 0.96};
@@ -995,17 +994,32 @@ const Novel = ({ user }) => {
                             });
                         };
 
+                        const handleViewNovel = () => {
+                            // 소설이 2개 이상이면 목록 모달 표시
+                            if (novelsForWeek.length > 1) {
+                                setSelectedWeekNovels(novelsForWeek);
+                            } else {
+                                // 소설이 1개면 바로 이동
+                                const novelKey = createNovelUrl(
+                                    currentDate.getFullYear(),
+                                    currentDate.getMonth() + 1,
+                                    week.weekNum,
+                                    firstNovel.genre
+                                );
+                                navigate(`/novel/${novelKey}`);
+                            }
+                        };
+
                         return (
                             <WeeklyCard key={week.weekNum}>
                                 <WeekTitle>
                                     <span>{t('week_num', { num: week.weekNum })}</span>
                                     {firstNovel && isCompleted && (
                                         <AddButton 
-                                            onClick={handleAddNovel} 
-                                            disabled={allGenresCreated}
-                                            title={allGenresCreated ? "모든 장르의 소설을 생성했습니다" : "다른 장르의 소설 만들기"}
+                                            onClick={handleViewNovel}
+                                            title="소설 보기"
                                         >
-                                            🔮
+                                            ☰
                                         </AddButton>
                                     )}
                                 </WeekTitle>
@@ -1059,23 +1073,10 @@ const Novel = ({ user }) => {
                                 {firstNovel ? (
                                     <CreateButton
                                         completed={true}
-                                        onClick={() => {
-                                            // 소설이 2개 이상이면 목록 모달 표시
-                                            if (novelsForWeek.length > 1) {
-                                                setSelectedWeekNovels(novelsForWeek);
-                                            } else {
-                                                // 소설이 1개면 바로 이동
-                                                const novelKey = createNovelUrl(
-                                                    currentDate.getFullYear(),
-                                                    currentDate.getMonth() + 1,
-                                                    week.weekNum,
-                                                    firstNovel.genre
-                                                );
-                                                navigate(`/novel/${novelKey}`);
-                                            }
-                                        }}
+                                        onClick={handleAddNovel}
+                                        disabled={allGenresCreated}
                                     >
-                                        {t('novel_view')}
+                                        {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
                                     </CreateButton>
                                 ) : (
                                     <CreateButton
