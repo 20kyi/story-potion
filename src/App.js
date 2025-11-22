@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 // import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
-import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
@@ -135,25 +135,10 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Firebase Auth redirect 결과 처리 (모바일 환경)
-        const handleRedirectResult = async () => {
-            if (Capacitor.getPlatform() !== 'web') {
-                try {
-                    const redirectResult = await getRedirectResult(auth);
-                    if (redirectResult) {
-                        console.log('✅ Firebase Auth redirect 결과 처리됨');
-                    }
-                } catch (error) {
-                    // redirect 결과가 없거나 이미 처리된 경우 (정상)
-                    console.log('Redirect 결과 없음 또는 이미 처리됨');
-                }
-            }
-        };
-
-        handleRedirectResult();
-
-        // 커스텀 OAuth 플로우 사용하므로 getRedirectResult는 사용하지 않음
-        // (localhost 문제 방지)
+        // 주의: 커스텀 OAuth 플로우를 사용하므로 getRedirectResult는 호출하지 않음
+        // 실제 구글 로그인은 appUrlOpen 이벤트 핸들러에서 처리됨
+        // getRedirectResult를 호출하면 "missing initial state" 에러가 발생할 수 있으며,
+        // 이는 실제 로그인 플로우에 영향을 줄 수 있으므로 완전히 제거함
 
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
@@ -209,6 +194,18 @@ function App() {
                     } catch (error) {
                         console.error('FCM 토큰 등록 중 오류:', error);
                     }
+                }
+            }
+        });
+
+        // 앱이 포그라운드로 돌아올 때 상태 확인
+        CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+            if (isActive) {
+                console.log('📱 앱이 활성화되었습니다. 로그인 상태 확인 중...');
+                // 앱이 활성화될 때 현재 사용자 상태 확인
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    console.log('✅ 사용자가 이미 로그인되어 있습니다:', currentUser.email);
                 }
             }
         });
@@ -296,10 +293,10 @@ function App() {
                 }
             }
 
-            // HTTPS redirect URI 처리 (Firebase의 공식 redirect URI)
-            if (url.includes('story-potion.firebaseapp.com/__/auth/handler') ||
-                url.includes('storypotion.firebaseapp.com/__/auth/handler')) {
-                console.log('🔗 HTTPS redirect URI 감지:', url);
+            // HTTPS redirect URI 처리 (story-potion.web.app 도메인)
+            // /oauth2redirect 경로 또는 루트 경로 모두 처리
+            if (url.includes('story-potion.web.app')) {
+                console.log('🔗 OAuth redirect URI 감지:', url);
 
                 try {
                     // URL에서 id_token 추출
@@ -320,9 +317,10 @@ function App() {
                     }
 
                     if (idToken) {
-                        console.log('✅ id_token 추출 성공');
+                        console.log('✅ id_token 추출 성공, 길이:', idToken.length);
                         const credential = GoogleAuthProvider.credential(idToken);
                         const result = await signInWithCredential(auth, credential);
+                        console.log('✅ Firebase credential 인증 성공, 사용자:', result.user.email);
 
                         // 구글 로그인 성공 후 사용자 정보 처리 (App.js의 기존 로직 재사용)
                         const user = result.user;
@@ -387,7 +385,11 @@ function App() {
 
                         console.log('✅ Firebase 로그인 성공 (HTTPS redirect)');
                     } else {
-                        console.error('❌ id_token을 찾을 수 없습니다. URL:', url);
+                        console.warn('⚠️ id_token을 찾을 수 없습니다. URL 구조 확인 필요');
+                        console.log('전체 URL:', url);
+                        console.log('Fragment 포함 여부:', url.includes('#'));
+                        console.log('Query 포함 여부:', url.includes('?'));
+                        // id_token이 없으면 OAuth 플로우가 완료되지 않은 것이므로 처리하지 않음
                     }
                 } catch (error) {
                     console.error('❌ HTTPS redirect 처리 실패:', error);

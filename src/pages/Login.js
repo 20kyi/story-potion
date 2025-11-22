@@ -241,10 +241,9 @@ function Login() {
 
         // Firebase 프로젝트의 웹 OAuth 클라이언트 ID 사용
         const webClientId = '607033226027-8f2q1anu11vdm5usbdcv418um9jsvk1e.apps.googleusercontent.com';
-        // // 모바일 앱에서는 커스텀 URL 스킴 사용 (localhost 문제 방지)
-        // const redirectUri = 'storypotion://auth';
-        // Firebase의 공식 redirect URI 사용 (localhost 문제 없음)
-        const redirectUri = 'https://story-potion.firebaseapp.com/__/auth/handler';
+        // HTTPS redirect URI 사용 (Google OAuth Console에 등록 가능)
+        // oauth2redirect 페이지에서 앱으로 리디렉션 처리
+        const redirectUri = 'https://story-potion.web.app/oauth2redirect';
 
 
         // nonce 생성 (보안을 위해)
@@ -258,8 +257,15 @@ function Login() {
           .join('');
 
         // 세션 스토리지에 저장 (리디렉션 후 확인용)
-        sessionStorage.setItem('google_oauth_state', state);
-        sessionStorage.setItem('google_oauth_nonce', nonce);
+        // sessionStorage 접근 불가능한 환경에서는 에러 무시하고 계속 진행
+        try {
+          sessionStorage.setItem('google_oauth_state', state);
+          sessionStorage.setItem('google_oauth_nonce', nonce);
+        } catch (storageError) {
+          console.warn('⚠️ sessionStorage 접근 불가 (OAuth 플로우는 계속 진행):', storageError);
+          // sessionStorage 접근 불가능해도 OAuth 플로우는 계속 진행
+          // state와 nonce는 URL 파라미터로 전달되므로 문제없음
+        }
 
         // OAuth URL 생성 (Authorization Code Flow with PKCE)
         // 모바일에서는 id_token을 직접 받는 방식 사용
@@ -274,9 +280,17 @@ function Login() {
           `&prompt=consent`;
 
         console.log('OAuth URL 생성 완료, 브라우저 열기');
+
+        // 브라우저가 닫힐 때를 감지 (사용자가 취소하거나 완료했을 때)
+        Browser.addListener('browserFinished', () => {
+          console.log('브라우저가 닫혔습니다. 로그인 상태 확인 중...');
+          // appUrlOpen 이벤트가 발생하지 않았다면 사용자가 취소한 것일 수 있음
+          // 하지만 로그인 성공 시에는 appUrlOpen이 먼저 발생하므로 여기서는 로그만 남김
+        });
+
         await Browser.open({ url: authUrl });
         console.log('브라우저 열기 성공');
-        // 리디렉션은 App.js에서 HTTPS URI로 처리됨
+        // 리디렉션은 App.js의 appUrlOpen 이벤트에서 storypotion://auth로 처리됨
       } else {
         // 웹: popup 사용
         console.log('웹 환경, signInWithPopup 시도');

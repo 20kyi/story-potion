@@ -16,6 +16,10 @@
     ],
     "rewrites": [
       {
+        "source": "/oauth2redirect",
+        "destination": "/oauth2redirect.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

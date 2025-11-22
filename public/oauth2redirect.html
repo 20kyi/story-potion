@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Story Potion 로그인 중...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+        (function () {
+            try {
+                var hash = window.location.hash || "";
+                var target = "storypotion://auth" + hash;
+
+                // 자동으로 앱 열기 시도
+                setTimeout(function () {
+                    window.location.href = target;
+                }, 100);
+
+                // 혹시 자동 이동이 막혔을 때를 대비해서 버튼도 보여줌
+                window.__sp_openApp = function () {
+                    window.location.href = target;
+                };
+            } catch (e) {
+                console.error("oauth2redirect 처리 중 오류:", e);
+            }
+        })();
+    </script>
+</head>
+
+<body style="font-family:sans-serif;text-align:center;margin-top:40px;">
+    <p>스토리포션 앱으로 이동 중입니다...</p>
+    <p style="margin-top:20px;">자동으로 이동하지 않으면 아래 버튼을 눌러주세요.</p>
+    <button style="
+        padding:10px 20px;
+        border-radius:8px;
+        border:none;
+        background:#e46262;
+        color:#fff;
+        font-size:14px;
+      " onclick="window.__sp_openApp()">
+        앱으로 돌아가기
+    </button>
+</body>
+
+</html>
