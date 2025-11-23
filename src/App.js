@@ -28,6 +28,7 @@ import Signup from './pages/Signup';
 import TermsAgreement from './pages/TermsAgreement';
 import NovelListByGenre from './pages/novel/NovelListByGenre';
 import { ToastProvider } from './components/ui/ToastProvider';
+import { RiKakaoTalkFill } from 'react-icons/ri';
 import Statistics from './pages/mypage/Statistics';
 import Settings from './pages/mypage/Settings';
 import NotificationSettings from './pages/mypage/NotificationSettings';
@@ -262,6 +263,8 @@ const KakaoCallback = () => {
                                     }
 
                                     console.log('✅ 카카오 로그인 성공 (Firebase Auth)');
+                                    // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                    window.dispatchEvent(new Event('kakaoLoginSuccess'));
                                     window.__kakaoCallbackProcessing = false;
                                     window.__kakaoCallbackHandled = false; // 성공 시 플래그 리셋
                                     window.location.href = '/';
@@ -366,7 +369,124 @@ const KakaoCallback = () => {
         }
     }, []);
 
-    return <div>카카오 로그인 처리 중...</div>;
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+        }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '32px',
+                animation: 'fadeIn 0.3s ease-in-out'
+            }}>
+                {/* 카카오 아이콘 */}
+                <div style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #FEE500 0%, #FDD835 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#3c1e1e',
+                    boxShadow: '0 8px 24px rgba(254, 229, 0, 0.3)',
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                }}>
+                    <RiKakaoTalkFill size={70} /> {/* 카카오 아이콘 크기 */}
+                </div>
+
+                {/* 로딩 텍스트 */}
+                <div style={{
+                    textAlign: 'center',
+                    color: '#333'
+                }}>
+                    <h2 style={{
+                        margin: '0 0 12px 0',
+                        fontSize: '24px',
+                        fontWeight: '700',
+                        color: '#3c1e1e'
+                    }}>
+                        카카오 로그인 처리 중
+                    </h2>
+                    <p style={{
+                        margin: 0,
+                        fontSize: '16px',
+                        color: '#666',
+                        opacity: 0.8
+                    }}>
+                        잠시만 기다려주세요
+                    </p>
+                </div>
+
+                {/* 로딩 인디케이터 */}
+                <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    {[0, 1, 2].map((index) => (
+                        <div
+                            key={index}
+                            style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: '#FEE500',
+                                animation: `bounce 1.4s ease-in-out infinite`,
+                                animationDelay: `${index * 0.2}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <style>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                @keyframes pulse {
+                    0%, 100% {
+                        transform: scale(1);
+                        box-shadow: 0 8px 24px rgba(254, 229, 0, 0.3);
+                    }
+                    50% {
+                        transform: scale(1.05);
+                        box-shadow: 0 12px 32px rgba(254, 229, 0, 0.4);
+                    }
+                }
+
+                @keyframes bounce {
+                    0%, 80%, 100% {
+                        transform: scale(0.8);
+                        opacity: 0.5;
+                    }
+                    40% {
+                        transform: scale(1.2);
+                        opacity: 1;
+                    }
+                }
+            `}</style>
+        </div>
+    );
 };
 
 function App() {
@@ -619,6 +739,8 @@ function App() {
                                     if (result.data.customToken) {
                                         await signInWithCustomToken(auth, result.data.customToken);
                                         console.log('✅ 카카오 로그인 성공 (기존 사용자)');
+                                        // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                        window.dispatchEvent(new Event('kakaoLoginSuccess'));
                                     }
                                 } else {
                                     // 신규 사용자 - 커스텀 토큰으로 사용자 생성
@@ -655,6 +777,8 @@ function App() {
                                         });
 
                                         console.log('✅ 카카오 로그인 성공 (신규 사용자)');
+                                        // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                        window.dispatchEvent(new Event('kakaoLoginSuccess'));
                                     }
                                 }
                             } else {

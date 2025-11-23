@@ -737,9 +737,9 @@ function Login() {
             </Form>
             <Divider>또는</Divider>
             <SocialLoginContainer>
-              <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle /></SocialButton>
-              <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple /></SocialButton>
-              <SocialButton color="#FEE500" onClick={handleKakaoLogin}><RiKakaoTalkFill style={{ color: '#3c1e1e' }} /></SocialButton>
+              <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle size={16} /></SocialButton>
+              <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple size={16} /></SocialButton>
+              <SocialButton color="#FEE500" onClick={handleKakaoLogin}><RiKakaoTalkFill size={16} style={{ color: '#3c1e1e' }} /></SocialButton>
               <SocialButton><NaverIcon>N</NaverIcon></SocialButton>
             </SocialLoginContainer>
             <SignupLink>

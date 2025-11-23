@@ -211,9 +211,14 @@ export const SocialButton = styled.button`
   border: 1px solid #eee;
   background-color: #fff;
   cursor: pointer;
-  font-size: 24px;
   color: ${props => props.color};
   transition: all 0.2s;
+
+  // 소셜 버튼 아이콘 크기
+  svg {
+    width: 26px;
+    height: 26px;
+  }
 
   &:hover {
     opacity: 0.8;
@@ -224,7 +229,7 @@ export const SocialButton = styled.button`
 export const NaverIcon = styled.div`
   color: #fff;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 26px;
   width: 100%;
   height: 100%;
   border-radius: 50%;
