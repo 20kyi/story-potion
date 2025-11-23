@@ -309,78 +309,12 @@ function Login() {
 
   const handleAppleLogin = async () => {
     console.log('애플 로그인 버튼 클릭됨');
-    try {
-      const provider = new OAuthProvider('apple.com');
-      provider.addScope('email');
-      provider.addScope('name');
+    alert('애플 로그인은 현재 준비 중입니다. 곧 제공될 예정입니다.');
+  };
 
-      const result = await signInWithPopup(auth, provider);
-      // 애플 로그인 성공 시 users/{userId} 문서 자동 생성
-      const user = result.user;
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        // 애플 프로필 정보 사용
-        const appleDisplayName = user.displayName || user.email?.split('@')[0] || '사용자';
-        const applePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
-
-        // Firebase Auth의 프로필 정보 업데이트
-        await updateProfile(user, {
-          displayName: appleDisplayName,
-          photoURL: applePhotoURL
-        });
-
-        await setDoc(userRef, {
-          email: user.email || '',
-          displayName: appleDisplayName,
-          photoURL: applePhotoURL,
-          point: 0,
-          createdAt: new Date(),
-          authProvider: 'apple.com',
-          emailVerified: user.emailVerified || false,
-          isActive: true,
-          lastLoginAt: new Date(),
-          updatedAt: new Date()
-        });
-      } else {
-        const userData = userSnap.data();
-        if (userData.status === '정지') {
-          setError('정지된 계정입니다. 관리자에게 문의하세요.');
-          await auth.signOut();
-          return;
-        }
-
-        // 기존 사용자의 경우 애플 프로필 정보로 업데이트 (photoURL이 비어있거나 기본 이미지인 경우)
-        if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
-          const applePhotoURL = user.photoURL || process.env.PUBLIC_URL + '/default-profile.svg';
-          await updateDoc(userRef, {
-            photoURL: applePhotoURL,
-            authProvider: 'apple.com',
-            lastLoginAt: new Date(),
-            updatedAt: new Date()
-          });
-
-          // Firebase Auth도 업데이트
-          if (user.photoURL) {
-            await updateProfile(user, {
-              photoURL: applePhotoURL
-            });
-          }
-        } else {
-          // 마지막 로그인 시간만 업데이트
-          await updateDoc(userRef, {
-            authProvider: 'apple.com',
-            lastLoginAt: new Date(),
-            updatedAt: new Date()
-          });
-        }
-      }
-      navigate('/');
-    } catch (e) {
-      console.error('Apple 로그인 실패:', e);
-      setError('Apple 로그인에 실패했습니다.');
-    }
+  const handleNaverLogin = async () => {
+    console.log('네이버 로그인 버튼 클릭됨');
+    alert('네이버 로그인은 현재 준비 중입니다. 곧 제공될 예정입니다.');
   };
 
   const handleKakaoLogin = async () => {
@@ -738,9 +672,9 @@ function Login() {
             <Divider>또는</Divider>
             <SocialLoginContainer>
               <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle size={16} /></SocialButton>
-              <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple size={16} /></SocialButton>
               <SocialButton color="#FEE500" onClick={handleKakaoLogin}><RiKakaoTalkFill size={16} style={{ color: '#3c1e1e' }} /></SocialButton>
-              <SocialButton><NaverIcon>N</NaverIcon></SocialButton>
+              <SocialButton onClick={handleNaverLogin}><NaverIcon>N</NaverIcon></SocialButton>
+              <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple size={16} /></SocialButton>
             </SocialLoginContainer>
             <SignupLink>
               계정이 없으신가요?
