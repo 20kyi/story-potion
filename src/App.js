@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 // import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -135,6 +136,135 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // 웹 환경에서 카카오 콜백 처리
+        if (Capacitor.getPlatform() === 'web' && window.location.pathname === '/auth/kakao/callback') {
+            const handleKakaoCallback = async () => {
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const code = urlParams.get('code');
+                    const state = urlParams.get('state');
+
+                    if (code) {
+                        console.log('🔗 웹 환경 카카오 콜백 처리');
+
+                        // state 검증
+                        try {
+                            const savedState = sessionStorage.getItem('kakao_oauth_state');
+                            if (state && savedState && state !== savedState) {
+                                console.error('❌ state 불일치 - CSRF 공격 가능성');
+                                window.location.href = '/login';
+                                return;
+                            }
+                            sessionStorage.removeItem('kakao_oauth_state');
+                        } catch (e) {
+                            console.warn('⚠️ sessionStorage 접근 불가, state 검증 건너뜀');
+                        }
+
+                        // Firebase Functions를 통해 카카오 인증 처리
+                        const functions = getFunctions();
+                        const kakaoAuth = httpsCallable(functions, 'kakaoAuth');
+                        const result = await kakaoAuth({
+                            code,
+                            redirectUri: window.location.origin + '/auth/kakao/callback'
+                        });
+
+                        if (result.data.success && result.data.userInfo) {
+                            const kakaoUserInfo = result.data.userInfo;
+
+                            // 카카오 사용자 정보로 Firebase 사용자 생성 또는 로그인
+                            const kakaoId = kakaoUserInfo.id.toString();
+                            const kakaoEmail = kakaoUserInfo.kakao_account?.email || `kakao_${kakaoId}@kakao.temp`;
+                            const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || kakaoUserInfo.properties?.nickname || '카카오 사용자';
+                            const kakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+
+                            // Firestore에서 카카오 ID로 기존 사용자 찾기
+                            const usersRef = collection(db, 'users');
+                            const q = query(usersRef, where('kakaoId', '==', kakaoId));
+                            const snapshot = await getDocs(q);
+
+                            if (!snapshot.empty) {
+                                // 기존 사용자
+                                const existingUserDoc = snapshot.docs[0];
+                                const userRef = doc(db, 'users', existingUserDoc.id);
+                                const userData = existingUserDoc.data();
+
+                                if (userData.status === '정지') {
+                                    console.error('❌ 정지된 계정입니다.');
+                                    await auth.signOut();
+                                    window.location.href = '/login';
+                                    return;
+                                }
+
+                                // 프로필 정보 업데이트
+                                await updateDoc(userRef, {
+                                    displayName: kakaoNickname,
+                                    photoURL: kakaoPhotoURL,
+                                    authProvider: 'kakao',
+                                    lastLoginAt: new Date(),
+                                    updatedAt: new Date()
+                                });
+
+                                // 커스텀 토큰으로 로그인
+                                if (result.data.customToken) {
+                                    await auth.signInWithCustomToken(result.data.customToken);
+                                    console.log('✅ 카카오 로그인 성공 (기존 사용자)');
+                                    window.location.href = '/';
+                                }
+                            } else {
+                                // 신규 사용자 - 커스텀 토큰으로 사용자 생성
+                                if (result.data.customToken) {
+                                    const userCredential = await auth.signInWithCustomToken(result.data.customToken);
+                                    const user = userCredential.user;
+                                    const userRef = doc(db, 'users', user.uid);
+
+                                    await updateProfile(user, {
+                                        displayName: kakaoNickname,
+                                        photoURL: kakaoPhotoURL
+                                    });
+
+                                    await setDoc(userRef, {
+                                        email: kakaoEmail,
+                                        displayName: kakaoNickname,
+                                        photoURL: kakaoPhotoURL,
+                                        point: 100,
+                                        createdAt: new Date(),
+                                        authProvider: 'kakao',
+                                        kakaoId: kakaoId,
+                                        emailVerified: false,
+                                        isActive: true,
+                                        lastLoginAt: new Date(),
+                                        updatedAt: new Date()
+                                    });
+
+                                    // 회원가입 축하 포인트 히스토리 추가
+                                    await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                                        type: 'earn',
+                                        amount: 100,
+                                        desc: '회원가입 축하 포인트',
+                                        createdAt: new Date()
+                                    });
+
+                                    console.log('✅ 카카오 로그인 성공 (신규 사용자)');
+                                    window.location.href = '/';
+                                }
+                            }
+                        } else {
+                            console.error('❌ 카카오 인증 실패:', result.data.error);
+                            window.location.href = '/login';
+                        }
+                    } else {
+                        console.warn('⚠️ 카카오 code를 찾을 수 없습니다.');
+                        window.location.href = '/login';
+                    }
+                } catch (error) {
+                    console.error('❌ 카카오 콜백 처리 실패:', error);
+                    window.location.href = '/login';
+                }
+            };
+
+            handleKakaoCallback();
+        }
+
         // 주의: 커스텀 OAuth 플로우를 사용하므로 getRedirectResult는 호출하지 않음
         // 실제 구글 로그인은 appUrlOpen 이벤트 핸들러에서 처리됨
         // getRedirectResult를 호출하면 "missing initial state" 에러가 발생할 수 있으며,
@@ -298,8 +428,132 @@ function App() {
             if (url.includes('story-potion.web.app')) {
                 console.log('🔗 OAuth redirect URI 감지:', url);
 
+                // 카카오 콜백 처리
+                if (url.includes('/auth/kakao/callback')) {
+                    console.log('🔗 카카오 콜백 URL 감지');
+                    try {
+                        // URL에서 code와 state 추출
+                        let code = null;
+                        let state = null;
+
+                        if (url.includes('?')) {
+                            const query = url.split('?')[1].split('#')[0];
+                            const params = new URLSearchParams(query);
+                            code = params.get('code');
+                            state = params.get('state');
+                        }
+
+                        if (code) {
+                            console.log('✅ 카카오 code 추출 성공');
+
+                            // state 검증
+                            try {
+                                const savedState = sessionStorage.getItem('kakao_oauth_state');
+                                if (state && savedState && state !== savedState) {
+                                    console.error('❌ state 불일치 - CSRF 공격 가능성');
+                                    return;
+                                }
+                                sessionStorage.removeItem('kakao_oauth_state');
+                            } catch (e) {
+                                console.warn('⚠️ sessionStorage 접근 불가, state 검증 건너뜀');
+                            }
+
+                            // Firebase Functions를 통해 카카오 인증 처리
+                            const functions = getFunctions();
+                            const kakaoAuth = httpsCallable(functions, 'kakaoAuth');
+                            const result = await kakaoAuth({ code, redirectUri: 'https://story-potion.web.app/auth/kakao/callback' });
+
+                            if (result.data.success && result.data.userInfo) {
+                                const kakaoUserInfo = result.data.userInfo;
+
+                                // 카카오 사용자 정보로 Firebase 사용자 생성 또는 로그인
+                                const kakaoId = kakaoUserInfo.id.toString();
+                                const kakaoEmail = kakaoUserInfo.kakao_account?.email || `kakao_${kakaoId}@kakao.temp`;
+                                const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || kakaoUserInfo.properties?.nickname || '카카오 사용자';
+                                const kakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+
+                                // Firestore에서 카카오 ID로 기존 사용자 찾기
+                                const usersRef = collection(db, 'users');
+                                const q = query(usersRef, where('kakaoId', '==', kakaoId));
+                                const snapshot = await getDocs(q);
+
+                                if (!snapshot.empty) {
+                                    // 기존 사용자
+                                    const existingUserDoc = snapshot.docs[0];
+                                    const userRef = doc(db, 'users', existingUserDoc.id);
+                                    const userData = existingUserDoc.data();
+
+                                    if (userData.status === '정지') {
+                                        console.error('❌ 정지된 계정입니다.');
+                                        await auth.signOut();
+                                        return;
+                                    }
+
+                                    // 프로필 정보 업데이트
+                                    await updateDoc(userRef, {
+                                        displayName: kakaoNickname,
+                                        photoURL: kakaoPhotoURL,
+                                        authProvider: 'kakao',
+                                        lastLoginAt: new Date(),
+                                        updatedAt: new Date()
+                                    });
+
+                                    // 커스텀 토큰으로 로그인
+                                    if (result.data.customToken) {
+                                        await auth.signInWithCustomToken(result.data.customToken);
+                                        console.log('✅ 카카오 로그인 성공 (기존 사용자)');
+                                    }
+                                } else {
+                                    // 신규 사용자 - 커스텀 토큰으로 사용자 생성
+                                    if (result.data.customToken) {
+                                        const userCredential = await auth.signInWithCustomToken(result.data.customToken);
+                                        const user = userCredential.user;
+                                        const userRef = doc(db, 'users', user.uid);
+
+                                        await updateProfile(user, {
+                                            displayName: kakaoNickname,
+                                            photoURL: kakaoPhotoURL
+                                        });
+
+                                        await setDoc(userRef, {
+                                            email: kakaoEmail,
+                                            displayName: kakaoNickname,
+                                            photoURL: kakaoPhotoURL,
+                                            point: 100,
+                                            createdAt: new Date(),
+                                            authProvider: 'kakao',
+                                            kakaoId: kakaoId,
+                                            emailVerified: false,
+                                            isActive: true,
+                                            lastLoginAt: new Date(),
+                                            updatedAt: new Date()
+                                        });
+
+                                        // 회원가입 축하 포인트 히스토리 추가
+                                        await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                                            type: 'earn',
+                                            amount: 100,
+                                            desc: '회원가입 축하 포인트',
+                                            createdAt: new Date()
+                                        });
+
+                                        console.log('✅ 카카오 로그인 성공 (신규 사용자)');
+                                    }
+                                }
+                            } else {
+                                console.error('❌ 카카오 인증 실패:', result.data.error);
+                            }
+                        } else {
+                            console.warn('⚠️ 카카오 code를 찾을 수 없습니다.');
+                        }
+                    } catch (error) {
+                        console.error('❌ 카카오 콜백 처리 실패:', error);
+                    }
+                    return; // 카카오 콜백 처리 완료
+                }
+
                 try {
-                    // URL에서 id_token 추출
+                    // URL에서 id_token 추출 (구글 로그인용)
                     let idToken = null;
 
                     // Fragment (#) 방식

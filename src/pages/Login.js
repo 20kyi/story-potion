@@ -14,7 +14,6 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, db } from '../firebase';
 import {
   Container, ContentWrapper, FormSection, LogoSection, Logo, Title,
@@ -384,6 +383,70 @@ function Login() {
     }
   };
 
+  const handleKakaoLogin = async () => {
+    console.log('카카오 로그인 버튼 클릭됨');
+    setError('');
+
+    try {
+      // 카카오 REST API 키 (환경 변수로 관리)
+      const KAKAO_REST_API_KEY = process.env.REACT_APP_KAKAO_REST_API_KEY;
+
+      console.log('카카오 REST API 키 확인:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
+
+      if (!KAKAO_REST_API_KEY || KAKAO_REST_API_KEY.trim() === '') {
+        setError('카카오 REST API 키가 설정되지 않았습니다. .env 파일에 REACT_APP_KAKAO_REST_API_KEY를 추가하고 개발 서버를 재시작해주세요.');
+        return;
+      }
+
+      // 리다이렉트 URI
+      const redirectUri = isMobile
+        ? 'https://story-potion.web.app/auth/kakao/callback'
+        : window.location.origin + '/auth/kakao/callback';
+
+      console.log('카카오 리다이렉트 URI:', redirectUri);
+      console.log('현재 origin:', window.location.origin);
+
+      // state 생성 (CSRF 방지)
+      const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // 세션 스토리지에 저장
+      try {
+        sessionStorage.setItem('kakao_oauth_state', state);
+      } catch (storageError) {
+        console.warn('⚠️ sessionStorage 접근 불가:', storageError);
+      }
+
+      // 카카오 OAuth URL 생성
+      const authUrl =
+        'https://kauth.kakao.com/oauth/authorize?' +
+        `client_id=${KAKAO_REST_API_KEY}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&state=${state}`;
+
+      console.log('카카오 OAuth URL 생성 완료, 브라우저 열기');
+
+      if (isMobile) {
+        // 모바일: Capacitor Browser 사용
+        Browser.addListener('browserFinished', () => {
+          console.log('카카오 로그인 브라우저가 닫혔습니다.');
+        });
+
+        await Browser.open({ url: authUrl });
+        console.log('브라우저 열기 성공');
+        // 리디렉션은 App.js의 appUrlOpen 이벤트에서 처리됨
+      } else {
+        // 웹: 새 창으로 열기
+        window.location.href = authUrl;
+      }
+    } catch (e) {
+      console.error('카카오 로그인 실패:', e);
+      setError('카카오 로그인에 실패했습니다: ' + (e.message || '알 수 없는 오류'));
+    }
+  };
+
   // 비밀번호 재설정 이메일 발송
   const handlePasswordReset = async (e) => {
     e.preventDefault();
@@ -676,7 +739,7 @@ function Login() {
             <SocialLoginContainer>
               <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle /></SocialButton>
               <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple /></SocialButton>
-              <SocialButton color="#FEE500"><RiKakaoTalkFill style={{ color: '#3c1e1e' }} /></SocialButton>
+              <SocialButton color="#FEE500" onClick={handleKakaoLogin}><RiKakaoTalkFill style={{ color: '#3c1e1e' }} /></SocialButton>
               <SocialButton><NaverIcon>N</NaverIcon></SocialButton>
             </SocialLoginContainer>
             <SignupLink>
