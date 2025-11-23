@@ -421,5 +421,6 @@
     "friend_sent_empty": "No sent friend requests.",
     "friend_sent_empty_sub": "When you send a friend request, it will appear here.",
     "friend_requests_tab": "Requests",
-    "google_password_notice": "If you logged in with a Google account, you can change your password in your Google account settings."
+    "google_password_notice": "If you logged in with a Google account, you can change your password in your Google account settings.",
+    "kakao_password_notice": "If you logged in with a Kakao account, you can change your password in your Kakao account settings."
 }

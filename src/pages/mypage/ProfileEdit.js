@@ -198,20 +198,39 @@ function ProfileEdit({ user }) {
   const [nicknameError, setNicknameError] = useState('');
   const [nicknameSuccess, setNicknameSuccess] = useState('');
 
+  // 인증 제공자 정보 (카카오 로그인 확인용)
+  const [authProvider, setAuthProvider] = useState(null);
+
   // 사용자 정보가 변경될 때 편집 폼 초기화
   useEffect(() => {
     if (user) {
-      setNewDisplayName(user.displayName || '');
-      setNewProfileImageUrl(user.photoURL || '');
-      setRemoveProfileImage(false);
-      // Firestore에서 휴대전화 번호 가져오기
+      // Firestore에서 사용자 정보 가져오기 (닉네임, 휴대전화번호, 인증 제공자 등)
       if (user?.uid) {
         getDoc(doc(db, "users", user.uid)).then((docSnap) => {
           if (docSnap.exists()) {
             const userData = docSnap.data();
-            setNewPhoneNumber(userData.phoneNumber || '');
+            // Firestore의 displayName을 우선 사용, 없으면 Firebase Auth의 displayName 사용
+            setNewDisplayName(userData.displayName || user.displayName || '');
+            setNewProfileImageUrl(userData.photoURL || user.photoURL || '');
+            // phoneNumber만 설정 (email이 들어가지 않도록 명확히 구분)
+            const phoneNumber = userData.phoneNumber;
+            setNewPhoneNumber(phoneNumber && typeof phoneNumber === 'string' ? phoneNumber : '');
+            setAuthProvider(userData.authProvider || null);
+          } else {
+            // Firestore 문서가 없는 경우 Firebase Auth 정보만 사용
+            setNewDisplayName(user.displayName || '');
+            setNewProfileImageUrl(user.photoURL || '');
+            setNewPhoneNumber('');
+            setAuthProvider(null);
           }
+          setRemoveProfileImage(false);
         });
+      } else {
+        // uid가 없는 경우
+        setNewDisplayName(user.displayName || '');
+        setNewProfileImageUrl(user.photoURL || '');
+        setNewPhoneNumber('');
+        setRemoveProfileImage(false);
       }
     }
   }, [user]);
@@ -374,7 +393,12 @@ function ProfileEdit({ user }) {
     setPwChangeSuccess('');
     
     // 1. 비밀번호 변경 로직 (입력값이 있을 때만)
-    if (user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (currentPassword || newPassword || confirmPassword)) {
+    // 구글 로그인 또는 카카오 로그인 사용자는 비밀번호 변경 불가
+    const isGoogleUser = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+    const isKakaoUser = authProvider === 'kakao';
+    const canChangePassword = !isGoogleUser && !isKakaoUser;
+    
+    if (user && canChangePassword && (currentPassword || newPassword || confirmPassword)) {
       if (!currentPassword || !newPassword || !confirmPassword) {
         setPwChangeError('모든 비밀번호 입력란을 채워주세요.');
         return;
@@ -546,8 +570,8 @@ function ProfileEdit({ user }) {
             />
           </EditInputWrap>
           
-          {/* 비밀번호 변경 입력창: 구글 로그인 사용자는 숨김 */}
-          {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (
+          {/* 비밀번호 변경 입력창: 구글/카카오 로그인 사용자는 숨김 */}
+          {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && authProvider !== 'kakao' && (
             <>
               <PasswordInputWrap>
                 <EditLabel htmlFor="current-password">현재 비밀번호</EditLabel>
@@ -617,8 +641,10 @@ function ProfileEdit({ user }) {
             </EditSaveButton>
           </EditButtonRow>
 
-          {/* 구글 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
-          {user && user.providerData && user.providerData.some(p => p.providerId === 'google.com') && (
+          {/* 구글/카카오 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
+          {user && (
+            (user.providerData && user.providerData.some(p => p.providerId === 'google.com')) || authProvider === 'kakao'
+          ) && (
             <div style={{
               textAlign: 'center',
               color: '#888',
@@ -631,7 +657,10 @@ function ProfileEdit({ user }) {
               wordBreak: 'keep-all',
               lineHeight: '1.5'
             }}>
-              {t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.'}
+              {user.providerData && user.providerData.some(p => p.providerId === 'google.com')
+                ? (t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.')
+                : (t('kakao_password_notice') || '카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다.')
+              }
             </div>
           )}
       </MainContainer>

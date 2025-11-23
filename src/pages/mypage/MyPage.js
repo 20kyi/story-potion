@@ -512,21 +512,56 @@ function MyPage({ user }) {
   const [nicknameError, setNicknameError] = useState('');
   const [nicknameSuccess, setNicknameSuccess] = useState('');
 
+  // 인증 제공자 정보 (카카오 로그인 확인용)
+  const [authProvider, setAuthProvider] = useState(null);
+
+  // Firestore에서 가져온 displayName (화면 표시용)
+  const [firestoreDisplayName, setFirestoreDisplayName] = useState('');
+  // Firestore에서 가져온 photoURL (화면 표시용)
+  const [firestorePhotoURL, setFirestorePhotoURL] = useState('');
 
   // 사용자 정보가 변경될 때 편집 폼 초기화
   useEffect(() => {
     if (user) {
-      setNewDisplayName(user.displayName || '');
-      setNewProfileImageUrl(user.photoURL || '');
-      setRemoveProfileImage(false);
-      // Firestore에서 휴대전화 번호 가져오기
+      // Firestore에서 사용자 정보 가져오기 (닉네임, 휴대전화번호, 인증 제공자 등)
       if (user?.uid) {
         getDoc(doc(db, "users", user.uid)).then((docSnap) => {
           if (docSnap.exists()) {
             const userData = docSnap.data();
-            setNewPhoneNumber(userData.phoneNumber || '');
+            // Firestore의 displayName을 우선 사용, 없으면 Firebase Auth의 displayName 사용
+            const displayName = userData.displayName || user.displayName || '';
+            const photoURL = userData.photoURL || user.photoURL || '';
+            setNewDisplayName(displayName);
+            setFirestoreDisplayName(displayName);
+            setFirestorePhotoURL(photoURL);
+            setNewProfileImageUrl(photoURL);
+            // phoneNumber만 설정 (email이 들어가지 않도록 명확히 구분)
+            const phoneNumber = userData.phoneNumber;
+            setNewPhoneNumber(phoneNumber && typeof phoneNumber === 'string' ? phoneNumber : '');
+            setAuthProvider(userData.authProvider || null);
+          } else {
+            // Firestore 문서가 없는 경우 Firebase Auth 정보만 사용
+            const displayName = user.displayName || '';
+            const photoURL = user.photoURL || '';
+            setNewDisplayName(displayName);
+            setFirestoreDisplayName(displayName);
+            setFirestorePhotoURL(photoURL);
+            setNewProfileImageUrl(photoURL);
+            setNewPhoneNumber('');
+            setAuthProvider(null);
           }
+          setRemoveProfileImage(false);
         });
+      } else {
+        // uid가 없는 경우
+        const displayName = user.displayName || '';
+        const photoURL = user.photoURL || '';
+        setNewDisplayName(displayName);
+        setFirestoreDisplayName(displayName);
+        setFirestorePhotoURL(photoURL);
+        setNewProfileImageUrl(photoURL);
+        setNewPhoneNumber('');
+        setRemoveProfileImage(false);
       }
     }
   }, [user]);
@@ -754,6 +789,11 @@ function MyPage({ user }) {
         phoneNumber: newPhoneNumber || ''
       });
 
+      // 화면 표시용 displayName과 photoURL도 업데이트
+      setFirestoreDisplayName(newDisplayName);
+      setFirestorePhotoURL(photoURL);
+      setNewProfileImageUrl(photoURL);
+
       alert('프로필이 성공적으로 업데이트되었습니다.');
       setIsEditing(false);
       setIsNicknameDuplicate(false);
@@ -766,7 +806,8 @@ function MyPage({ user }) {
 
   // 프리미엄 해지 함수 제거
 
-  const displayName = user?.displayName || user?.email?.split('@')[0] || '사용자';
+  // Firestore의 displayName을 우선 사용, 없으면 Firebase Auth의 displayName, 그것도 없으면 이메일 앞부분 또는 '사용자'
+  const displayName = firestoreDisplayName || user?.displayName || user?.email?.split('@')[0] || '사용자';
 
   return (
     <>
@@ -901,8 +942,8 @@ function MyPage({ user }) {
                 onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
               />
             </EditInputWrap>
-            {/* 비밀번호 변경 입력창: 구글 로그인 사용자는 숨김 */}
-            {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (
+            {/* 비밀번호 변경 입력창: 구글/카카오 로그인 사용자는 숨김 */}
+            {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && authProvider !== 'kakao' && (
               <>
                 <PasswordInputWrap>
                   <EditLabel htmlFor="current-password">현재 비밀번호</EditLabel>
@@ -971,7 +1012,12 @@ function MyPage({ user }) {
                     return;
                   }
                   // 1. 비밀번호 변경 로직 (입력값이 있을 때만)
-                  if (user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && (currentPassword || newPassword || confirmPassword)) {
+                  // 구글 로그인 또는 카카오 로그인 사용자는 비밀번호 변경 불가
+                  const isGoogleUser = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+                  const isKakaoUser = authProvider === 'kakao';
+                  const canChangePassword = !isGoogleUser && !isKakaoUser;
+                  
+                  if (user && canChangePassword && (currentPassword || newPassword || confirmPassword)) {
                     if (!currentPassword || !newPassword || !confirmPassword) {
                       setPwChangeError('모든 비밀번호 입력란을 채워주세요.');
                       return;
@@ -1011,8 +1057,10 @@ function MyPage({ user }) {
               >{t('save')}</EditSaveButton>
             </EditButtonRow>
 
-            {/* 구글 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
-            {user && user.providerData && user.providerData.some(p => p.providerId === 'google.com') && (
+            {/* 구글/카카오 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
+            {user && (
+              (user.providerData && user.providerData.some(p => p.providerId === 'google.com')) || authProvider === 'kakao'
+            ) && (
               <div style={{
                 textAlign: 'center',
                 color: '#888',
@@ -1025,7 +1073,10 @@ function MyPage({ user }) {
                 wordBreak: 'keep-all',
                 lineHeight: '1.5'
               }}>
-                {t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.'}
+                {user.providerData && user.providerData.some(p => p.providerId === 'google.com')
+                  ? (t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.')
+                  : (t('kakao_password_notice') || '카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다.')
+                }
               </div>
             )}
           </EditProfileCard>
@@ -1033,7 +1084,7 @@ function MyPage({ user }) {
           <>
             <ProfileContainer>
               <ProfileImage
-                src={getSafeProfileImageUrl(user?.photoURL)}
+                src={getSafeProfileImageUrl(firestorePhotoURL || user?.photoURL)}
                 alt="Profile"
                 onError={(e) => handleImageError(e)}
               />
