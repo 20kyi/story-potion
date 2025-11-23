@@ -67,6 +67,7 @@ import TermsOfService from './pages/mypage/TermsOfService';
 import PrivacyPolicy from './pages/mypage/PrivacyPolicy';
 import { inAppPurchaseService } from './utils/inAppPurchase';
 import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
+import { convertKakaoImageUrlToHttps } from './utils/profileImageUtils';
 import LoadingScreen from './components/LoadingScreen';
 import LoadingTest from './pages/LoadingTest';
 
@@ -293,6 +294,8 @@ const KakaoCallback = () => {
                                                 displayName: userData.displayName || user.displayName,
                                                 photoURL: userData.photoURL
                                             });
+                                            // 사용자 정보 갱신 (프로필이 즉시 반영되도록)
+                                            await user.reload();
                                         }
                                     }
 
@@ -710,7 +713,9 @@ function App() {
                                 const kakaoId = kakaoUserInfo.id.toString();
                                 const kakaoEmail = kakaoUserInfo.kakao_account?.email || `kakao_${kakaoId}@kakao.temp`;
                                 const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || kakaoUserInfo.properties?.nickname || '카카오 사용자';
-                                const kakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+                                const rawKakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+                                // 카카오 이미지 URL을 HTTPS로 변환 (모바일 앱에서 HTTP 이미지 로드 문제 해결)
+                                const kakaoPhotoURL = convertKakaoImageUrlToHttps(rawKakaoPhotoURL) || rawKakaoPhotoURL;
 
                                 // 먼저 커스텀 토큰으로 로그인 (Firestore 쓰기 전에 인증 필요)
                                 if (!result.data.customToken) {
@@ -754,6 +759,9 @@ function App() {
                                         photoURL: kakaoPhotoURL
                                     });
 
+                                    // 사용자 정보 갱신 (프로필이 즉시 반영되도록)
+                                    await user.reload();
+
                                     console.log('✅ 카카오 로그인 성공 (기존 사용자, 딥링크)');
                                 } else {
                                     // 신규 사용자 - Firestore에 사용자 정보 저장
@@ -785,6 +793,9 @@ function App() {
                                         desc: '회원가입 축하 포인트',
                                         createdAt: new Date()
                                     });
+
+                                    // 사용자 정보 갱신 (프로필이 즉시 반영되도록)
+                                    await user.reload();
 
                                     console.log('✅ 카카오 로그인 성공 (신규 사용자, 딥링크)');
                                 }
@@ -931,7 +942,9 @@ function App() {
                                 const kakaoId = kakaoUserInfo.id.toString();
                                 const kakaoEmail = kakaoUserInfo.kakao_account?.email || `kakao_${kakaoId}@kakao.temp`;
                                 const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || kakaoUserInfo.properties?.nickname || '카카오 사용자';
-                                const kakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+                                const rawKakaoPhotoURL = kakaoUserInfo.kakao_account?.profile?.profile_image_url || kakaoUserInfo.properties?.profile_image || process.env.PUBLIC_URL + '/default-profile.svg';
+                                // 카카오 이미지 URL을 HTTPS로 변환 (모바일 앱에서 HTTP 이미지 로드 문제 해결)
+                                const kakaoPhotoURL = convertKakaoImageUrlToHttps(rawKakaoPhotoURL) || rawKakaoPhotoURL;
 
                                 // 먼저 커스텀 토큰으로 로그인 (Firestore 쓰기 전에 인증 필요)
                                 if (!result.data.customToken) {
@@ -975,6 +988,9 @@ function App() {
                                         photoURL: kakaoPhotoURL
                                     });
 
+                                    // 사용자 정보 갱신 (프로필이 즉시 반영되도록)
+                                    await user.reload();
+
                                     console.log('✅ 카카오 로그인 성공 (기존 사용자)');
                                     // 로딩 상태 해제를 위한 전역 이벤트 발생
                                     window.dispatchEvent(new Event('kakaoLoginSuccess'));
@@ -1008,6 +1024,9 @@ function App() {
                                         desc: '회원가입 축하 포인트',
                                         createdAt: new Date()
                                     });
+
+                                    // 사용자 정보 갱신 (프로필이 즉시 반영되도록)
+                                    await user.reload();
 
                                     console.log('✅ 카카오 로그인 성공 (신규 사용자)');
                                     // 로딩 상태 해제를 위한 전역 이벤트 발생

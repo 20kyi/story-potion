@@ -3,6 +3,27 @@
  */
 
 /**
+ * 카카오 프로필 이미지 URL을 HTTPS로 변환
+ * @param {string} photoURL - 원본 카카오 프로필 이미지 URL
+ * @returns {string} HTTPS로 변환된 이미지 URL
+ */
+export const convertKakaoImageUrlToHttps = (photoURL) => {
+  if (!photoURL || typeof photoURL !== 'string') {
+    return null;
+  }
+
+  // 카카오 이미지 URL인지 확인 (k.kakaocdn.net 또는 dn.kakaocdn.net)
+  if (photoURL.includes('kakaocdn.net')) {
+    // HTTP를 HTTPS로 변환
+    if (photoURL.startsWith('http://')) {
+      return photoURL.replace('http://', 'https://');
+    }
+  }
+
+  return photoURL;
+};
+
+/**
  * Google 프로필 이미지 URL을 정리하여 반환
  * @param {string} photoURL - 원본 Google 프로필 이미지 URL
  * @returns {string} 정리된 이미지 URL
@@ -54,6 +75,12 @@ export const isValidProfileImageUrl = (photoURL) => {
 export const getSafeProfileImageUrl = (photoURL, fallbackUrl = '/default-profile.svg') => {
   if (!isValidProfileImageUrl(photoURL)) {
     return fallbackUrl;
+  }
+
+  // 카카오 프로필 이미지인 경우 HTTPS로 변환
+  if (photoURL.includes('kakaocdn.net')) {
+    const httpsUrl = convertKakaoImageUrlToHttps(photoURL);
+    return httpsUrl || fallbackUrl;
   }
 
   // Google 프로필 이미지인 경우 정리

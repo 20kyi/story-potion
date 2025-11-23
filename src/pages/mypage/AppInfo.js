@@ -6,6 +6,7 @@ import { useTheme } from '../../ThemeContext';
 import { auth, storage, db } from '../../firebase';
 import { ref, listAll, getMetadata, deleteObject } from 'firebase/storage';
 import { deleteUser } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   collection,
   query,
@@ -546,14 +547,38 @@ function AppInfo({ user }) {
       try {
         const currentUser = auth.currentUser;
         if (currentUser) {
-          await deleteUser(currentUser);
-          console.log('Firebase Auth 계정 삭제 완료');
+          // 먼저 클라이언트에서 삭제 시도
+          try {
+            await deleteUser(currentUser);
+            console.log('Firebase Auth 계정 삭제 완료 (클라이언트)');
+          } catch (clientError) {
+            console.warn('클라이언트에서 Auth 계정 삭제 실패, Firebase Functions로 시도:', clientError);
+            
+            // 클라이언트 삭제 실패 시 Firebase Functions를 통해 삭제 시도
+            // (소셜 로그인 계정의 경우 서버 측에서만 삭제 가능할 수 있음)
+            try {
+              const functions = getFunctions();
+              const deleteAuthAccounts = httpsCallable(functions, 'deleteAuthAccounts');
+              const result = await deleteAuthAccounts({ userIds: [currentUser.uid] });
+              
+              if (result.data.success > 0) {
+                console.log('Firebase Auth 계정 삭제 완료 (Functions)');
+              } else {
+                console.warn('Firebase Functions를 통한 삭제도 실패:', result.data);
+                // Functions 삭제 실패해도 계속 진행 (Firestore는 이미 삭제됨)
+              }
+            } catch (functionsError) {
+              console.error('Firebase Functions를 통한 Auth 계정 삭제 실패:', functionsError);
+              // Functions 삭제 실패해도 계속 진행 (Firestore는 이미 삭제됨)
+            }
+          }
         }
       } catch (error) {
         console.error('Firebase Auth 계정 삭제 실패:', error);
         // Auth 계정 삭제 실패해도 로그아웃은 진행
         await auth.signOut();
-        throw error;
+        // 에러를 throw하지 않고 계속 진행 (Firestore 데이터는 이미 삭제됨)
+        console.warn('Auth 계정 삭제는 실패했지만 Firestore 데이터는 삭제되었습니다.');
       }
 
       alert(t('account_delete_done', { count: deletedCount }));
