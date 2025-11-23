@@ -721,35 +721,26 @@ function Signup() {
     setError('');
     setIsSubmitting(true);
 
-    // 최종 이메일 중복 체크 (중요!)
+    // 최종 이메일 중복 체크 (Firestore에서만 - 구글/카카오 계정과 별도로 허용)
     try {
-      // 1. Firebase Auth에서 이메일 중복 체크
-      const signInMethods = await fetchSignInMethodsForEmail(auth, formData.email.trim());
-
-      // 2. Firestore에서도 이메일 중복 체크
+      // Firestore에서 이메일 중복 체크 (authProvider가 'password'인 경우에만 중복으로 처리)
       const usersRef = collection(db, 'users');
       const emailQuery = query(usersRef, where('email', '==', formData.email.trim().toLowerCase()));
       const querySnapshot = await getDocs(emailQuery);
 
-      // Auth에 있지만 Firestore에 없는 경우 (탈퇴한 회원)
-      if (signInMethods && signInMethods.length > 0 && querySnapshot.empty) {
-        // 탈퇴한 회원의 Auth 계정이 남아있는 경우
-        // 회원가입을 진행하되, 기존 Auth 계정은 무시하고 새로 생성
-        console.log('탈퇴한 회원의 Auth 계정이 남아있습니다. 새 계정을 생성합니다.');
-      } else if (signInMethods && signInMethods.length > 0) {
-        // Auth와 Firestore 모두에 있는 경우
-        setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
-        setIsEmailDuplicate(true);
-        setCurrentStep(1); // 1단계로 돌아가기
-        setIsSubmitting(false);
-        return;
-      } else if (!querySnapshot.empty) {
-        // Firestore에만 있는 경우
-        setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
-        setIsEmailDuplicate(true);
-        setCurrentStep(1); // 1단계로 돌아가기
-        setIsSubmitting(false);
-        return;
+      if (!querySnapshot.empty) {
+        // 같은 이메일이 있는 경우, authProvider 확인
+        const existingUser = querySnapshot.docs[0].data();
+        if (existingUser.authProvider === 'password') {
+          // 이미 이메일/비밀번호로 가입된 경우만 중복으로 처리
+          setError('이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.');
+          setIsEmailDuplicate(true);
+          setCurrentStep(1); // 1단계로 돌아가기
+          setIsSubmitting(false);
+          return;
+        }
+        // 구글/카카오 계정이 있는 경우는 허용 - 별도 계정으로 생성
+        console.log('구글/카카오 계정이 있지만 이메일 회원가입 허용 (별도 계정)');
       }
     } catch (error) {
       console.error('최종 이메일 중복 체크 실패:', error);
@@ -772,37 +763,15 @@ function Signup() {
         );
       } catch (createError) {
         if (createError.code === 'auth/email-already-in-use') {
-          // Auth에 계정이 있지만 Firestore에는 없는 경우 (탈퇴한 회원)
-          // Firebase Functions를 통해 Auth 계정 삭제 시도
-          try {
-            const functions = getFunctions();
-            const deleteOrphanAuthAccount = httpsCallable(functions, 'deleteOrphanAuthAccount');
-            const result = await deleteOrphanAuthAccount({ email: formData.email.trim() });
-
-            if (result.data.success) {
-              // Auth 계정 삭제 성공, 다시 회원가입 시도
-              userCredential = await createUserWithEmailAndPassword(
-                auth,
-                formData.email.trim(),
-                formData.password
-              );
-            } else {
-              // Functions가 없거나 실패한 경우
-              setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
-              setIsEmailDuplicate(true);
-              setCurrentStep(1);
-              setIsSubmitting(false);
-              return;
-            }
-          } catch (functionError) {
-            console.error('Firebase Functions 호출 실패:', functionError);
-            // Functions가 없거나 실패한 경우
-            setError('이 이메일은 이전에 사용되었습니다. 관리자에게 문의해주세요.');
-            setIsEmailDuplicate(true);
-            setCurrentStep(1);
-            setIsSubmitting(false);
-            return;
-          }
+          // Firebase Auth에 이미 같은 이메일이 있는 경우 (구글 계정 등)
+          // 구글 계정과 별도 계정으로 생성하려면 커스텀 토큰 필요
+          // 하지만 이메일/비밀번호 로그인을 위해 Firebase Auth를 사용해야 함
+          // 따라서 에러 메시지를 변경하여 안내
+          setError('이 이메일은 다른 로그인 방식(구글, 카카오 등)으로 이미 사용 중입니다. 해당 방식으로 로그인해주세요.');
+          setIsEmailDuplicate(true);
+          setCurrentStep(1);
+          setIsSubmitting(false);
+          return;
         } else {
           throw createError;
         }

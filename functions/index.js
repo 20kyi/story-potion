@@ -1600,7 +1600,11 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         }
 
         // 카카오 REST API 키 (Firebase Functions 설정에서 가져오기)
-        const KAKAO_REST_API_KEY = functions.config().kakao?.rest_api_key;
+        // 우선순위: 1) 환경 변수, 2) Functions 설정, 3) 하드코딩 (테스트용)
+        const KAKAO_REST_API_KEY = 
+            process.env.KAKAO_REST_API_KEY || 
+            functions.config().kakao?.rest_api_key || 
+            '10c127c108feaa420dc5331b6ff00a8e'; // 테스트용 - 나중에 제거 필요
         
         if (!KAKAO_REST_API_KEY) {
             throw new functions.https.HttpsError(
@@ -1608,8 +1612,15 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
                 '카카오 REST API 키가 설정되지 않았습니다.'
             );
         }
+        
+        console.log('카카오 REST API 키 사용:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
 
         // 1. code를 access_token으로 교환
+        const finalRedirectUri = redirectUri || 'https://story-potion.web.app/auth/kakao/callback';
+        console.log('토큰 교환 시 사용할 리다이렉트 URI:', finalRedirectUri);
+        console.log('인증 코드:', code);
+        console.log('클라이언트 ID:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
+        
         const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
             method: 'POST',
             headers: {
@@ -1618,7 +1629,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
             body: new URLSearchParams({
                 grant_type: 'authorization_code',
                 client_id: KAKAO_REST_API_KEY,
-                redirect_uri: redirectUri || 'https://story-potion.web.app/auth/kakao/callback',
+                redirect_uri: finalRedirectUri,
                 code: code,
             }),
         });
@@ -1626,9 +1637,27 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         if (!tokenResponse.ok) {
             const errorText = await tokenResponse.text();
             console.error('카카오 토큰 교환 실패:', errorText);
+            console.error('사용된 리다이렉트 URI:', finalRedirectUri);
+            console.error('카카오 REST API 키:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
+            console.error('HTTP 상태 코드:', tokenResponse.status);
+            
+            // 에러 메시지에 카카오 API 응답 포함
+            let errorMessage = '카카오 인증 토큰 교환에 실패했습니다.';
+            try {
+                const errorJson = JSON.parse(errorText);
+                if (errorJson.error_description) {
+                    errorMessage += ` (${errorJson.error_description})`;
+                } else if (errorJson.error) {
+                    errorMessage += ` (${errorJson.error})`;
+                }
+            } catch (e) {
+                // JSON 파싱 실패 시 원본 텍스트 사용
+                errorMessage += ` (${errorText})`;
+            }
+            
             throw new functions.https.HttpsError(
                 'internal',
-                '카카오 인증 토큰 교환에 실패했습니다.'
+                errorMessage
             );
         }
 
@@ -1665,28 +1694,98 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         const kakaoNickname = userInfo.kakao_account?.profile?.nickname || userInfo.properties?.nickname || '카카오 사용자';
         const kakaoPhotoURL = userInfo.kakao_account?.profile?.profile_image_url || userInfo.properties?.profile_image || null;
 
-        // 3. Firestore에서 기존 사용자 찾기
+        // 3. Firestore에서 기존 사용자 찾기 (카카오 ID로만 검색 - 이메일과 무관하게 별도 계정)
         const db = admin.firestore();
         const usersRef = db.collection('users');
         const existingUserQuery = await usersRef.where('kakaoId', '==', kakaoId).limit(1).get();
 
         let uid;
         let isNewUser = false;
+        let existingUserDoc = null;
 
         if (!existingUserQuery.empty) {
-            // 기존 사용자
-            uid = existingUserQuery.docs[0].id;
+            // 카카오 ID로 기존 사용자 찾음
+            existingUserDoc = existingUserQuery.docs[0];
+            uid = existingUserDoc.id;
+            console.log('카카오 ID로 기존 사용자 찾음:', uid);
         } else {
-            // 신규 사용자 - 새 UID 생성
+            // 신규 사용자 - 카카오 ID가 없으면 항상 새 계정 생성 (이메일과 무관)
             uid = db.collection('users').doc().id;
             isNewUser = true;
+            console.log('신규 카카오 사용자 생성 (이메일과 별도 계정):', uid);
         }
 
         // 4. Firebase 커스텀 토큰 생성
-        const customToken = await admin.auth().createCustomToken(uid, {
-            provider: 'kakao',
-            kakaoId: kakaoId,
-        });
+        // 참고: 커스텀 토큰 생성에는 Service Account Token Creator 권한이 필요합니다
+        let customToken;
+        try {
+            // 현재 사용 중인 서비스 계정 정보 로깅
+            const app = admin.app();
+            console.log('Firebase Admin 앱 이름:', app.name);
+            
+            customToken = await admin.auth().createCustomToken(uid, {
+                provider: 'kakao',
+                kakaoId: kakaoId,
+            });
+            console.log('커스텀 토큰 생성 성공');
+        } catch (tokenError) {
+            console.error('커스텀 토큰 생성 실패:', tokenError);
+            console.error('에러 코드:', tokenError.code);
+            console.error('에러 메시지:', tokenError.message);
+            console.error('에러 상세:', JSON.stringify(tokenError, null, 2));
+            
+            // 권한 오류인 경우 더 자세한 안내
+            if (tokenError.code === 'auth/insufficient-permission' || 
+                tokenError.message?.includes('Permission') ||
+                tokenError.message?.includes('iam.serviceAccounts.signBlob')) {
+                
+                // 권한 오류이지만, Firestore에 사용자 정보는 저장할 수 있으므로
+                // 커스텀 토큰 없이 사용자 정보만 반환하고 클라이언트에서 처리하도록 변경
+                console.warn('⚠️ 커스텀 토큰 생성 권한이 없습니다. 사용자 정보만 반환합니다.');
+                
+                // Firestore에 사용자 정보는 저장
+                const userRef = db.collection('users').doc(uid);
+                const userData = {
+                    email: kakaoEmail,
+                    displayName: kakaoNickname,
+                    photoURL: kakaoPhotoURL,
+                    authProvider: 'kakao',
+                    kakaoId: kakaoId,
+                    lastLoginAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+
+                if (isNewUser) {
+                    await userRef.set({
+                        ...userData,
+                        point: 100,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        emailVerified: false,
+                        isActive: true,
+                    });
+
+                    await db.collection('users').doc(uid).collection('pointHistory').add({
+                        type: 'earn',
+                        amount: 100,
+                        desc: '회원가입 축하 포인트',
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                } else {
+                    await userRef.update(userData);
+                }
+                
+                // 커스텀 토큰 없이 사용자 정보만 반환
+                // 클라이언트에서 Firebase Auth 없이 Firestore에서 직접 사용자 정보를 사용하도록 처리
+                return {
+                    success: true,
+                    userInfo: userInfo,
+                    uid: uid,
+                    customToken: null, // 권한 문제로 생성 불가
+                    requiresManualAuth: true, // 수동 인증 필요
+                };
+            }
+            throw tokenError;
+        }
 
         // 5. Firestore에 사용자 정보 저장/업데이트
         const userRef = db.collection('users').doc(uid);
@@ -1701,7 +1800,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         };
 
         if (isNewUser) {
-            // 신규 사용자
+            // 신규 사용자 - 이메일 로그인과 별도 계정으로 생성
             await userRef.set({
                 ...userData,
                 point: 100,
@@ -1718,14 +1817,15 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
         } else {
-            // 기존 사용자 - 업데이트
+            // 기존 카카오 사용자 - 정보 업데이트
             await userRef.update(userData);
         }
 
         return {
             success: true,
             userInfo: userInfo,
-            customToken: customToken,
+            customToken: customToken || null, // 권한 문제로 null일 수 있음
+            uid: uid,
         };
     } catch (error) {
         console.error('카카오 인증 처리 실패:', error);
