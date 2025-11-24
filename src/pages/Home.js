@@ -930,7 +930,7 @@ function Home({ user }) {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
   const [userCreatedAt, setUserCreatedAt] = useState(null); // 사용자 가입일
-  const [totalNovelCount, setTotalNovelCount] = useState(0); // 전체 소설 개수
+  const [totalNovelCount, setTotalNovelCount] = useState(null); // 전체 소설 개수 (null: 로딩 중)
 
 
   // 포션 데이터 (표시는 locale로)
@@ -1183,7 +1183,7 @@ function Home({ user }) {
         </CarouselContainer>
 
         {/* 튜토리얼 책 섹션 - 소설 1개 미만 생성한 사용자에게만 표시 */}
-        {userCreatedAt && totalNovelCount < 1 && (
+        {userCreatedAt && totalNovelCount !== null && totalNovelCount < 1 && (
           <TutorialSection>
             <TutorialRow>
               {(() => {
