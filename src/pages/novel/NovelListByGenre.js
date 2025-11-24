@@ -15,9 +15,10 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  padding-top: 10px;
-  padding-bottom: 100px;
-  margin: 40px auto;
+  // padding-top: 10px;
+  // padding-bottom: 100px;
+  margin-top: 50px;
+  margin-bottom: 80px;
   max-width: 600px;
   overflow-y: auto;
   position: relative;
@@ -25,13 +26,6 @@ const Container = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-`;
-const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
-  font-size: 18px;
-  font-weight: 600;
-  text-align: center;
-  margin: 24px 0 24px 0;
 `;
 // const BannerImage = styled.img`
 //   width: 100%;
@@ -200,10 +194,16 @@ const NovelListByGenre = ({ user }) => {
     return novel.week || `${novel.month}월 ${novel.weekNum}주차`;
   };
 
+  const titleText = t('novel_list_by_genre_title', { genre: getDisplayGenre() });
+
   return (
     <Container>
-      <Header user={user} />
-      <Title>{t('novel_list_by_genre_title', { genre: getDisplayGenre() })}</Title>
+      <Header
+        user={user}
+        leftAction={() => navigate(-1)}
+        leftIconType="back"
+        title={titleText}
+      />
 
       {/* {bannerImage && <BannerImage src={bannerImage} alt={`${genre} 배너`} />} */}
 
@@ -214,7 +214,6 @@ const NovelListByGenre = ({ user }) => {
           <NovelGrid>
             {novels.map(novel => (
               <NovelItem key={novel.id || novel.title} onClick={() => handleNovelClick(novel)}>
-                <WeekTitle>{formatWeekLabel(novel)}</WeekTitle>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelTitle>{novel.title}</NovelTitle>
               </NovelItem>
