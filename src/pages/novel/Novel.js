@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc, limit } from 'firebase/firestore';
 import { useToast } from '../../components/ui/ToastProvider';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { useTheme } from '../../ThemeContext';
@@ -262,7 +262,7 @@ const WeeklySection = styled.div`
   overflow: hidden;
 `;
 
-const SectionTitle = styled.h2`
+const WeeklySectionTitle = styled.h2`
   color: #cb6565;
   font-size: 24px;
   margin-bottom: 20px;
@@ -604,6 +604,99 @@ const sliderSettings = {
     cssEase: 'linear',
 };
 
+// 내 소설/서재 섹션 스타일
+const LibrarySection = styled.div`
+  margin-bottom: 30px;
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const SectionTitle = styled.h2`
+  color: #cb6565;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const MoreLink = styled.button`
+  background: none;
+  border: none;
+  color: #cb6565;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const NovelRow = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const NovelBox = styled.div`
+  min-width: 100px;
+  max-width: 120px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+  &:hover {
+    transform: translateY(-4px);
+  }
+`;
+
+const NovelCoverImage = styled.img`
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin-bottom: 8px;
+`;
+
+const NovelTitle = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  font-size: 14px;
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+  margin: 30px 0;
+`;
+
 const Novel = ({ user }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -629,6 +722,8 @@ const Novel = ({ user }) => {
     const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const [selectedWeekForCreate, setSelectedWeekForCreate] = useState(null);
     const [timeUntilNextCharge, setTimeUntilNextCharge] = useState('');
+    const [myNovels, setMyNovels] = useState([]);
+    const [purchasedNovels, setPurchasedNovels] = useState([]);
 
 
 
@@ -679,12 +774,17 @@ const Novel = ({ user }) => {
 
             // 2. Fetch all Novels for the user to create a map
             const novelsRef = collection(db, 'novels');
-            const novelsQuery = query(novelsRef, where('userId', '==', user.uid));
+            const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
             try {
                 const novelSnapshot = await getDocs(novelsQuery);
                 const newNovelsMap = {};
+                const allMyNovels = [];
                 novelSnapshot.forEach(doc => {
                     const novel = doc.data();
+                    // 삭제되지 않은 소설만 추가
+                    if (novel.deleted !== true) {
+                        allMyNovels.push({ id: doc.id, ...novel });
+                    }
                     // year, month, weekNum이 모두 있는 경우에만 맵에 추가
                     if (novel.year && novel.month && novel.weekNum) {
                         const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
@@ -696,11 +796,86 @@ const Novel = ({ user }) => {
                     }
                 });
                 setNovelsMap(newNovelsMap);
+                // 최근 5개만 표시
+                setMyNovels(allMyNovels.slice(0, 5));
             } catch (error) {
                 // 오류가 나도 UI는 계속 진행되도록 함
             }
 
-            // 3. Fetch premium free novel status and potions
+            // 3. Fetch purchased novels
+            try {
+                const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
+                const viewedSnapshot = await getDocs(viewedNovelsRef);
+
+                if (viewedSnapshot.empty) {
+                    setPurchasedNovels([]);
+                } else {
+                    // viewedNovels 문서에서 novelId와 viewedAt 정보 추출
+                    // 문서 ID가 novelId입니다
+                    const viewedNovelsData = viewedSnapshot.docs.map(doc => ({
+                        novelId: doc.id,
+                        viewedAt: doc.data().viewedAt || doc.data().createdAt || null
+                    }));
+
+                    // novelId로 novels 컬렉션에서 데이터 fetch
+                    const novelsRef = collection(db, 'novels');
+                    const novelDocs = await Promise.all(
+                        viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
+                    );
+
+                    let purchased = novelDocs
+                        .map((snap, idx) => {
+                            if (!snap.exists()) return null;
+                            const novelData = snap.data();
+                            // 삭제되지 않고 공개된 소설만 추가
+                            if (novelData.deleted === true || novelData.isPublic === false) {
+                                return null;
+                            }
+                            return {
+                                ...novelData,
+                                id: snap.id,
+                                purchasedAt: viewedNovelsData[idx].viewedAt
+                            };
+                        })
+                        .filter(novel => novel !== null);
+
+                    // 구매일 기준 최신순 정렬
+                    purchased = purchased.sort((a, b) => {
+                        const aDate = a.purchasedAt?.toDate?.() || a.purchasedAt || new Date(0);
+                        const bDate = b.purchasedAt?.toDate?.() || b.purchasedAt || new Date(0);
+                        return bDate - aDate;
+                    });
+
+                    // 각 소설의 userId로 닉네임/아이디 조회
+                    const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
+                    const userDocs = await Promise.all(
+                        ownerIds.map(uid => getDoc(doc(db, 'users', uid)))
+                    );
+                    const ownerMap = {};
+                    userDocs.forEach((snap, idx) => {
+                        if (snap.exists()) {
+                            const data = snap.data();
+                            ownerMap[ownerIds[idx]] = data.nickname || data.nick || data.displayName || ownerIds[idx];
+                        } else {
+                            ownerMap[ownerIds[idx]] = ownerIds[idx];
+                        }
+                    });
+
+                    // novel에 ownerName 필드 추가
+                    purchased = purchased.map(novel => ({
+                        ...novel,
+                        ownerName: ownerMap[novel.userId] || novel.userId
+                    }));
+
+                    // 최근 5개만 표시
+                    setPurchasedNovels(purchased.slice(0, 5));
+                }
+            } catch (error) {
+                console.error('구매한 소설 목록 가져오기 실패:', error);
+                setPurchasedNovels([]);
+            }
+
+            // 4. Fetch premium free novel status and potions
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
@@ -741,7 +916,7 @@ const Novel = ({ user }) => {
                 console.error('프리미엄 무료권 상태 조회 실패:', error);
             }
 
-            // 4. Calculate progress
+            // 5. Calculate progress
             calculateAllProgress(year, month, fetchedDiaries);
             setIsLoading(false);
         };
@@ -838,12 +1013,17 @@ const Novel = ({ user }) => {
 
                 // 2. Fetch all Novels for the user to create a map
                 const novelsRef = collection(db, 'novels');
-                const novelsQuery = query(novelsRef, where('userId', '==', user.uid));
+                const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
                 try {
                     const novelSnapshot = await getDocs(novelsQuery);
                     const newNovelsMap = {};
+                    const allMyNovels = [];
                     novelSnapshot.forEach(doc => {
                         const novel = doc.data();
+                        // 삭제되지 않은 소설만 추가
+                        if (novel.deleted !== true) {
+                            allMyNovels.push({ id: doc.id, ...novel });
+                        }
                         // year, month, weekNum이 모두 있는 경우에만 맵에 추가
                         if (novel.year && novel.month && novel.weekNum) {
                             const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
@@ -855,11 +1035,46 @@ const Novel = ({ user }) => {
                         }
                     });
                     setNovelsMap(newNovelsMap);
+                    // 최근 5개만 표시
+                    setMyNovels(allMyNovels.slice(0, 5));
                 } catch (error) {
                     // 오류가 나도 UI는 계속 진행되도록 함
                 }
 
-                // 3. Fetch premium free novel status and potions
+                // 3. Fetch purchased novels
+                try {
+                    const purchasedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
+                    const purchasedQuery = query(purchasedNovelsRef, orderBy('viewedAt', 'desc'), limit(5));
+                    const purchasedSnapshot = await getDocs(purchasedQuery);
+                    const purchasedList = [];
+
+                    for (const purchasedDoc of purchasedSnapshot.docs) {
+                        const purchasedData = purchasedDoc.data();
+                        if (purchasedData.novelId) {
+                            try {
+                                const novelDoc = await getDoc(doc(db, 'novels', purchasedData.novelId));
+                                if (novelDoc.exists()) {
+                                    const novelData = novelDoc.data();
+                                    // 삭제되지 않고 공개된 소설만 추가
+                                    if (novelData.deleted !== true && novelData.isPublic !== false) {
+                                        purchasedList.push({
+                                            id: novelDoc.id,
+                                            ...novelData,
+                                            ownerName: purchasedData.ownerName || novelData.ownerName
+                                        });
+                                    }
+                                }
+                            } catch (err) {
+                                // 개별 소설 조회 실패는 무시
+                            }
+                        }
+                    }
+                    setPurchasedNovels(purchasedList);
+                } catch (error) {
+                    // 오류가 나도 UI는 계속 진행되도록 함
+                }
+
+                // 4. Fetch premium free novel status and potions
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     if (userDoc.exists()) {
@@ -900,7 +1115,80 @@ const Novel = ({ user }) => {
                     console.error('프리미엄 무료권 상태 조회 실패:', error);
                 }
 
-                // 4. Calculate progress
+                // 4. Fetch purchased novels
+                try {
+                    const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
+                    const viewedSnapshot = await getDocs(viewedNovelsRef);
+
+                    if (viewedSnapshot.empty) {
+                        setPurchasedNovels([]);
+                    } else {
+                        // viewedNovels 문서에서 novelId와 viewedAt 정보 추출
+                        // 문서 ID가 novelId입니다
+                        const viewedNovelsData = viewedSnapshot.docs.map(doc => ({
+                            novelId: doc.id,
+                            viewedAt: doc.data().viewedAt || doc.data().createdAt || null
+                        }));
+
+                        // novelId로 novels 컬렉션에서 데이터 fetch
+                        const novelsRef = collection(db, 'novels');
+                        const novelDocs = await Promise.all(
+                            viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
+                        );
+
+                        let purchased = novelDocs
+                            .map((snap, idx) => {
+                                if (!snap.exists()) return null;
+                                const novelData = snap.data();
+                                // 삭제되지 않고 공개된 소설만 추가
+                                if (novelData.deleted === true || novelData.isPublic === false) {
+                                    return null;
+                                }
+                                return {
+                                    ...novelData,
+                                    id: snap.id,
+                                    purchasedAt: viewedNovelsData[idx].viewedAt
+                                };
+                            })
+                            .filter(novel => novel !== null);
+
+                        // 구매일 기준 최신순 정렬
+                        purchased = purchased.sort((a, b) => {
+                            const aDate = a.purchasedAt?.toDate?.() || a.purchasedAt || new Date(0);
+                            const bDate = b.purchasedAt?.toDate?.() || b.purchasedAt || new Date(0);
+                            return bDate - aDate;
+                        });
+
+                        // 각 소설의 userId로 닉네임/아이디 조회
+                        const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
+                        const userDocs = await Promise.all(
+                            ownerIds.map(uid => getDoc(doc(db, 'users', uid)))
+                        );
+                        const ownerMap = {};
+                        userDocs.forEach((snap, idx) => {
+                            if (snap.exists()) {
+                                const data = snap.data();
+                                ownerMap[ownerIds[idx]] = data.nickname || data.nick || data.displayName || ownerIds[idx];
+                            } else {
+                                ownerMap[ownerIds[idx]] = ownerIds[idx];
+                            }
+                        });
+
+                        // novel에 ownerName 필드 추가
+                        purchased = purchased.map(novel => ({
+                            ...novel,
+                            ownerName: ownerMap[novel.userId] || novel.userId
+                        }));
+
+                        // 최근 5개만 표시
+                        setPurchasedNovels(purchased.slice(0, 5));
+                    }
+                } catch (error) {
+                    console.error('구매한 소설 목록 가져오기 실패:', error);
+                    setPurchasedNovels([]);
+                }
+
+                // 5. Calculate progress
                 calculateAllProgress(year, month, fetchedDiaries);
                 setIsLoading(false);
             };
@@ -1197,6 +1485,76 @@ const Novel = ({ user }) => {
                     ))}
                 </Slider>
             </CarouselContainer>
+
+            {/* 내 소설 섹션 */}
+            <LibrarySection>
+                <SectionHeader>
+                    <SectionTitle>📚 {t('home_my_novel') || '내 소설'}</SectionTitle>
+                    {myNovels.length > 0 && (
+                        <MoreLink onClick={() => navigate('/my/completed-novels')}>
+                            더보기 →
+                        </MoreLink>
+                    )}
+                </SectionHeader>
+                {myNovels.length > 0 ? (
+                    <NovelRow>
+                        {myNovels.map(novel => (
+                            <NovelBox
+                                key={novel.id}
+                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}
+                            >
+                                <NovelCoverImage
+                                    src={novel.imageUrl || '/novel_banner/default.png'}
+                                    alt={novel.title}
+                                />
+                                <NovelTitle>{novel.title}</NovelTitle>
+                            </NovelBox>
+                        ))}
+                    </NovelRow>
+                ) : (
+                    <EmptyState>
+                        아직 작성한 소설이 없습니다.<br />
+                        일기를 작성하고 소설을 만들어보세요!
+                    </EmptyState>
+                )}
+            </LibrarySection>
+
+            {/* 내 서재 섹션 */}
+            <LibrarySection>
+                <SectionHeader>
+                    <SectionTitle>🛍️ {t('home_purchased_novel') || '내 서재'}</SectionTitle>
+                    {purchasedNovels.length > 0 && (
+                        <MoreLink onClick={() => navigate('/purchased-novels')}>
+                            더보기 →
+                        </MoreLink>
+                    )}
+                </SectionHeader>
+                {purchasedNovels.length > 0 ? (
+                    <NovelRow>
+                        {purchasedNovels.map(novel => (
+                            <NovelBox
+                                key={novel.id}
+                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
+                                    state: { returnPath: '/novel' }
+                                })}
+                            >
+                                <NovelCoverImage
+                                    src={novel.imageUrl || '/novel_banner/default.png'}
+                                    alt={novel.title}
+                                />
+                                <NovelTitle>{novel.title}</NovelTitle>
+                            </NovelBox>
+                        ))}
+                    </NovelRow>
+                ) : (
+                    <EmptyState>
+                        아직 구매한 소설이 없습니다.<br />
+                        다른 사람의 소설을 구매해보세요!
+                    </EmptyState>
+                )}
+            </LibrarySection>
+
+            <Divider />
 
             {/* 프리미엄 무료권 상태 표시 */}
             {isPremium && (
