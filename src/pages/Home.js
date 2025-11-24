@@ -652,7 +652,7 @@ const CarouselSlide = styled.div`
 const bannerData = [
   { src: process.env.PUBLIC_URL + '/home_banner/home1.png' },
   { src: process.env.PUBLIC_URL + '/home_banner/home2.png' },
-  // 앞으로 이미지가 추가될 경우 여기에 파일명만 추가하면 됨
+  { src: process.env.PUBLIC_URL + '/home_banner/home3.png' },
 ];
 
 const sliderSettings = {
@@ -922,6 +922,29 @@ function Home({ user }) {
       />
 
       <ContentGrid>
+        {/* 캐러셀 배너 */}
+        <CarouselContainer>
+          <Slider {...sliderSettings}>
+            {bannerData.map((banner, idx) => (
+              <CarouselSlide key={idx}>
+                <img
+                  src={banner.src}
+                  alt={`배너${idx + 1}`}
+                  style={{
+                    width: '100%',
+                    maxWidth: '600px',
+                    height: 'auto',
+                    objectFit: 'cover',
+                    borderRadius: '12px',
+                    display: 'block',
+                    margin: '0 auto',
+                  }}
+                />
+              </CarouselSlide>
+            ))}
+          </Slider>
+        </CarouselContainer>
+
         {/* 탭 바 추가 */}
         <TabBar>
           <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>{t('home_my_novel')}</TabButton>
