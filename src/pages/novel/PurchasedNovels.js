@@ -110,10 +110,6 @@ const NovelListWrapper = styled.div`
   flex-direction: ${props => props.$viewMode === 'list' ? 'column' : 'row'};
   gap: 20px;
   padding-bottom: 20px;
-  
-  @media (min-width: 480px) {
-    grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(3, 1fr)' : 'none'};
-  }
 `;
 
 const NovelItem = styled.div`
