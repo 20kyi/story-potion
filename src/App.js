@@ -39,6 +39,7 @@ import Social from './pages/mypage/Social';
 import Friend from './pages/mypage/Friend';
 import PotionGift from './pages/mypage/PotionGift';
 import Shop from './pages/mypage/Shop';
+import Premium from './pages/mypage/Premium';
 import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
 import { ThemeProvider, useTheme } from './ThemeContext';
@@ -119,6 +120,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/potion-gift" element={user ? <PotionGift user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/shop" element={user ? <Shop user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/shop/charge" element={user ? <PointCharge user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/premium" element={user ? <Premium user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/theme-settings" element={user ? <ThemeSettings user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/point-history" element={<PointHistory user={user} />} />
                 <Route path="/my/potion-shop" element={user ? <PotionShop user={user} /> : <Navigate to="/login" />} />

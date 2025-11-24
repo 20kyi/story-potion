@@ -45,6 +45,7 @@ import { getSafeProfileImageUrl, handleImageError } from '../../utils/profileIma
 import PointIcon from '../../components/icons/PointIcon';
 import ShopIcon from '../../components/icons/ShopIcon';
 import AppInfoIcon from '../../components/icons/AppInfoIcon';
+import GiftIcon from '../../components/icons/GiftIcon';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
@@ -1141,7 +1142,7 @@ function MyPage({ user }) {
 
             {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
             {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-              <PremiumUpgradeCard onClick={() => navigate('/my/shop')}>
+              <PremiumUpgradeCard onClick={() => navigate('/my/premium')}>
                 <PremiumUpgradeContent>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '20px' }}>👑</span>
@@ -1226,18 +1227,23 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>{t('shop')}</MenuLabel>
               </MenuButton>
-
+              <MenuButton onClick={() => navigate('/my/potion-gift')}>
+                <MenuIcon as="div">
+                  <GiftIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                </MenuIcon>
+                <MenuLabel>{t('potion_gift') || '포션 선물'}</MenuLabel>
+              </MenuButton>
+              <MenuButton onClick={() => navigate('/my/premium')}>
+                <MenuIcon as="div">
+                  <CrownIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                </MenuIcon>
+                <MenuLabel>{t('premium') || '프리미엄'}</MenuLabel>
+              </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
                   <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('support')}</MenuLabel>
-              </MenuButton>
-              <MenuButton onClick={() => navigate('/my/social')}>
-                <MenuIcon as="div">
-                  <InviteFriendIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
-                </MenuIcon>
-                <MenuLabel>{t('social')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/app-info')}>
                 <MenuIcon as="div">
@@ -1245,7 +1251,6 @@ function MyPage({ user }) {
                 </MenuIcon>
                 <MenuLabel>{t('app_info')}</MenuLabel>
               </MenuButton>
-
 
             </MenuGrid>
           </>
