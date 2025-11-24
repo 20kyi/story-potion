@@ -51,7 +51,7 @@ import {
 } from '../../utils/cleanupDeletedUsers';
 import { requireAdmin, isMainAdmin, isAdmin } from '../../utils/adminAuth';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const Container = styled.div`
@@ -591,7 +591,7 @@ function UserManagement({ user }) {
   const [debugInfo, setDebugInfo] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userDetail, setUserDetail] = useState(null);
-  const [userActivity, setUserActivity] = useState({ diaries: [], novels: [], comments: [] });
+  const [userActivity, setUserActivity] = useState({ diaries: [], novels: [], comments: [], freeNovelHistory: [] });
   const [detailLoading, setDetailLoading] = useState(false);
   const [pointInput, setPointInput] = useState(0);
   const [pointActionLoading, setPointActionLoading] = useState(false);
@@ -602,6 +602,7 @@ function UserManagement({ user }) {
 
   // 아코디언 상태 관리
   const [openSections, setOpenSections] = useState({
+    premiumMigration: false,
     userList: false, // 사용자 목록은 기본적으로 닫힘
     profileUpdate: false,
     pointManagement: false,
@@ -1258,23 +1259,53 @@ function UserManagement({ user }) {
     setUserDetail(u);
     // 활동 내역 fetch (예시: diaries, novels, comments 컬렉션)
     try {
-      const [diariesSnap, novelsSnap, commentsSnap] = await Promise.all([
-        getDocs(query(collection(db, 'diaries'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
-        getDocs(query(collection(db, 'novels'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
-        getDocs(query(collection(db, 'comments'), where('uid', '==', u.uid), orderBy('createdAt', 'desc'), fsLimit(10))),
-      ]);
+      const promises = [
+        // orderBy를 제거하고 클라이언트에서 정렬 (인덱스 불필요)
+        getDocs(query(collection(db, 'diaries'), where('uid', '==', u.uid))),
+        getDocs(query(collection(db, 'novels'), where('uid', '==', u.uid))),
+        getDocs(query(collection(db, 'comments'), where('uid', '==', u.uid))),
+      ];
+      
+      // 무료 생성권 사용 기록 (프리미엄 회원인 경우만)
+      if (u.isMonthlyPremium || u.isYearlyPremium) {
+        try {
+          const freeNovelHistorySnap = await getDocs(collection(db, 'users', u.uid, 'freeNovelHistory'));
+          promises.push(Promise.resolve({ docs: freeNovelHistorySnap.docs }));
+        } catch (e) {
+          console.error('무료 생성권 사용 기록 조회 실패:', e);
+          promises.push(Promise.resolve({ docs: [] }));
+        }
+      } else {
+        promises.push(Promise.resolve({ docs: [] }));
+      }
+
+      const [diariesSnap, novelsSnap, commentsSnap, freeNovelHistorySnap] = await Promise.all(promises);
+      
+      // 클라이언트에서 정렬 및 최대 10개 제한
+      const sortByCreatedAt = (a, b) => {
+        const aTime = a.createdAt?.seconds || a.createdAt || 0;
+        const bTime = b.createdAt?.seconds || b.createdAt || 0;
+        return bTime - aTime; // 내림차순
+      };
+      
+      const diaries = diariesSnap.docs.map(d => d.data()).sort(sortByCreatedAt).slice(0, 10);
+      const novels = novelsSnap.docs.map(n => n.data()).sort(sortByCreatedAt).slice(0, 10);
+      const comments = commentsSnap.docs.map(c => c.data()).sort(sortByCreatedAt).slice(0, 10);
+      
       setUserActivity({
-        diaries: diariesSnap.docs.map(d => d.data()),
-        novels: novelsSnap.docs.map(n => n.data()),
-        comments: commentsSnap.docs.map(c => c.data()),
+        diaries,
+        novels,
+        comments,
+        freeNovelHistory: freeNovelHistorySnap.docs.map(d => d.data()),
       });
     } catch (e) {
-      setUserActivity({ diaries: [], novels: [], comments: [] });
+      console.error('사용자 활동 내역 조회 실패:', e);
+      setUserActivity({ diaries: [], novels: [], comments: [], freeNovelHistory: [] });
     } finally {
       setDetailLoading(false);
     }
   };
-  const closeUserDetail = () => { setSelectedUser(null); setUserDetail(null); setUserActivity({ diaries: [], novels: [], comments: [] }); };
+  const closeUserDetail = () => { setSelectedUser(null); setUserDetail(null); setUserActivity({ diaries: [], novels: [], comments: [], freeNovelHistory: [] }); };
 
   // 가입일/접속일 포맷 함수
   const formatDate = (val) => {
@@ -1498,6 +1529,75 @@ function UserManagement({ user }) {
       }
     } catch (e) {
       setStatusActionStatus({ type: 'error', message: '프리미엄 상태 변경 오류: ' + e.message });
+    } finally {
+      setStatusActionLoading(false);
+    }
+  };
+
+  // 프리미엄 무료 생성권 마이그레이션 핸들러 (개별 사용자)
+  const handleMigratePremiumFreeNovel = async () => {
+    if (!selectedUser) return;
+    setStatusActionLoading(true);
+    setStatusActionStatus(null);
+    try {
+      const functions = getFunctions(undefined, 'us-central1');
+      const migratePremiumFreeNovel = httpsCallable(functions, 'migratePremiumFreeNovelCount');
+      const result = await migratePremiumFreeNovel({ userId: selectedUser.uid });
+      
+      if (result.data.success) {
+        setStatusActionStatus({
+          type: 'success',
+          message: `마이그레이션 완료: ${result.data.data.currentCount}개 보유 (총 충전: ${result.data.data.totalCharged}개, 사용: ${result.data.data.usedCount}개)`
+        });
+        // 사용자 상세 정보 새로고침
+        setTimeout(async () => {
+          if (selectedUser) {
+            // 사용자 데이터 다시 가져오기
+            try {
+              const userDocRef = doc(db, 'users', selectedUser.uid);
+              const userDocSnap = await getDoc(userDocRef);
+              if (userDocSnap.exists()) {
+                const updatedUser = { uid: selectedUser.uid, ...userDocSnap.data() };
+                setUserDetail(updatedUser);
+                setSelectedUser(updatedUser);
+              }
+            } catch (error) {
+              console.error('사용자 정보 새로고침 실패:', error);
+            }
+          }
+        }, 500);
+      } else {
+        setStatusActionStatus({ type: 'error', message: result.data.message || '마이그레이션 실패' });
+      }
+    } catch (e) {
+      setStatusActionStatus({ type: 'error', message: '마이그레이션 오류: ' + e.message });
+    } finally {
+      setStatusActionLoading(false);
+    }
+  };
+
+  // 모든 프리미엄 사용자 무료 생성권 일괄 마이그레이션 핸들러
+  const handleMigrateAllPremiumFreeNovel = async () => {
+    if (!window.confirm('모든 프리미엄 사용자의 무료 생성권을 마이그레이션하시겠습니까? 이 작업은 시간이 걸릴 수 있습니다.')) {
+      return;
+    }
+    setStatusActionLoading(true);
+    setStatusActionStatus(null);
+    try {
+      const functions = getFunctions(undefined, 'us-central1');
+      const migrateAllPremiumFreeNovel = httpsCallable(functions, 'migrateAllPremiumFreeNovelCount');
+      const result = await migrateAllPremiumFreeNovel();
+      
+      if (result.data.success) {
+        setStatusActionStatus({
+          type: 'success',
+          message: `일괄 마이그레이션 완료: 성공 ${result.data.successCount}명, 실패 ${result.data.failCount}명 (총 ${result.data.totalCount}명)`
+        });
+      } else {
+        setStatusActionStatus({ type: 'error', message: result.data.message || '일괄 마이그레이션 실패' });
+      }
+    } catch (e) {
+      setStatusActionStatus({ type: 'error', message: '일괄 마이그레이션 오류: ' + e.message });
     } finally {
       setStatusActionLoading(false);
     }
@@ -1821,6 +1921,41 @@ function UserManagement({ user }) {
         </Section>
       )}
 
+      {/* 프리미엄 무료 생성권 마이그레이션 - 메인 관리자만 */}
+      {isMainAdmin(user) && (
+        <Section theme={theme}>
+          <SectionTitle theme={theme} onClick={() => toggleSection('premiumMigration')}>
+            <span>🔄 프리미엄 무료 생성권 마이그레이션</span>
+            <AccordionIcon theme={theme} isOpen={openSections.premiumMigration}>▼</AccordionIcon>
+          </SectionTitle>
+          <SectionContent isOpen={openSections.premiumMigration}>
+            <ButtonGroup theme={theme}>
+              <ButtonGroupTitle theme={theme}>무료 생성권 마이그레이션</ButtonGroupTitle>
+              <InfoText>
+                기존 프리미엄 사용자들의 무료 생성권을 계산하여 마이그레이션합니다.<br/>
+                구독 시작일 기준으로 7일마다 1개씩 충전되며, 사용 기록을 차감하여 현재 보유 개수를 계산합니다.
+              </InfoText>
+              <Button
+                onClick={handleMigrateAllPremiumFreeNovel}
+                disabled={statusActionLoading}
+                style={{ backgroundColor: '#9b59b6' }}
+              >
+                {statusActionLoading ? '마이그레이션 중...' : '모든 프리미엄 사용자 일괄 마이그레이션'}
+              </Button>
+              {statusActionStatus && (
+                <div style={{ 
+                  marginTop: 8, 
+                  color: statusActionStatus.type === 'success' ? 'green' : 'red', 
+                  fontSize: '12px' 
+                }}>
+                  {statusActionStatus.message}
+                </div>
+              )}
+            </ButtonGroup>
+          </SectionContent>
+        </Section>
+      )}
+
       {/* 포인트 지급 - 메인 관리자만 */}
       {isMainAdmin(user) && (
         <Section theme={theme}>
@@ -2139,7 +2274,7 @@ function UserManagement({ user }) {
 
                   setNotificationSending(true);
                   try {
-                    const functions = getFunctions();
+                    const functions = getFunctions(undefined, 'us-central1');
                     const sendNotification = httpsCallable(
                       functions,
                       notificationType === 'marketing' ? 'sendMarketingNotification' : 'sendEventNotification'
@@ -2418,6 +2553,84 @@ function UserManagement({ user }) {
                   <div style={{ marginBottom: '8px' }}>
                     <b>프리미엄 상태:</b> {renderPremiumBadge(userDetail)}
                   </div>
+                  {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (() => {
+                    // 무료 생성권 상세 정보 계산
+                    let totalCharged = 0;
+                    let usedCount = 0;
+                    let currentCount = 0;
+                    let startDate = null;
+                    let nextChargeDate = null;
+
+                    try {
+                      // premiumStartDate 확인
+                      if (userDetail.premiumStartDate) {
+                        if (userDetail.premiumStartDate.seconds) {
+                          startDate = new Date(userDetail.premiumStartDate.seconds * 1000);
+                        } else if (userDetail.premiumStartDate.toDate) {
+                          startDate = userDetail.premiumStartDate.toDate();
+                        } else {
+                          startDate = new Date(userDetail.premiumStartDate);
+                        }
+                      }
+
+                      if (startDate) {
+                        const now = new Date();
+                        const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+                        totalCharged = Math.floor(elapsedDays / 7) + 1; // 시작일 당일에도 1개 지급
+                        usedCount = userActivity.freeNovelHistory?.length || 0;
+                        currentCount = Math.max(0, totalCharged - usedCount);
+
+                        // 다음 충전 시점 계산
+                        const lastChargeDate = new Date(startDate);
+                        lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
+                        nextChargeDate = new Date(lastChargeDate);
+                        nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+                      } else {
+                        // premiumStartDate가 없으면 현재 보유 개수만 표시
+                        currentCount = userDetail.premiumFreeNovelCount || 0;
+                        usedCount = userActivity.freeNovelHistory?.length || 0;
+                        totalCharged = currentCount + usedCount;
+                      }
+                    } catch (e) {
+                      console.error('무료 생성권 정보 계산 실패:', e);
+                    }
+
+                    return (
+                      <div style={{ marginBottom: '8px', fontSize: '14px' }}>
+                        <div style={{ marginBottom: '4px' }}>
+                          <b>무료 생성권:</b> {userDetail.premiumFreeNovelCount !== undefined ? `${userDetail.premiumFreeNovelCount}개` : '미설정'}
+                          {userDetail.premiumFreeNovelNextChargeDate && (
+                            <span style={{ marginLeft: '8px', color: '#666', fontSize: '12px' }}>
+                              (다음 충전: {formatDate(userDetail.premiumFreeNovelNextChargeDate)})
+                            </span>
+                          )}
+                        </div>
+                        {startDate && (
+                          <div style={{ 
+                            marginTop: '8px', 
+                            padding: '8px', 
+                            background: '#f0f0f0', 
+                            borderRadius: '6px',
+                            fontSize: '13px'
+                          }}>
+                            <div style={{ marginBottom: '4px' }}>
+                              <b>상세 정보:</b>
+                            </div>
+                            <div style={{ marginLeft: '8px', color: '#555' }}>
+                              <div>📥 받은 개수: <b style={{ color: '#27ae60' }}>{totalCharged}개</b></div>
+                              <div>📤 사용한 개수: <b style={{ color: '#e74c3c' }}>{usedCount}개</b></div>
+                              <div>💎 남은 개수: <b style={{ color: '#3498db' }}>{currentCount}개</b></div>
+                              {startDate && (
+                                <div style={{ marginTop: '4px', fontSize: '11px', color: '#888' }}>
+                                  구독 시작일: {formatDate(userDetail.premiumStartDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {isMainAdmin(user) && (
                     <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <Button
@@ -2457,6 +2670,20 @@ function UserManagement({ user }) {
                           }}
                         >
                           프리미엄 해제
+                        </Button>
+                      )}
+                      {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (
+                        <Button
+                          onClick={handleMigratePremiumFreeNovel}
+                          disabled={statusActionLoading}
+                          style={{
+                            background: '#9b59b6',
+                            fontSize: isMobile ? '13px' : '12px',
+                            padding: isMobile ? '10px 12px' : '6px 12px',
+                            flex: isMobile ? '1 1 100%' : 'auto'
+                          }}
+                        >
+                          무료 생성권 마이그레이션
                         </Button>
                       )}
                     </div>

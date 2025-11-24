@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import PointIcon from '../../components/icons/PointIcon';
 import { usePrompt } from '../../hooks/usePrompt';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import { useTheme } from '../../ThemeContext';
 
 const Container = styled.div`
   display: flex;
@@ -229,6 +230,94 @@ const StyledPotionImg = styled(motion.img)`
 
 const PotionLabel = styled.div``;
 
+const CreateOptionModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const CreateOptionContent = styled.div`
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  opacity: 1;
+  position: relative;
+`;
+
+const CreateOptionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin: 0 0 16px 0;
+  text-align: center;
+`;
+
+const CreateOptionButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: ${({ isFree, theme }) =>
+        isFree
+            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%)'
+            : 'linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%)'};
+  color: ${({ isFree }) => isFree ? '#e4a30d' : '#e46262'};
+  border: ${({ isFree }) => isFree ? '2px solid #e4a30d' : '2px solid #e46262'};
+  box-shadow: none;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ isFree }) =>
+        isFree
+            ? '0 4px 12px rgba(0,0,0,0.15)'
+            : '0 4px 12px rgba(228, 98, 98, 0.2)'};
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const CreateOptionDesc = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#666'};
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: ${({ theme }) => theme.text};
+  cursor: pointer;
+  padding: 4px 8px;
+`;
+
 
 function NovelCreate({ user }) {
     const location = useLocation();
@@ -236,6 +325,7 @@ function NovelCreate({ user }) {
     const toast = useToast();
     const { t } = useTranslation();
     const { language } = useLanguage();
+    const theme = useTheme();
     const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted, useFree } = location.state || {};
     // 이전 페이지 경로 저장 (없으면 기본값으로 '/novel')
     const previousPath = returnPath || '/novel';
@@ -257,6 +347,7 @@ function NovelCreate({ user }) {
     const [premiumFreeNovelAvailable, setPremiumFreeNovelAvailable] = useState(false);
     const [premiumFreeNovelCount, setPremiumFreeNovelCount] = useState(0);
     const [premiumFreeNovelNextChargeDate, setPremiumFreeNovelNextChargeDate] = useState(null);
+    const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const selectedGenre = selectedPotion !== null ? potionImages[selectedPotion].genre : null;
 
     // 뒤로가기 방지 로직 - 소설 생성 중일 때 뒤로가기 방지
@@ -546,6 +637,17 @@ function NovelCreate({ user }) {
                         premiumFreeNovelCount: newCount,
                         updatedAt: Timestamp.now()
                     });
+
+                    // 무료권 사용 기록 추가 (year, month, weekNum으로 기록)
+                    await addDoc(collection(db, 'users', user.uid, 'freeNovelHistory'), {
+                        year: year,
+                        month: month,
+                        weekNum: weekNum,
+                        genre: selectedGenre,
+                        novelId: docRef.id,
+                        createdAt: Timestamp.now()
+                    });
+
                     console.log('프리미엄 무료권 사용 완료, 남은 개수:', newCount);
                     setPremiumFreeNovelCount(newCount);
                     setPremiumFreeNovelAvailable(newCount > 0);
@@ -780,8 +882,8 @@ function NovelCreate({ user }) {
                                                     potion.genre === '동화' ? 'fairytale' :
                                                         potion.genre === '판타지' ? 'fantasy' : null;
 
-                                    // 무료 생성 모드는 useFree가 true일 때만
-                                    const isFreeMode = useFree === true;
+                                    // 무료 생성 모드는 무료권이 있을 때 또는 useFree가 true일 때
+                                    const isFreeMode = (premiumFreeNovelCount > 0 && isPremium) || useFree === true;
                                     if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
                                         return null;
                                     }
@@ -854,8 +956,8 @@ function NovelCreate({ user }) {
                                                     potion.genre === '동화' ? 'fairytale' :
                                                         potion.genre === '판타지' ? 'fantasy' : null;
 
-                                    // 무료 생성 모드는 useFree가 true일 때만
-                                    const isFreeMode = useFree === true;
+                                    // 무료 생성 모드는 무료권이 있을 때 또는 useFree가 true일 때
+                                    const isFreeMode = (premiumFreeNovelCount > 0 && isPremium) || useFree === true;
                                     if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
                                         return null;
                                     }
@@ -919,8 +1021,8 @@ function NovelCreate({ user }) {
                             {/* 두 번째 선반 */}
                             <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 30, zIndex: 1, position: 'relative' }} />
 
-                            {/* 포션이 없을 때 안내 (무료 모드가 아닐 때만) */}
-                            {useFree !== true && Object.values(ownedPotions).every(count => !count || count <= 0) && (
+                            {/* 포션이 없을 때 안내 (무료권이 없고 포션이 없을 때만) */}
+                            {!(premiumFreeNovelCount > 0 && isPremium) && Object.values(ownedPotions).every(count => !count || count <= 0) && (
                                 <div style={{
                                     textAlign: 'center',
                                     marginTop: '20px',
@@ -961,7 +1063,7 @@ function NovelCreate({ user }) {
                             )}
 
                             {/* 무료 생성 모드 안내 */}
-                            {useFree === true && (
+                            {(premiumFreeNovelCount > 0 && isPremium) && (
                                 <div style={{
                                     textAlign: 'center',
                                     marginTop: '20px',
@@ -1007,8 +1109,31 @@ function NovelCreate({ user }) {
                                         opacity: selectedPotion === null || isLoading ? 0.5 : 1,
                                     }}
                                     onClick={selectedPotion !== null && !isLoading ? () => {
-                                        // useFree가 true일 때만 무료권 사용, 나머지는 포션 사용
-                                        handleGenerateNovel(useFree === true);
+                                        // 무료권이 있고 포션도 있으면 선택 모달 표시
+                                        const hasPotions = selectedPotion !== null && (() => {
+                                            const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
+                                                potionImages[selectedPotion].genre === '역사' ? 'historical' :
+                                                    potionImages[selectedPotion].genre === '추리' ? 'mystery' :
+                                                        potionImages[selectedPotion].genre === '공포' ? 'horror' :
+                                                            potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
+                                                                potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
+                                            return potionId && ownedPotions[potionId] && ownedPotions[potionId] > 0;
+                                        })();
+                                        const canUseFree = premiumFreeNovelCount > 0 && isPremium;
+
+                                        if (canUseFree && hasPotions) {
+                                            // 무료권과 포션이 모두 있으면 모달 표시
+                                            setShowCreateOptionModal(true);
+                                        } else if (canUseFree) {
+                                            // 무료권만 있으면 무료권 사용
+                                            handleGenerateNovel(true);
+                                        } else if (hasPotions) {
+                                            // 포션만 있으면 포션 사용
+                                            handleGenerateNovel(false);
+                                        } else {
+                                            // 둘 다 없으면 에러 메시지
+                                            toast.showToast(t('novel_generate_need_potion'), 'error');
+                                        }
                                     } : undefined}
                                     aria-disabled={selectedPotion === null || isLoading}
                                 >
@@ -1030,13 +1155,40 @@ function NovelCreate({ user }) {
                                             : selectedPotion !== null
                                                 ? t('novel_generate_button_with_genre', { genre: t(potionImages[selectedPotion].key) })
                                                 : t('novel_generate_button')}
-                                        {selectedPotion !== null && !isLoading && (
-                                            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
-                                                {useFree === true
-                                                    ? t('novel_generate_free_use')
-                                                    : t('novel_generate_potion_use')}
-                                            </div>
-                                        )}
+                                        {selectedPotion !== null && !isLoading && (() => {
+                                            const hasPotions = (() => {
+                                                const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
+                                                    potionImages[selectedPotion].genre === '역사' ? 'historical' :
+                                                        potionImages[selectedPotion].genre === '추리' ? 'mystery' :
+                                                            potionImages[selectedPotion].genre === '공포' ? 'horror' :
+                                                                potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
+                                                                    potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
+                                                return potionId && ownedPotions[potionId] && ownedPotions[potionId] > 0;
+                                            })();
+                                            const canUseFree = premiumFreeNovelCount > 0 && isPremium;
+
+                                            // 무료권과 포션이 모두 있으면 선택 안내, 아니면 사용 방법 표시
+                                            if (canUseFree && hasPotions) {
+                                                return (
+                                                    <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
+                                                        생성 방법 선택
+                                                    </div>
+                                                );
+                                            } else if (canUseFree) {
+                                                return (
+                                                    <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
+                                                        {t('novel_generate_free_use')}
+                                                    </div>
+                                                );
+                                            } else if (hasPotions) {
+                                                return (
+                                                    <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
+                                                        {t('novel_generate_potion_use')}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -1070,6 +1222,43 @@ function NovelCreate({ user }) {
                     )}
                 </div>
             )}
+
+            {/* 소설 생성 방법 선택 모달 */}
+            {showCreateOptionModal && (
+                <CreateOptionModal onClick={() => setShowCreateOptionModal(false)}>
+                    <CreateOptionContent onClick={(e) => e.stopPropagation()} theme={theme}>
+                        <CloseButton onClick={() => setShowCreateOptionModal(false)} theme={theme}>×</CloseButton>
+                        <CreateOptionTitle theme={theme}>소설 생성 방법 선택</CreateOptionTitle>
+                        <CreateOptionButton
+                            isFree={true}
+                            onClick={() => {
+                                handleGenerateNovel(true);
+                                setShowCreateOptionModal(false);
+                            }}
+                            theme={theme}
+                        >
+                            🪄 프리미엄 무료권 사용
+                        </CreateOptionButton>
+                        <CreateOptionDesc theme={theme} style={{ marginBottom: '12px' }}>
+                            무료로 소설을 생성합니다 (7일 후 자동 충전)
+                        </CreateOptionDesc>
+                        <CreateOptionButton
+                            isFree={false}
+                            onClick={() => {
+                                handleGenerateNovel(false);
+                                setShowCreateOptionModal(false);
+                            }}
+                            theme={theme}
+                        >
+                            🧪 포션 사용
+                        </CreateOptionButton>
+                        <CreateOptionDesc theme={theme}>
+                            보유한 포션 1개를 사용합니다
+                        </CreateOptionDesc>
+                    </CreateOptionContent>
+                </CreateOptionModal>
+            )}
+
             <Navigation />
         </Container>
     );

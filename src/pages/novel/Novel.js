@@ -1315,36 +1315,36 @@ const Novel = ({ user }) => {
                                 return;
                             }
 
-                            const year = currentDate.getFullYear();
-                            const month = currentDate.getMonth() + 1;
-                            const novelTitle = language === 'en'
-                                ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+                            // 무료권 사용 가능 여부와 포션 보유 여부 확인
+                            const hasPotions = Object.values(ownedPotions).some(count => count > 0);
+                            const canUseFree = premiumFreeNovelCount > 0 && isPremium;
 
-                            const weekStartDate = new Date(week.start);
-                            const weekEndDate = new Date(week.end);
+                            // 무료권과 포션이 모두 가능한 경우에만 모달 표시
+                            if (canUseFree && hasPotions) {
+                                setSelectedWeekForCreate(week);
+                                setShowCreateOptionModal(true);
+                            } else {
+                                // 나머지 경우는 바로 소설 생성 페이지로 이동
+                                const year = currentDate.getFullYear();
+                                const month = currentDate.getMonth() + 1;
+                                const novelTitle = language === 'en'
+                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
-                            const firstDiaryWithImage = diaries.find(diary => {
-                                const diaryDate = new Date(diary.date);
-                                return diaryDate >= weekStartDate &&
-                                    diaryDate <= weekEndDate &&
-                                    diary.imageUrls && diary.imageUrls.length > 0;
-                            });
-                            const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+                                const weekStartDate = new Date(week.start);
+                                const weekEndDate = new Date(week.end);
 
-                            navigate('/novel/create', {
-                                state: {
-                                    year: year,
-                                    month: month,
-                                    weekNum: week.weekNum,
-                                    week: weekKey,
-                                    dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
-                                    imageUrl: imageUrl,
-                                    title: novelTitle,
-                                    existingGenres: existingGenres,
-                                    returnPath: location.pathname || '/novel'
-                                }
-                            });
+                                const firstDiaryWithImage = diaries.find(diary => {
+                                    const diaryDate = new Date(diary.date);
+                                    return diaryDate >= weekStartDate &&
+                                        diaryDate <= weekEndDate &&
+                                        diary.imageUrls && diary.imageUrls.length > 0;
+                                });
+                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+
+                                // 무료권만 있으면 무료권 사용, 아니면 포션 사용
+                                handleCreateNovel(week, canUseFree);
+                            }
                         };
 
                         const handleViewNovel = () => {

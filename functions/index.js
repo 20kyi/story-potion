@@ -1034,6 +1034,266 @@ exports.chargePremiumFreeNovel = functions.pubsub.schedule('every 1 hours').time
     }
 });
 
+// 기존 프리미엄 사용자 무료 생성권 마이그레이션 함수
+exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, context) => {
+    console.log('프리미엄 무료 생성권 마이그레이션 시작...');
+    
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            '인증이 필요합니다.'
+        );
+    }
+
+    // 관리자만 실행 가능하도록 체크 (필요시)
+    const userId = context.auth.uid;
+    const targetUserId = data.userId || userId;
+
+    try {
+        const userRef = admin.firestore().collection('users').doc(targetUserId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists()) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                '사용자를 찾을 수 없습니다.'
+            );
+        }
+
+        const userData = userDoc.data();
+        const isPremium = userData.isMonthlyPremium || userData.isYearlyPremium;
+
+        if (!isPremium) {
+            return {
+                success: false,
+                message: '프리미엄 회원이 아닙니다.'
+            };
+        }
+
+        // premiumStartDate 확인
+        let startDate;
+        if (userData.premiumStartDate) {
+            if (userData.premiumStartDate.seconds) {
+                startDate = new Date(userData.premiumStartDate.seconds * 1000);
+            } else if (userData.premiumStartDate.toDate) {
+                startDate = userData.premiumStartDate.toDate();
+            } else {
+                startDate = new Date(userData.premiumStartDate);
+            }
+        } else {
+            // premiumStartDate가 없으면 현재 시점으로 설정
+            startDate = new Date();
+        }
+
+        const now = new Date();
+        
+        // 경과 일수 계산
+        const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        
+        // 총 충전 횟수 계산 (7일마다 1개씩)
+        // 시작일 당일에도 1개 지급되므로 +1
+        const totalCharged = Math.floor(elapsedDays / 7) + 1;
+
+        // 무료 사용 기록 확인
+        const freeNovelHistoryRef = admin.firestore()
+            .collection('users')
+            .doc(targetUserId)
+            .collection('freeNovelHistory');
+        const freeNovelHistorySnapshot = await freeNovelHistoryRef.get();
+        const usedCount = freeNovelHistorySnapshot.size;
+
+        // 현재 보유 개수 계산
+        const currentCount = Math.max(0, totalCharged - usedCount);
+
+        // 다음 충전 시점 계산
+        // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
+        const lastChargeDate = new Date(startDate);
+        lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
+        
+        // 다음 충전 시점 = 마지막 충전일 + 7일
+        const nextChargeDate = new Date(lastChargeDate);
+        nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+
+        // 사용자 데이터 업데이트
+        await userRef.update({
+            premiumFreeNovelCount: currentCount,
+            premiumFreeNovelNextChargeDate: admin.firestore.Timestamp.fromDate(nextChargeDate),
+            updatedAt: admin.firestore.Timestamp.now()
+        });
+
+        console.log(`마이그레이션 완료: ${targetUserId}`, {
+            startDate: startDate.toISOString(),
+            elapsedDays,
+            totalCharged,
+            usedCount,
+            currentCount,
+            nextChargeDate: nextChargeDate.toISOString()
+        });
+
+        return {
+            success: true,
+            message: '마이그레이션 완료',
+            data: {
+                startDate: startDate.toISOString(),
+                elapsedDays,
+                totalCharged,
+                usedCount,
+                currentCount,
+                nextChargeDate: nextChargeDate.toISOString()
+            }
+        };
+    } catch (error) {
+        console.error('마이그레이션 실패:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            `마이그레이션 실패: ${error.message}`
+        );
+    }
+});
+
+// 모든 프리미엄 사용자 무료 생성권 일괄 마이그레이션 함수
+exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, context) => {
+    console.log('모든 프리미엄 사용자 무료 생성권 일괄 마이그레이션 시작...');
+    
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            '인증이 필요합니다.'
+        );
+    }
+
+    try {
+        // 모든 프리미엄 회원 조회
+        const monthlyPremiumUsers = await admin.firestore().collection('users')
+            .where('isMonthlyPremium', '==', true)
+            .get();
+        
+        const yearlyPremiumUsers = await admin.firestore().collection('users')
+            .where('isYearlyPremium', '==', true)
+            .get();
+
+        const allUserIds = new Set();
+        monthlyPremiumUsers.forEach(doc => allUserIds.add(doc.id));
+        yearlyPremiumUsers.forEach(doc => allUserIds.add(doc.id));
+
+        console.log(`마이그레이션 대상: ${allUserIds.size}명`);
+
+        let successCount = 0;
+        let failCount = 0;
+        const results = [];
+
+        for (const userId of allUserIds) {
+            try {
+                const userRef = admin.firestore().collection('users').doc(userId);
+                const userDoc = await userRef.get();
+
+                if (!userDoc.exists()) {
+                    continue;
+                }
+
+                const userData = userDoc.data();
+                
+                // 이미 마이그레이션된 사용자는 스킵 (premiumFreeNovelCount가 있으면)
+                if (userData.premiumFreeNovelCount !== undefined) {
+                    console.log(`이미 마이그레이션됨: ${userId}`);
+                    continue;
+                }
+
+                // premiumStartDate 확인
+                let startDate;
+                if (userData.premiumStartDate) {
+                    if (userData.premiumStartDate.seconds) {
+                        startDate = new Date(userData.premiumStartDate.seconds * 1000);
+                    } else if (userData.premiumStartDate.toDate) {
+                        startDate = userData.premiumStartDate.toDate();
+                    } else {
+                        startDate = new Date(userData.premiumStartDate);
+                    }
+                } else {
+                    // premiumStartDate가 없으면 현재 시점으로 설정
+                    startDate = new Date();
+                }
+
+                const now = new Date();
+                
+                // 경과 일수 계산
+                const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+                
+                // 총 충전 횟수 계산 (7일마다 1개씩)
+                // 시작일 당일에도 1개 지급되므로 +1
+                const totalCharged = Math.floor(elapsedDays / 7) + 1;
+
+                // 무료 사용 기록 확인
+                const freeNovelHistoryRef = admin.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('freeNovelHistory');
+                const freeNovelHistorySnapshot = await freeNovelHistoryRef.get();
+                const usedCount = freeNovelHistorySnapshot.size;
+
+                // 현재 보유 개수 계산
+                const currentCount = Math.max(0, totalCharged - usedCount);
+
+                // 다음 충전 시점 계산
+                // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
+                const lastChargeDate = new Date(startDate);
+                lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
+                
+                // 다음 충전 시점 = 마지막 충전일 + 7일
+                const nextChargeDate = new Date(lastChargeDate);
+                nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+
+                // 사용자 데이터 업데이트
+                await userRef.update({
+                    premiumFreeNovelCount: currentCount,
+                    premiumFreeNovelNextChargeDate: admin.firestore.Timestamp.fromDate(nextChargeDate),
+                    updatedAt: admin.firestore.Timestamp.now()
+                });
+
+                successCount++;
+                results.push({
+                    userId,
+                    success: true,
+                    currentCount,
+                    totalCharged,
+                    usedCount
+                });
+
+                console.log(`마이그레이션 완료: ${userId}`, {
+                    currentCount,
+                    totalCharged,
+                    usedCount
+                });
+            } catch (error) {
+                failCount++;
+                results.push({
+                    userId,
+                    success: false,
+                    error: error.message
+                });
+                console.error(`마이그레이션 실패: ${userId}`, error);
+            }
+        }
+
+        console.log(`일괄 마이그레이션 완료: 성공 ${successCount}명, 실패 ${failCount}명`);
+
+        return {
+            success: true,
+            message: `마이그레이션 완료: 성공 ${successCount}명, 실패 ${failCount}명`,
+            successCount,
+            failCount,
+            totalCount: allUserIds.size,
+            results: results.slice(0, 100) // 결과는 최대 100개만 반환
+        };
+    } catch (error) {
+        console.error('일괄 마이그레이션 실패:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            `일괄 마이그레이션 실패: ${error.message}`
+        );
+    }
+});
+
 // 마케팅 알림 발송 함수 (관리자용)
 exports.sendMarketingNotification = functions.https.onCall(async (data, context) => {
     // 인증 확인
