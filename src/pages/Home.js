@@ -382,7 +382,8 @@ const MoreButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
-  // margin-top: 16px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   text-align: center;
   &:hover {
     opacity: 0.8;
@@ -749,7 +750,7 @@ function Home({ user }) {
   // 사용자 가입일 가져오기
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchUserCreatedAt = async () => {
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -761,7 +762,7 @@ function Home({ user }) {
         console.error('사용자 가입일 조회 실패:', error);
       }
     };
-    
+
     fetchUserCreatedAt();
   }, [user]);
 
@@ -957,7 +958,7 @@ function Home({ user }) {
                     </MyNovelBox>
                   ))}
                 </MyNovelRow>
-                <MoreButton onClick={() => navigate('/my/statistics')}>
+                <MoreButton onClick={() => navigate('/my/completed-novels')}>
                   {t('home_see_more')}
                 </MoreButton>
               </>
@@ -1002,7 +1003,7 @@ function Home({ user }) {
                   const tutorialNovel = purchasedNovels.length < 3 ? getTutorialNovel(userCreatedAt) : null;
                   const allNovels = tutorialNovel ? [tutorialNovel, ...purchasedNovels] : purchasedNovels;
                   const displayNovels = allNovels.slice(0, 3);
-                  
+
                   return (
                     <>
                       <MyNovelRow>
@@ -1020,9 +1021,9 @@ function Home({ user }) {
                                 });
                               }
                             }}>
-                              <NovelCover 
-                                src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')} 
-                                alt={novel.title} 
+                              <NovelCover
+                                src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')}
+                                alt={novel.title}
                               />
                               <MyNovelTitle>{novel.title}</MyNovelTitle>
                               <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>

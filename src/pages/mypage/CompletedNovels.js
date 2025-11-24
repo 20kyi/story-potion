@@ -416,6 +416,52 @@ const NovelCheckbox = styled.input`
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+`;
+
+const PaginationButton = styled.button`
+  padding: 10px 16px;
+  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
+  border-radius: 8px;
+  background: ${({ theme, $active }) => $active ? '#cb6565' : theme.card || '#fff'};
+  color: ${({ $active }) => $active ? '#fff' : '#333'};
+  font-size: 14px;
+  font-weight: ${({ $active }) => $active ? '600' : '500'};
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme, $active }) => $active ? '#cb6565' : '#f5f5f5'};
+    border-color: ${({ theme }) => theme.primary || '#cb6565'};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+`;
+
+const PaginationInfo = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.cardSubText || '#666'};
+  margin: 0 8px;
+  white-space: nowrap;
+`;
+
 function CompletedNovels({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -436,6 +482,8 @@ function CompletedNovels({ user }) {
     const [showCheckboxes, setShowCheckboxes] = useState(false);
     const [batchConfirmOpen, setBatchConfirmOpen] = useState(false);
     const [batchAction, setBatchAction] = useState(null); // 'public' or 'private'
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
 
     // 완성된 소설 목록 가져오기
     useEffect(() => {
@@ -515,6 +563,8 @@ function CompletedNovels({ user }) {
         }
 
         setFilteredNovels(filtered);
+        // 필터/정렬 변경 시 첫 페이지로 리셋
+        setCurrentPage(1);
     }, [novels, selectedGenre, sortBy]);
 
     // 사용 가능한 장르 목록
@@ -748,8 +798,11 @@ function CompletedNovels({ user }) {
             ) : filteredNovels.length === 0 ? (
                 <EmptyMessage theme={theme}>완성된 소설이 없습니다.</EmptyMessage>
             ) : (
-                <NovelListWrapper $viewMode={viewMode}>
-                    {filteredNovels.map((novel) => {
+                <>
+                    <NovelListWrapper $viewMode={viewMode}>
+                        {filteredNovels
+                            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                            .map((novel) => {
                         const genreKey = getGenreKey(novel.genre);
                         return (
                             <NovelItem
@@ -799,8 +852,32 @@ function CompletedNovels({ user }) {
                                 </NovelInfo>
                             </NovelItem>
                         );
-                    })}
-                </NovelListWrapper>
+                        })}
+                    </NovelListWrapper>
+                    
+                    {/* 페이지네이션 */}
+                    {filteredNovels.length > itemsPerPage && (
+                        <PaginationContainer theme={theme}>
+                            <PaginationButton
+                                theme={theme}
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                이전
+                            </PaginationButton>
+                            <PaginationInfo theme={theme}>
+                                {currentPage} / {Math.ceil(filteredNovels.length / itemsPerPage)}
+                            </PaginationInfo>
+                            <PaginationButton
+                                theme={theme}
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredNovels.length / itemsPerPage), prev + 1))}
+                                disabled={currentPage >= Math.ceil(filteredNovels.length / itemsPerPage)}
+                            >
+                                다음
+                            </PaginationButton>
+                        </PaginationContainer>
+                    )}
+                </>
             )}
             
             <ConfirmModal

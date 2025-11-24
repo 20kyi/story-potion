@@ -235,6 +235,52 @@ const EmptyMessage = styled.div`
   padding: 60px 20px;
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+`;
+
+const PaginationButton = styled.button`
+  padding: 10px 16px;
+  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
+  border-radius: 8px;
+  background: ${({ theme, $active }) => $active ? '#cb6565' : theme.card || '#fff'};
+  color: ${({ $active }) => $active ? '#fff' : '#333'};
+  font-size: 14px;
+  font-weight: ${({ $active }) => $active ? '600' : '500'};
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme, $active }) => $active ? '#cb6565' : '#f5f5f5'};
+    border-color: ${({ theme }) => theme.primary || '#cb6565'};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+`;
+
+const PaginationInfo = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.cardSubText || '#666'};
+  margin: 0 8px;
+  white-space: nowrap;
+`;
+
 function PurchasedNovels({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
@@ -250,6 +296,8 @@ function PurchasedNovels({ user }) {
     });
     const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'author'
     const [userCreatedAt, setUserCreatedAt] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
 
     // 사용자 가입일 가져오기
     useEffect(() => {
@@ -412,6 +460,8 @@ function PurchasedNovels({ user }) {
         } else {
             setSortedNovels(sorted);
         }
+        // 정렬 변경 시 첫 페이지로 리셋
+        setCurrentPage(1);
     }, [novels, sortBy, userCreatedAt]);
 
     return (
@@ -455,7 +505,9 @@ function PurchasedNovels({ user }) {
                         </ViewToggleRight>
                     </ViewToggle>
                     <NovelListWrapper $viewMode={viewMode}>
-                        {sortedNovels.map((novel) => {
+                        {sortedNovels
+                            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                            .map((novel) => {
                             const formatPurchaseDate = (purchasedAt) => {
                                 if (!purchasedAt) return '';
                                 const date = purchasedAt.toDate ? purchasedAt.toDate() : new Date(purchasedAt);
@@ -505,6 +557,29 @@ function PurchasedNovels({ user }) {
                             );
                         })}
                     </NovelListWrapper>
+                    
+                    {/* 페이지네이션 */}
+                    {sortedNovels.length > itemsPerPage && (
+                        <PaginationContainer theme={theme}>
+                            <PaginationButton
+                                theme={theme}
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                이전
+                            </PaginationButton>
+                            <PaginationInfo theme={theme}>
+                                {currentPage} / {Math.ceil(sortedNovels.length / itemsPerPage)}
+                            </PaginationInfo>
+                            <PaginationButton
+                                theme={theme}
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(sortedNovels.length / itemsPerPage), prev + 1))}
+                                disabled={currentPage >= Math.ceil(sortedNovels.length / itemsPerPage)}
+                            >
+                                다음
+                            </PaginationButton>
+                        </PaginationContainer>
+                    )}
                 </>
             )}
             <Navigation />
