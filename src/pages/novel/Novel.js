@@ -550,6 +550,7 @@ const NovelCTACard = styled.div`
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  user-select: none;
   
   &:hover {
     transform: translateY(-2px);
@@ -560,6 +561,8 @@ const NovelCTACard = styled.div`
     transform: translateY(0);
   }
 `;
+
+
 
 const NovelCTAContent = styled.div`
   position: relative;
@@ -968,6 +971,7 @@ const Novel = ({ user }) => {
             }
 
             // 표시되는 모든 주차를 포함하는 날짜 범위 설정
+            // 표시되는 모든 주차를 포함하는 날짜 범위 설정
             const startDate = monthWeeks[0].start;
             const endDate = monthWeeks[monthWeeks.length - 1].end;
 
@@ -1207,10 +1211,12 @@ const Novel = ({ user }) => {
                 }
 
                 // 표시되는 모든 주차를 포함하는 날짜 범위 설정
-                const startDate = monthWeeks[0].start;
+                // 지난주도 포함하기 위해 시작 날짜를 7일 앞으로 확장
+                const startDate = new Date(monthWeeks[0].start);
+                startDate.setDate(startDate.getDate() - 7);
                 const endDate = monthWeeks[monthWeeks.length - 1].end;
 
-                // 1. 확장된 날짜 범위로 일기 가져오기
+                // 1. 확장된 날짜 범위로 일기 가져오기 (지난주 포함)
                 const diariesRef = collection(db, 'diaries');
                 const diariesQuery = query(diariesRef,
                     where('userId', '==', user.uid),
@@ -2332,10 +2338,6 @@ const Novel = ({ user }) => {
                                         <CurrentWeekDiaryItem
                                             key={index}
                                             theme={theme}
-                                            onClick={() => {
-                                                setShowCurrentWeekDiaryModal(false);
-                                                handleDiaryClick(diary);
-                                            }}
                                         >
                                             {imageUrl ? (
                                                 <CurrentWeekDiaryImage src={imageUrl} alt="일기 이미지" />
