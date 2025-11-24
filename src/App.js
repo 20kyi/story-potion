@@ -30,6 +30,7 @@ import NovelListByGenre from './pages/novel/NovelListByGenre';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import Statistics from './pages/mypage/Statistics';
+import CompletedNovels from './pages/mypage/CompletedNovels';
 import Settings from './pages/mypage/Settings';
 import NotificationSettings from './pages/mypage/NotificationSettings';
 import Notice from './pages/mypage/Notice';
@@ -106,6 +107,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/novel/:id" element={user ? <NovelView user={user} /> : <Navigate to="/login" />} />
                 <Route path="/novels/genre/:genre" element={user ? <NovelListByGenre user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/statistics" element={user ? <Statistics user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/completed-novels" element={user ? <CompletedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/app-info" element={user ? <AppInfo user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/terms-of-service" element={user ? <TermsOfService user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/privacy-policy" element={user ? <PrivacyPolicy user={user} /> : <Navigate to="/login" />} />

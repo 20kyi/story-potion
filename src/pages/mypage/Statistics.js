@@ -4,9 +4,8 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useTranslation } from '../../LanguageContext';
-import { createNovelUrl } from '../../utils/novelUtils';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
@@ -86,119 +85,6 @@ const StatNumberSmall = styled(StatNumber)`
   font-size: 1.1rem;
 `;
 
-const NovelListModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const NovelListModalContent = styled.div`
-  background-color: ${({ theme }) => theme.card || 'white'};
-  padding: 24px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-`;
-
-const FilterContainer = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-`;
-
-const Select = styled.select`
-  padding: 10px 16px;
-  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.card || '#fff'};
-  color: ${({ theme }) => theme.text || '#333'};
-  font-size: 14px;
-  cursor: pointer;
-  flex: 1;
-  min-width: 120px;
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.primary || '#cb6565'};
-  }
-`;
-
-const NovelGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-  width: 100%;
-`;
-
-const NovelItem = styled.div`
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  &:hover {
-    transform: translateY(-4px);
-  }
-`;
-
-const NovelCover = styled.img`
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 8px;
-  display: block;
-  min-width: 0;
-`;
-
-const NovelTitle = styled.div`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text || '#333'};
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-`;
-
-const NovelMeta = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.cardSubText || '#666'};
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-`;
-
-const PurchaseBadge = styled.span`
-  background: ${({ theme }) => theme.primary || '#cb6565'};
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 60px 20px;
-  color: ${({ theme }) => theme.cardSubText || '#999'};
-  font-size: 16px;
-`;
 
 // 가장 많이 제작한 장르 이미지
 const FavoriteGenreContainer = styled.div`
@@ -280,12 +166,6 @@ function Statistics({ user }) {
     const [loading, setLoading] = useState(true);
     const [favoriteGenre, setFavoriteGenre] = useState('-');
     const [favoriteGenreCount, setFavoriteGenreCount] = useState(0);
-    const [showNovelList, setShowNovelList] = useState(false);
-    const [novels, setNovels] = useState([]);
-    const [filteredNovels, setFilteredNovels] = useState([]);
-    const [selectedGenre, setSelectedGenre] = useState('all');
-    const [sortBy, setSortBy] = useState('latest'); // 'latest', 'oldest', 'popular'
-    const [novelsLoading, setNovelsLoading] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -383,100 +263,6 @@ function Statistics({ user }) {
         fetchData();
     }, [user]);
 
-    // 완성된 소설 목록 가져오기
-    useEffect(() => {
-        if (!user || !showNovelList) return;
-
-        const fetchNovels = async () => {
-            setNovelsLoading(true);
-            try {
-                const novelsRef = collection(db, 'novels');
-                const novelsQ = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-                const novelsSnap = await getDocs(novelsQ);
-                const fetchedNovels = novelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // 구매자 수 조회 (최적화: 모든 사용자의 viewedNovels를 한 번에 조회)
-                const usersRef = collection(db, 'users');
-                const usersSnapshot = await getDocs(usersRef);
-                const purchaseCountMap = {};
-
-                // 각 사용자의 viewedNovels를 조회하여 구매자 수 집계
-                const countPromises = usersSnapshot.docs.map(async (userDoc) => {
-                    try {
-                        const viewedNovelsRef = collection(db, 'users', userDoc.id, 'viewedNovels');
-                        const viewedSnap = await getDocs(viewedNovelsRef);
-                        viewedSnap.docs.forEach(viewedDoc => {
-                            const novelId = viewedDoc.id;
-                            purchaseCountMap[novelId] = (purchaseCountMap[novelId] || 0) + 1;
-                        });
-                    } catch (error) {
-                        // 개별 사용자 조회 실패는 무시
-                    }
-                });
-
-                await Promise.all(countPromises);
-
-                // 소설에 구매자 수 추가
-                const novelsWithPurchaseCount = fetchedNovels.map(novel => ({
-                    ...novel,
-                    purchaseCount: purchaseCountMap[novel.id] || 0
-                }));
-
-                setNovels(novelsWithPurchaseCount);
-            } catch (error) {
-                console.error('소설 목록 가져오기 실패:', error);
-                setNovels([]);
-            } finally {
-                setNovelsLoading(false);
-            }
-        };
-
-        fetchNovels();
-    }, [user, showNovelList]);
-
-    // 필터링 및 정렬
-    useEffect(() => {
-        let filtered = [...novels];
-
-        // 장르 필터
-        if (selectedGenre !== 'all') {
-            filtered = filtered.filter(novel => novel.genre === selectedGenre);
-        }
-
-        // 정렬
-        if (sortBy === 'latest') {
-            filtered.sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
-                const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
-                return dateB - dateA;
-            });
-        } else if (sortBy === 'oldest') {
-            filtered.sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
-                const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
-                return dateA - dateB;
-            });
-        } else if (sortBy === 'popular') {
-            filtered.sort((a, b) => (b.purchaseCount || 0) - (a.purchaseCount || 0));
-        }
-
-        setFilteredNovels(filtered);
-    }, [novels, selectedGenre, sortBy]);
-
-    // 사용 가능한 장르 목록
-    const availableGenres = ['all', ...new Set(novels.map(n => n.genre).filter(Boolean))];
-
-    const getGenreKey = (genre) => {
-        const genreMap = {
-            '로맨스': 'romance',
-            '추리': 'mystery',
-            '역사': 'historical',
-            '동화': 'fairytale',
-            '판타지': 'fantasy',
-            '공포': 'horror'
-        };
-        return genreMap[genre] || null;
-    };
 
     // 가장 많이 제작한 장르의 배너 정보 가져오기
     const favoriteGenreBanner = favoriteGenre !== '-' && genreBannerData[favoriteGenre]
@@ -549,12 +335,12 @@ function Statistics({ user }) {
                             <StatLabel color="#a259d9">{t('stat_streak')}</StatLabel>
                             <StatNumber color="#a259d9">{maxStreak}</StatNumber>
                         </StatCard>
-                        {/* 내 관심사 */}
+                        {/* 완성된 소설 */}
                         <StatCard
                             style={{ gridColumn: 2, gridRow: '3 / 5', cursor: novelCount > 0 ? 'pointer' : 'default' }}
                             onClick={() => {
                                 if (novelCount > 0) {
-                                    setShowNovelList(true);
+                                    navigate('/my/completed-novels');
                                 }
                             }}
                         >
@@ -571,68 +357,6 @@ function Statistics({ user }) {
                     </StatsGrid>
                 )}
 
-                {/* 완성된 소설 목록 모달 */}
-                {showNovelList && (
-                    <NovelListModal onClick={() => setShowNovelList(false)}>
-                        <NovelListModalContent onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                                <h3 style={{ color: '#cb6565', margin: 0, fontSize: 20 }}>완성된 소설</h3>
-                                <button
-                                    onClick={() => setShowNovelList(false)}
-                                    style={{ background: 'none', border: 'none', color: '#cb6565', fontSize: 24, cursor: 'pointer', padding: 8 }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <FilterContainer>
-                                <Select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)}>
-                                    <option value="all">전체 장르</option>
-                                    {availableGenres.filter(g => g !== 'all').map(genre => (
-                                        <option key={genre} value={genre}>
-                                            {getGenreKey(genre) ? t(`novel_genre_${getGenreKey(genre)}`) : genre}
-                                        </option>
-                                    ))}
-                                </Select>
-                                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                                    <option value="latest">최신순</option>
-                                    <option value="oldest">오래된순</option>
-                                    <option value="popular">인기순</option>
-                                </Select>
-                            </FilterContainer>
-
-                            {novelsLoading ? (
-                                <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{t('loading')}</div>
-                            ) : filteredNovels.length === 0 ? (
-                                <EmptyMessage>완성된 소설이 없습니다.</EmptyMessage>
-                            ) : (
-                                <NovelGrid>
-                                    {filteredNovels.map((novel) => {
-                                        const genreKey = getGenreKey(novel.genre);
-                                        return (
-                                            <NovelItem
-                                                key={novel.id}
-                                                onClick={() => {
-                                                    navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
-                                                    setShowNovelList(false);
-                                                }}
-                                            >
-                                                <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                                                <NovelTitle>{novel.title}</NovelTitle>
-                                                <NovelMeta>
-                                                    <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
-                                                    {novel.purchaseCount > 0 && (
-                                                        <PurchaseBadge>{novel.purchaseCount}</PurchaseBadge>
-                                                    )}
-                                                </NovelMeta>
-                                            </NovelItem>
-                                        );
-                                    })}
-                                </NovelGrid>
-                            )}
-                        </NovelListModalContent>
-                    </NovelListModal>
-                )}
             </div>
             <Navigation />
         </>
