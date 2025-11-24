@@ -1282,6 +1282,21 @@ function App() {
 }
 
 const GlobalStyle = createGlobalStyle`
+    /* 시스템 폰트 크기 설정의 영향을 받지 않도록 설정 */
+    html {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    
+    body {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    
     * {
         font-family: ${props => props.fontFamily} !important;
     }
@@ -1289,6 +1304,10 @@ const GlobalStyle = createGlobalStyle`
     /* 폰트 크기 적용 - 모든 요소에 직접 적용 */
     * {
         font-size: ${props => props.fontSize}px !important;
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
     }
     
     /* Header와 Navigation은 제외 - 각 요소에 이미 !important로 명시적 폰트 크기가 설정되어 있어 자동으로 override됨 */

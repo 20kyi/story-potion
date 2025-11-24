@@ -4,6 +4,14 @@
 
 /* 폰트는 index.html에서 정의됨 */
 
+/* 시스템 폰트 크기 설정의 영향을 받지 않도록 설정 */
+html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -11,6 +19,10 @@ body {
     padding-right: env(safe-area-inset-right);
     box-sizing: border-box;
     font-family: inherit;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 

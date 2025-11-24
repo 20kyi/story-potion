@@ -30,8 +30,20 @@
             box-sizing: border-box;
         }
 
+        /* 시스템 폰트 크기 설정의 영향을 받지 않도록 설정 */
+        html {
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
         body {
             font-family: 'Instrument Sans', sans-serif;
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         @font-face {
