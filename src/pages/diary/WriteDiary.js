@@ -2312,7 +2312,14 @@ function WriteDiary({ user }) {
                 )}
 
                 {/* 플로팅 스티커 버튼 */}
-                <StickerButton onClick={() => setIsStickerPanelOpen(true)}>
+                <StickerButton onClick={() => {
+                    if (!isPremium) {
+                        toast.showToast(t('premium_required'), 'info');
+                        navigate('/my/premium');
+                        return;
+                    }
+                    setIsStickerPanelOpen(true);
+                }}>
                     🎨
                 </StickerButton>
             </main>
