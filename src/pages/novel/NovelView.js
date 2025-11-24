@@ -759,7 +759,20 @@ function NovelView({ user }) {
                 // userId가 'system'인 경우 튜토리얼 책으로 처리
                 if (targetUserId === 'system' && isDateKey) {
                     const { getTutorialNovel } = await import('../../utils/tutorialNovel');
-                    fetchedNovel = getTutorialNovel();
+                    // 사용자 가입일 가져오기
+                    let userCreatedAt = null;
+                    if (user) {
+                        try {
+                            const userDoc = await getDoc(doc(db, 'users', user.uid));
+                            if (userDoc.exists()) {
+                                const userData = userDoc.data();
+                                userCreatedAt = userData.createdAt || null;
+                            }
+                        } catch (error) {
+                            console.error('사용자 가입일 조회 실패:', error);
+                        }
+                    }
+                    fetchedNovel = getTutorialNovel(userCreatedAt);
                     setNovel(fetchedNovel);
                     setShowCoverView(true);
                     setIsReadingMode(false);

@@ -699,6 +699,7 @@ function Home({ user }) {
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
+  const [userCreatedAt, setUserCreatedAt] = useState(null); // 사용자 가입일
 
 
   // 포션 데이터 (표시는 locale로)
@@ -743,6 +744,25 @@ function Home({ user }) {
   };
 
 
+
+  // 사용자 가입일 가져오기
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchUserCreatedAt = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserCreatedAt(userData.createdAt || null);
+        }
+      } catch (error) {
+        console.error('사용자 가입일 조회 실패:', error);
+      }
+    };
+    
+    fetchUserCreatedAt();
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -1011,13 +1031,13 @@ function Home({ user }) {
               <>
                 <MyNovelRow>
                   <MyNovelBox onClick={() => {
-                    const tutorialNovel = getTutorialNovel();
+                    const tutorialNovel = getTutorialNovel(userCreatedAt);
                     navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
                       state: { tutorialNovel, returnPath: '/' }
                     });
                   }}>
-                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel().title} />
-                    <MyNovelTitle>{getTutorialNovel().title}</MyNovelTitle>
+                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel(userCreatedAt).title} />
+                    <MyNovelTitle>{getTutorialNovel(userCreatedAt).title}</MyNovelTitle>
                   </MyNovelBox>
                   {Array(2).fill(null).map((_, idx) => (
                     <MyNovelBox key={`placeholder-${idx}`}>
@@ -1043,48 +1063,75 @@ function Home({ user }) {
           <>
             {purchasedNovels.length > 0 ? (
               <>
-                <MyNovelRow>
-                  {purchasedNovels.map(novel => (
-                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
-                      state: { returnPath: '/' }
-                    })}>
-                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                      <MyNovelTitle>{novel.title}</MyNovelTitle>
-                      <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {novel.ownerName}</div>
-                    </MyNovelBox>
-                  ))}
-                  {Array(3 - purchasedNovels.length).fill(null).map((_, idx) => (
-                    <MyNovelBox key={`purchased-placeholder-${idx}`}>
-                      <div style={{
-                        width: '100%',
-                        maxWidth: '180px',
-                        aspectRatio: '2/3',
-                        background: 'transparent',
-                        borderRadius: '15px',
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                      }} />
-                    </MyNovelBox>
-                  ))}
-                </MyNovelRow>
-                <MoreButton onClick={() => navigate('/purchased-novels')}>
-                  {t('home_see_more')}
-                </MoreButton>
+                {(() => {
+                  // 소설이 3개 미만일 때만 튜토리얼 책 포함
+                  const tutorialNovel = purchasedNovels.length < 3 ? getTutorialNovel(userCreatedAt) : null;
+                  const allNovels = tutorialNovel ? [tutorialNovel, ...purchasedNovels] : purchasedNovels;
+                  const displayNovels = allNovels.slice(0, 3);
+                  
+                  return (
+                    <>
+                      <MyNovelRow>
+                        {displayNovels.map((novel, idx) => {
+                          const isTutorial = novel.id === 'tutorial' || novel.isTutorial === true;
+                          return (
+                            <MyNovelBox key={novel.id || `novel-${idx}`} onClick={() => {
+                              if (isTutorial) {
+                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
+                                  state: { tutorialNovel: novel, returnPath: '/' }
+                                });
+                              } else {
+                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
+                                  state: { returnPath: '/' }
+                                });
+                              }
+                            }}>
+                              <NovelCover 
+                                src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')} 
+                                alt={novel.title} 
+                              />
+                              <MyNovelTitle>{novel.title}</MyNovelTitle>
+                              <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>
+                                by {novel.ownerName}
+                              </div>
+                            </MyNovelBox>
+                          );
+                        })}
+                        {Array(3 - displayNovels.length).fill(null).map((_, idx) => (
+                          <MyNovelBox key={`purchased-placeholder-${idx}`}>
+                            <div style={{
+                              width: '100%',
+                              maxWidth: '180px',
+                              aspectRatio: '2/3',
+                              background: 'transparent',
+                              borderRadius: '15px',
+                              display: 'block',
+                              marginLeft: 'auto',
+                              marginRight: 'auto',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                            }} />
+                          </MyNovelBox>
+                        ))}
+                      </MyNovelRow>
+                      <MoreButton onClick={() => navigate('/purchased-novels')}>
+                        {t('home_see_more')}
+                      </MoreButton>
+                    </>
+                  );
+                })()}
               </>
             ) : (
               <>
                 <MyNovelRow>
                   <MyNovelBox onClick={() => {
-                    const tutorialNovel = getTutorialNovel();
+                    const tutorialNovel = getTutorialNovel(userCreatedAt);
                     navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
                       state: { tutorialNovel, returnPath: '/' }
                     });
                   }}>
-                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel().title} />
-                    <MyNovelTitle>{getTutorialNovel().title}</MyNovelTitle>
-                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {getTutorialNovel().ownerName}</div>
+                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel(userCreatedAt).title} />
+                    <MyNovelTitle>{getTutorialNovel(userCreatedAt).title}</MyNovelTitle>
+                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {getTutorialNovel(userCreatedAt).ownerName}</div>
                   </MyNovelBox>
                   {Array(2).fill(null).map((_, idx) => (
                     <MyNovelBox key={`purchased-placeholder-${idx}`}>

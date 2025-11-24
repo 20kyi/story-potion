@@ -1,8 +1,21 @@
 // 튜토리얼 소설 데이터
-export const getTutorialNovel = () => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
+export const getTutorialNovel = (userCreatedAt = null) => {
+    // 사용자 가입일이 있으면 사용, 없으면 현재 시간 사용
+    const createdAtDate = userCreatedAt
+        ? (userCreatedAt.toDate ? userCreatedAt.toDate() : new Date(userCreatedAt))
+        : new Date();
+
+    const year = createdAtDate.getFullYear();
+    const month = createdAtDate.getMonth() + 1;
+
+    // createdAt을 Firestore Timestamp 형식으로 변환
+    const createdAtTimestamp = userCreatedAt
+        ? (userCreatedAt.toDate
+            ? { seconds: Math.floor(userCreatedAt.toDate().getTime() / 1000), nanoseconds: 0 }
+            : (userCreatedAt.seconds
+                ? userCreatedAt
+                : { seconds: Math.floor(new Date(userCreatedAt).getTime() / 1000), nanoseconds: 0 }))
+        : { seconds: Math.floor(createdAtDate.getTime() / 1000), nanoseconds: 0 };
 
     return {
         id: 'tutorial',
@@ -44,7 +57,7 @@ export const getTutorialNovel = () => {
 3. 다른 사람들의 소설도 구경해보세요
 
 감사합니다! 🎉`,
-        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+        createdAt: createdAtTimestamp,
         isPublic: true,
         ownerName: '스토리 포션',
         week: `${year}년 ${month}월 1주차`,
