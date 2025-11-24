@@ -10,6 +10,7 @@ import { db } from '../../firebase';
 import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import { useTheme } from '../../ThemeContext';
 import { createNovelPurchaseNotification, createPointEarnNotification } from '../../utils/notificationService';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import AlertModal from '../../components/ui/AlertModal';
@@ -300,6 +301,16 @@ const CoverTitle = styled.h2`
   font-weight: 600;
   text-align: center;
   font-family: inherit;
+`;
+
+const CoverAuthor = styled.div`
+  font-size: 16px;
+  color: ${({ theme }) => theme.cardSubText || '#888'};
+  margin-top: 8px;
+  margin-bottom: 0;
+  text-align: center;
+  font-family: inherit;
+  font-weight: 500;
 `;
 
 const CoverHint = styled.div`
@@ -698,9 +709,11 @@ function NovelView({ user }) {
     const [resumeReadingModal, setResumeReadingModal] = useState(false);
     const [savedScrollPosition, setSavedScrollPosition] = useState(null);
     const [savedPageIndex, setSavedPageIndex] = useState(null);
+    const [ownerName, setOwnerName] = useState('');
     const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useTranslation();
+    const theme = useTheme();
 
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
@@ -752,6 +765,7 @@ function NovelView({ user }) {
                     setShowCoverView(true);
                     setIsReadingMode(false);
                     setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
+                    setOwnerName(fetchedNovel.ownerName || '스토리 포션');
                     setLoading(false);
                     return;
                 }
@@ -777,6 +791,7 @@ function NovelView({ user }) {
                     setShowCoverView(true);
                     setIsReadingMode(false);
                     setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
+                    setOwnerName(fetchedNovel.ownerName || '스토리 포션');
                     setLoading(false);
                     return;
                 }
@@ -816,6 +831,23 @@ function NovelView({ user }) {
                 setNovel(fetchedNovel);
                 setShowCoverView(true); // 소설이 로드될 때마다 표지 보기 모드로 리셋
                 setIsReadingMode(false); // 읽기 모드도 리셋
+                
+                // 작가 정보 가져오기
+                if (fetchedNovel.userId) {
+                    try {
+                        const ownerRef = doc(db, 'users', fetchedNovel.userId);
+                        const ownerSnap = await getDoc(ownerRef);
+                        if (ownerSnap.exists()) {
+                            const ownerData = ownerSnap.data();
+                            setOwnerName(ownerData.nickname || ownerData.nick || ownerData.displayName || fetchedNovel.userId);
+                        } else {
+                            setOwnerName(fetchedNovel.userId);
+                        }
+                    } catch (error) {
+                        console.error('작가 정보 가져오기 실패:', error);
+                        setOwnerName(fetchedNovel.userId);
+                    }
+                }
 
                 // 본인 소설인 경우 구매자 수 조회
                 if (fetchedNovel.userId === user.uid) {
@@ -1252,6 +1284,9 @@ function NovelView({ user }) {
                         alt={novel.title}
                     />
                     <CoverTitle>{novel.title}</CoverTitle>
+                    {ownerName && (
+                        <CoverAuthor theme={theme}>by {ownerName}</CoverAuthor>
+                    )}
                     {/* <CoverHint>표지를 터치하거나 클릭하여 소설을 읽으세요</CoverHint> */}
                     {/* 구매 전 안내 문구 (본인 소설이 아니고 접근 권한이 없을 때만) */}
                     {novel.userId !== user.uid && !accessGranted && (

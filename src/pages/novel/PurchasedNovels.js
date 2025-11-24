@@ -106,50 +106,64 @@ const ToggleButton = styled.button`
 
 const NovelListWrapper = styled.div`
   display: ${props => props.$viewMode === 'card' ? 'grid' : 'flex'};
-  grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(2, 1fr)' : 'none'};
+  grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(3, 1fr)' : 'none'};
   flex-direction: ${props => props.$viewMode === 'list' ? 'column' : 'row'};
-  gap: 20px;
+  gap: ${props => props.$viewMode === 'card' ? '32px 16px' : '20px'};
   padding-bottom: 20px;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(4, 1fr)' : 'none'};
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(5, 1fr)' : 'none'};
+  }
 `;
 
 const NovelItem = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 12px;
-  padding: ${props => props.$viewMode === 'card' ? '20px' : '16px'};
-  box-shadow: ${({ theme }) => theme.cardShadow};
-  border: 1px solid ${({ theme }) => theme.border};
+  background: ${props => props.$viewMode === 'card' ? 'transparent' : props.theme.card};
+  border-radius: ${props => props.$viewMode === 'card' ? '0' : '12px'};
+  padding: ${props => props.$viewMode === 'card' ? '0' : '16px'};
+  box-shadow: ${props => props.$viewMode === 'card' ? 'none' : props.theme.cardShadow};
+  border: ${props => props.$viewMode === 'card' ? 'none' : `1px solid ${props.theme.border}`};
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: ${props => props.$viewMode === 'card' ? 'transform 0.2s' : 'box-shadow 0.15s'};
   display: flex;
   flex-direction: ${props => props.$viewMode === 'card' ? 'column' : 'row'};
   align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
   gap: ${props => props.$viewMode === 'card' ? '12px' : '16px'};
   width: 100%;
+  text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
   &:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    ${props => props.$viewMode === 'card' 
+      ? 'transform: translateY(-4px);' 
+      : 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);'
+    }
   }
 `;
 
 const NovelCover = styled.img`
   width: ${props => props.$viewMode === 'card' ? '100%' : '80px'};
-  max-width: ${props => props.$viewMode === 'card' ? '180px' : '80px'};
+  max-width: ${props => props.$viewMode === 'card' ? 'none' : '80px'};
   aspect-ratio: 2/3;
   height: ${props => props.$viewMode === 'card' ? 'auto' : '120px'};
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: ${props => props.$viewMode === 'card' ? '4px' : '12px'};
   background: #E5E5E5;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${props => props.$viewMode === 'card' ? '0 2px 8px rgba(0,0,0,0.07)' : '0 2px 8px rgba(0,0,0,0.1)'};
+  margin-bottom: ${props => props.$viewMode === 'card' ? '12px' : '0'};
   flex-shrink: 0;
 `;
 
 const TutorialCover = styled.div`
   width: ${props => props.$viewMode === 'card' ? '100%' : '80px'};
-  max-width: ${props => props.$viewMode === 'card' ? '180px' : '80px'};
+  max-width: ${props => props.$viewMode === 'card' ? 'none' : '80px'};
   aspect-ratio: 2/3;
   height: ${props => props.$viewMode === 'card' ? 'auto' : '120px'};
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: ${props => props.$viewMode === 'card' ? '4px' : '12px'};
+  box-shadow: ${props => props.$viewMode === 'card' ? '0 2px 8px rgba(0,0,0,0.07)' : '0 2px 8px rgba(0,0,0,0.1)'};
+  margin-bottom: ${props => props.$viewMode === 'card' ? '12px' : '0'};
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -178,10 +192,10 @@ const NovelInfo = styled.div`
 `;
 
 const NovelTitle = styled.div`
-  font-size: 15px;
+  font-size: ${props => props.$viewMode === 'card' ? '14px' : '15px'};
   color: ${({ theme }) => theme.text};
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-weight: ${props => props.$viewMode === 'card' ? '500' : '600'};
+  margin-bottom: ${props => props.$viewMode === 'card' ? '0' : '4px'};
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -190,6 +204,8 @@ const NovelTitle = styled.div`
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
+  height: ${props => props.$viewMode === 'card' ? '2.8em' : 'auto'};
 `;
 
 const NovelOwner = styled.div`
@@ -474,13 +490,17 @@ function PurchasedNovels({ user }) {
                                         alt={novel.title || '소설 표지'}
                                         $viewMode={viewMode}
                                     />
-                                    <NovelInfo $viewMode={viewMode}>
+                                    {viewMode === 'card' ? (
                                         <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
-                                        <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
-                                        <PurchaseDate $viewMode={viewMode}>
-                                            {isTutorial ? '튜토리얼' : `구매일: ${formatPurchaseDate(novel.purchasedAt)}`}
-                                        </PurchaseDate>
-                                    </NovelInfo>
+                                    ) : (
+                                        <NovelInfo $viewMode={viewMode}>
+                                            <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
+                                            <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
+                                            <PurchaseDate $viewMode={viewMode}>
+                                                {isTutorial ? '튜토리얼' : `구매일: ${formatPurchaseDate(novel.purchasedAt)}`}
+                                            </PurchaseDate>
+                                        </NovelInfo>
+                                    )}
                                 </NovelItem>
                             );
                         })}
