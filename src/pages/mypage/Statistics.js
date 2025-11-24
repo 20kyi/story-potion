@@ -200,6 +200,76 @@ const EmptyMessage = styled.div`
   font-size: 16px;
 `;
 
+// 가장 많이 제작한 장르 이미지
+const FavoriteGenreContainer = styled.div`
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto 20px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const FavoriteGenreCard = styled.div`
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+`;
+
+// 가장 많이 제작한 장르 텍스트
+const FavoriteGenreText = styled.div`
+  text-align: center;
+  margin-top: 32px;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text || '#333'};
+`;
+
+// 장르별 배너 데이터
+const genreBannerData = {
+    '로맨스': {
+        genreKey: 'romance',
+        src: process.env.PUBLIC_URL + '/novel_banner/romance.png',
+        text: '낭만적인 로맨티스트'
+    },
+    '추리': {
+        genreKey: 'mystery',
+        src: process.env.PUBLIC_URL + '/novel_banner/mystery.png',
+        text: '추리를 풀어가는 탐정'
+    },
+    '역사': {
+        genreKey: 'historical',
+        src: process.env.PUBLIC_URL + '/novel_banner/historical.png',
+        text: '시간을 여행하는는 고전 감성러'
+    },
+    '동화': {
+        genreKey: 'fairytale',
+        src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png',
+        text: '동화를 꿈꾸는 이야기꾼'
+    },
+    '판타지': {
+        genreKey: 'fantasy',
+        src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
+        text: '새로운 세계를 창조하는 모험가'
+    },
+    '공포': {
+        genreKey: 'horror',
+        src: process.env.PUBLIC_URL + '/novel_banner/horror.png',
+        text: '공포를 즐기는 호러 마니아'
+    },
+};
+
 function Statistics({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -408,10 +478,31 @@ function Statistics({ user }) {
         return genreMap[genre] || null;
     };
 
+    // 가장 많이 제작한 장르의 배너 정보 가져오기
+    const favoriteGenreBanner = favoriteGenre !== '-' && genreBannerData[favoriteGenre]
+        ? genreBannerData[favoriteGenre]
+        : null;
+
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('stats_title')} />
             <div style={{ maxWidth: 600, margin: '60px auto', marginTop: 50, padding: 24, paddingTop: 40, paddingBottom: 100 }}>
+                {/* 가장 많이 제작한 장르 이미지 */}
+                {!loading && favoriteGenreBanner && (
+                    <FavoriteGenreContainer>
+                        <div>
+                            <FavoriteGenreCard onClick={() => navigate(`/novels/genre/${favoriteGenreBanner.genreKey}`)}>
+                                <img
+                                    src={favoriteGenreBanner.src}
+                                    alt={t(`novel_genre_${favoriteGenreBanner.genreKey}`)}
+                                />
+                            </FavoriteGenreCard>
+                            <FavoriteGenreText>
+                                {favoriteGenreBanner.text}
+                            </FavoriteGenreText>
+                        </div>
+                    </FavoriteGenreContainer>
+                )}
                 {loading ? (
                     <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{t('loading')}</div>
                 ) : (

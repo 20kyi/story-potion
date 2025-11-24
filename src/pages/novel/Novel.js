@@ -476,32 +476,24 @@ const CarouselSlide = styled.div`
   padding: 0;
 `;
 
-const bannerData = [
-    { genre: '로맨스', genreKey: 'romance', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
-    { genre: '추리', genreKey: 'mystery', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
-    { genre: '역사', genreKey: 'historical', src: process.env.PUBLIC_URL + '/novel_banner/historical.png' },
-    { genre: '동화', genreKey: 'fairytale', src: process.env.PUBLIC_URL + '/novel_banner/fairytale.png' },
-    { genre: '판타지', genreKey: 'fantasy', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
-    { genre: '공포', genreKey: 'horror', src: process.env.PUBLIC_URL + '/novel_banner/horror.png' },
-];
-
 // home_banner용 데이터
 const homeBannerData = [
-  { src: process.env.PUBLIC_URL + '/home_banner/home1.png' },
-  { src: process.env.PUBLIC_URL + '/home_banner/home2.png' },
+    { src: process.env.PUBLIC_URL + '/home_banner/home1.png' },
+    { src: process.env.PUBLIC_URL + '/home_banner/home2.png' },
+    { src: process.env.PUBLIC_URL + '/home_banner/home3.png' },
 ];
 
 const sliderSettings = {
-  dots: true,
-  infinite: true,
-  speed: 500,
-  slidesToShow: 1,
-  slidesToScroll: 1,
-  autoplay: true,
-  autoplaySpeed: 5000,
-  pauseOnHover: false,
-  arrows: false,
-  cssEase: 'linear',
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    pauseOnHover: false,
+    arrows: false,
+    cssEase: 'linear',
 };
 
 const Novel = ({ user }) => {
@@ -969,16 +961,6 @@ const Novel = ({ user }) => {
                 </Slider>
             </CarouselContainer>
 
-            <GenreGrid>
-                {bannerData.map((banner, idx) => (
-                    <GenreCard key={idx} onClick={() => navigate(`/novels/genre/${banner.genreKey}`)}>
-                        <img
-                            src={banner.src}
-                            alt={t(`novel_genre_${banner.genreKey}`)}
-                        />
-                    </GenreCard>
-                ))}
-            </GenreGrid>
             <WeeklySection>
                 <MonthSelector>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
@@ -1031,7 +1013,7 @@ const Novel = ({ user }) => {
                         const novelsForWeek = novelsMap[weekKey] || [];
                         const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
                         const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
-                        
+
                         // 모든 장르 목록
                         const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
                         // 모든 장르의 소설이 생성되었는지 확인
@@ -1042,7 +1024,7 @@ const Novel = ({ user }) => {
                             if (allGenresCreated) {
                                 return;
                             }
-                            
+
                             const weekProgress = weeklyProgress[week.weekNum] || 0;
                             if (weekProgress < 100) {
                                 alert(t('novel_all_diaries_needed'));
@@ -1102,7 +1084,7 @@ const Novel = ({ user }) => {
                                 <WeekTitle>
                                     <span>{t('week_num', { num: week.weekNum })}</span>
                                     {firstNovel && isCompleted && (
-                                        <AddButton 
+                                        <AddButton
                                             onClick={handleViewNovel}
                                             title="소설 보기"
                                         >
