@@ -1115,7 +1115,14 @@ function MyPage({ user }) {
                 theme={theme}
                 isPremium={premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium}
               >
-                {premiumStatus.isMonthlyPremium && (
+                {premiumStatus.premiumType === 'trial' && (
+                  <>
+                    <span>🎁</span>
+                    일주일 무료 체험
+                    <span>🎁</span>
+                  </>
+                )}
+                {premiumStatus.isMonthlyPremium && premiumStatus.premiumType !== 'trial' && (
                   <>
                     <span>💎</span>
                     {t('premium_monthly')}

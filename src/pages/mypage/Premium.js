@@ -237,6 +237,59 @@ function Premium({ user }) {
     setModal({ open: true, type: 'yearly' });
   };
 
+  // 일주일 무료 체험 핸들러
+  const handleFreeTrial = async () => {
+    if (premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) {
+      toast.showToast('이미 프리미엄 회원입니다.', 'error');
+      return;
+    }
+    setModal({ open: true, type: 'trial' });
+  };
+
+  // 일주일 무료 체험 실행 함수
+  const doFreeTrial = async () => {
+    setIsLoading(true);
+    try {
+      const now = new Date();
+      const renewalDate = new Date(now);
+      renewalDate.setDate(now.getDate() + 7); // 7일 후
+
+      // 프리미엄 무료권 다음 충전 시점 계산 (체험 시작 시점 + 7일)
+      const nextFreeNovelChargeDate = new Date(now);
+      nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
+      await updateDoc(doc(db, 'users', user.uid), {
+        isMonthlyPremium: true, // 일주일 체험도 월간 프리미엄으로 처리
+        isYearlyPremium: false,
+        premiumType: 'trial', // 체험 타입 표시
+        premiumStartDate: Timestamp.fromDate(now),
+        premiumRenewalDate: Timestamp.fromDate(renewalDate),
+        premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
+        premiumFreeNovelCount: 1, // 체험 시작 시점에 무료권 1개 지급
+        premiumCancelled: false,
+        updatedAt: Timestamp.now()
+      });
+      toast.showToast('일주일 무료 체험이 시작되었습니다!', 'success');
+      // 상태 업데이트를 위해 다시 조회
+      const updatedUserDoc = await getDoc(doc(db, 'users', user.uid));
+      if (updatedUserDoc.exists()) {
+        const data = updatedUserDoc.data();
+        setPremiumStatus({
+          isMonthlyPremium: data.isMonthlyPremium || false,
+          isYearlyPremium: data.isYearlyPremium || false,
+          premiumType: data.premiumType || null,
+          premiumRenewalDate: data.premiumRenewalDate || null
+        });
+      }
+    } catch (error) {
+      console.error('일주일 무료 체험 시작 실패:', error);
+      toast.showToast('일주일 무료 체험 시작에 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+      setModal({ open: false, type: null });
+    }
+  };
+
   // 실제 결제 로직 분리
   const doMonthlyPremium = async () => {
     setIsLoading(true);
@@ -447,12 +500,15 @@ function Premium({ user }) {
           </SubscriptionTitle>
           <SubscriptionInfo>
             <SubscriptionStatus theme={theme}>
-              {premiumStatus.isMonthlyPremium && `💎 ${t('premium_monthly')}`}
+              {premiumStatus.premiumType === 'trial' && `🎁 일주일 무료 체험`}
+              {premiumStatus.isMonthlyPremium && premiumStatus.premiumType !== 'trial' && `💎 ${t('premium_monthly')}`}
               {premiumStatus.isYearlyPremium && `👑 ${t('premium_yearly')}`}
             </SubscriptionStatus>
             {premiumStatus.premiumRenewalDate && (
               <SubscriptionDetail theme={theme}>
-                {t('subscription_next_renewal_date') || '다음 갱신일'}{' '}
+                {premiumStatus.premiumType === 'trial'
+                  ? '체험 종료일'
+                  : (t('subscription_next_renewal_date') || '다음 갱신일')}{' '}
                 {new Date(
                   premiumStatus.premiumRenewalDate.seconds
                     ? premiumStatus.premiumRenewalDate.seconds * 1000
@@ -471,6 +527,71 @@ function Premium({ user }) {
       {/* 프리미엄 결제 비교 카드 UI */}
       {!premiumStatus.isYearlyPremium && (
         <>
+          {/* 일주일 무료 체험 카드 - 프리미엄이 아닌 사용자에게만 표시 */}
+          {!premiumStatus.isMonthlyPremium && (
+            <div style={{ marginBottom: '20px' }}>
+              <PremiumCard style={{
+                border: '2px solid #4CAF50',
+                boxShadow: '0 4px 16px rgba(76,175,80,0.2)',
+                background: 'linear-gradient(135deg, rgba(76,175,80,0.05) 0%, rgba(76,175,80,0.02) 100%)'
+              }}>
+                <div
+                  style={{
+                    color: '#4CAF50',
+                    fontWeight: 800,
+                    fontSize: 13,
+                    marginBottom: 6,
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  일주일 무료 체험
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 800,
+                      marginBottom: 2,
+                      textAlign: 'center',
+                      color: '#4CAF50',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    무료
+                  </div>
+                  <div
+                    style={{
+                      color: '#666',
+                      fontSize: 12,
+                      marginBottom: 10,
+                      textAlign: 'center',
+                      marginTop: 10,
+                      fontFamily: 'inherit',
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    모든 프리미엄 기능을{'\n'}7일간 무료로 체험하세요
+                  </div>
+                </div>
+                <PremiumButton
+                  style={{
+                    width: '100%',
+                    fontSize: 14,
+                    marginTop: 6,
+                    padding: '12px 0',
+                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                    boxShadow: '0 4px 12px rgba(76,175,80,0.3)'
+                  }}
+                  onClick={handleFreeTrial}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '처리 중...' : '일주일 무료 체험 시작'}
+                </PremiumButton>
+              </PremiumCard>
+            </div>
+          )}
+
           <div style={{
             display: 'flex',
             gap: '6px',
@@ -523,9 +644,9 @@ function Premium({ user }) {
                 <PremiumButton
                   style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
                   onClick={handleMonthlyPremium}
-                  disabled={isLoading}
+                  disabled={true}
                 >
-                  {isLoading ? t('processing') : t('premium_monthly_subscribe_button')}
+                  테스트 단계 (비활성화)
                 </PremiumButton>
               </PremiumCard>
             )}
@@ -615,9 +736,9 @@ function Premium({ user }) {
               <PremiumButton
                 style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
                 onClick={handleYearlyPremium}
-                disabled={isLoading}
+                disabled={true}
               >
-                {isLoading ? t('processing') : t('premium_yearly_subscribe_button')}
+                테스트 단계 (비활성화)
               </PremiumButton>
             </YearlyPremiumCard>
           </div>
@@ -662,21 +783,26 @@ function Premium({ user }) {
             ? t('premium_monthly_modal_title')
             : modal.type === 'yearly'
               ? t('premium_yearly_modal_title')
-              : ''
+              : modal.type === 'trial'
+                ? '일주일 무료 체험 시작'
+                : ''
         }
         description={
           modal.type === 'monthly'
             ? t('premium_monthly_modal_desc')
             : modal.type === 'yearly'
               ? t('premium_yearly_modal_desc')
-              : ''
+              : modal.type === 'trial'
+                ? '일주일 동안 모든 프리미엄 기능을 무료로 체험하실 수 있습니다. 체험 기간이 끝나면 자동으로 해지됩니다.'
+                : ''
         }
         onCancel={() => setModal({ open: false, type: null })}
         onConfirm={() => {
           if (modal.type === 'monthly') doMonthlyPremium();
           else if (modal.type === 'yearly') doYearlyPremium();
+          else if (modal.type === 'trial') doFreeTrial();
         }}
-        confirmText={t('premium_subscribe_confirm_button')}
+        confirmText={modal.type === 'trial' ? '체험 시작' : t('premium_subscribe_confirm_button')}
       />
 
       {/* 프리미엄 해지 확인 모달 */}
