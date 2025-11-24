@@ -579,12 +579,12 @@ function MyPage({ user }) {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setPoint(userData.point || 0);
-          
+
           // 포션 개수 계산
           const potions = userData.potions || {};
           const totalPotions = Object.values(potions).reduce((sum, count) => sum + (count || 0), 0);
           setPotionCount(totalPotions);
-          
+
           const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
           setPremiumStatus({
             isMonthlyPremium: userData.isMonthlyPremium || false,
@@ -1031,7 +1031,7 @@ function MyPage({ user }) {
                   const isGoogleUser = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
                   const isKakaoUser = authProvider === 'kakao';
                   const canChangePassword = !isGoogleUser && !isKakaoUser;
-                  
+
                   if (user && canChangePassword && (currentPassword || newPassword || confirmPassword)) {
                     if (!currentPassword || !newPassword || !confirmPassword) {
                       setPwChangeError('모든 비밀번호 입력란을 채워주세요.');
@@ -1076,24 +1076,24 @@ function MyPage({ user }) {
             {user && (
               (user.providerData && user.providerData.some(p => p.providerId === 'google.com')) || authProvider === 'kakao'
             ) && (
-              <div style={{
-                textAlign: 'center',
-                color: '#888',
-                fontSize: '14px',
-                marginTop: '16px',
-                padding: '12px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                border: '1px solid #e9ecef',
-                wordBreak: 'keep-all',
-                lineHeight: '1.5'
-              }}>
-                {user.providerData && user.providerData.some(p => p.providerId === 'google.com')
-                  ? (t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.')
-                  : (t('kakao_password_notice') || '카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다.')
-                }
-              </div>
-            )}
+                <div style={{
+                  textAlign: 'center',
+                  color: '#888',
+                  fontSize: '14px',
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef',
+                  wordBreak: 'keep-all',
+                  lineHeight: '1.5'
+                }}>
+                  {user.providerData && user.providerData.some(p => p.providerId === 'google.com')
+                    ? (t('google_password_notice') || '구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.')
+                    : (t('kakao_password_notice') || '카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다.')
+                  }
+                </div>
+              )}
           </EditProfileCard>
         ) : (
           <>

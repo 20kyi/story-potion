@@ -836,6 +836,9 @@ function Signup() {
       // 약관 동의 정보 세션에서 제거
       sessionStorage.removeItem('termsAgreement');
 
+      // 기본 폰트 설정 (휴먼범석네오)
+      localStorage.setItem('fontFamily', 'HumanBeomseokNeo, sans-serif');
+
       // 회원가입 완료 후 권한 요청
       await requestPermissions(user);
 

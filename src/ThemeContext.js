@@ -15,7 +15,7 @@ export function ThemeProvider({ children }) {
     // 폰트 패밀리 상태 추가
     const [fontFamily, setFontFamily] = useState(() => {
         const saved = localStorage.getItem('fontFamily');
-        return saved ? saved : 'system-ui, sans-serif';
+        return saved ? saved : 'HumanBeomseokNeo, sans-serif';
     });
 
     // 폰트 크기 상태 추가
