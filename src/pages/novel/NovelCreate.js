@@ -22,7 +22,10 @@ const Container = styled.div`
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
-  margin: 40px auto;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   overflow-y: auto;
   position: relative;

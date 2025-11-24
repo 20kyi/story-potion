@@ -17,7 +17,7 @@ const Container = styled.div`
   padding: 20px;
   // padding-top: 10px;
   // padding-bottom: 100px;
-  margin-top: 50px;
+  margin-top: 60px;
   margin-bottom: 80px;
   max-width: 600px;
   overflow-y: auto;

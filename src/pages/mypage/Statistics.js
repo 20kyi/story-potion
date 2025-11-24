@@ -492,7 +492,7 @@ function Statistics({ user }) {
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('stats_title')} />
-            <div style={{ maxWidth: 600, margin: '60px auto', marginTop: 50, padding: 24, paddingTop: 40, paddingBottom: 100 }}>
+            <div style={{ maxWidth: 600, marginTop: 60, marginBottom: 80, marginLeft: 'auto', marginRight: 'auto', padding: 24, paddingTop: 40, paddingBottom: 100 }}>
                 {/* 가장 많이 제작한 장르 이미지 또는 빈 방 이미지 */}
                 {!loading && (
                     <FavoriteGenreContainer>

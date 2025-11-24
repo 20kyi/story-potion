@@ -29,7 +29,10 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin: 60px auto;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
   overflow-y: auto;

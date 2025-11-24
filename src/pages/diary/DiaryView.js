@@ -17,8 +17,10 @@ const Container = styled.div`
   min-height: 100vh;
   padding: 20px;
   padding-bottom: 100px;
-  margin: 0 auto;
   margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   width: 100%;
   box-sizing: border-box;

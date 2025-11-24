@@ -12,7 +12,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin: 70px auto;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
   min-height: calc(100vh - 120px);

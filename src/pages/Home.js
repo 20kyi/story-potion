@@ -28,7 +28,10 @@ const Container = styled.div`
   padding: 20px;
   // padding-top: 30px;
   padding-bottom: 30px;
-  margin: 60px auto;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   overflow-y: auto;
   position: relative;

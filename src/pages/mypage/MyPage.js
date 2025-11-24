@@ -66,7 +66,10 @@ const MainContainer = styled.div`
   // min-height: 100vh;
   padding: 0 20px;
   // padding-top: 0;
-  margin: 60px auto;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: 600px;
   background: ${({ theme }) => theme.background};
   overflow-y: auto;
