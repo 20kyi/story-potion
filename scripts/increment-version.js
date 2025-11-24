@@ -18,25 +18,19 @@ try {
     console.warn('⚠️  versionCode를 찾을 수 없습니다.');
   }
   
-  // versionName 찾기 및 증가 (예: 1.0.0 -> 1.0.1)
+  // versionName을 항상 1.0.0으로 유지
   const versionNameMatch = content.match(/versionName\s+"([^"]+)"/);
   if (versionNameMatch) {
     const currentVersionName = versionNameMatch[1];
-    const versionParts = currentVersionName.split('.');
+    const fixedVersionName = "1.0.0";
     
-    // 마지막 버전 번호 증가
-    if (versionParts.length >= 3) {
-      const patchVersion = parseInt(versionParts[2]) + 1;
-      versionParts[2] = patchVersion.toString();
-    } else if (versionParts.length === 2) {
-      versionParts.push('1');
+    // versionName이 1.0.0이 아닌 경우에만 변경
+    if (currentVersionName !== fixedVersionName) {
+      content = content.replace(/versionName\s+"[^"]+"/, `versionName "${fixedVersionName}"`);
+      console.log(`✅ versionName: ${currentVersionName} → ${fixedVersionName} (고정)`);
     } else {
-      versionParts.push('0', '1');
+      console.log(`✅ versionName: ${fixedVersionName} (유지)`);
     }
-    
-    const newVersionName = versionParts.join('.');
-    content = content.replace(/versionName\s+"[^"]+"/, `versionName "${newVersionName}"`);
-    console.log(`✅ versionName: ${currentVersionName} → ${newVersionName}`);
   } else {
     console.warn('⚠️  versionName을 찾을 수 없습니다.');
   }

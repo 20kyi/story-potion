@@ -867,28 +867,6 @@ function Home({ user }) {
         user={user}
         onNotificationRead={(count) => setUnreadNotificationCount(count)}
       />
-      <CarouselContainer>
-        <Slider {...sliderSettings}>
-          {bannerData.map((banner, idx) => (
-            <CarouselSlide key={idx}>
-              <img
-                src={banner.src}
-                alt={`배너${idx + 1}`}
-                style={{
-                  width: '100%',
-                  maxWidth: '600px',
-                  height: 'auto',
-                  objectFit: 'cover',
-                  borderRadius: '16px',
-                  display: 'block',
-                  margin: '0 auto',
-                  // marginTop: '10px',
-                }}
-              />
-            </CarouselSlide>
-          ))}
-        </Slider>
-      </CarouselContainer>
 
       {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
       {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (

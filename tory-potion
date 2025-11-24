@@ -1,0 +1,25 @@
+warning: in the working copy of 'android/app/capacitor.build.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/assets/capacitor.config.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/assets/capacitor.plugins.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/assets/public/asset-manifest.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/assets/public/static/media/slick.2630a3e3eab21c607e21.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/storypotion/app/MainActivity.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/res/values/strings.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/res/xml/config.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/capacitor-cordova-android-plugins/build.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/capacitor-cordova-android-plugins/cordova.variables.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/capacitor-cordova-android-plugins/src/main/res/.gitkeep', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/capacitor.settings.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+android/app/build.gradle
+android/app/src/main/assets/public/asset-manifest.json
+android/app/src/main/assets/public/index.html
+android/app/src/main/java/com/storypotion/app/MainActivity.java
+android/app/src/main/res/values/strings.xml
+package.json
+scripts/generate-android-icons.js
+src/components/DebugPanel.js
+src/components/icons/GridIcon.js
+src/components/icons/ListIcon.js

@@ -20,7 +20,6 @@ import NovelList from './pages/novel/NovelList';
 import DiaryView from './pages/diary/DiaryView';
 import Novel from './pages/novel/Novel';
 import Navigation from './components/Navigation';
-import DebugPanel from './components/DebugPanel';
 import MyPage from './pages/mypage/MyPage';
 import NovelCreate from './pages/novel/NovelCreate';
 import NovelView from './pages/novel/NovelView';
@@ -131,7 +130,6 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/loading-test" element={user ? <LoadingTest user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
-            <DebugPanel />
         </div>
     );
 };

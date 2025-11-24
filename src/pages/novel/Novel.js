@@ -7,6 +7,9 @@ import Header from '../../components/Header';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 const Container = styled.div`
   display: flex;
@@ -430,6 +433,49 @@ const AddButton = styled.button`
   line-height: 1;
 `;
 
+const CarouselContainer = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  position: relative;
+  .slick-dots {
+    position: relative;
+    bottom: 0;
+    margin-top: 12px;
+    padding-top: 0;
+    li {
+      margin: 0 4px;
+      button:before {
+        color: #fdd2d2;
+        opacity: 0.5;
+        font-size: 8px;
+      }
+      &.slick-active button:before {
+        color: #cb6565;
+        opacity: 1;
+      }
+    }
+  }
+  .slick-slide {
+    padding: 0 5px;
+  }
+  .slick-list {
+    margin: 0 -5px;
+  }
+`;
+
+const CarouselSlide = styled.div`
+  width: 100%;
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+`;
+
 const bannerData = [
     { genre: '로맨스', genreKey: 'romance', src: process.env.PUBLIC_URL + '/novel_banner/romance.png' },
     { genre: '추리', genreKey: 'mystery', src: process.env.PUBLIC_URL + '/novel_banner/mystery.png' },
@@ -438,6 +484,25 @@ const bannerData = [
     { genre: '판타지', genreKey: 'fantasy', src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png' },
     { genre: '공포', genreKey: 'horror', src: process.env.PUBLIC_URL + '/novel_banner/horror.png' },
 ];
+
+// home_banner용 데이터
+const homeBannerData = [
+  { src: process.env.PUBLIC_URL + '/home_banner/home1.png' },
+  { src: process.env.PUBLIC_URL + '/home_banner/home2.png' },
+];
+
+const sliderSettings = {
+  dots: true,
+  infinite: true,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 5000,
+  pauseOnHover: false,
+  arrows: false,
+  cssEase: 'linear',
+};
 
 const Novel = ({ user }) => {
     const navigate = useNavigate();
@@ -881,6 +946,28 @@ const Novel = ({ user }) => {
         <Container>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('novel_title')} />
             {/* <Title>Novel</Title> */}
+
+            <CarouselContainer>
+                <Slider {...sliderSettings}>
+                    {homeBannerData.map((banner, idx) => (
+                        <CarouselSlide key={idx}>
+                            <img
+                                src={banner.src}
+                                alt={`배너${idx + 1}`}
+                                style={{
+                                    width: '100%',
+                                    maxWidth: '600px',
+                                    height: 'auto',
+                                    objectFit: 'cover',
+                                    borderRadius: '12px',
+                                    display: 'block',
+                                    margin: '0 auto',
+                                }}
+                            />
+                        </CarouselSlide>
+                    ))}
+                </Slider>
+            </CarouselContainer>
 
             <GenreGrid>
                 {bannerData.map((banner, idx) => (
