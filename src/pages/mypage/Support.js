@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,10 @@ import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import { lightTheme, darkTheme } from '../../theme';
 import { useTranslation } from '../../LanguageContext';
+import { getTutorialNovel } from '../../utils/tutorialNovel';
+import { createNovelUrl } from '../../utils/novelUtils';
+import { db } from '../../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const SettingsContainer = styled.div`
   max-width: 600px;
@@ -107,6 +111,25 @@ function Support({ user }) {
     const { actualTheme } = useTheme();
     const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
     const { t } = useTranslation();
+    const [userCreatedAt, setUserCreatedAt] = useState(null);
+    
+    // 사용자 가입일 가져오기
+    useEffect(() => {
+        if (user?.uid) {
+            const fetchUserCreatedAt = async () => {
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        setUserCreatedAt(userData.createdAt || null);
+                    }
+                } catch (error) {
+                    console.error('사용자 가입일 조회 실패:', error);
+                }
+            };
+            fetchUserCreatedAt();
+        }
+    }, [user]);
     
     const handleMenuClick = (menuType) => {
         switch (menuType) {
@@ -127,6 +150,13 @@ function Support({ user }) {
             default:
                 break;
         }
+    };
+    
+    const handleTutorial = () => {
+        const tutorialNovel = getTutorialNovel(userCreatedAt);
+        navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
+            state: { tutorialNovel, returnPath: '/my/support' }
+        });
     };
 
     const handleShare = () => {
@@ -158,6 +188,9 @@ function Support({ user }) {
                     </SettingsItem>
                     <SettingsItem theme={theme} clickable onClick={() => handleMenuClick('feedback')}>
                         <ItemTitle theme={theme}>{t('feedback')}</ItemTitle>
+                    </SettingsItem>
+                    <SettingsItem theme={theme} clickable onClick={handleTutorial}>
+                        <ItemTitle theme={theme}>{t('tutorial_again') || '튜토리얼 다시 보기'}</ItemTitle>
                     </SettingsItem>
                     
                     {/* 앱 공유 - 소셜 메뉴에서 이동 */}
