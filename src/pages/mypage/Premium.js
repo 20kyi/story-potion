@@ -646,7 +646,7 @@ function Premium({ user }) {
                   onClick={handleMonthlyPremium}
                   disabled={true}
                 >
-                  테스트 단계 (비활성화)
+                  구독하기
                 </PremiumButton>
               </PremiumCard>
             )}
@@ -738,7 +738,7 @@ function Premium({ user }) {
                 onClick={handleYearlyPremium}
                 disabled={true}
               >
-                테스트 단계 (비활성화)
+                구독하기
               </PremiumButton>
             </YearlyPremiumCard>
           </div>
