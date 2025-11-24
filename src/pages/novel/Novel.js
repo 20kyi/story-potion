@@ -5,8 +5,10 @@ import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
+import { useToast } from '../../components/ui/ToastProvider';
 import { useLanguage, useTranslation } from '../../LanguageContext';
+import { useTheme } from '../../ThemeContext';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -336,11 +338,11 @@ const DayIndicator = styled.div`
             if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
             return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
         }
-        // 일기가 있으면 버튼 색상과 일치
-        if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        if (barColor === 'create') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-        if (barColor === 'free') return '#e4a30d';
-        if (barColor === 'view') return theme.primary;
+        // 일기가 있으면 버튼 텍스트 색상과 일치
+        if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96'; // 일기 채우기 버튼 텍스트 색상
+        if (barColor === 'create') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e'; // 소설 만들기 버튼 텍스트 색상
+        if (barColor === 'free') return '#e4a30d'; // 무료 버튼 텍스트 색상
+        if (barColor === 'view') return theme.primary; // 소설 보기 버튼 배경 색상
         return '#cb6565'; // 기본값
     }};
   transition: background-color 0.3s ease;
@@ -409,6 +411,109 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
   width: 100%;
+`;
+
+const PremiumFreeNovelStatus = styled.div`
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: ${({ available, theme }) =>
+        available
+            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.15) 0%, rgba(255, 226, 148, 0.15) 100%)'
+            : theme.card};
+  border-radius: 12px;
+  border: ${({ available }) =>
+        available
+            ? '2px solid rgba(228, 163, 13, 0.4)'
+            : '1px solid rgba(0,0,0,0.1)'};
+  text-align: center;
+  font-size: 14px;
+`;
+
+const CreateOptionModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const CreateOptionContent = styled.div`
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  opacity: 1;
+`;
+
+const CreateOptionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin: 0 0 16px 0;
+  text-align: center;
+`;
+
+const CreateOptionButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: ${({ isFree, theme }) =>
+        isFree
+            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%)'
+            : 'linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%)'};
+  color: ${({ isFree }) => isFree ? '#e4a30d' : '#e46262'};
+  border: ${({ isFree }) => isFree ? '2px solid #e4a30d' : '2px solid #e46262'};
+  box-shadow: none;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ isFree }) =>
+        isFree
+            ? '0 4px 12px rgba(0,0,0,0.15)'
+            : '0 4px 12px rgba(228, 98, 98, 0.2)'};
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const CreateOptionDesc = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#666'};
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: ${({ theme }) => theme.text};
+  cursor: pointer;
+  padding: 4px 8px;
 `;
 
 const AddButton = styled.button`
@@ -504,6 +609,8 @@ const Novel = ({ user }) => {
     const location = useLocation();
     const { language } = useLanguage();
     const { t } = useTranslation();
+    const toast = useToast();
+    const theme = useTheme();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [weeks, setWeeks] = useState([]);
     const [weeklyProgress, setWeeklyProgress] = useState({});
@@ -514,7 +621,14 @@ const Novel = ({ user }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [novelsMap, setNovelsMap] = useState({});
     const [selectedWeekNovels, setSelectedWeekNovels] = useState(null);
-    const [freeNovelHistoryMap, setFreeNovelHistoryMap] = useState({}); // 주차별 무료 사용 기록
+    const [isPremium, setIsPremium] = useState(false);
+    const [premiumFreeNovelAvailable, setPremiumFreeNovelAvailable] = useState(false);
+    const [premiumFreeNovelCount, setPremiumFreeNovelCount] = useState(0);
+    const [premiumFreeNovelNextChargeDate, setPremiumFreeNovelNextChargeDate] = useState(null);
+    const [ownedPotions, setOwnedPotions] = useState({});
+    const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
+    const [selectedWeekForCreate, setSelectedWeekForCreate] = useState(null);
+    const [timeUntilNextCharge, setTimeUntilNextCharge] = useState('');
 
 
 
@@ -586,21 +700,45 @@ const Novel = ({ user }) => {
                 // 오류가 나도 UI는 계속 진행되도록 함
             }
 
-            // 3. Fetch all free novel history for the user
+            // 3. Fetch premium free novel status and potions
             try {
-                const freeNovelHistoryRef = collection(db, 'users', user.uid, 'freeNovelHistory');
-                const freeNovelHistorySnapshot = await getDocs(freeNovelHistoryRef);
-                const newFreeNovelHistoryMap = {};
-                freeNovelHistorySnapshot.forEach(doc => {
-                    const record = doc.data();
-                    if (record.year && record.month && record.weekNum) {
-                        const key = `${record.year}년 ${record.month}월 ${record.weekNum}주차`;
-                        newFreeNovelHistoryMap[key] = true;
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
+                    setIsPremium(isPremiumUser);
+                    setOwnedPotions(userData.potions || {});
+
+                    if (isPremiumUser) {
+                        const now = new Date();
+                        let nextChargeDate = null;
+
+                        // premiumFreeNovelNextChargeDate 확인
+                        if (userData.premiumFreeNovelNextChargeDate) {
+                            if (userData.premiumFreeNovelNextChargeDate.seconds) {
+                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
+                            } else if (userData.premiumFreeNovelNextChargeDate.toDate) {
+                                nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
+                            } else {
+                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
+                            }
+                        }
+
+                        // premiumFreeNovelCount 확인
+                        let freeNovelCount = userData.premiumFreeNovelCount || 0;
+
+                        setPremiumFreeNovelNextChargeDate(nextChargeDate);
+                        setPremiumFreeNovelCount(freeNovelCount);
+                        setPremiumFreeNovelAvailable(freeNovelCount > 0);
+                    } else {
+                        setPremiumFreeNovelCount(0);
+                        setPremiumFreeNovelAvailable(false);
+                        setPremiumFreeNovelNextChargeDate(null);
                     }
-                });
-                setFreeNovelHistoryMap(newFreeNovelHistoryMap);
+                }
             } catch (error) {
                 // 오류가 나도 UI는 계속 진행되도록 함
+                console.error('프리미엄 무료권 상태 조회 실패:', error);
             }
 
             // 4. Calculate progress
@@ -610,6 +748,51 @@ const Novel = ({ user }) => {
 
         fetchAllData();
     }, [user, currentDate]);
+
+    // 다음 충전까지 남은 시간 계산 및 업데이트
+    useEffect(() => {
+        if (!premiumFreeNovelNextChargeDate || !isPremium) {
+            setTimeUntilNextCharge('');
+            return;
+        }
+
+        const updateTimeUntilNextCharge = () => {
+            const now = new Date();
+            let nextChargeDate;
+
+            if (premiumFreeNovelNextChargeDate.seconds) {
+                nextChargeDate = new Date(premiumFreeNovelNextChargeDate.seconds * 1000);
+            } else if (premiumFreeNovelNextChargeDate.toDate) {
+                nextChargeDate = premiumFreeNovelNextChargeDate.toDate();
+            } else {
+                nextChargeDate = new Date(premiumFreeNovelNextChargeDate);
+            }
+
+            const diff = nextChargeDate - now;
+
+            if (diff <= 0) {
+                setTimeUntilNextCharge('사용 가능');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) {
+                setTimeUntilNextCharge(`${days}일 ${hours}시간 후`);
+            } else if (hours > 0) {
+                setTimeUntilNextCharge(`${hours}시간 ${minutes}분 후`);
+            } else {
+                setTimeUntilNextCharge(`${minutes}분 후`);
+            }
+        };
+
+        updateTimeUntilNextCharge();
+        const interval = setInterval(updateTimeUntilNextCharge, 60000); // 1분마다 업데이트
+
+        return () => clearInterval(interval);
+    }, [premiumFreeNovelNextChargeDate, isPremium]);
 
     // location state에서 소설 삭제 알림을 받으면 데이터 다시 가져오기
     useEffect(() => {
@@ -676,21 +859,45 @@ const Novel = ({ user }) => {
                     // 오류가 나도 UI는 계속 진행되도록 함
                 }
 
-                // 3. Fetch all free novel history for the user
+                // 3. Fetch premium free novel status and potions
                 try {
-                    const freeNovelHistoryRef = collection(db, 'users', user.uid, 'freeNovelHistory');
-                    const freeNovelHistorySnapshot = await getDocs(freeNovelHistoryRef);
-                    const newFreeNovelHistoryMap = {};
-                    freeNovelHistorySnapshot.forEach(doc => {
-                        const record = doc.data();
-                        if (record.year && record.month && record.weekNum) {
-                            const key = `${record.year}년 ${record.month}월 ${record.weekNum}주차`;
-                            newFreeNovelHistoryMap[key] = true;
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
+                        setIsPremium(isPremiumUser);
+                        setOwnedPotions(userData.potions || {});
+
+                        if (isPremiumUser) {
+                            const now = new Date();
+                            let nextChargeDate = null;
+
+                            // premiumFreeNovelNextChargeDate 확인
+                            if (userData.premiumFreeNovelNextChargeDate) {
+                                if (userData.premiumFreeNovelNextChargeDate.seconds) {
+                                    nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
+                                } else if (userData.premiumFreeNovelNextChargeDate.toDate) {
+                                    nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
+                                } else {
+                                    nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
+                                }
+                            }
+
+                            // premiumFreeNovelCount 확인
+                            let freeNovelCount = userData.premiumFreeNovelCount || 0;
+
+                            setPremiumFreeNovelNextChargeDate(nextChargeDate);
+                            setPremiumFreeNovelCount(freeNovelCount);
+                            setPremiumFreeNovelAvailable(freeNovelCount > 0);
+                        } else {
+                            setPremiumFreeNovelCount(0);
+                            setPremiumFreeNovelAvailable(false);
+                            setPremiumFreeNovelNextChargeDate(null);
                         }
-                    });
-                    setFreeNovelHistoryMap(newFreeNovelHistoryMap);
+                    }
                 } catch (error) {
                     // 오류가 나도 UI는 계속 진행되도록 함
+                    console.error('프리미엄 무료권 상태 조회 실패:', error);
                 }
 
                 // 4. Calculate progress
@@ -809,7 +1016,7 @@ const Novel = ({ user }) => {
         return `${d.getMonth() + 1}/${d.getDate()}`;
     }
 
-    const handleCreateNovel = (week) => {
+    const handleCreateNovel = (week, useFree = false) => {
         const weekProgress = weeklyProgress[week.weekNum] || 0;
         if (weekProgress < 100) {
             alert(t('novel_all_diaries_needed'));
@@ -848,9 +1055,36 @@ const Novel = ({ user }) => {
                 imageUrl: imageUrl,
                 title: novelTitle,
                 existingGenres: existingGenres,
-                returnPath: location.pathname || '/novel'
+                returnPath: location.pathname || '/novel',
+                useFree: useFree
             }
         });
+    };
+
+    const handleCreateNovelClick = (week) => {
+        const weekProgress = weeklyProgress[week.weekNum] || 0;
+        if (weekProgress < 100) {
+            alert(t('novel_all_diaries_needed'));
+            return;
+        }
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        const weekKey = `${year}년 ${month}월 ${week.weekNum}주차`;
+        const novelsForWeek = novelsMap[weekKey] || [];
+
+        // 무료권 사용 가능 여부와 포션 보유 여부 확인
+        const hasPotions = Object.values(ownedPotions).some(count => count > 0);
+        const canUseFree = premiumFreeNovelCount > 0 && isPremium && novelsForWeek.length === 0;
+
+        // 무료권과 포션이 모두 가능한 경우에만 모달 표시
+        if (canUseFree && hasPotions) {
+            setSelectedWeekForCreate(week);
+            setShowCreateOptionModal(true);
+        } else {
+            // 나머지 경우는 모두 포션 사용 (useFree: false)
+            handleCreateNovel(week, false);
+        }
     };
 
     // 주차가 미래인지 확인하는 함수
@@ -963,6 +1197,53 @@ const Novel = ({ user }) => {
                     ))}
                 </Slider>
             </CarouselContainer>
+
+            {/* 프리미엄 무료권 상태 표시 */}
+            {isPremium && (
+                <PremiumFreeNovelStatus available={premiumFreeNovelCount > 0} theme={theme}>
+                    <div style={{
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        color: premiumFreeNovelCount > 0 ? '#e4a30d' : theme.text,
+                        marginBottom: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}>
+                        <span>🪄</span>
+                        <span>프리미엄 전용 무료 소설</span>
+                        <span>🪄</span>
+                    </div>
+                    <div style={{
+                        fontSize: '14px',
+                        color: theme.subText || '#666',
+                        marginBottom: '4px'
+                    }}>
+                        <span style={{
+                            color: premiumFreeNovelCount > 0 ? '#e4a30d' : theme.subText || '#666',
+                            fontWeight: '600',
+                            marginBottom: '8px',
+                            display: 'block'
+                        }}>
+                            {premiumFreeNovelCount}개 보유
+                        </span>
+                    </div>
+                    {timeUntilNextCharge && (
+                        <div style={{
+                            fontSize: '12px',
+                            color: theme.subText || '#888',
+                            marginTop: '4px'
+                        }}>
+                            {premiumFreeNovelCount > 0 ? (
+                                <span>다음 충전: {timeUntilNextCharge}</span>
+                            ) : (
+                                <span>다음 충전까지: {timeUntilNextCharge}</span>
+                            )}
+                        </div>
+                    )}
+                </PremiumFreeNovelStatus>
+            )}
 
             <WeeklySection>
                 <MonthSelector>
@@ -1101,7 +1382,7 @@ const Novel = ({ user }) => {
                                         firstNovel
                                             ? 'view'
                                             : isCompleted
-                                                ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? 'free' : 'create')
+                                                ? 'create'
                                                 : 'fill'
                                     }
                                 >
@@ -1134,7 +1415,7 @@ const Novel = ({ user }) => {
                                                         firstNovel
                                                             ? 'view'
                                                             : isCompleted
-                                                                ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? 'free' : 'create')
+                                                                ? 'create'
                                                                 : 'fill'
                                                     }
                                                 />
@@ -1153,19 +1434,17 @@ const Novel = ({ user }) => {
                                 ) : (
                                     <CreateButton
                                         completed={false}
-                                        isFree={isCompleted && novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey]}
+                                        isFree={false}
                                         disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
                                         onClick={() => {
                                             if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
                                                 return;
                                             }
-                                            isCompleted ? handleCreateNovel(week) : handleWriteDiary(week);
+                                            isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
                                         }}
                                     >
                                         {isCompleted
-                                            ? (novelsForWeek.length === 0 && !freeNovelHistoryMap[weekKey] ? (
-                                                t('novel_generate_free_button')
-                                            ) : t('novel_create'))
+                                            ? t('novel_create')
                                             : t('novel_fill_diary')}
                                     </CreateButton>
                                 )}
@@ -1174,6 +1453,42 @@ const Novel = ({ user }) => {
                     })}
                 </WeeklyGrid>
             </WeeklySection>
+
+            {/* 소설 생성 옵션 모달 */}
+            {showCreateOptionModal && selectedWeekForCreate && (
+                <CreateOptionModal onClick={() => setShowCreateOptionModal(false)}>
+                    <CreateOptionContent onClick={(e) => e.stopPropagation()} theme={theme}>
+                        <CloseButton onClick={() => setShowCreateOptionModal(false)} theme={theme}>×</CloseButton>
+                        <CreateOptionTitle theme={theme}>소설 생성 방법 선택</CreateOptionTitle>
+                        <CreateOptionButton
+                            isFree={true}
+                            onClick={() => {
+                                handleCreateNovel(selectedWeekForCreate, true);
+                                setShowCreateOptionModal(false);
+                            }}
+                            theme={theme}
+                        >
+                            🪄 프리미엄 무료권 사용
+                        </CreateOptionButton>
+                        <CreateOptionDesc theme={theme} style={{ marginBottom: '12px' }}>
+                            무료로 소설을 생성합니다 (7일 후 자동 충전)
+                        </CreateOptionDesc>
+                        <CreateOptionButton
+                            isFree={false}
+                            onClick={() => {
+                                handleCreateNovel(selectedWeekForCreate, false);
+                                setShowCreateOptionModal(false);
+                            }}
+                            theme={theme}
+                        >
+                            🔮 포션 사용
+                        </CreateOptionButton>
+                        <CreateOptionDesc theme={theme}>
+                            보유한 포션 1개를 사용합니다
+                        </CreateOptionDesc>
+                    </CreateOptionContent>
+                </CreateOptionModal>
+            )}
 
             {/* 소설 목록 모달 */}
             {selectedWeekNovels && (

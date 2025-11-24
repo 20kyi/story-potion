@@ -947,6 +947,93 @@ exports.renewMonthlyPremium = functions.pubsub.schedule('every day 00:00').timeZ
     }
 });
 
+// 프리미엄 무료권 자동 충전 함수 (매 시간마다 실행)
+exports.chargePremiumFreeNovel = functions.pubsub.schedule('every 1 hours').timeZone('Asia/Seoul').onRun(async (context) => {
+    console.log('프리미엄 무료권 자동 충전 시작...');
+    const now = admin.firestore.Timestamp.now();
+    const nowDate = new Date();
+
+    try {
+        // 프리미엄 회원 중 다음 충전 시점이 지난 사용자 조회
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('premiumFreeNovelNextChargeDate', '<=', now)
+            .get();
+
+        if (usersSnapshot.empty) {
+            console.log('충전 대상자 없음');
+            return null;
+        }
+
+        let chargedCount = 0;
+        const batchSize = 500; // Firestore 배치 제한
+        let batch = admin.firestore().batch();
+        let currentBatchCount = 0;
+        const batches = [];
+
+        usersSnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+
+            // 프리미엄 회원인지 확인
+            const isPremium = userData.isMonthlyPremium || userData.isYearlyPremium;
+            if (!isPremium) {
+                return; // 프리미엄 회원이 아니면 스킵
+            }
+
+            // premiumFreeNovelNextChargeDate가 실제로 지났는지 확인
+            let nextChargeDate;
+            if (userData.premiumFreeNovelNextChargeDate?.seconds) {
+                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
+            } else if (userData.premiumFreeNovelNextChargeDate?.toDate) {
+                nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
+            } else {
+                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
+            }
+
+            // 충전 시점이 지났고, 프리미엄 회원인 경우에만 충전
+            if (nextChargeDate <= nowDate && isPremium) {
+                // 다음 충전 시점 계산 (현재 시점 + 7일)
+                const nextChargeDateNew = new Date(nowDate);
+                nextChargeDateNew.setDate(nextChargeDateNew.getDate() + 7);
+
+                // 현재 보유 개수 확인 (없으면 0)
+                const currentCount = userData.premiumFreeNovelCount || 0;
+                const newCount = currentCount + 1; // 1개 추가
+
+                const userRef = admin.firestore().collection('users').doc(userDoc.id);
+                batch.update(userRef, {
+                    premiumFreeNovelNextChargeDate: admin.firestore.Timestamp.fromDate(nextChargeDateNew),
+                    premiumFreeNovelCount: newCount, // 무료권 1개 추가
+                    updatedAt: admin.firestore.Timestamp.now()
+                });
+
+                chargedCount++;
+                currentBatchCount++;
+
+                // 배치 크기 제한 체크
+                if (currentBatchCount >= batchSize) {
+                    batches.push(batch);
+                    batch = admin.firestore().batch();
+                    currentBatchCount = 0;
+                }
+            }
+        });
+
+        // 남은 배치 추가
+        if (currentBatchCount > 0) {
+            batches.push(batch);
+        }
+
+        // 모든 배치 커밋
+        await Promise.all(batches.map(b => b.commit()));
+
+        console.log(`프리미엄 무료권 자동 충전 완료: ${chargedCount}명`);
+        return null;
+    } catch (error) {
+        console.error('프리미엄 무료권 자동 충전 실패:', error);
+        throw error;
+    }
+});
+
 // 마케팅 알림 발송 함수 (관리자용)
 exports.sendMarketingNotification = functions.https.onCall(async (data, context) => {
     // 인증 확인

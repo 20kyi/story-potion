@@ -3,7 +3,7 @@ import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { doc, getDoc, updateDoc, increment, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
@@ -263,14 +263,21 @@ function Shop({ user }) {
       const now = new Date();
       const renewalDate = new Date(now);
       renewalDate.setMonth(now.getMonth() + 1);
+      
+      // 프리미엄 무료권 다음 충전 시점 계산 (결제 시점 + 7일)
+      const nextFreeNovelChargeDate = new Date(now);
+      nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+      
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: true,
         isYearlyPremium: false,
         premiumType: 'monthly',
-        premiumStartDate: now,
-        premiumRenewalDate: renewalDate,
+        premiumStartDate: Timestamp.fromDate(now),
+        premiumRenewalDate: Timestamp.fromDate(renewalDate),
+        premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
+        premiumFreeNovelCount: 1, // 결제 시점에 무료권 1개 지급
         premiumCancelled: false,
-        updatedAt: new Date()
+        updatedAt: Timestamp.now()
       });
       toast.showToast(t('premium_monthly_success'), 'success');
       setPremiumStatus({
@@ -334,14 +341,20 @@ function Shop({ user }) {
         console.log(`연간 프리미엄 갱신일: ${renewalDate.toLocaleDateString()}, 추가된 일수: ${extraDays}일`);
       }
 
+      // 프리미엄 무료권 다음 충전 시점 계산 (결제 시점 + 7일)
+      const nextFreeNovelChargeDate = new Date(now);
+      nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: false,
         isYearlyPremium: true,
         premiumType: 'yearly',
-        premiumStartDate: now,
-        premiumRenewalDate: renewalDate,
+        premiumStartDate: Timestamp.fromDate(now),
+        premiumRenewalDate: Timestamp.fromDate(renewalDate),
+        premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
+        premiumFreeNovelCount: 1, // 결제 시점에 무료권 1개 지급
         premiumCancelled: false,
-        updatedAt: new Date()
+        updatedAt: Timestamp.now()
       });
 
       const successMessage =

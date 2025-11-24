@@ -236,7 +236,7 @@ function NovelCreate({ user }) {
     const toast = useToast();
     const { t } = useTranslation();
     const { language } = useLanguage();
-    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted } = location.state || {};
+    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted, useFree } = location.state || {};
     // 이전 페이지 경로 저장 (없으면 기본값으로 '/novel')
     const previousPath = returnPath || '/novel';
 
@@ -254,7 +254,9 @@ function NovelCreate({ user }) {
     const [currentPoints, setCurrentPoints] = useState(0);
     const [ownedPotions, setOwnedPotions] = useState({});
     const [isPremium, setIsPremium] = useState(false);
-    const [weeklyFreeNovelUsed, setWeeklyFreeNovelUsed] = useState(false);
+    const [premiumFreeNovelAvailable, setPremiumFreeNovelAvailable] = useState(false);
+    const [premiumFreeNovelCount, setPremiumFreeNovelCount] = useState(0);
+    const [premiumFreeNovelNextChargeDate, setPremiumFreeNovelNextChargeDate] = useState(null);
     const selectedGenre = selectedPotion !== null ? potionImages[selectedPotion].genre : null;
 
     // 뒤로가기 방지 로직 - 소설 생성 중일 때 뒤로가기 방지
@@ -353,35 +355,43 @@ function NovelCreate({ user }) {
                     console.log('사용자 데이터 fetch 완료:', { point: userData.point, potions: userData.potions });
                     setCurrentPoints(userData.point || 0);
                     setOwnedPotions(userData.potions || {});
-                    setIsPremium(userData.isMonthlyPremium || userData.isYearlyPremium || false);
+                    const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
+                    setIsPremium(isPremiumUser);
 
-                    // 해당 주(현재 주 또는 과거 주)에 무료 사용 기록이 있는지 확인
-                    // 중요: 무료 사용 기록이 있으면 해당 주에 소설이 0개여도 무료 생성 불가능
-                    if (year && month && weekNum) {
-                        // 무료 사용 기록 확인 (소설 삭제 여부와 관계없이 무료 사용 기록은 영구 유지)
-                        const freeNovelHistoryRef = collection(db, 'users', user.uid, 'freeNovelHistory');
-                        const freeNovelQuery = query(
-                            freeNovelHistoryRef,
-                            where('year', '==', year),
-                            where('month', '==', month),
-                            where('weekNum', '==', weekNum)
-                        );
-                        const freeNovelSnapshot = await getDocs(freeNovelQuery);
-                        // 해당 주에 무료 사용 기록이 있으면 무료 생성 불가 (소설이 없어도 불가능)
-                        const hasFreeRecord = !freeNovelSnapshot.empty;
-                        console.log('무료 사용 기록 확인:', {
-                            year,
-                            month,
-                            weekNum,
-                            hasFreeRecord,
-                            recordCount: freeNovelSnapshot.size,
-                            isPremium
+                    // 프리미엄 회원인 경우 무료권 개수 확인
+                    if (isPremiumUser) {
+                        const now = new Date();
+                        let nextChargeDate = null;
+                        let freeNovelCount = userData.premiumFreeNovelCount || 0;
+
+                        // premiumFreeNovelNextChargeDate 확인
+                        if (userData.premiumFreeNovelNextChargeDate) {
+                            if (userData.premiumFreeNovelNextChargeDate.seconds) {
+                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
+                            } else if (userData.premiumFreeNovelNextChargeDate.toDate) {
+                                nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
+                            } else {
+                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
+                            }
+
+                            // 다음 충전 시점이 지났다면 자동 충전 (클라이언트에서 확인만, 실제 충전은 서버에서)
+                            if (nextChargeDate && nextChargeDate <= now) {
+                                // 서버에서 자동 충전되므로 여기서는 개수만 확인
+                                // 실제 충전은 Cloud Functions에서 처리
+                            }
+                        }
+
+                        setPremiumFreeNovelNextChargeDate(nextChargeDate);
+                        setPremiumFreeNovelCount(freeNovelCount);
+                        setPremiumFreeNovelAvailable(freeNovelCount > 0);
+                        console.log('프리미엄 무료권 상태 확인:', {
+                            freeNovelCount,
+                            nextChargeDate: nextChargeDate?.toISOString(),
+                            now: now.toISOString()
                         });
-                        setWeeklyFreeNovelUsed(hasFreeRecord);
                     } else {
-                        // year, month, weekNum이 없으면 무료 생성 불가 (정보 부족)
-                        console.log('주차 정보 부족:', { year, month, weekNum });
-                        setWeeklyFreeNovelUsed(true);
+                        setPremiumFreeNovelAvailable(false);
+                        setPremiumFreeNovelNextChargeDate(null);
                     }
                 }
             } catch (error) {
@@ -389,7 +399,7 @@ function NovelCreate({ user }) {
             }
         };
         fetchUserData();
-    }, [user?.uid, year, month, weekNum, novelDeleted]);
+    }, [user?.uid, novelDeleted]);
 
     // 이미 생성된 소설이 있는지 확인 (같은 장르인 경우에만 리다이렉트)
     // 이제는 여러 장르의 소설을 만들 수 있으므로, 같은 장르가 아닌 경우에는 리다이렉트하지 않음
@@ -400,14 +410,10 @@ function NovelCreate({ user }) {
         return `${date.getMonth() + 1}월 ${date.getDate()}일`;
     };
 
-    // 무료 소설 생성 함수 (해당 주에 소설을 생성하지 않은 경우)
+    // 무료 소설 생성 함수 (프리미엄 무료권 사용)
     const handleGenerateNovelFree = async () => {
-        if (weeklyFreeNovelUsed) {
-            toast.showToast(t('weekly_free_novel_already_used'), 'error');
-            return;
-        }
-        if (!year || !month || !weekNum) {
-            toast.showToast(t('novel_generate_need_week_info'), 'error');
+        if (!premiumFreeNovelAvailable) {
+            toast.showToast('무료권을 사용할 수 없습니다.', 'error');
             return;
         }
         if (!selectedGenre) {
@@ -528,26 +534,25 @@ function NovelCreate({ user }) {
             const docRef = await addDoc(collection(db, 'novels'), newNovel);
             console.log('소설 저장 완료, 문서 ID:', docRef.id);
 
-            // 무료 사용인 경우 (해당 주 첫 소설 생성)
-            // 중요: 무료 사용 기록을 저장하면 해당 주에 소설이 없어도 다시 무료 생성 불가능
+            // 무료 사용인 경우 (프리미엄 무료권 사용)
             if (isFree) {
                 try {
-                    // 무료 사용 기록 저장 (소설 삭제 여부와 관계없이 기록 영구 유지)
-                    // 이 기록이 있으면 해당 주(year, month, weekNum)에 소설이 0개여도 무료 생성 불가능
-                    await addDoc(collection(db, 'users', user.uid, 'freeNovelHistory'), {
-                        novelId: docRef.id,
-                        year: year,
-                        month: month,
-                        weekNum: weekNum,
-                        createdAt: Timestamp.now(),
-                        genre: selectedGenre,
+                    // 무료권 사용 처리: count 1개 차감 (충전 시점은 변경하지 않음)
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    const currentCount = userDoc.data()?.premiumFreeNovelCount || 0;
+                    const newCount = Math.max(0, currentCount - 1);
+
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        premiumFreeNovelCount: newCount,
+                        updatedAt: Timestamp.now()
                     });
-                    console.log('무료 사용 기록 저장 완료:', { year, month, weekNum, novelId: docRef.id });
-                    setWeeklyFreeNovelUsed(true);
-                    toast.showToast(t('weekly_free_novel_used'), 'success');
+                    console.log('프리미엄 무료권 사용 완료, 남은 개수:', newCount);
+                    setPremiumFreeNovelCount(newCount);
+                    setPremiumFreeNovelAvailable(newCount > 0);
+                    toast.showToast('프리미엄 무료권을 사용했습니다.', 'success');
                 } catch (error) {
-                    console.error('무료 사용 기록 저장 실패:', error);
-                    setWeeklyFreeNovelUsed(true);
+                    console.error('무료권 사용 처리 실패:', error);
+                    setPremiumFreeNovelAvailable(false);
                 }
             } else {
                 // 소설 저장 성공 시 포션 1개 차감
@@ -666,8 +671,8 @@ function NovelCreate({ user }) {
     const handleSaveNovel = async () => {
         if (!isNovelGenerated || isNovelSaved) return;
         // week 필드에 년도 포함 (year, month, weekNum이 모두 있는 경우)
-        const weekValue = (year && month && weekNum) 
-            ? `${year}년 ${month}월 ${weekNum}주차` 
+        const weekValue = (year && month && weekNum)
+            ? `${year}년 ${month}월 ${weekNum}주차`
             : (week || '');
         // undefined/null/함수 등 비정상 값 제거 및 안전한 값 할당
         const newNovel = {
@@ -775,8 +780,8 @@ function NovelCreate({ user }) {
                                                     potion.genre === '동화' ? 'fairytale' :
                                                         potion.genre === '판타지' ? 'fantasy' : null;
 
-                                    // 무료 생성 모드가 아니면 보유한 포션이 없으면 표시하지 않음
-                                    const isFreeMode = !weeklyFreeNovelUsed && year && month && weekNum;
+                                    // 무료 생성 모드는 useFree가 true일 때만
+                                    const isFreeMode = useFree === true;
                                     if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
                                         return null;
                                     }
@@ -849,8 +854,8 @@ function NovelCreate({ user }) {
                                                     potion.genre === '동화' ? 'fairytale' :
                                                         potion.genre === '판타지' ? 'fantasy' : null;
 
-                                    // 무료 생성 모드가 아니면 보유한 포션이 없으면 표시하지 않음
-                                    const isFreeMode = !weeklyFreeNovelUsed && year && month && weekNum;
+                                    // 무료 생성 모드는 useFree가 true일 때만
+                                    const isFreeMode = useFree === true;
                                     if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
                                         return null;
                                     }
@@ -915,7 +920,7 @@ function NovelCreate({ user }) {
                             <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 30, zIndex: 1, position: 'relative' }} />
 
                             {/* 포션이 없을 때 안내 (무료 모드가 아닐 때만) */}
-                            {!(!weeklyFreeNovelUsed && year && month && weekNum) && Object.values(ownedPotions).every(count => !count || count <= 0) && (
+                            {useFree !== true && Object.values(ownedPotions).every(count => !count || count <= 0) && (
                                 <div style={{
                                     textAlign: 'center',
                                     marginTop: '20px',
@@ -956,7 +961,7 @@ function NovelCreate({ user }) {
                             )}
 
                             {/* 무료 생성 모드 안내 */}
-                            {!weeklyFreeNovelUsed && year && month && weekNum && (
+                            {useFree === true && (
                                 <div style={{
                                     textAlign: 'center',
                                     marginTop: '20px',
@@ -1001,7 +1006,10 @@ function NovelCreate({ user }) {
                                         cursor: selectedPotion !== null && !isLoading ? 'pointer' : 'default',
                                         opacity: selectedPotion === null || isLoading ? 0.5 : 1,
                                     }}
-                                    onClick={selectedPotion !== null && !isLoading ? () => handleGenerateNovel(!weeklyFreeNovelUsed && year && month && weekNum) : undefined}
+                                    onClick={selectedPotion !== null && !isLoading ? () => {
+                                        // useFree가 true일 때만 무료권 사용, 나머지는 포션 사용
+                                        handleGenerateNovel(useFree === true);
+                                    } : undefined}
                                     aria-disabled={selectedPotion === null || isLoading}
                                 >
                                     <img src="/book.png" alt="book" style={{ width: '100%', display: 'block' }} />
@@ -1024,7 +1032,7 @@ function NovelCreate({ user }) {
                                                 : t('novel_generate_button')}
                                         {selectedPotion !== null && !isLoading && (
                                             <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
-                                                {!weeklyFreeNovelUsed && year && month && weekNum
+                                                {useFree === true
                                                     ? t('novel_generate_free_use')
                                                     : t('novel_generate_potion_use')}
                                             </div>

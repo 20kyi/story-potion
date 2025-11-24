@@ -577,11 +577,13 @@ function MyPage({ user }) {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setPoint(userData.point || 0);
+          const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
           setPremiumStatus({
             isMonthlyPremium: userData.isMonthlyPremium || false,
             isYearlyPremium: userData.isYearlyPremium || false,
             premiumType: userData.premiumType || null
           });
+
         } else {
           // 문서가 없는 경우 기본값 설정
           setPremiumStatus({
@@ -1126,6 +1128,7 @@ function MyPage({ user }) {
                 )}
               </PremiumStatus>
             )}
+
 
             {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
             {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (

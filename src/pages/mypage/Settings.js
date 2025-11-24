@@ -103,6 +103,7 @@ function Settings() {
                 premiumType: null,
                 premiumStartDate: null,
                 premiumRenewalDate: null,
+                premiumFreeNovelCount: 0, // 프리미엄 해지 시 무료권 소멸
                 premiumCancelled: true,
                 updatedAt: new Date()
             });
