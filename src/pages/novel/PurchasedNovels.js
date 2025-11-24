@@ -10,6 +10,7 @@ import { createNovelUrl } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import GridIcon from '../../components/icons/GridIcon';
 import ListIcon from '../../components/icons/ListIcon';
+import { getTutorialNovel } from '../../utils/tutorialNovel';
 
 const Container = styled.div`
   display: flex;
@@ -143,6 +144,32 @@ const NovelCover = styled.img`
   background: #E5E5E5;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   flex-shrink: 0;
+`;
+
+const TutorialCover = styled.div`
+  width: ${props => props.$viewMode === 'card' ? '100%' : '80px'};
+  max-width: ${props => props.$viewMode === 'card' ? '180px' : '80px'};
+  aspect-ratio: 2/3;
+  height: ${props => props.$viewMode === 'card' ? 'auto' : '120px'};
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: ${props => props.$viewMode === 'card' ? '20px' : '10px'};
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
+`;
+
+const TutorialCoverTitle = styled.div`
+  font-size: ${props => props.$viewMode === 'card' ? '14px' : '11px'};
+  font-weight: 700;
+  color: #cb6565;
+  text-align: center;
+  word-break: keep-all;
+  line-height: 1.4;
 `;
 
 const NovelInfo = styled.div`
@@ -343,7 +370,67 @@ function PurchasedNovels({ user }) {
             {isLoading ? (
                 <div style={{ textAlign: 'center', marginTop: 40 }}>로딩 중...</div>
             ) : novels.length === 0 ? (
-                <EmptyMessage>{t('home_no_purchased_novel')}</EmptyMessage>
+                <>
+                    <ViewToggle>
+                        <SortSelect 
+                            value={sortBy} 
+                            onChange={(e) => setSortBy(e.target.value)}
+                            theme={theme}
+                            style={{ opacity: 0.5 }}
+                            disabled
+                        >
+                            <option value="newest">구매일 최신순</option>
+                            <option value="oldest">구매일 오래된순</option>
+                            <option value="author">작가순</option>
+                        </SortSelect>
+                        <ViewToggleRight>
+                            <ToggleButton 
+                                $active={viewMode === 'card'} 
+                                onClick={() => {
+                                    setViewMode('card');
+                                    localStorage.setItem('purchasedNovelsViewMode', 'card');
+                                }}
+                                title="그리드형"
+                            >
+                                <GridIcon width={20} height={20} />
+                            </ToggleButton>
+                            <ToggleButton 
+                                $active={viewMode === 'list'} 
+                                onClick={() => {
+                                    setViewMode('list');
+                                    localStorage.setItem('purchasedNovelsViewMode', 'list');
+                                }}
+                                title="목록형"
+                            >
+                                <ListIcon width={20} height={20} />
+                            </ToggleButton>
+                        </ViewToggleRight>
+                    </ViewToggle>
+                    <NovelListWrapper $viewMode={viewMode}>
+                        <NovelItem
+                            $viewMode={viewMode}
+                            onClick={() => {
+                                const tutorialNovel = getTutorialNovel();
+                                navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, { 
+                                    state: { tutorialNovel, returnPath: '/purchased-novels' } 
+                                });
+                            }}
+                        >
+                            <NovelCover 
+                                src={process.env.PUBLIC_URL + '/bookcover.png'} 
+                                alt={getTutorialNovel().title || '튜토리얼'}
+                                $viewMode={viewMode}
+                            />
+                            <NovelInfo $viewMode={viewMode}>
+                                <NovelTitle $viewMode={viewMode}>{getTutorialNovel().title}</NovelTitle>
+                                <NovelOwner $viewMode={viewMode}>by {getTutorialNovel().ownerName}</NovelOwner>
+                                <PurchaseDate $viewMode={viewMode}>
+                                    튜토리얼
+                                </PurchaseDate>
+                            </NovelInfo>
+                        </NovelItem>
+                    </NovelListWrapper>
+                </>
             ) : (
                 <>
                     <ViewToggle>

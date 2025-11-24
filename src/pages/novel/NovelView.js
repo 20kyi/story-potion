@@ -3,8 +3,9 @@ import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import BackIcon from '../../components/icons/BackIcon';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { parseNovelUrl } from '../../utils/novelUtils';
+import { isTutorialNovel } from '../../utils/tutorialNovel';
 import { db } from '../../firebase';
 import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
@@ -260,6 +261,35 @@ const LargeCover = styled.img`
   &:hover {
     transform: scale(1.02);
   }
+`;
+
+const TutorialLargeCover = styled.div`
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 2/3;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+`;
+
+const TutorialLargeCoverTitle = styled.div`
+  font-size: 28px;
+  font-weight: 700;
+  color: #cb6565;
+  text-align: center;
+  word-break: keep-all;
+  line-height: 1.4;
 `;
 
 const CoverTitle = styled.h2`
@@ -651,6 +681,7 @@ const PageIndicator = styled.div`
 function NovelView({ user }) {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
+    const location = useLocation();
     const targetUserId = searchParams.get('userId') || user.uid;
     // URL 파싱 (year-month-weekNum 또는 year-month-weekNum-genre 형식)
     const parsedUrl = parseNovelUrl(id);
@@ -713,6 +744,30 @@ function NovelView({ user }) {
             setAccessGranted(false);
             try {
                 let fetchedNovel = null;
+                
+                // location.state에서 튜토리얼 책 데이터 확인
+                if (location.state?.tutorialNovel) {
+                    fetchedNovel = location.state.tutorialNovel;
+                    setNovel(fetchedNovel);
+                    setShowCoverView(true);
+                    setIsReadingMode(false);
+                    setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
+                    setLoading(false);
+                    return;
+                }
+                
+                // userId가 'system'인 경우 튜토리얼 책으로 처리
+                if (targetUserId === 'system' && isDateKey) {
+                    const { getTutorialNovel } = await import('../../utils/tutorialNovel');
+                    fetchedNovel = getTutorialNovel();
+                    setNovel(fetchedNovel);
+                    setShowCoverView(true);
+                    setIsReadingMode(false);
+                    setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
+                    setLoading(false);
+                    return;
+                }
+                
                 if (isDateKey) {
                     // 연-월-주차(및 장르)로 쿼리 (targetUserId 사용)
                     const { year, month, weekNum, genre } = parsedUrl;
@@ -1174,12 +1229,13 @@ function NovelView({ user }) {
 
     // 표지 보기 모드
     if (showCoverView) {
+        const isTutorial = isTutorialNovel(novel);
         return (
             <Container>
                 <Header user={user} />
                 <CoverViewContainer onClick={() => setShowCoverView(false)}>
                     <LargeCover
-                        src={novel.imageUrl || '/novel_banner/default.png'}
+                        src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')}
                         alt={novel.title}
                     />
                     <CoverTitle>{novel.title}</CoverTitle>

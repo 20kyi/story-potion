@@ -17,6 +17,7 @@ import { getPointPolicy } from '../utils/appConfig';
 import { checkWeeklyBonus } from '../utils/weeklyBonus';
 import { useTranslation } from '../LanguageContext';
 import { motion } from 'framer-motion';
+import { getTutorialNovel } from '../utils/tutorialNovel';
 
 
 const Container = styled.div`
@@ -416,6 +417,33 @@ const NovelCover = styled.img`
   display: block;
   margin-left: auto;
   margin-right: auto;
+`;
+
+const TutorialCover = styled.div`
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 2/3;
+  height: auto;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid #e0e0e0;
+`;
+
+const TutorialCoverTitle = styled.div`
+  font-size: 16px;
+  font-weight: 700;
+  color: #cb6565;
+  text-align: center;
+  word-break: keep-all;
+  line-height: 1.4;
 `;
 
 const RightColumn = styled.div`
@@ -980,11 +1008,34 @@ function Home({ user }) {
                 </MoreButton>
               </>
             ) : (
-              <EmptyStateContainer>
-                <EmptyStateIcon>📖</EmptyStateIcon>
-                <EmptyStateTitle>{t('home_no_novel_title')}</EmptyStateTitle>
-                <EmptyStateDesc>{t('home_no_novel_desc')}</EmptyStateDesc>
-              </EmptyStateContainer>
+              <>
+                <MyNovelRow>
+                  <MyNovelBox onClick={() => {
+                    const tutorialNovel = getTutorialNovel();
+                    navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
+                      state: { tutorialNovel, returnPath: '/' }
+                    });
+                  }}>
+                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel().title} />
+                    <MyNovelTitle>{getTutorialNovel().title}</MyNovelTitle>
+                  </MyNovelBox>
+                  {Array(2).fill(null).map((_, idx) => (
+                    <MyNovelBox key={`placeholder-${idx}`}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '180px',
+                        aspectRatio: '2/3',
+                        background: 'transparent',
+                        borderRadius: '15px',
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }} />
+                    </MyNovelBox>
+                  ))}
+                </MyNovelRow>
+              </>
             )}
           </>
         )}
@@ -1023,11 +1074,35 @@ function Home({ user }) {
                 </MoreButton>
               </>
             ) : (
-              <EmptyStateContainer>
-                <EmptyStateIcon>📚</EmptyStateIcon>
-                <EmptyStateTitle>{t('home_no_purchased_novel_title')}</EmptyStateTitle>
-                <EmptyStateDesc>{t('home_no_purchased_novel_desc')}</EmptyStateDesc>
-              </EmptyStateContainer>
+              <>
+                <MyNovelRow>
+                  <MyNovelBox onClick={() => {
+                    const tutorialNovel = getTutorialNovel();
+                    navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
+                      state: { tutorialNovel, returnPath: '/' }
+                    });
+                  }}>
+                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel().title} />
+                    <MyNovelTitle>{getTutorialNovel().title}</MyNovelTitle>
+                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {getTutorialNovel().ownerName}</div>
+                  </MyNovelBox>
+                  {Array(2).fill(null).map((_, idx) => (
+                    <MyNovelBox key={`purchased-placeholder-${idx}`}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '180px',
+                        aspectRatio: '2/3',
+                        background: 'transparent',
+                        borderRadius: '15px',
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }} />
+                    </MyNovelBox>
+                  ))}
+                </MyNovelRow>
+              </>
             )}
           </>
         )}
