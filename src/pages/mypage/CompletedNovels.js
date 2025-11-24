@@ -170,7 +170,7 @@ const NovelItem = styled.div`
   transition: box-shadow 0.15s;
   display: flex;
   flex-direction: ${props => props.$viewMode === 'card' ? 'column' : 'row'};
-  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
+  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'center'};
   gap: ${props => props.$viewMode === 'card' ? '12px' : '16px'};
   width: 100%;
   position: relative;
@@ -195,6 +195,7 @@ const NovelInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
+  justify-content: ${props => props.$viewMode === 'card' ? 'flex-start' : 'center'};
   gap: 8px;
   flex: 1;
   width: 100%;
