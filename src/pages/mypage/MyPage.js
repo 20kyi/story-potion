@@ -484,6 +484,7 @@ function MyPage({ user }) {
   const [removeProfileImage, setRemoveProfileImage] = useState(false); // 프로필 이미지 삭제 여부
   const [point, setPoint] = useState(0); // 사용자 포인트
   const [friendCount, setFriendCount] = useState(0); // 친구 수
+  const [potionCount, setPotionCount] = useState(0); // 포션 개수
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
   const [isLoading, setIsLoading] = useState(false);
   const [hasFriendRequest, setHasFriendRequest] = useState(false); // 친구 요청 존재 여부
@@ -569,14 +570,20 @@ function MyPage({ user }) {
     }
   }, [user]);
 
-  // 사용자 포인트 정보를 Firestore에서 가져오기
+  // 사용자 포인트 및 포션 정보를 Firestore에서 가져오기
   useEffect(() => {
     if (user?.uid) {
-      // Firestore에서 포인트 불러오기
+      // Firestore에서 포인트 및 포션 불러오기
       getDoc(doc(db, "users", user.uid)).then((docSnap) => {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setPoint(userData.point || 0);
+          
+          // 포션 개수 계산
+          const potions = userData.potions || {};
+          const totalPotions = Object.values(potions).reduce((sum, count) => sum + (count || 0), 0);
+          setPotionCount(totalPotions);
+          
           const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
           setPremiumStatus({
             isMonthlyPremium: userData.isMonthlyPremium || false,
@@ -586,6 +593,7 @@ function MyPage({ user }) {
 
         } else {
           // 문서가 없는 경우 기본값 설정
+          setPotionCount(0);
           setPremiumStatus({
             isMonthlyPremium: false,
             isYearlyPremium: false,
@@ -594,6 +602,7 @@ function MyPage({ user }) {
         }
       }).catch(() => {
         // 에러 발생 시 기본값 설정
+        setPotionCount(0);
         setPremiumStatus({
           isMonthlyPremium: false,
           isYearlyPremium: false,
@@ -1188,12 +1197,15 @@ function MyPage({ user }) {
                 <StatNumber>{point.toLocaleString()}</StatNumber>
                 <StatLabel>{t('points')}</StatLabel>
               </StatItem>
+              <StatItem onClick={() => navigate('/my/potion-shop')}>
+                <StatNumber>{potionCount}</StatNumber>
+                <StatLabel>{t('potions')}</StatLabel>
+              </StatItem>
               <StatItem onClick={() => navigate('/my/friend')}>
                 <StatNumber>{friendCount}</StatNumber>
                 <StatLabel>{t('friends')}</StatLabel>
                 {hasFriendRequest && <FriendRequestBadge theme={theme} />}
               </StatItem>
-
             </StatsContainer>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
