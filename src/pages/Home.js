@@ -17,7 +17,7 @@ import { getPointPolicy } from '../utils/appConfig';
 import { checkWeeklyBonus } from '../utils/weeklyBonus';
 import { useTranslation } from '../LanguageContext';
 import { motion } from 'framer-motion';
-import { getTutorialNovel } from '../utils/tutorialNovel';
+import { getAppTutorialNovel, getNovelCreationTutorialNovel } from '../utils/tutorialNovel';
 
 
 const Container = styled.div`
@@ -443,7 +443,55 @@ const NovelCover = styled.img`
   margin-right: auto;
 `;
 
-const TutorialCover = styled.div`
+const TutorialSection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const TutorialRow = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const TutorialBox = styled.div`
+  width: calc((100% - 12px) / 2);
+  min-width: calc((100% - 12px) / 2);
+  max-width: calc((100% - 12px) / 2);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+  &:hover {
+    transform: translateY(-4px);
+  }
+`;
+
+const TutorialCover = styled.img`
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin-bottom: 8px;
+`;
+
+const TutorialTitle = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+`;
+
+const TutorialCoverOld = styled.div`
   width: 100%;
   max-width: 180px;
   aspect-ratio: 2/3;
@@ -882,6 +930,7 @@ function Home({ user }) {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
   const [userCreatedAt, setUserCreatedAt] = useState(null); // 사용자 가입일
+  const [totalNovelCount, setTotalNovelCount] = useState(0); // 전체 소설 개수
 
 
   // 포션 데이터 (표시는 locale로)
@@ -961,6 +1010,14 @@ function Home({ user }) {
       const novelsQuery = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3));
       const novelSnapshot = await getDocs(novelsQuery);
       setRecentNovels(novelSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+
+      // 전체 소설 개수 확인 (삭제되지 않은 소설만)
+      const allNovelsQuery = query(novelsRef, where('userId', '==', user.uid));
+      const allNovelsSnapshot = await getDocs(allNovelsQuery);
+      const allNovels = allNovelsSnapshot.docs
+        .map(doc => ({ ...doc.data(), id: doc.id }))
+        .filter(novel => novel.deleted !== true);
+      setTotalNovelCount(allNovels.length);
 
       // Fetch purchased novels
       try {
@@ -1124,6 +1181,44 @@ function Home({ user }) {
             ))}
           </Slider>
         </CarouselContainer>
+
+        {/* 튜토리얼 책 섹션 - 소설 1개 미만 생성한 사용자에게만 표시 */}
+        {userCreatedAt && totalNovelCount < 1 && (
+          <TutorialSection>
+            <TutorialRow>
+              {(() => {
+                const appTutorial = getAppTutorialNovel(userCreatedAt);
+                const novelTutorial = getNovelCreationTutorialNovel(userCreatedAt);
+                return (
+                  <>
+                    <TutorialBox
+                      onClick={() => navigate(`/novel/${createNovelUrl(appTutorial.year, appTutorial.month, appTutorial.weekNum, appTutorial.genre)}?userId=${appTutorial.userId}`, {
+                        state: { tutorialNovel: appTutorial, returnPath: '/' }
+                      })}
+                    >
+                      <TutorialCover
+                        src={appTutorial.imageUrl || '/bookcover.png'}
+                        alt={appTutorial.title}
+                      />
+                      <TutorialTitle>{appTutorial.title}</TutorialTitle>
+                    </TutorialBox>
+                    <TutorialBox
+                      onClick={() => navigate(`/novel/${createNovelUrl(novelTutorial.year, novelTutorial.month, novelTutorial.weekNum, novelTutorial.genre)}?userId=${novelTutorial.userId}`, {
+                        state: { tutorialNovel: novelTutorial, returnPath: '/' }
+                      })}
+                    >
+                      <TutorialCover
+                        src={novelTutorial.imageUrl || '/bookcover2.png'}
+                        alt={novelTutorial.title}
+                      />
+                      <TutorialTitle>{novelTutorial.title}</TutorialTitle>
+                    </TutorialBox>
+                  </>
+                );
+              })()}
+            </TutorialRow>
+          </TutorialSection>
+        )}
 
         {/* AI 소설 만들기 CTA */}
         <AICreateCard onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>

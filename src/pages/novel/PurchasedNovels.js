@@ -538,7 +538,7 @@ function PurchasedNovels({ user }) {
                                     }}
                                 >
                                     <NovelCover 
-                                        src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')} 
+                                        src={novel.imageUrl || '/novel_banner/default.png'} 
                                         alt={novel.title || '소설 표지'}
                                         $viewMode={viewMode}
                                     />

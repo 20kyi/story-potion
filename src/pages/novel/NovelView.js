@@ -246,7 +246,7 @@ const CoverViewContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 200px);
-  padding: 10px;
+  padding: 0;
   cursor: pointer;
 `;
 
@@ -757,7 +757,7 @@ function NovelView({ user }) {
             setAccessGranted(false);
             try {
                 let fetchedNovel = null;
-                
+
                 // location.state에서 튜토리얼 책 데이터 확인
                 if (location.state?.tutorialNovel) {
                     fetchedNovel = location.state.tutorialNovel;
@@ -769,7 +769,7 @@ function NovelView({ user }) {
                     setLoading(false);
                     return;
                 }
-                
+
                 // userId가 'system'인 경우 튜토리얼 책으로 처리
                 if (targetUserId === 'system' && isDateKey) {
                     const { getTutorialNovel } = await import('../../utils/tutorialNovel');
@@ -795,7 +795,7 @@ function NovelView({ user }) {
                     setLoading(false);
                     return;
                 }
-                
+
                 if (isDateKey) {
                     // 연-월-주차(및 장르)로 쿼리 (targetUserId 사용)
                     const { year, month, weekNum, genre } = parsedUrl;
@@ -831,7 +831,7 @@ function NovelView({ user }) {
                 setNovel(fetchedNovel);
                 setShowCoverView(true); // 소설이 로드될 때마다 표지 보기 모드로 리셋
                 setIsReadingMode(false); // 읽기 모드도 리셋
-                
+
                 // 작가 정보 가져오기
                 if (fetchedNovel.userId) {
                     try {
