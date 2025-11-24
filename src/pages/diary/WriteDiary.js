@@ -1973,7 +1973,7 @@ function WriteDiary({ user }) {
                         ) : !(isPremium || imageLimitExtended) && imagePreview.length === 1 ? (
                             <button
                                 type="button"
-                                onClick={() => navigate('/my/shop')}
+                                onClick={() => navigate('/my/premium')}
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -2219,7 +2219,7 @@ function WriteDiary({ user }) {
                     ) : (
                         <button
                             type="button"
-                            onClick={() => navigate('/my/shop')}
+                            onClick={() => navigate('/my/premium')}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',

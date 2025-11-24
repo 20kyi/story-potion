@@ -251,7 +251,7 @@ const genreBannerData = {
     '역사': {
         genreKey: 'historical',
         src: process.env.PUBLIC_URL + '/novel_banner/historical.png',
-        text: '시간을 여행하는는 고전 감성러'
+        text: '시간을 여행하는 고전 감성러'
     },
     '동화': {
         genreKey: 'fairytale',
@@ -261,7 +261,7 @@ const genreBannerData = {
     '판타지': {
         genreKey: 'fantasy',
         src: process.env.PUBLIC_URL + '/novel_banner/fantasy.png',
-        text: '새로운 세계를 창조하는 모험가'
+        text: '새로운 세계의 모험가'
     },
     '공포': {
         genreKey: 'horror',
