@@ -202,7 +202,7 @@ const NovelContent = styled.div`
         return theme.cardText;
     }};
   white-space: pre-line;
-  padding: ${({ isReadingMode }) => isReadingMode ? '40px 24px' : '20px'};
+  padding: ${({ isReadingMode }) => isReadingMode ? '40px 24px' : '0px'};   // 소설 컨텐츠
   background: ${({ readTheme, theme, isReadingMode }) => {
         if (isReadingMode) {
             if (readTheme === 'sepia') return '#f4e8d7';
