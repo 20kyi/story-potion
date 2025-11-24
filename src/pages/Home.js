@@ -617,11 +617,17 @@ const PremiumBannerContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: center;
+  text-align: center;
 `;
 
 const PremiumBannerLeft = styled.div`
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   
   @media (max-width: 480px) {
     flex: 1;
@@ -634,6 +640,7 @@ const PremiumBannerTitle = styled.div`
   margin-bottom: 6px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -652,6 +659,7 @@ const PremiumBannerDesc = styled.div`
   color: #8B4513;
   word-break: keep-all;
   overflow-wrap: break-word;
+  text-align: center;
   
   @media (max-width: 480px) {
     font-size: 12px;
@@ -695,12 +703,13 @@ const CarouselSlide = styled.div`
 `;
 
 const AICreateCard = styled(motion.div)`
-  background: linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%);
+  background: linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%);
+  border: 2px solid #FFD4CC;
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(201, 154, 154, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 180, 170, 0.2);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -712,7 +721,7 @@ const AICreateCard = styled(motion.div)`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 40%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
     animation: shimmer 4s infinite;
   }
   
@@ -723,7 +732,8 @@ const AICreateCard = styled(motion.div)`
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(201, 154, 154, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 180, 170, 0.3);
+    border-color: #FFC4B8;
   }
   
   &:active {
@@ -737,13 +747,14 @@ const AICreateContent = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  color: #fff;
+  color: #8B3E2E;
 `;
 
 const AICreateIcon = styled.div`
   font-size: 40px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 2px 4px rgba(139, 62, 46, 0.2));
+  color: #8B3E2E;
 `;
 
 const AICreateText = styled.div`
@@ -752,28 +763,33 @@ const AICreateText = styled.div`
 `;
 
 const AICreateTitle = styled.div`
-  font-size: 20px;
+  font-size: 32px !important;
   font-weight: 700;
   margin-bottom: 6px;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  color: #8B3E2E;
   line-height: 1.3;
   word-break: keep-all;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: pre-line;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   
   @media (max-width: 480px) {
-    font-size: 18px;
+    font-size: 30px !important;
   }
 `;
 
 const AICreateDesc = styled.div`
   font-size: 14px;
-  opacity: 0.95;
+  color: #A05245;
   line-height: 1.4;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.06);
   word-break: keep-all;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: pre-line;
   
   @media (max-width: 480px) {
     font-size: 13px;
@@ -784,11 +800,13 @@ const AICreateArrow = styled.div`
   font-size: 24px;
   font-weight: 700;
   flex-shrink: 0;
-  opacity: 0.9;
-  transition: transform 0.2s;
+  color: #8B3E2E;
+  opacity: 0.8;
+  transition: all 0.2s;
   
   ${AICreateCard}:hover & {
     transform: translateX(4px);
+    opacity: 1;
   }
 `;
 
@@ -1089,14 +1107,16 @@ function Home({ user }) {
         </CarouselContainer>
 
         {/* AI 소설 만들기 CTA */}
-        <AICreateCard onClick={() => navigate('/novel')}>
+        <AICreateCard onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>
           <AICreateContent>
-            <AICreateIcon>✨</AICreateIcon>
+            {/* <AICreateIcon>✨</AICreateIcon> */}
             <AICreateText>
-              <AICreateTitle>{t('home_ai_create_title')}</AICreateTitle>
+              <AICreateTitle>
+                <span>{t('home_ai_create_title')}</span>
+                <span style={{ fontSize: '32px', fontWeight: '700' }}>→</span>
+              </AICreateTitle>
               <AICreateDesc>{t('home_ai_create_desc')}</AICreateDesc>
             </AICreateText>
-            <AICreateArrow>→</AICreateArrow>
           </AICreateContent>
         </AICreateCard>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createNovelUrl } from '../../utils/novelUtils';
 import styled from 'styled-components';
@@ -538,6 +538,284 @@ const AddButton = styled.button`
   line-height: 1;
 `;
 
+// CTA 카드 스타일
+const NovelCTACard = styled.div`
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
+  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5'};
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px ${({ theme }) => theme.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.08)'};
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px ${({ theme }) => theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.12)'};
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const NovelCTAContent = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: ${({ theme }) => theme.text};
+`;
+
+const NovelCTAIcon = styled.div`
+  font-size: 40px;
+  flex-shrink: 0;
+`;
+
+const NovelCTATop = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const NovelCTAIconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+`;
+
+const NovelCTAText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const NovelCTATitle = styled.div`
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  word-break: keep-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  color: ${({ theme }) => theme.text};
+  
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
+`;
+
+const NovelCTADesc = styled.div`
+  font-size: 14px;
+  opacity: 0.8;
+  line-height: 1.4;
+  word-break: keep-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  color: ${({ theme }) => theme.subText || '#888'};
+  
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
+
+const NovelCTAArrow = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: transform 0.2s;
+  color: ${({ theme }) => theme.text};
+  
+  ${NovelCTACard}:hover & {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+`;
+
+const NovelCTAProgress = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const NovelCTAProgressText = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const NovelCTAProgressBar = styled.div`
+  width: 100%;
+  height: 16px;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5'};
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+`;
+
+const NovelCTAProgressFill = styled.div`
+  height: 100%;
+  background: linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%);
+  border-radius: 8px;
+  transition: width 0.3s ease;
+  width: ${({ progress }) => progress}%;
+`;
+
+// 이번주 일기 목록 모달 스타일
+const CurrentWeekDiaryModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const CurrentWeekDiaryContent = styled.div`
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+`;
+
+const CurrentWeekDiaryHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const CurrentWeekDiaryTitle = styled.h3`
+  font-size: 20px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin: 0;
+`;
+
+const CurrentWeekDiaryClose = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.text};
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const CurrentWeekDiaryList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const CurrentWeekDiaryItem = styled.div`
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#F5F5F5'};
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: ${({ theme }) => theme.mode === 'dark' ? '#4A4A4A' : '#EEEEEE'};
+    transform: translateY(-2px);
+  }
+`;
+
+const CurrentWeekDiaryImage = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+`;
+
+const CurrentWeekDiaryImagePlaceholder = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  flex-shrink: 0;
+`;
+
+const CurrentWeekDiaryInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const CurrentWeekDiaryDate = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  font-weight: 500;
+`;
+
+const CurrentWeekDiaryTitleText = styled.div`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+`;
+
+const CurrentWeekDiaryPreview = styled.div`
+  font-size: 13px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+`;
+
+const CurrentWeekDiaryEmpty = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  font-size: 14px;
+`;
+
 // 내 소설/서재 섹션 스타일
 const LibrarySection = styled.div`
   margin-bottom: 30px;
@@ -588,8 +866,9 @@ const NovelRow = styled.div`
 `;
 
 const NovelBox = styled.div`
-  min-width: 100px;
-  max-width: 120px;
+  width: calc((100% - 24px) / 3);
+  min-width: calc((100% - 24px) / 3);
+  max-width: calc((100% - 24px) / 3);
   flex-shrink: 0;
   cursor: pointer;
   transition: transform 0.2s;
@@ -658,6 +937,10 @@ const Novel = ({ user }) => {
     const [timeUntilNextCharge, setTimeUntilNextCharge] = useState('');
     const [myNovels, setMyNovels] = useState([]);
     const [purchasedNovels, setPurchasedNovels] = useState([]);
+    const weekRefs = useRef({});
+    const [showCurrentWeekDiaryModal, setShowCurrentWeekDiaryModal] = useState(false);
+    const [currentWeekDiaries, setCurrentWeekDiaries] = useState([]);
+    const progressSectionRef = useRef(null);
 
 
 
@@ -1132,6 +1415,17 @@ const Novel = ({ user }) => {
         }
     }, [location.state?.novelDeleted, user, currentDate, navigate, location.pathname]);
 
+    // 홈화면에서 진행도 구역으로 스크롤
+    useEffect(() => {
+        if (location.state?.scrollToProgress && progressSectionRef.current && !isLoading) {
+            setTimeout(() => {
+                progressSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // state 초기화
+                navigate(location.pathname, { replace: true });
+            }, 500);
+        }
+    }, [location.state?.scrollToProgress, isLoading, navigate, location.pathname]);
+
 
     const getWeeksInMonth = (year, month) => {
         const weeks = [];
@@ -1393,10 +1687,204 @@ const Novel = ({ user }) => {
         setIsPickerOpen(false);
     };
 
+    // 소설을 만들 수 있는 주차 찾기 (일기 7개 모두 작성된 주차)
+    const findCreatableWeek = () => {
+        // 모든 주차를 확인하여 소설을 만들 수 있는 주차 찾기
+        for (let i = 0; i < weeks.length; i++) {
+            const week = weeks[i];
+            const progress = weeklyProgress[week.weekNum] || 0;
+            const isCompleted = progress >= 100;
+
+            if (isCompleted) {
+                return week;
+            }
+        }
+        return null;
+    };
+
+    // 오늘이 속한 주차 찾기
+    const getCurrentWeek = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 현재 표시된 월의 주차들 확인
+        for (let i = 0; i < weeks.length; i++) {
+            const week = weeks[i];
+            const weekStart = new Date(week.start);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd = new Date(week.end);
+            weekEnd.setHours(23, 59, 59, 999);
+
+            if (today >= weekStart && today <= weekEnd) {
+                return week;
+            }
+        }
+
+        // 현재 표시된 월에 없으면 오늘이 속한 월 확인
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+        // 오늘이 속한 월이 현재 표시된 월과 다를 때만 계산
+        if (currentYear !== currentDate.getFullYear() || currentMonth !== currentDate.getMonth()) {
+            // getWeeksInMonth를 호출하지 않고 직접 계산
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            let currentMonday = new Date(firstDayOfMonth);
+            const dayOfWeek = currentMonday.getDay();
+            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            currentMonday.setDate(currentMonday.getDate() - diff);
+
+            let weekNum = 1;
+            while (true) {
+                const weekStart = new Date(currentMonday);
+                const weekEnd = new Date(currentMonday);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                if (today >= weekStart && today <= weekEnd) {
+                    return {
+                        weekNum: weekNum,
+                        start: weekStart,
+                        end: weekEnd
+                    };
+                }
+
+                if (weekEnd.getMonth() !== currentMonth || weekEnd.getFullYear() !== currentYear) {
+                    if (weekNum > 1) break;
+                }
+
+                currentMonday.setDate(currentMonday.getDate() + 7);
+                weekNum++;
+
+                if (currentMonday.getFullYear() > currentYear || (currentMonday.getFullYear() === currentYear && currentMonday.getMonth() > currentMonth + 1)) {
+                    break;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    // 이번주 일기 진행도 계산
+    const getCurrentWeekProgress = () => {
+        const currentWeek = getCurrentWeek();
+        if (!currentWeek) return { progress: 0, count: 0, total: 7 };
+
+        const weekStartStr = formatDate(currentWeek.start);
+        const weekEndStr = formatDate(currentWeek.end);
+
+        const weekDiaries = diaries.filter(diary => {
+            return diary.date >= weekStartStr && diary.date <= weekEndStr;
+        });
+
+        const count = weekDiaries.length;
+        const total = 7;
+        const progress = Math.min(100, (count / total) * 100);
+
+        return { progress, count, total };
+    };
+
+    // 이번주 일기 목록 가져오기
+    const getCurrentWeekDiaries = async () => {
+        const currentWeek = getCurrentWeek();
+        if (!currentWeek) {
+            setCurrentWeekDiaries([]);
+            return;
+        }
+
+        const weekStartStr = formatDate(currentWeek.start);
+        const weekEndStr = formatDate(currentWeek.end);
+
+        // 현재 로드된 diaries에서 필터링
+        const weekDiaries = diaries.filter(diary => {
+            return diary.date >= weekStartStr && diary.date <= weekEndStr;
+        });
+
+        // 날짜순으로 정렬
+        weekDiaries.sort((a, b) => {
+            return a.date.localeCompare(b.date);
+        });
+
+        setCurrentWeekDiaries(weekDiaries);
+    };
+
+    // 이번주 일기 목록 모달 열기
+    const openCurrentWeekDiaryModal = async () => {
+        await getCurrentWeekDiaries();
+        setShowCurrentWeekDiaryModal(true);
+    };
+
+    // 일기 상세 보기로 이동
+    const handleDiaryClick = (diary) => {
+        navigate('/diary/view', {
+            state: {
+                date: diary.date,
+                diary: diary
+            }
+        });
+    };
+
+    // 소설을 만들 수 있는 주차로 스크롤
+    const scrollToCreatableWeek = () => {
+        const creatableWeek = findCreatableWeek();
+
+        if (creatableWeek) {
+            const weekKey = `${creatableWeek.weekNum}`;
+            const weekRef = weekRefs.current[weekKey];
+
+            if (weekRef) {
+                // 해당 주차가 현재 표시된 월에 있는지 확인
+                const weekYear = new Date(creatableWeek.start).getFullYear();
+                const weekMonth = new Date(creatableWeek.start).getMonth();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth();
+
+                // 다른 월에 있으면 해당 월로 이동
+                if (weekYear !== currentYear || weekMonth !== currentMonth) {
+                    setCurrentDate(new Date(weekYear, weekMonth));
+                    // 상태 업데이트 후 스크롤 (약간의 지연 필요)
+                    setTimeout(() => {
+                        const updatedWeekRef = weekRefs.current[weekKey];
+                        if (updatedWeekRef) {
+                            updatedWeekRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                } else {
+                    // 같은 월에 있으면 바로 스크롤
+                    weekRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // ref가 없으면 해당 월로 이동
+                const weekYear = new Date(creatableWeek.start).getFullYear();
+                const weekMonth = new Date(creatableWeek.start).getMonth();
+                setCurrentDate(new Date(weekYear, weekMonth));
+            }
+        } else {
+            // 소설을 만들 수 있는 주차가 없으면 토스트 메시지 표시
+            toast.show(t('novel_no_creatable_week') || '소설을 만들 수 있는 주차가 없습니다. 일기를 더 작성해주세요.');
+        }
+    };
+
     return (
         <Container>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('novel_title')} />
             {/* <Title>Novel</Title> */}
+
+            {/* 소설 만들기 CTA */}
+            <NovelCTACard onClick={openCurrentWeekDiaryModal} theme={theme}>
+                <NovelCTAContent theme={theme}>
+                    <NovelCTAProgress>
+                        <NovelCTAProgressText theme={theme}>
+                            <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
+                            <span>{(() => {
+                                const { count, total } = getCurrentWeekProgress();
+                                return `${count}/${total}`;
+                            })()}</span>
+                        </NovelCTAProgressText>
+                        <NovelCTAProgressBar theme={theme}>
+                            <NovelCTAProgressFill progress={getCurrentWeekProgress().progress} />
+                        </NovelCTAProgressBar>
+                    </NovelCTAProgress>
+                </NovelCTAContent>
+            </NovelCTACard>
 
             {/* 내 소설 섹션 */}
             <LibrarySection>
@@ -1515,7 +2003,7 @@ const Novel = ({ user }) => {
                 </PremiumFreeNovelStatus>
             )}
 
-            <WeeklySection>
+            <WeeklySection ref={progressSectionRef}>
                 <MonthSelector>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
                     <CurrentMonth onClick={() => setIsPickerOpen(true)}>
@@ -1634,7 +2122,14 @@ const Novel = ({ user }) => {
                         };
 
                         return (
-                            <WeeklyCard key={week.weekNum}>
+                            <WeeklyCard
+                                key={week.weekNum}
+                                ref={(el) => {
+                                    if (el) {
+                                        weekRefs.current[week.weekNum] = el;
+                                    }
+                                }}
+                            >
                                 <WeekTitle>
                                     <span>{t('week_num', { num: week.weekNum })}</span>
                                     {firstNovel && isCompleted && (
@@ -1805,6 +2300,68 @@ const Novel = ({ user }) => {
                         })}
                     </NovelListContent>
                 </NovelListModal>
+            )}
+
+            {/* 이번주 일기 목록 모달 */}
+            {showCurrentWeekDiaryModal && (
+                <CurrentWeekDiaryModal onClick={() => setShowCurrentWeekDiaryModal(false)}>
+                    <CurrentWeekDiaryContent theme={theme} onClick={(e) => e.stopPropagation()}>
+                        <CurrentWeekDiaryHeader>
+                            <CurrentWeekDiaryTitle theme={theme}>
+                                {t('novel_this_week_diaries') || '이번주 일기 목록'}
+                            </CurrentWeekDiaryTitle>
+                            <CurrentWeekDiaryClose theme={theme} onClick={() => setShowCurrentWeekDiaryModal(false)}>
+                                ×
+                            </CurrentWeekDiaryClose>
+                        </CurrentWeekDiaryHeader>
+                        <CurrentWeekDiaryList>
+                            {currentWeekDiaries.length === 0 ? (
+                                <CurrentWeekDiaryEmpty theme={theme}>
+                                    {t('novel_no_this_week_diaries') || '이번주에 작성한 일기가 없습니다.'}
+                                </CurrentWeekDiaryEmpty>
+                            ) : (
+                                currentWeekDiaries.map((diary, index) => {
+                                    const diaryDate = new Date(diary.date);
+                                    const dateStr = `${diaryDate.getFullYear()}년 ${diaryDate.getMonth() + 1}월 ${diaryDate.getDate()}일`;
+
+                                    // 이미지가 있으면 첫 번째 이미지 사용, 없으면 이모티콘 표시
+                                    const hasImage = diary.imageUrls && diary.imageUrls.length > 0;
+                                    const imageUrl = hasImage ? diary.imageUrls[0] : null;
+
+                                    return (
+                                        <CurrentWeekDiaryItem
+                                            key={index}
+                                            theme={theme}
+                                            onClick={() => {
+                                                setShowCurrentWeekDiaryModal(false);
+                                                handleDiaryClick(diary);
+                                            }}
+                                        >
+                                            {imageUrl ? (
+                                                <CurrentWeekDiaryImage src={imageUrl} alt="일기 이미지" />
+                                            ) : (
+                                                <CurrentWeekDiaryImagePlaceholder theme={theme}>
+                                                    📝
+                                                </CurrentWeekDiaryImagePlaceholder>
+                                            )}
+                                            <CurrentWeekDiaryInfo>
+                                                <CurrentWeekDiaryDate theme={theme}>{dateStr}</CurrentWeekDiaryDate>
+                                                <CurrentWeekDiaryTitleText theme={theme}>
+                                                    {diary.title || t('diary_no_title') || '제목 없음'}
+                                                </CurrentWeekDiaryTitleText>
+                                                {diary.content && (
+                                                    <CurrentWeekDiaryPreview theme={theme}>
+                                                        {diary.content}
+                                                    </CurrentWeekDiaryPreview>
+                                                )}
+                                            </CurrentWeekDiaryInfo>
+                                        </CurrentWeekDiaryItem>
+                                    );
+                                })
+                            )}
+                        </CurrentWeekDiaryList>
+                    </CurrentWeekDiaryContent>
+                </CurrentWeekDiaryModal>
             )}
 
             <Navigation />
