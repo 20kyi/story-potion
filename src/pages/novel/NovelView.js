@@ -1280,7 +1280,7 @@ function NovelView({ user }) {
                 <Header user={user} />
                 <CoverViewContainer onClick={() => setShowCoverView(false)}>
                     <LargeCover
-                        src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')}
+                        src={novel.imageUrl || (isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : '/novel_banner/default.png')}
                         alt={novel.title}
                     />
                     <CoverTitle>{novel.title}</CoverTitle>

@@ -6,8 +6,6 @@ import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import { lightTheme, darkTheme } from '../../theme';
 import { useTranslation } from '../../LanguageContext';
-import { getTutorialNovel } from '../../utils/tutorialNovel';
-import { createNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -153,10 +151,7 @@ function Support({ user }) {
     };
     
     const handleTutorial = () => {
-        const tutorialNovel = getTutorialNovel(userCreatedAt);
-        navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
-            state: { tutorialNovel, returnPath: '/my/support' }
-        });
+        navigate('/my/tutorial');
     };
 
     const handleShare = () => {

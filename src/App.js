@@ -35,6 +35,7 @@ import Settings from './pages/mypage/Settings';
 import NotificationSettings from './pages/mypage/NotificationSettings';
 import Notice from './pages/mypage/Notice';
 import Support from './pages/mypage/Support';
+import TutorialList from './pages/mypage/TutorialList';
 import FAQ from './pages/mypage/FAQ';
 import Social from './pages/mypage/Social';
 import Friend from './pages/mypage/Friend';
@@ -116,6 +117,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/notice" element={user ? <Notice user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/notice/:id" element={user ? <NoticeDetail user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/support" element={user ? <Support user={user} /> : <Navigate to="/login" />} />
+                <Route path="/my/tutorial" element={user ? <TutorialList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/faq" element={user ? <FAQ user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/social" element={user ? <Social user={user} /> : <Navigate to="/login" />} />
                 <Route path="/my/friend" element={user ? <Friend user={user} /> : <Navigate to="/login" />} />
