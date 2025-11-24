@@ -280,6 +280,47 @@ const WeeklyGrid = styled.div`
   width: 100%;
 `;
 
+const WeeklyList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0;
+  width: 100%;
+`;
+
+const ViewToggleButton = styled.button`
+  background: ${({ active, theme }) => active
+        ? (theme.primary || '#cb6565')
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')};
+  color: ${({ active, theme }) => active
+        ? '#fff'
+        : theme.text};
+  border: 1px solid ${({ active, theme }) => active
+        ? (theme.primary || '#cb6565')
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)')};
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  &:hover {
+    background: ${({ active, theme }) => active
+        ? (theme.primary || '#cb6565')
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')};
+  }
+`;
+
+const ViewToggleContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-end;
+`;
+
 const WeeklyCard = styled.div`
   background-color: ${({ theme }) => theme.progressCard};
   border-radius: 15px;
@@ -944,8 +985,16 @@ const Novel = ({ user }) => {
     const [showCurrentWeekDiaryModal, setShowCurrentWeekDiaryModal] = useState(false);
     const [currentWeekDiaries, setCurrentWeekDiaries] = useState([]);
     const progressSectionRef = useRef(null);
+    const [weeklyViewMode, setWeeklyViewMode] = useState(() => {
+        const saved = localStorage.getItem('novel_weekly_view_mode');
+        return saved || 'card'; // 'card' or 'list'
+    });
 
 
+
+    useEffect(() => {
+        localStorage.setItem('novel_weekly_view_mode', weeklyViewMode);
+    }, [weeklyViewMode]);
 
     useEffect(() => {
         if (!user) {
@@ -2019,6 +2068,22 @@ const Novel = ({ user }) => {
                     </CurrentMonth>
                     <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
                 </MonthSelector>
+                <ViewToggleContainer>
+                    <ViewToggleButton
+                        active={weeklyViewMode === 'card'}
+                        onClick={() => setWeeklyViewMode('card')}
+                        theme={theme}
+                    >
+                        📋 카드형
+                    </ViewToggleButton>
+                    <ViewToggleButton
+                        active={weeklyViewMode === 'list'}
+                        onClick={() => setWeeklyViewMode('list')}
+                        theme={theme}
+                    >
+                        📝 목록형
+                    </ViewToggleButton>
+                </ViewToggleContainer>
                 {isPickerOpen && (
                     <DatePickerModal onClick={() => setIsPickerOpen(false)}>
                         <DatePickerContent onClick={(e) => e.stopPropagation()}>
@@ -2053,176 +2118,349 @@ const Novel = ({ user }) => {
                         </DatePickerContent>
                     </DatePickerModal>
                 )}
-                <WeeklyGrid>
-                    {weeks.map((week) => {
-                        const progress = weeklyProgress[week.weekNum] || 0;
-                        const isCompleted = progress >= 100;
-                        const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
-                        const novelsForWeek = novelsMap[weekKey] || [];
-                        const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
-                        const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+                {weeklyViewMode === 'card' ? (
+                    <WeeklyGrid>
+                        {weeks.map((week) => {
+                            const progress = weeklyProgress[week.weekNum] || 0;
+                            const isCompleted = progress >= 100;
+                            const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
+                            const novelsForWeek = novelsMap[weekKey] || [];
+                            const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
+                            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
 
-                        // 모든 장르 목록
-                        const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
-                        // 모든 장르의 소설이 생성되었는지 확인
-                        const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
+                            // 모든 장르 목록
+                            const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
+                            // 모든 장르의 소설이 생성되었는지 확인
+                            const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
 
-                        const handleAddNovel = () => {
-                            // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
-                            if (allGenresCreated) {
-                                return;
-                            }
+                            const handleAddNovel = () => {
+                                // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
+                                if (allGenresCreated) {
+                                    return;
+                                }
 
-                            const weekProgress = weeklyProgress[week.weekNum] || 0;
-                            if (weekProgress < 100) {
-                                alert(t('novel_all_diaries_needed'));
-                                return;
-                            }
+                                const weekProgress = weeklyProgress[week.weekNum] || 0;
+                                if (weekProgress < 100) {
+                                    alert(t('novel_all_diaries_needed'));
+                                    return;
+                                }
 
-                            // 무료권 사용 가능 여부와 포션 보유 여부 확인
-                            const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-                            const canUseFree = premiumFreeNovelCount > 0 && isPremium;
+                                // 무료권 사용 가능 여부와 포션 보유 여부 확인
+                                const hasPotions = Object.values(ownedPotions).some(count => count > 0);
+                                const canUseFree = premiumFreeNovelCount > 0 && isPremium;
 
-                            // 무료권과 포션이 모두 가능한 경우에만 모달 표시
-                            if (canUseFree && hasPotions) {
-                                setSelectedWeekForCreate(week);
-                                setShowCreateOptionModal(true);
-                            } else {
-                                // 나머지 경우는 바로 소설 생성 페이지로 이동
-                                const year = currentDate.getFullYear();
-                                const month = currentDate.getMonth() + 1;
-                                const novelTitle = language === 'en'
-                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+                                // 무료권과 포션이 모두 가능한 경우에만 모달 표시
+                                if (canUseFree && hasPotions) {
+                                    setSelectedWeekForCreate(week);
+                                    setShowCreateOptionModal(true);
+                                } else {
+                                    // 나머지 경우는 바로 소설 생성 페이지로 이동
+                                    const year = currentDate.getFullYear();
+                                    const month = currentDate.getMonth() + 1;
+                                    const novelTitle = language === 'en'
+                                        ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                        : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
-                                const weekStartDate = new Date(week.start);
-                                const weekEndDate = new Date(week.end);
+                                    const weekStartDate = new Date(week.start);
+                                    const weekEndDate = new Date(week.end);
 
-                                const firstDiaryWithImage = diaries.find(diary => {
-                                    const diaryDate = new Date(diary.date);
-                                    return diaryDate >= weekStartDate &&
-                                        diaryDate <= weekEndDate &&
-                                        diary.imageUrls && diary.imageUrls.length > 0;
-                                });
-                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+                                    const firstDiaryWithImage = diaries.find(diary => {
+                                        const diaryDate = new Date(diary.date);
+                                        return diaryDate >= weekStartDate &&
+                                            diaryDate <= weekEndDate &&
+                                            diary.imageUrls && diary.imageUrls.length > 0;
+                                    });
+                                    const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
 
-                                // 무료권만 있으면 무료권 사용, 아니면 포션 사용
-                                handleCreateNovel(week, canUseFree);
-                            }
-                        };
+                                    // 무료권만 있으면 무료권 사용, 아니면 포션 사용
+                                    handleCreateNovel(week, canUseFree);
+                                }
+                            };
 
-                        const handleViewNovel = () => {
-                            // 소설이 2개 이상이면 목록 모달 표시
-                            if (novelsForWeek.length > 1) {
-                                setSelectedWeekNovels(novelsForWeek);
-                            } else {
-                                // 소설이 1개면 바로 이동
-                                const novelKey = createNovelUrl(
-                                    currentDate.getFullYear(),
-                                    currentDate.getMonth() + 1,
-                                    week.weekNum,
-                                    firstNovel.genre
-                                );
-                                navigate(`/novel/${novelKey}`);
-                            }
-                        };
+                            const handleViewNovel = () => {
+                                // 소설이 2개 이상이면 목록 모달 표시
+                                if (novelsForWeek.length > 1) {
+                                    setSelectedWeekNovels(novelsForWeek);
+                                } else {
+                                    // 소설이 1개면 바로 이동
+                                    const novelKey = createNovelUrl(
+                                        currentDate.getFullYear(),
+                                        currentDate.getMonth() + 1,
+                                        week.weekNum,
+                                        firstNovel.genre
+                                    );
+                                    navigate(`/novel/${novelKey}`);
+                                }
+                            };
 
-                        return (
-                            <WeeklyCard
-                                key={week.weekNum}
-                                ref={(el) => {
-                                    if (el) {
-                                        weekRefs.current[week.weekNum] = el;
-                                    }
-                                }}
-                            >
-                                <WeekTitle>
-                                    <span>{t('week_num', { num: week.weekNum })}</span>
-                                    {firstNovel && isCompleted && (
-                                        <AddButton
-                                            onClick={handleViewNovel}
-                                            title="소설 보기"
-                                        >
-                                            ☰
-                                        </AddButton>
-                                    )}
-                                </WeekTitle>
-                                <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                <ProgressBar
-                                    barColor={
-                                        firstNovel
-                                            ? 'view'
-                                            : isCompleted
-                                                ? 'create'
-                                                : 'fill'
-                                    }
-                                >
-                                    {(() => {
-                                        // 주의 시작일부터 7일간의 날짜 생성
-                                        const weekStart = new Date(week.start);
-                                        const weekDays = [];
-                                        for (let i = 0; i < 7; i++) {
-                                            const date = new Date(weekStart);
-                                            date.setDate(weekStart.getDate() + i);
-                                            weekDays.push(date);
+                            return (
+                                <WeeklyCard
+                                    key={week.weekNum}
+                                    ref={(el) => {
+                                        if (el) {
+                                            weekRefs.current[week.weekNum] = el;
                                         }
-
-                                        // 해당 주의 일기 날짜 목록
-                                        const weekStartStr = formatDate(week.start);
-                                        const weekEndStr = formatDate(week.end);
-                                        const weekDiaries = diaries.filter(diary => {
-                                            return diary.date >= weekStartStr && diary.date <= weekEndStr;
-                                        });
-                                        const writtenDates = new Set(weekDiaries.map(diary => diary.date));
-
-                                        return weekDays.map((day, idx) => {
-                                            const dayStr = formatDate(day);
-                                            const hasDiary = writtenDates.has(dayStr);
-                                            return (
-                                                <DayIndicator
-                                                    key={idx}
-                                                    hasDiary={hasDiary}
-                                                    barColor={
-                                                        firstNovel
-                                                            ? 'view'
-                                                            : isCompleted
-                                                                ? 'create'
-                                                                : 'fill'
-                                                    }
-                                                />
-                                            );
-                                        });
-                                    })()}
-                                </ProgressBar>
-                                {firstNovel ? (
-                                    <CreateButton
-                                        completed={true}
-                                        onClick={handleAddNovel}
-                                        disabled={allGenresCreated}
+                                    }}
+                                >
+                                    <WeekTitle>
+                                        <span>{t('week_num', { num: week.weekNum })}</span>
+                                        {firstNovel && isCompleted && (
+                                            <AddButton
+                                                onClick={handleViewNovel}
+                                                title="소설 보기"
+                                            >
+                                                ☰
+                                            </AddButton>
+                                        )}
+                                    </WeekTitle>
+                                    <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
+                                    <ProgressBar
+                                        barColor={
+                                            firstNovel
+                                                ? 'view'
+                                                : isCompleted
+                                                    ? 'create'
+                                                    : 'fill'
+                                        }
                                     >
-                                        {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
-                                    </CreateButton>
-                                ) : (
-                                    <CreateButton
-                                        completed={false}
-                                        isFree={false}
-                                        disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
-                                        onClick={() => {
-                                            if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
-                                                return;
+                                        {(() => {
+                                            // 주의 시작일부터 7일간의 날짜 생성
+                                            const weekStart = new Date(week.start);
+                                            const weekDays = [];
+                                            for (let i = 0; i < 7; i++) {
+                                                const date = new Date(weekStart);
+                                                date.setDate(weekStart.getDate() + i);
+                                                weekDays.push(date);
                                             }
-                                            isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
-                                        }}
+
+                                            // 해당 주의 일기 날짜 목록
+                                            const weekStartStr = formatDate(week.start);
+                                            const weekEndStr = formatDate(week.end);
+                                            const weekDiaries = diaries.filter(diary => {
+                                                return diary.date >= weekStartStr && diary.date <= weekEndStr;
+                                            });
+                                            const writtenDates = new Set(weekDiaries.map(diary => diary.date));
+
+                                            return weekDays.map((day, idx) => {
+                                                const dayStr = formatDate(day);
+                                                const hasDiary = writtenDates.has(dayStr);
+                                                return (
+                                                    <DayIndicator
+                                                        key={idx}
+                                                        hasDiary={hasDiary}
+                                                        barColor={
+                                                            firstNovel
+                                                                ? 'view'
+                                                                : isCompleted
+                                                                    ? 'create'
+                                                                    : 'fill'
+                                                        }
+                                                    />
+                                                );
+                                            });
+                                        })()}
+                                    </ProgressBar>
+                                    {firstNovel ? (
+                                        <CreateButton
+                                            completed={true}
+                                            onClick={handleAddNovel}
+                                            disabled={allGenresCreated}
+                                        >
+                                            {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
+                                        </CreateButton>
+                                    ) : (
+                                        <CreateButton
+                                            completed={false}
+                                            isFree={false}
+                                            disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
+                                            onClick={() => {
+                                                if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
+                                                    return;
+                                                }
+                                                isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
+                                            }}
+                                        >
+                                            {isCompleted
+                                                ? t('novel_create')
+                                                : t('novel_fill_diary')}
+                                        </CreateButton>
+                                    )}
+                                </WeeklyCard>
+                            );
+                        })}
+                    </WeeklyGrid>
+                ) : (
+                    <WeeklyList>
+                        {weeks.map((week) => {
+                            const progress = weeklyProgress[week.weekNum] || 0;
+                            const isCompleted = progress >= 100;
+                            const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
+                            const novelsForWeek = novelsMap[weekKey] || [];
+                            const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
+                            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+
+                            // 모든 장르 목록
+                            const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
+                            // 모든 장르의 소설이 생성되었는지 확인
+                            const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
+
+                            const handleAddNovel = () => {
+                                // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
+                                if (allGenresCreated) {
+                                    return;
+                                }
+
+                                const weekProgress = weeklyProgress[week.weekNum] || 0;
+                                if (weekProgress < 100) {
+                                    alert(t('novel_all_diaries_needed'));
+                                    return;
+                                }
+
+                                // 무료권 사용 가능 여부와 포션 보유 여부 확인
+                                const hasPotions = Object.values(ownedPotions).some(count => count > 0);
+                                const canUseFree = premiumFreeNovelCount > 0 && isPremium;
+
+                                // 무료권과 포션이 모두 가능한 경우에만 모달 표시
+                                if (canUseFree && hasPotions) {
+                                    setSelectedWeekForCreate(week);
+                                    setShowCreateOptionModal(true);
+                                } else {
+                                    // 나머지 경우는 바로 소설 생성 페이지로 이동
+                                    const year = currentDate.getFullYear();
+                                    const month = currentDate.getMonth() + 1;
+                                    const novelTitle = language === 'en'
+                                        ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                        : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+
+                                    const weekStartDate = new Date(week.start);
+                                    const weekEndDate = new Date(week.end);
+
+                                    const firstDiaryWithImage = diaries.find(diary => {
+                                        const diaryDate = new Date(diary.date);
+                                        return diaryDate >= weekStartDate &&
+                                            diaryDate <= weekEndDate &&
+                                            diary.imageUrls && diary.imageUrls.length > 0;
+                                    });
+                                    const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+
+                                    // 무료권만 있으면 무료권 사용, 아니면 포션 사용
+                                    handleCreateNovel(week, canUseFree);
+                                }
+                            };
+
+                            const handleViewNovel = () => {
+                                // 소설이 2개 이상이면 목록 모달 표시
+                                if (novelsForWeek.length > 1) {
+                                    setSelectedWeekNovels(novelsForWeek);
+                                } else {
+                                    // 소설이 1개면 바로 이동
+                                    const novelKey = createNovelUrl(
+                                        currentDate.getFullYear(),
+                                        currentDate.getMonth() + 1,
+                                        week.weekNum,
+                                        firstNovel.genre
+                                    );
+                                    navigate(`/novel/${novelKey}`);
+                                }
+                            };
+
+                            return (
+                                <WeeklyCard
+                                    key={week.weekNum}
+                                    ref={(el) => {
+                                        if (el) {
+                                            weekRefs.current[week.weekNum] = el;
+                                        }
+                                    }}
+                                >
+                                    <WeekTitle>
+                                        <span>{t('week_num', { num: week.weekNum })}</span>
+                                        {firstNovel && isCompleted && (
+                                            <AddButton
+                                                onClick={handleViewNovel}
+                                                title="소설 보기"
+                                            >
+                                                ☰
+                                            </AddButton>
+                                        )}
+                                    </WeekTitle>
+                                    <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
+                                    <ProgressBar
+                                        barColor={
+                                            firstNovel
+                                                ? 'view'
+                                                : isCompleted
+                                                    ? 'create'
+                                                    : 'fill'
+                                        }
                                     >
-                                        {isCompleted
-                                            ? t('novel_create')
-                                            : t('novel_fill_diary')}
-                                    </CreateButton>
-                                )}
-                            </WeeklyCard>
-                        );
-                    })}
-                </WeeklyGrid>
+                                        {(() => {
+                                            // 주의 시작일부터 7일간의 날짜 생성
+                                            const weekStart = new Date(week.start);
+                                            const weekDays = [];
+                                            for (let i = 0; i < 7; i++) {
+                                                const date = new Date(weekStart);
+                                                date.setDate(weekStart.getDate() + i);
+                                                weekDays.push(date);
+                                            }
+
+                                            // 해당 주의 일기 날짜 목록
+                                            const weekStartStr = formatDate(week.start);
+                                            const weekEndStr = formatDate(week.end);
+                                            const weekDiaries = diaries.filter(diary => {
+                                                return diary.date >= weekStartStr && diary.date <= weekEndStr;
+                                            });
+                                            const writtenDates = new Set(weekDiaries.map(diary => diary.date));
+
+                                            return weekDays.map((day, idx) => {
+                                                const dayStr = formatDate(day);
+                                                const hasDiary = writtenDates.has(dayStr);
+                                                return (
+                                                    <DayIndicator
+                                                        key={idx}
+                                                        hasDiary={hasDiary}
+                                                        barColor={
+                                                            firstNovel
+                                                                ? 'view'
+                                                                : isCompleted
+                                                                    ? 'create'
+                                                                    : 'fill'
+                                                        }
+                                                    />
+                                                );
+                                            });
+                                        })()}
+                                    </ProgressBar>
+                                    {firstNovel ? (
+                                        <CreateButton
+                                            completed={true}
+                                            onClick={handleAddNovel}
+                                            disabled={allGenresCreated}
+                                        >
+                                            {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
+                                        </CreateButton>
+                                    ) : (
+                                        <CreateButton
+                                            completed={false}
+                                            isFree={false}
+                                            disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
+                                            onClick={() => {
+                                                if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
+                                                    return;
+                                                }
+                                                isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
+                                            }}
+                                        >
+                                            {isCompleted
+                                                ? t('novel_create')
+                                                : t('novel_fill_diary')}
+                                        </CreateButton>
+                                    )}
+                                </WeeklyCard>
+                            );
+                        })}
+                    </WeeklyList>
+                )}
             </WeeklySection>
 
             {/* 소설 생성 옵션 모달 */}
