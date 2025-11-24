@@ -40,11 +40,51 @@ const ViewToggle = styled.div`
   padding: 0 4px;
 `;
 
+const TopBar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+`;
+
+const FilterRow = styled.div`
+  display: flex;
+  gap: 8px;
+  width: 100%;
+`;
+
+const BottomBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+`;
+
+const SelectAllCheckbox = styled.input`
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  accent-color: #cb6565;
+  min-width: 24px;
+  min-height: 24px;
+  touch-action: manipulation;
+  flex-shrink: 0;
+`;
+
 const FilterContainer = styled.div`
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+`;
+
+const ActionButtonsContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 `;
 
 const Select = styled.select`
@@ -316,27 +356,50 @@ const BatchActionButton = styled.button`
   }
 `;
 
-const SelectModeButton = styled.button`
-  padding: 12px 20px;
-  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
+const QuickActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  animation: slideIn 0.2s ease;
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+`;
+
+const QuickActionButton = styled.button`
+  padding: 10px 16px;
+  border: none;
   border-radius: 8px;
-  background: ${({ active, theme }) => active ? '#cb6565' : 'transparent'};
-  color: ${({ active }) => active ? '#fff' : '#333'};
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   min-height: 44px;
-  min-width: 80px;
   touch-action: manipulation;
+  white-space: nowrap;
+  background: ${({ variant }) => {
+    if (variant === 'public') return '#cb6565';
+    if (variant === 'private') return '#666';
+    return 'transparent';
+  }};
+  color: #fff;
   
   &:active {
     transform: scale(0.95);
   }
   
-  &:hover {
-    background: ${({ active }) => active ? '#cb6565' : '#f5f5f5'};
-    border-color: #cb6565;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
   }
 `;
 
@@ -368,8 +431,8 @@ function CompletedNovels({ user }) {
     });
     const [privateConfirmOpen, setPrivateConfirmOpen] = useState(false);
     const [novelToToggle, setNovelToToggle] = useState(null);
-    const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedNovels, setSelectedNovels] = useState(new Set());
+    const [showCheckboxes, setShowCheckboxes] = useState(false);
     const [batchConfirmOpen, setBatchConfirmOpen] = useState(false);
     const [batchAction, setBatchAction] = useState(null); // 'public' or 'private'
 
@@ -517,11 +580,6 @@ function CompletedNovels({ user }) {
         }
     };
 
-    // 선택 모드 토글
-    const toggleSelectMode = () => {
-        setIsSelectMode(!isSelectMode);
-        setSelectedNovels(new Set());
-    };
 
     // 개별 소설 선택/해제
     const toggleNovelSelection = (novelId, e) => {
@@ -539,9 +597,16 @@ function CompletedNovels({ user }) {
 
     // 전체 선택/해제
     const toggleSelectAll = () => {
-        if (selectedNovels.size === filteredNovels.length) {
+        if (!showCheckboxes) {
+            // 처음 체크박스를 보이게 하고 전체 선택
+            setShowCheckboxes(true);
+            setSelectedNovels(new Set(filteredNovels.map(n => n.id)));
+        } else if (selectedNovels.size === filteredNovels.length) {
+            // 전체 해제 시 체크박스도 숨김
             setSelectedNovels(new Set());
+            setShowCheckboxes(false);
         } else {
+            // 전체 선택
             setSelectedNovels(new Set(filteredNovels.map(n => n.id)));
         }
     };
@@ -583,9 +648,9 @@ function CompletedNovels({ user }) {
                 )
             );
             
-            // 선택 모드 종료 및 선택 초기화
-            setIsSelectMode(false);
+            // 선택 초기화
             setSelectedNovels(new Set());
+            setShowCheckboxes(false);
             setBatchConfirmOpen(false);
             setBatchAction(null);
         } catch (error) {
@@ -603,24 +668,47 @@ function CompletedNovels({ user }) {
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="완성된 소설" />
             
             <ViewToggle>
-                <FilterContainer>
-                    <Select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} theme={theme} disabled={isSelectMode}>
-                        <option value="all">전체 장르</option>
-                        {availableGenres.filter(g => g !== 'all').map(genre => (
-                            <option key={genre} value={genre}>
-                                {getGenreKey(genre) ? t(`novel_genre_${getGenreKey(genre)}`) : genre}
-                            </option>
-                        ))}
-                    </Select>
-                    <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} theme={theme} disabled={isSelectMode}>
-                        <option value="latest">최신순</option>
-                        <option value="oldest">오래된순</option>
-                        <option value="popular">인기순</option>
-                    </Select>
-                </FilterContainer>
-                <ViewToggleRight>
-                    {!isSelectMode && (
-                        <>
+                <TopBar>
+                    <FilterRow>
+                        <FilterContainer>
+                            <Select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} theme={theme} disabled={showCheckboxes}>
+                                <option value="all">전체 장르</option>
+                                {availableGenres.filter(g => g !== 'all').map(genre => (
+                                    <option key={genre} value={genre}>
+                                        {getGenreKey(genre) ? t(`novel_genre_${getGenreKey(genre)}`) : genre}
+                                    </option>
+                                ))}
+                            </Select>
+                            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} theme={theme} disabled={showCheckboxes}>
+                                <option value="latest">최신순</option>
+                                <option value="oldest">오래된순</option>
+                                <option value="popular">인기순</option>
+                            </Select>
+                        </FilterContainer>
+                    </FilterRow>
+                    <BottomBar>
+                        <SelectAllCheckbox
+                            type="checkbox"
+                            checked={selectedNovels.size === filteredNovels.length && filteredNovels.length > 0 && showCheckboxes}
+                            onChange={toggleSelectAll}
+                        />
+                        {showCheckboxes && selectedNovels.size > 0 && (
+                            <QuickActionButtons>
+                                <QuickActionButton
+                                    variant="public"
+                                    onClick={() => handleBatchAction('public')}
+                                >
+                                    공개
+                                </QuickActionButton>
+                                <QuickActionButton
+                                    variant="private"
+                                    onClick={() => handleBatchAction('private')}
+                                >
+                                    비공개
+                                </QuickActionButton>
+                            </QuickActionButtons>
+                        )}
+                        <ActionButtonsContainer>
                             <ToggleButton 
                                 $active={viewMode === 'card'} 
                                 onClick={() => {
@@ -641,50 +729,16 @@ function CompletedNovels({ user }) {
                             >
                                 <ListIcon width={20} height={20} />
                             </ToggleButton>
-                        </>
-                    )}
-                    <SelectModeButton 
-                        active={isSelectMode}
-                        onClick={toggleSelectMode}
-                        theme={theme}
-                    >
-                        {isSelectMode ? '선택 취소' : '선택'}
-                    </SelectModeButton>
-                </ViewToggleRight>
+                        </ActionButtonsContainer>
+                    </BottomBar>
+                </TopBar>
             </ViewToggle>
 
-            {isSelectMode && filteredNovels.length > 0 && (
+            {showCheckboxes && selectedNovels.size > 0 && (
                 <BatchActionBar theme={theme}>
-                    <BatchActionTop>
-                        <BatchActionLeft>
-                            <Checkbox
-                                type="checkbox"
-                                checked={selectedNovels.size === filteredNovels.length && filteredNovels.length > 0}
-                                onChange={toggleSelectAll}
-                            />
-                            <BatchActionText theme={theme}>
-                                전체 선택 ({selectedNovels.size}/{filteredNovels.length})
-                            </BatchActionText>
-                        </BatchActionLeft>
-                    </BatchActionTop>
-                    <BatchActionButtons>
-                        <BatchActionButton
-                            variant="public"
-                            onClick={() => handleBatchAction('public')}
-                            disabled={selectedNovels.size === 0}
-                            theme={theme}
-                        >
-                            공개로 변경
-                        </BatchActionButton>
-                        <BatchActionButton
-                            variant="private"
-                            onClick={() => handleBatchAction('private')}
-                            disabled={selectedNovels.size === 0}
-                            theme={theme}
-                        >
-                            비공개로 변경
-                        </BatchActionButton>
-                    </BatchActionButtons>
+                    <BatchActionText theme={theme}>
+                        {selectedNovels.size}개 선택됨
+                    </BatchActionText>
                 </BatchActionBar>
             )}
 
@@ -702,12 +756,12 @@ function CompletedNovels({ user }) {
                                 $viewMode={viewMode}
                                 $selected={selectedNovels.has(novel.id)}
                                 onClick={() => {
-                                    if (!isSelectMode) {
+                                    if (!showCheckboxes) {
                                         navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
                                     }
                                 }}
                             >
-                                {isSelectMode && (
+                                {showCheckboxes && (
                                     <NovelCheckbox
                                         type="checkbox"
                                         checked={selectedNovels.has(novel.id)}
@@ -727,7 +781,7 @@ function CompletedNovels({ user }) {
                                             <PurchaseBadge theme={theme}>{novel.purchaseCount}</PurchaseBadge>
                                         )}
                                     </NovelMeta>
-                                    {!isSelectMode && (
+                                    {!showCheckboxes && (
                                         <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
                                             <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
                                             <PublicToggleButton
@@ -736,7 +790,7 @@ function CompletedNovels({ user }) {
                                             />
                                         </PublicStatus>
                                     )}
-                                    {isSelectMode && (
+                                    {showCheckboxes && (
                                         <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
                                             <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
                                         </PublicStatus>
