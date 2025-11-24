@@ -162,7 +162,7 @@ const TodayCircle = styled.div`
 const ImageContainer = styled.div`
   margin-top: 2px;
   line-height: 1;
-  min-height: 28px;
+  min-height: 32px;
   min-width: 20px;
   display: flex;
   flex-direction: column;
@@ -171,9 +171,11 @@ const ImageContainer = styled.div`
 `;
 
 const DisplayImage = styled.img`
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   margin-bottom: 2px;
+  border-radius: 50%;
+  object-fit: cover;
 `;
 
 const EmotionStatsContainer = styled.div`
@@ -626,15 +628,18 @@ function Diary({ user }) {
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
 
-            // 스티커가 있으면 첫 번째 스티커를, 없으면 감정 이모티콘을 표시
+            // 우선순위: 사진 > 감정 이모티콘 > 날씨 이모티콘
             let displayImg = null;
             if (diary) {
-                if (diary.stickers && diary.stickers.length > 0) {
-                    // 첫 번째 스티커를 대표 이미지로 사용
-                    displayImg = diary.stickers[0].src;
+                if (diary.imageUrls && diary.imageUrls.length > 0) {
+                    // 사진이 있으면 첫 번째 사진 표시
+                    displayImg = diary.imageUrls[0];
                 } else if (diary.emotion) {
-                    // 스티커가 없으면 감정 이모티콘 사용
+                    // 사진이 없으면 감정 이모티콘 표시
                     displayImg = emotionImageMap[diary.emotion];
+                } else if (diary.weather) {
+                    // 감정 이모티콘도 없으면 날씨 이모티콘 표시
+                    displayImg = weatherImageMap[diary.weather];
                 }
             }
 
