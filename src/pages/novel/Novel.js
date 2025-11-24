@@ -9,6 +9,8 @@ import { collection, query, where, getDocs, orderBy, doc, getDoc, limit } from '
 import { useToast } from '../../components/ui/ToastProvider';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { useTheme } from '../../ThemeContext';
+import GridIcon from '../../components/icons/GridIcon';
+import ListIcon from '../../components/icons/ListIcon';
 
 const Container = styled.div`
   display: flex;
@@ -291,26 +293,40 @@ const WeeklyList = styled.div`
 const ViewToggleButton = styled.button`
   background: ${({ active, theme }) => active
         ? (theme.primary || '#cb6565')
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')};
-  color: ${({ active, theme }) => active
-        ? '#fff'
-        : theme.text};
+        : 'transparent'};
   border: 1px solid ${({ active, theme }) => active
         ? (theme.primary || '#cb6565')
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)')};
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')};
   border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 14px;
+  padding: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   
   &:hover {
     background: ${({ active, theme }) => active
         ? (theme.primary || '#cb6565')
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')};
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f5f5')};
+    border-color: ${({ active, theme }) => active
+        ? (theme.primary || '#cb6565')
+        : (theme.primary || '#cb6565')};
+  }
+  
+  svg {
+    stroke: ${({ active, theme }) => active
+        ? '#fff'
+        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.7)' : '#888')};
+    transition: stroke 0.2s;
+  }
+  
+  &:hover svg {
+    stroke: ${({ active, theme }) => active
+        ? '#fff'
+        : (theme.primary || '#cb6565')};
   }
 `;
 
@@ -324,24 +340,33 @@ const ViewToggleContainer = styled.div`
 const WeeklyCard = styled.div`
   background-color: ${({ theme }) => theme.progressCard};
   border-radius: 15px;
-  padding: 20px 16px;
+  padding: ${({ isListMode }) => isListMode ? '16px' : '20px 16px'};
   flex: 0 0 240px;
   color: ${({ theme }) => theme.cardText};
   min-width: 70px;
-  // max-width: 200px;
   box-sizing: border-box;
+  ${({ isListMode }) => isListMode ? `
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+  ` : ''}
 `;
 
 
 const WeekTitle = styled.h3`
   color: #cb6565;
-  font-size: 18px;
-//   margin: 0 0 10px 0;
+  font-size: ${({ isListMode }) => isListMode ? '16px' : '18px'};
+  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  min-height: 32px;
+  min-height: ${({ isListMode }) => isListMode ? '24px' : '32px'};
   line-height: 1.2;
+  flex-shrink: 0;
   span {
     display: flex;
     align-items: flex-start;
@@ -351,30 +376,37 @@ const WeekTitle = styled.h3`
 // 일기 진행도 UI 컴포넌트
 const DateRange = styled.p`
   color: #666;
-  font-size: 11px;
-  margin: 0 0 10px 0;
+  font-size: ${({ isListMode }) => isListMode ? '10px' : '11px'};
+  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0;
 `;
 
 const ProgressBar = styled.div`
   width: 100%;
   display: flex;
   gap: 4px;
-  margin: 0 0 10px 0;
+  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
   justify-content: space-between;
+  flex-shrink: ${({ isListMode }) => isListMode ? '0' : '1'};
+  min-width: ${({ isListMode }) => isListMode ? '140px' : 'auto'};
 `;
 
 const DayIndicator = styled.div`
   flex: 1;
-  height: 8px;
-  border-radius: 4px;
-  background-color: ${({ hasDiary, barColor, theme }) => {
+  height: ${({ isListMode }) => isListMode ? '12px' : '16px'};
+  border-radius: ${({ isListMode }) => isListMode ? '2px' : '3px'};
+  background: ${({ hasDiary, barColor, theme, isCompleted }) => {
         if (!hasDiary) {
             // 일기가 없으면 연한 회색
             if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
             return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
+        }
+        // 모든 일기를 완성한 경우 상단 CTA와 동일한 그라데이션 색상 적용
+        if (isCompleted && hasDiary) {
+            return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
         }
         // 일기가 있으면 버튼 텍스트 색상과 일치
         if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96'; // 일기 채우기 버튼 텍스트 색상
@@ -383,18 +415,23 @@ const DayIndicator = styled.div`
         if (barColor === 'view') return theme.primary; // 소설 보기 버튼 배경 색상
         return '#cb6565'; // 기본값
     }};
-  transition: background-color 0.3s ease;
+  transition: background 0.3s ease;
 `;
 
 const CreateButton = styled.button`
-  width: 100%;
+  width: ${({ isListMode }) => isListMode ? '130px' : '100%'};
+  min-width: ${({ isListMode }) => isListMode ? '130px' : 'auto'};
   margin: 0;
-  margin-top: 2px;
-  background-color: ${({ children, completed, theme, isFree, disabled }) => {
+  margin-top: ${({ isListMode }) => isListMode ? '0' : '2px'};
+  padding: ${({ isListMode }) => isListMode ? '6px 12px' : '8px'};
+  font-size: ${({ isListMode }) => isListMode ? '11px' : '12px'};
+  white-space: ${({ isListMode }) => isListMode ? 'nowrap' : 'nowrap'};
+  background: ${({ children, completed, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'transparent';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
-        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
+        if (children === '다른 장르 생성') return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'; // 일기 진행도 그래프 색상
+        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
@@ -402,7 +439,8 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        if (children === '다른 장르 생성') return '#fff'; // 일기 진행도 그래프 색상 배경에 맞춰 흰색
+        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
@@ -410,7 +448,8 @@ const CreateButton = styled.button`
         if (disabled) return theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
         if (isFree) return '2px solid #e4a30d';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-        if (children === '소설 만들기' || children === '다른 소설 생성' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
+        if (children === '다른 장르 생성') return 'none'; // 그라데이션 배경이므로 border 없음
+        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
         return 'none';
     }};
@@ -427,18 +466,19 @@ const CreateButton = styled.button`
   box-shadow: ${({ children }) =>
         (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
   &:hover {
-    background-color: ${({ children, theme, isFree, disabled }) => {
+    background: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'rgba(228, 163, 13, 0.1)';
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
-        if (children === '소설 만들기' || children === '다른 소설 생성') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
+        if (children === '다른 장르 생성') return 'linear-gradient(90deg, #B88A8A 0%, #C39595 100%)'; // hover 시 약간 어둡게
+        if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
     color: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
-        if (children === '일기 채우기' || children === '소설 만들기' || children === '다른 소설 생성') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
+        if (children === '일기 채우기' || children === '소설 만들기' || children === '다른 장르 생성') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
         return '#fff';
     }};
     opacity: ${({ disabled }) => disabled ? 0.6 : 0.96};
@@ -984,6 +1024,7 @@ const Novel = ({ user }) => {
     const weekRefs = useRef({});
     const [showCurrentWeekDiaryModal, setShowCurrentWeekDiaryModal] = useState(false);
     const [currentWeekDiaries, setCurrentWeekDiaries] = useState([]);
+    const [currentWeekDiariesForProgress, setCurrentWeekDiariesForProgress] = useState([]);
     const progressSectionRef = useRef(null);
     const [weeklyViewMode, setWeeklyViewMode] = useState(() => {
         const saved = localStorage.getItem('novel_weekly_view_mode');
@@ -995,6 +1036,56 @@ const Novel = ({ user }) => {
     useEffect(() => {
         localStorage.setItem('novel_weekly_view_mode', weeklyViewMode);
     }, [weeklyViewMode]);
+
+    // 상단 CTA 카드용 현재 주의 일기 가져오기 (항상 현재 날짜 기준)
+    useEffect(() => {
+        if (!user) {
+            setCurrentWeekDiariesForProgress([]);
+            return;
+        }
+
+        const fetchCurrentWeek = async () => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 현재 주의 시작일과 종료일 계산
+            const dayOfWeek = today.getDay();
+            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지의 차이
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - diff);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+
+            // formatDate 함수 사용 (컴포넌트 내부에 정의되어 있음)
+            const formatDateForQuery = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            const weekStartStr = formatDateForQuery(weekStart);
+            const weekEndStr = formatDateForQuery(weekEnd);
+
+            try {
+                const diariesRef = collection(db, 'diaries');
+                const diariesQuery = query(diariesRef,
+                    where('userId', '==', user.uid),
+                    where('date', '>=', weekStartStr),
+                    where('date', '<=', weekEndStr),
+                    orderBy('date')
+                );
+                const diarySnapshot = await getDocs(diariesQuery);
+                const fetchedDiaries = diarySnapshot.docs.map(doc => doc.data());
+                setCurrentWeekDiariesForProgress(fetchedDiaries);
+            } catch (error) {
+                setCurrentWeekDiariesForProgress([]);
+            }
+        };
+
+        fetchCurrentWeek();
+    }, [user]);
 
     useEffect(() => {
         if (!user) {
@@ -1818,47 +1909,66 @@ const Novel = ({ user }) => {
         return null;
     };
 
-    // 이번주 일기 진행도 계산
+
+    // 이번주 일기 진행도 계산 (항상 현재 날짜 기준)
     const getCurrentWeekProgress = () => {
-        const currentWeek = getCurrentWeek();
-        if (!currentWeek) return { progress: 0, count: 0, total: 7 };
-
-        const weekStartStr = formatDate(currentWeek.start);
-        const weekEndStr = formatDate(currentWeek.end);
-
-        const weekDiaries = diaries.filter(diary => {
-            return diary.date >= weekStartStr && diary.date <= weekEndStr;
-        });
-
-        const count = weekDiaries.length;
+        const count = currentWeekDiariesForProgress.length;
         const total = 7;
         const progress = Math.min(100, (count / total) * 100);
 
         return { progress, count, total };
     };
 
-    // 이번주 일기 목록 가져오기
+    // 이번주 일기 목록 가져오기 (모달용, 항상 현재 날짜 기준)
     const getCurrentWeekDiaries = async () => {
-        const currentWeek = getCurrentWeek();
-        if (!currentWeek) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 현재 주의 시작일과 종료일 계산
+        const dayOfWeek = today.getDay();
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지의 차이
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - diff);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        // formatDate 함수 사용 (컴포넌트 내부에 정의되어 있음)
+        const formatDateForQuery = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const weekStartStr = formatDateForQuery(weekStart);
+        const weekEndStr = formatDateForQuery(weekEnd);
+
+        if (!user) {
             setCurrentWeekDiaries([]);
             return;
         }
 
-        const weekStartStr = formatDate(currentWeek.start);
-        const weekEndStr = formatDate(currentWeek.end);
+        try {
+            const diariesRef = collection(db, 'diaries');
+            const diariesQuery = query(diariesRef,
+                where('userId', '==', user.uid),
+                where('date', '>=', weekStartStr),
+                where('date', '<=', weekEndStr),
+                orderBy('date')
+            );
+            const diarySnapshot = await getDocs(diariesQuery);
+            const fetchedDiaries = diarySnapshot.docs.map(doc => doc.data());
 
-        // 현재 로드된 diaries에서 필터링
-        const weekDiaries = diaries.filter(diary => {
-            return diary.date >= weekStartStr && diary.date <= weekEndStr;
-        });
+            // 날짜순으로 정렬
+            fetchedDiaries.sort((a, b) => {
+                return a.date.localeCompare(b.date);
+            });
 
-        // 날짜순으로 정렬
-        weekDiaries.sort((a, b) => {
-            return a.date.localeCompare(b.date);
-        });
-
-        setCurrentWeekDiaries(weekDiaries);
+            setCurrentWeekDiaries(fetchedDiaries);
+        } catch (error) {
+            setCurrentWeekDiaries([]);
+        }
     };
 
     // 이번주 일기 목록 모달 열기
@@ -2073,15 +2183,17 @@ const Novel = ({ user }) => {
                         active={weeklyViewMode === 'card'}
                         onClick={() => setWeeklyViewMode('card')}
                         theme={theme}
+                        title="카드형"
                     >
-                        📋 카드형
+                        <GridIcon width={20} height={20} />
                     </ViewToggleButton>
                     <ViewToggleButton
                         active={weeklyViewMode === 'list'}
                         onClick={() => setWeeklyViewMode('list')}
                         theme={theme}
+                        title="목록형"
                     >
-                        📝 목록형
+                        <ListIcon width={20} height={20} />
                     </ViewToggleButton>
                 </ViewToggleContainer>
                 {isPickerOpen && (
@@ -2248,6 +2360,7 @@ const Novel = ({ user }) => {
                                                     <DayIndicator
                                                         key={idx}
                                                         hasDiary={hasDiary}
+                                                        isCompleted={isCompleted}
                                                         barColor={
                                                             firstNovel
                                                                 ? 'view'
@@ -2266,7 +2379,7 @@ const Novel = ({ user }) => {
                                             onClick={handleAddNovel}
                                             disabled={allGenresCreated}
                                         >
-                                            {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
+                                            {allGenresCreated ? "완성 ✨" : "다른 장르 생성"}
                                         </CreateButton>
                                     ) : (
                                         <CreateButton
@@ -2367,95 +2480,105 @@ const Novel = ({ user }) => {
                             return (
                                 <WeeklyCard
                                     key={week.weekNum}
+                                    isListMode={true}
                                     ref={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
                                 >
-                                    <WeekTitle>
-                                        <span>{t('week_num', { num: week.weekNum })}</span>
-                                        {firstNovel && isCompleted && (
-                                            <AddButton
-                                                onClick={handleViewNovel}
-                                                title="소설 보기"
-                                            >
-                                                ☰
-                                            </AddButton>
-                                        )}
-                                    </WeekTitle>
-                                    <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                    <ProgressBar
-                                        barColor={
-                                            firstNovel
-                                                ? 'view'
-                                                : isCompleted
-                                                    ? 'create'
-                                                    : 'fill'
-                                        }
-                                    >
-                                        {(() => {
-                                            // 주의 시작일부터 7일간의 날짜 생성
-                                            const weekStart = new Date(week.start);
-                                            const weekDays = [];
-                                            for (let i = 0; i < 7; i++) {
-                                                const date = new Date(weekStart);
-                                                date.setDate(weekStart.getDate() + i);
-                                                weekDays.push(date);
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1', minWidth: 0 }}>
+                                        <WeekTitle isListMode={true}>
+                                            <span>{t('week_num', { num: week.weekNum })}</span>
+                                            {firstNovel && isCompleted && (
+                                                <AddButton
+                                                    onClick={handleViewNovel}
+                                                    title="소설 보기"
+                                                >
+                                                    ☰
+                                                </AddButton>
+                                            )}
+                                        </WeekTitle>
+                                        <DateRange isListMode={true}>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
+                                        <ProgressBar
+                                            isListMode={true}
+                                            barColor={
+                                                firstNovel
+                                                    ? 'view'
+                                                    : isCompleted
+                                                        ? 'create'
+                                                        : 'fill'
                                             }
-
-                                            // 해당 주의 일기 날짜 목록
-                                            const weekStartStr = formatDate(week.start);
-                                            const weekEndStr = formatDate(week.end);
-                                            const weekDiaries = diaries.filter(diary => {
-                                                return diary.date >= weekStartStr && diary.date <= weekEndStr;
-                                            });
-                                            const writtenDates = new Set(weekDiaries.map(diary => diary.date));
-
-                                            return weekDays.map((day, idx) => {
-                                                const dayStr = formatDate(day);
-                                                const hasDiary = writtenDates.has(dayStr);
-                                                return (
-                                                    <DayIndicator
-                                                        key={idx}
-                                                        hasDiary={hasDiary}
-                                                        barColor={
-                                                            firstNovel
-                                                                ? 'view'
-                                                                : isCompleted
-                                                                    ? 'create'
-                                                                    : 'fill'
-                                                        }
-                                                    />
-                                                );
-                                            });
-                                        })()}
-                                    </ProgressBar>
-                                    {firstNovel ? (
-                                        <CreateButton
-                                            completed={true}
-                                            onClick={handleAddNovel}
-                                            disabled={allGenresCreated}
                                         >
-                                            {allGenresCreated ? "완성 ✨" : "다른 소설 생성"}
-                                        </CreateButton>
-                                    ) : (
-                                        <CreateButton
-                                            completed={false}
-                                            isFree={false}
-                                            disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
-                                            onClick={() => {
-                                                if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
-                                                    return;
+                                            {(() => {
+                                                // 주의 시작일부터 7일간의 날짜 생성
+                                                const weekStart = new Date(week.start);
+                                                const weekDays = [];
+                                                for (let i = 0; i < 7; i++) {
+                                                    const date = new Date(weekStart);
+                                                    date.setDate(weekStart.getDate() + i);
+                                                    weekDays.push(date);
                                                 }
-                                                isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
-                                            }}
-                                        >
-                                            {isCompleted
-                                                ? t('novel_create')
-                                                : t('novel_fill_diary')}
-                                        </CreateButton>
-                                    )}
+
+                                                // 해당 주의 일기 날짜 목록
+                                                const weekStartStr = formatDate(week.start);
+                                                const weekEndStr = formatDate(week.end);
+                                                const weekDiaries = diaries.filter(diary => {
+                                                    return diary.date >= weekStartStr && diary.date <= weekEndStr;
+                                                });
+                                                const writtenDates = new Set(weekDiaries.map(diary => diary.date));
+
+                                                return weekDays.map((day, idx) => {
+                                                    const dayStr = formatDate(day);
+                                                    const hasDiary = writtenDates.has(dayStr);
+                                                    return (
+                                                        <DayIndicator
+                                                            key={idx}
+                                                            isListMode={true}
+                                                            hasDiary={hasDiary}
+                                                            isCompleted={isCompleted}
+                                                            barColor={
+                                                                firstNovel
+                                                                    ? 'view'
+                                                                    : isCompleted
+                                                                        ? 'create'
+                                                                        : 'fill'
+                                                            }
+                                                        />
+                                                    );
+                                                });
+                                            })()}
+                                        </ProgressBar>
+                                    </div>
+                                    <div style={{ flexShrink: 0 }}>
+                                        {firstNovel ? (
+                                            <CreateButton
+                                                isListMode={true}
+                                                completed={true}
+                                                onClick={handleAddNovel}
+                                                disabled={allGenresCreated}
+                                            >
+                                                {allGenresCreated ? "완성 ✨" : "다른 장르 생성"}
+                                            </CreateButton>
+                                        ) : (
+                                            <CreateButton
+                                                isListMode={true}
+                                                completed={false}
+                                                isFree={false}
+                                                disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
+                                                onClick={() => {
+                                                    if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
+                                                        return;
+                                                    }
+                                                    isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
+                                                }}
+                                            >
+                                                {isCompleted
+                                                    ? t('novel_create')
+                                                    : t('novel_fill_diary')}
+                                            </CreateButton>
+                                        )}
+                                    </div>
                                 </WeeklyCard>
                             );
                         })}
