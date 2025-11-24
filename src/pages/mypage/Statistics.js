@@ -483,23 +483,45 @@ function Statistics({ user }) {
         ? genreBannerData[favoriteGenre]
         : null;
 
+    // 소설을 만들지 않은 경우 emptyroom 이미지와 추천 문구
+    const emptyRoomData = {
+        src: process.env.PUBLIC_URL + '/novel_banner/emptyroom.png',
+        text: '첫 소설로 공간을 채워볼까요?'
+    };
+
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('stats_title')} />
             <div style={{ maxWidth: 600, margin: '60px auto', marginTop: 50, padding: 24, paddingTop: 40, paddingBottom: 100 }}>
-                {/* 가장 많이 제작한 장르 이미지 */}
-                {!loading && favoriteGenreBanner && (
+                {/* 가장 많이 제작한 장르 이미지 또는 빈 방 이미지 */}
+                {!loading && (
                     <FavoriteGenreContainer>
                         <div>
-                            <FavoriteGenreCard onClick={() => navigate(`/novels/genre/${favoriteGenreBanner.genreKey}`)}>
-                                <img
-                                    src={favoriteGenreBanner.src}
-                                    alt={t(`novel_genre_${favoriteGenreBanner.genreKey}`)}
-                                />
-                            </FavoriteGenreCard>
-                            <FavoriteGenreText>
-                                {favoriteGenreBanner.text}
-                            </FavoriteGenreText>
+                            {favoriteGenreBanner ? (
+                                <>
+                                    <FavoriteGenreCard onClick={() => navigate(`/novels/genre/${favoriteGenreBanner.genreKey}`)}>
+                                        <img
+                                            src={favoriteGenreBanner.src}
+                                            alt={t(`novel_genre_${favoriteGenreBanner.genreKey}`)}
+                                        />
+                                    </FavoriteGenreCard>
+                                    <FavoriteGenreText>
+                                        {favoriteGenreBanner.text}
+                                    </FavoriteGenreText>
+                                </>
+                            ) : (
+                                <>
+                                    <FavoriteGenreCard onClick={() => navigate('/novel')}>
+                                        <img
+                                            src={emptyRoomData.src}
+                                            alt="빈 방"
+                                        />
+                                    </FavoriteGenreCard>
+                                    <FavoriteGenreText>
+                                        {emptyRoomData.text}
+                                    </FavoriteGenreText>
+                                </>
+                            )}
                         </div>
                     </FavoriteGenreContainer>
                 )}
