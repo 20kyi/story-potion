@@ -535,6 +535,7 @@ const PremiumBanner = styled(motion.div)`
   background: linear-gradient(135deg, #ffe29f 0%, #ffc371 100%);
   border-radius: 20px;
   padding: 20px;
+  margin-top: 12px;
   margin-bottom: 20px;
   color: #8B4513;
   cursor: pointer;
@@ -670,7 +671,7 @@ const sliderSettings = {
 const TabBar = styled.div`
   display: flex;
   gap: 0;
-  margin: 18px 0 0 0;
+  margin: 0;
   border-bottom: 1.5px solid #f0caca;
 `;
 const TabButton = styled.button`
@@ -919,74 +920,7 @@ function Home({ user }) {
         onNotificationRead={(count) => setUnreadNotificationCount(count)}
       />
 
-      {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
-      {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-        <PremiumBanner
-          onClick={() => navigate('/my/shop')}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <PremiumBannerContent>
-            <PremiumBannerLeft>
-              <PremiumBannerTitle>
-                👑 {t('premium_benefits')} 👑
-              </PremiumBannerTitle>
-              <PremiumBannerDesc>
-                광고 제거, AI 일기, 주간 무료 포션, 프리미엄 스티커 등 다양한 혜택을 만나보세요!
-              </PremiumBannerDesc>
-            </PremiumBannerLeft>
-            <PremiumBannerButton>
-              {t('premium_monthly_subscribe_button')}
-            </PremiumBannerButton>
-          </PremiumBannerContent>
-        </PremiumBanner>
-      )}
-
-
-
       <ContentGrid>
-        <SectionLabel>{t('home_recent_diary')}</SectionLabel>
-        <MainButtonRow>
-          <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
-            {recentDiaries.length > 0 && recentDiaries[0] ? (
-              <DiaryPreviewContainer>
-                {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
-                  <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
-                ) : (
-                  <DiaryPreviewImagePlaceholder>
-                    <DiaryPreviewImagePlaceholderIcon>📷</DiaryPreviewImagePlaceholderIcon>
-                    <DiaryPreviewImagePlaceholderText>오늘의 사진을 찍어보세요</DiaryPreviewImagePlaceholderText>
-                  </DiaryPreviewImagePlaceholder>
-                )}
-                <DiaryPreviewTextContainer>
-                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
-                  <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent lineClamp={3}>{recentDiaries[0].content}</DiaryPreviewContent>
-                </DiaryPreviewTextContainer>
-              </DiaryPreviewContainer>
-            ) : (
-              <DiaryPreviewContainer>
-                <DiaryPreviewTitle>{t('home_no_diary_yet')}</DiaryPreviewTitle>
-                <DiaryPreviewContent lineClamp={6}>{t('home_write_first_diary')}</DiaryPreviewContent>
-              </DiaryPreviewContainer>
-            )}
-          </RecentDiaryCard>
-
-          <RightColumn>
-            <TopicCard>
-              {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
-              <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro>
-              <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
-            </TopicCard>
-            <WriteDiaryButton onClick={handleWriteDiaryClick}>
-              <WriteButtonContent>
-                <PencilIcon width="32" height="32" />
-                <MainButtonText>{t('home_write_diary')}</MainButtonText>
-              </WriteButtonContent>
-            </WriteDiaryButton>
-          </RightColumn>
-        </MainButtonRow>
-
         {/* 탭 바 추가 */}
         <TabBar>
           <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>{t('home_my_novel')}</TabButton>
@@ -1183,6 +1117,71 @@ function Home({ user }) {
             )}
           </>
         )}
+
+        {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
+        {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+          <PremiumBanner
+            onClick={() => navigate('/my/shop')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <PremiumBannerContent>
+              <PremiumBannerLeft>
+                <PremiumBannerTitle>
+                  👑 {t('premium_benefits')} 👑
+                </PremiumBannerTitle>
+                <PremiumBannerDesc>
+                  광고 제거, AI 일기, 주간 무료 포션, 프리미엄 스티커 등 다양한 혜택을 만나보세요!
+                </PremiumBannerDesc>
+              </PremiumBannerLeft>
+              <PremiumBannerButton>
+                {t('premium_monthly_subscribe_button')}
+              </PremiumBannerButton>
+            </PremiumBannerContent>
+          </PremiumBanner>
+        )}
+
+        <SectionLabel>{t('home_recent_diary')}</SectionLabel>
+        <MainButtonRow>
+          <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
+            {recentDiaries.length > 0 && recentDiaries[0] ? (
+              <DiaryPreviewContainer>
+                {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
+                  <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
+                ) : (
+                  <DiaryPreviewImagePlaceholder>
+                    <DiaryPreviewImagePlaceholderIcon>📷</DiaryPreviewImagePlaceholderIcon>
+                    <DiaryPreviewImagePlaceholderText>오늘의 사진을 찍어보세요</DiaryPreviewImagePlaceholderText>
+                  </DiaryPreviewImagePlaceholder>
+                )}
+                <DiaryPreviewTextContainer>
+                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
+                  <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
+                  <DiaryPreviewContent lineClamp={3}>{recentDiaries[0].content}</DiaryPreviewContent>
+                </DiaryPreviewTextContainer>
+              </DiaryPreviewContainer>
+            ) : (
+              <DiaryPreviewContainer>
+                <DiaryPreviewTitle>{t('home_no_diary_yet')}</DiaryPreviewTitle>
+                <DiaryPreviewContent lineClamp={6}>{t('home_write_first_diary')}</DiaryPreviewContent>
+              </DiaryPreviewContainer>
+            )}
+          </RecentDiaryCard>
+
+          <RightColumn>
+            <WriteDiaryButton onClick={handleWriteDiaryClick}>
+              <WriteButtonContent>
+                <PencilIcon width="32" height="32" />
+                <MainButtonText>{t('home_write_diary')}</MainButtonText>
+              </WriteButtonContent>
+            </WriteDiaryButton>
+            <TopicCard>
+              {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
+              <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro>
+              <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
+            </TopicCard>
+          </RightColumn>
+        </MainButtonRow>
       </ContentGrid>
 
       <Navigation />
