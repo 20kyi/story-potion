@@ -64,7 +64,7 @@ const RecentDiaryCard = styled.div`
   background: ${({ theme }) => theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)'};
   border-radius: 28px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-  min-height: 150px;
+  height: 256px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -72,6 +72,7 @@ const RecentDiaryCard = styled.div`
   transition: box-shadow 0.2s;
   &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.13); }
   padding: 16px;
+  overflow: hidden;
 
   // @media (min-width: 768px) {
   //   height: auto;
@@ -107,23 +108,27 @@ const MainButtonText = styled.div`
 /* 일기 최근 미리보기 */
 const DiaryPreviewContainer = styled.div`
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  overflow: hidden;
 `;
 /* 일기 최근 미리보기 이미지 */
 const DiaryPreviewImage = styled.img`
   width: 100%;
-  aspect-ratio: 16 / 9;
+  max-height: 100px;
   border-radius: 12px;
   object-fit: cover;
+  flex-shrink: 0;
 `;
 
 /* 일기 최근 미리보기 이미지 대체 영역 */
 const DiaryPreviewImagePlaceholder = styled.div`
   width: 100%;
-  aspect-ratio: 16 / 9;
+  max-height: 100px;
+  min-height: 80px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.3);
   display: flex;
@@ -132,6 +137,7 @@ const DiaryPreviewImagePlaceholder = styled.div`
   justify-content: center;
   gap: 8px;
   border: 2px dashed rgba(44, 62, 80, 0.3);
+  flex-shrink: 0;
 `;
 
 const DiaryPreviewImagePlaceholderIcon = styled.div`
@@ -150,22 +156,25 @@ const DiaryPreviewImagePlaceholderText = styled.div`
 const DiaryPreviewTextContainer = styled.div`
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 `;
 /* 일기 최근 미리보기 날짜 */
 const DiaryPreviewDate = styled.div`
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.8;
   color: ${({ theme }) => theme.cardSubText || theme.text};
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
   // @media (min-width: 768px) {
   //   font-size: 14px;
   // }
 `;
 /* 일기 최근 미리보기 제목 */
 const DiaryPreviewTitle = styled.div`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: ${({ theme }) => theme.cardText || theme.text};
   margin-bottom: 4px;
@@ -173,13 +182,14 @@ const DiaryPreviewTitle = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  flex-shrink: 0;
   // @media (min-width: 768px) {
   //   font-size: 22px;
   // }
 `;
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   color: ${({ theme }) => theme.cardSubText || theme.diaryContent || theme.text};
   opacity: 0.9;
   overflow: hidden;
@@ -187,11 +197,13 @@ const DiaryPreviewContent = styled.div`
   display: -webkit-box;
   -webkit-line-clamp: ${props => props.lineClamp || 3};
   -webkit-box-orient: vertical;
-  line-height: 1.4;
+  line-height: 1.3;
   width: 100%;
   word-break: keep-all;
   overflow-wrap: break-word;
   white-space: normal;
+  flex: 1;
+  min-height: 0;
   // @media (min-width: 768px) {
   //   font-size: 16px;
   // }
@@ -461,20 +473,58 @@ const RightColumn = styled.div`
   // }
 `;
 /* 일기 최근 미리보기 영역 */
+const TopicSection = styled.div`
+  margin-top: 20px;
+  margin-bottom: 20px;
+`;
+
 const TopicCard = styled.div`
   background-color: ${({ theme }) => theme.progressCard};
   border-radius: 20px;
   padding: 16px;
   border: 1px solid #f0f0f0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
+`;
 
-  // @media (min-width: 768px) {
-  //   flex-grow: 1;
-  // }
+const PotionShopButton = styled.div`
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%);
+  border-radius: 28px;
+  box-shadow: 0 4px 16px rgba(165, 180, 252, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  gap: 10px;
+  &:hover { 
+    box-shadow: 0 6px 20px rgba(165, 180, 252, 0.4); 
+  }
+`;
+
+const PotionShopContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+`;
+
+const PotionShopIcon = styled.div`
+  font-size: 32px;
+`;
+
+const PotionShopText = styled.div`
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.08);
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicTitle = styled.p`
@@ -565,15 +615,8 @@ const PremiumBannerContent = styled.div`
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  
-  @media (max-width: 480px) {
-    flex-direction: row;
-    gap: 8px;
-  }
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const PremiumBannerLeft = styled.div`
@@ -619,18 +662,21 @@ const PremiumBannerDesc = styled.div`
 const PremiumBannerButton = styled.div`
   background: white;
   color: #8B4513;
-  padding: 12px 20px;
+  padding: 12px 40px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 15px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   transition: transform 0.2s;
-  flex-shrink: 0;
+  align-self: center;
+  text-align: center;
+  min-width: 200px;
   
   @media (max-width: 480px) {
-    padding: 10px 16px;
+    padding: 10px 32px;
     font-size: 14px;
+    min-width: 180px;
   }
   
   ${PremiumBanner}:hover & {
@@ -646,6 +692,104 @@ const CarouselSlide = styled.div`
   background: none;
   border-radius: 0;
   padding: 0;
+`;
+
+const AICreateCard = styled(motion.div)`
+  background: linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(201, 154, 154, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 40%, transparent 70%);
+    animation: shimmer 4s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(201, 154, 154, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const AICreateContent = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+`;
+
+const AICreateIcon = styled.div`
+  font-size: 40px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+`;
+
+const AICreateText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const AICreateTitle = styled.div`
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  line-height: 1.3;
+  word-break: keep-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
+`;
+
+const AICreateDesc = styled.div`
+  font-size: 14px;
+  opacity: 0.95;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  word-break: keep-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
+
+const AICreateArrow = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: transform 0.2s;
+  
+  ${AICreateCard}:hover & {
+    transform: translateX(4px);
+  }
 `;
 
 // home_banner용 데이터
@@ -697,7 +841,6 @@ function Home({ user }) {
   const [recentNovels, setRecentNovels] = useState([]);
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
   const [ownedPotions, setOwnedPotions] = useState({});
-  const [activeTab, setActiveTab] = useState('my'); // 'my', 'purchased', 'potion'
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [premiumStatus, setPremiumStatus] = useState(null); // 프리미엄 상태 (null: 로딩 중, 객체: 로드 완료)
@@ -945,202 +1088,17 @@ function Home({ user }) {
           </Slider>
         </CarouselContainer>
 
-        {/* 탭 바 추가 */}
-        <TabBar>
-          <TabButton $active={activeTab === 'my'} onClick={() => setActiveTab('my')}>{t('home_my_novel')}</TabButton>
-          <TabButton $active={activeTab === 'purchased'} onClick={() => setActiveTab('purchased')}>{t('home_purchased_novel')}</TabButton>
-          <TabButton $active={activeTab === 'potion'} onClick={() => setActiveTab('potion')}>{t('home_my_potion')}</TabButton>
-        </TabBar>
-        <div style={{ height: 16 }} />
-
-        {/* 탭별 내용 */}
-        {activeTab === 'my' && (
-          <>
-            {recentNovels.length > 0 ? (
-              <>
-                <MyNovelRow>
-                  {recentNovels.map(novel => (
-                    <MyNovelBox key={novel.id} onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}>
-                      <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                      <MyNovelTitle>{novel.title}</MyNovelTitle>
-                    </MyNovelBox>
-                  ))}
-                  {Array(3 - recentNovels.length).fill(null).map((_, idx) => (
-                    <MyNovelBox key={`placeholder-${idx}`}>
-                      <div style={{
-                        width: '100%',
-                        maxWidth: '180px',
-                        aspectRatio: '2/3',
-                        background: 'transparent',
-                        borderRadius: '15px',
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                      }} />
-                    </MyNovelBox>
-                  ))}
-                </MyNovelRow>
-                <MoreButton onClick={() => navigate('/my/completed-novels')}>
-                  {t('home_see_more')}
-                </MoreButton>
-              </>
-            ) : (
-              <>
-                <MyNovelRow>
-                  <MyNovelBox onClick={() => {
-                    const tutorialNovel = getTutorialNovel(userCreatedAt);
-                    navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
-                      state: { tutorialNovel, returnPath: '/' }
-                    });
-                  }}>
-                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel(userCreatedAt).title} />
-                    <MyNovelTitle>{getTutorialNovel(userCreatedAt).title}</MyNovelTitle>
-                  </MyNovelBox>
-                  {Array(2).fill(null).map((_, idx) => (
-                    <MyNovelBox key={`placeholder-${idx}`}>
-                      <div style={{
-                        width: '100%',
-                        maxWidth: '180px',
-                        aspectRatio: '2/3',
-                        background: 'transparent',
-                        borderRadius: '15px',
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                      }} />
-                    </MyNovelBox>
-                  ))}
-                </MyNovelRow>
-              </>
-            )}
-          </>
-        )}
-        {activeTab === 'purchased' && (
-          <>
-            {purchasedNovels.length > 0 ? (
-              <>
-                {(() => {
-                  // 소설이 3개 미만일 때만 튜토리얼 책 포함
-                  const tutorialNovel = purchasedNovels.length < 3 ? getTutorialNovel(userCreatedAt) : null;
-                  const allNovels = tutorialNovel ? [tutorialNovel, ...purchasedNovels] : purchasedNovels;
-                  const displayNovels = allNovels.slice(0, 3);
-
-                  return (
-                    <>
-                      <MyNovelRow>
-                        {displayNovels.map((novel, idx) => {
-                          const isTutorial = novel.id === 'tutorial' || novel.isTutorial === true;
-                          return (
-                            <MyNovelBox key={novel.id || `novel-${idx}`} onClick={() => {
-                              if (isTutorial) {
-                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
-                                  state: { tutorialNovel: novel, returnPath: '/' }
-                                });
-                              } else {
-                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
-                                  state: { returnPath: '/' }
-                                });
-                              }
-                            }}>
-                              <NovelCover
-                                src={isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : (novel.imageUrl || '/novel_banner/default.png')}
-                                alt={novel.title}
-                              />
-                              <MyNovelTitle>{novel.title}</MyNovelTitle>
-                              <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>
-                                by {novel.ownerName}
-                              </div>
-                            </MyNovelBox>
-                          );
-                        })}
-                        {Array(3 - displayNovels.length).fill(null).map((_, idx) => (
-                          <MyNovelBox key={`purchased-placeholder-${idx}`}>
-                            <div style={{
-                              width: '100%',
-                              maxWidth: '180px',
-                              aspectRatio: '2/3',
-                              background: 'transparent',
-                              borderRadius: '15px',
-                              display: 'block',
-                              marginLeft: 'auto',
-                              marginRight: 'auto',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                            }} />
-                          </MyNovelBox>
-                        ))}
-                      </MyNovelRow>
-                      <MoreButton onClick={() => navigate('/purchased-novels')}>
-                        {t('home_see_more')}
-                      </MoreButton>
-                    </>
-                  );
-                })()}
-              </>
-            ) : (
-              <>
-                <MyNovelRow>
-                  <MyNovelBox onClick={() => {
-                    const tutorialNovel = getTutorialNovel(userCreatedAt);
-                    navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
-                      state: { tutorialNovel, returnPath: '/' }
-                    });
-                  }}>
-                    <NovelCover src={process.env.PUBLIC_URL + '/bookcover.png'} alt={getTutorialNovel(userCreatedAt).title} />
-                    <MyNovelTitle>{getTutorialNovel(userCreatedAt).title}</MyNovelTitle>
-                    <div style={{ fontSize: '13px', color: '#888', marginTop: '-10px', marginBottom: '6px' }}>by {getTutorialNovel(userCreatedAt).ownerName}</div>
-                  </MyNovelBox>
-                  {Array(2).fill(null).map((_, idx) => (
-                    <MyNovelBox key={`purchased-placeholder-${idx}`}>
-                      <div style={{
-                        width: '100%',
-                        maxWidth: '180px',
-                        aspectRatio: '2/3',
-                        background: 'transparent',
-                        borderRadius: '15px',
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                      }} />
-                    </MyNovelBox>
-                  ))}
-                </MyNovelRow>
-              </>
-            )}
-          </>
-        )}
-        {activeTab === 'potion' && (
-          <>
-            {Object.values(ownedPotions).some(count => count && count > 0) ? (
-              <PotionSection>
-                <PotionRow>
-                  {potionData.map(potion => {
-                    const count = ownedPotions[potion.id] || 0;
-                    return count > 0 ? (
-                      <PotionCard
-                        key={potion.id}
-                        onClick={() => navigate('/my/potion-shop')}
-                        title={`${t(potion.key)} ${t('potion') || ''} ${count}`}
-                      >
-                        <PotionImage src={potion.image} alt={t(potion.key)} />
-                        <PotionCount>{count}</PotionCount>
-                        <PotionName>{t(potion.key)}</PotionName>
-                      </PotionCard>
-                    ) : null;
-                  })}
-                </PotionRow>
-              </PotionSection>
-            ) : (
-              <EmptyStateContainer>
-                <EmptyStateIcon>🧪</EmptyStateIcon>
-                <EmptyStateTitle>{t('home_no_potion_title')}</EmptyStateTitle>
-                <EmptyStateDesc>{t('home_no_potion_desc')}</EmptyStateDesc>
-              </EmptyStateContainer>
-            )}
-          </>
-        )}
+        {/* AI 소설 만들기 CTA */}
+        <AICreateCard onClick={() => navigate('/novel')}>
+          <AICreateContent>
+            <AICreateIcon>✨</AICreateIcon>
+            <AICreateText>
+              <AICreateTitle>{t('home_ai_create_title')}</AICreateTitle>
+              <AICreateDesc>{t('home_ai_create_desc')}</AICreateDesc>
+            </AICreateText>
+            <AICreateArrow>→</AICreateArrow>
+          </AICreateContent>
+        </AICreateCard>
 
         {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
         {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
@@ -1155,7 +1113,7 @@ function Home({ user }) {
                   👑 {t('premium_benefits')} 👑
                 </PremiumBannerTitle>
                 <PremiumBannerDesc>
-                  광고 제거, AI 일기, 주간 무료 포션, 프리미엄 스티커 등 다양한 혜택을 만나보세요!
+                  {t('premium_benefits_desc')}
                 </PremiumBannerDesc>
               </PremiumBannerLeft>
               <PremiumBannerButton>
@@ -1165,7 +1123,17 @@ function Home({ user }) {
           </PremiumBanner>
         )}
 
-        <SectionLabel>{t('home_recent_diary')}</SectionLabel>
+        {/* 오늘의 주제 섹션 */}
+        <TopicSection>
+          <SectionLabel style={{ marginTop: '0', marginBottom: '12px' }}>💡 {t('home_topic_title')}</SectionLabel>
+          <TopicCard>
+            {/* <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro> */}
+            <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
+          </TopicCard>
+        </TopicSection>
+
+        {/* 일기 섹션 - 하단으로 이동 */}
+        <SectionLabel style={{ marginTop: '10px' }}>📝 {t('home_recent_diary')}</SectionLabel>
         <MainButtonRow>
           <RecentDiaryCard onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
             {recentDiaries.length > 0 && recentDiaries[0] ? (
@@ -1199,11 +1167,12 @@ function Home({ user }) {
                 <MainButtonText>{t('home_write_diary')}</MainButtonText>
               </WriteButtonContent>
             </WriteDiaryButton>
-            <TopicCard>
-              {/* <TopicTitle>오늘의 일기 </TopicTitle> */}
-              <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro>
-              <RecommendationTopic>"{todayTopic}"</RecommendationTopic>
-            </TopicCard>
+            <PotionShopButton onClick={() => navigate('/my/potion-shop')}>
+              <PotionShopContent>
+                <PotionShopIcon>🧪</PotionShopIcon>
+                <PotionShopText>{t('home_potion_buy')}</PotionShopText>
+              </PotionShopContent>
+            </PotionShopButton>
           </RightColumn>
         </MainButtonRow>
       </ContentGrid>
