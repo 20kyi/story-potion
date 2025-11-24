@@ -8,7 +8,8 @@ import { useToast } from '../../components/ui/ToastProvider';
 import styled from 'styled-components';
 import { useTheme } from '../../ThemeContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
-import { useTranslation } from '../../LanguageContext';
+import { useLanguage } from '../../LanguageContext';
+import { auth } from '../../firebase';
 
 const Container = styled.div`
   display: flex;
@@ -107,6 +108,68 @@ const YearlyPremiumCard = styled(PremiumCard)`
   position: relative;
 `;
 
+const SubscriptionSection = styled.div`
+  background: ${({ theme }) => theme.card};
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+`;
+
+const SubscriptionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: ${({ theme }) => theme.text};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SubscriptionInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+`;
+
+const SubscriptionStatus = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SubscriptionDetail = styled.div`
+  font-size: 13px;
+  color: ${({ theme }) => theme.subText || '#888'};
+  line-height: 1.5;
+`;
+
+const CancelButton = styled.button`
+  padding: 10px 20px;
+  background: transparent;
+  color: #e46262;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+
+  &:hover {
+    background: rgba(228, 98, 98, 0.1);
+    color: #e46262;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
 const premiumFeatures = [
   { id: 'ads', titleKey: 'premium_feature_ads_title', descKey: 'premium_feature_ads_desc' },
   { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
@@ -123,14 +186,17 @@ function Premium({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [premiumStatus, setPremiumStatus] = useState({
     isMonthlyPremium: false,
     isYearlyPremium: false,
-    premiumType: null
+    premiumType: null,
+    premiumRenewalDate: null
   });
   const [modal, setModal] = useState({ open: false, type: null });
+  const [cancelModal, setCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // 프리미엄 상태 조회
   useEffect(() => {
@@ -143,7 +209,8 @@ function Premium({ user }) {
             setPremiumStatus({
               isMonthlyPremium: data.isMonthlyPremium || false,
               isYearlyPremium: data.isYearlyPremium || false,
-              premiumType: data.premiumType || null
+              premiumType: data.premiumType || null,
+              premiumRenewalDate: data.premiumRenewalDate || null
             });
           }
         } catch (error) {
@@ -177,11 +244,11 @@ function Premium({ user }) {
       const now = new Date();
       const renewalDate = new Date(now);
       renewalDate.setMonth(now.getMonth() + 1);
-      
+
       // 프리미엄 무료권 다음 충전 시점 계산 (결제 시점 + 7일)
       const nextFreeNovelChargeDate = new Date(now);
       nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
-      
+
       await updateDoc(doc(db, 'users', user.uid), {
         isMonthlyPremium: true,
         isYearlyPremium: false,
@@ -194,11 +261,17 @@ function Premium({ user }) {
         updatedAt: Timestamp.now()
       });
       toast.showToast(t('premium_monthly_success'), 'success');
-      setPremiumStatus({
-        isMonthlyPremium: true,
-        isYearlyPremium: false,
-        premiumType: 'monthly'
-      });
+      // 상태 업데이트를 위해 다시 조회
+      const updatedUserDoc = await getDoc(doc(db, 'users', user.uid));
+      if (updatedUserDoc.exists()) {
+        const data = updatedUserDoc.data();
+        setPremiumStatus({
+          isMonthlyPremium: data.isMonthlyPremium || false,
+          isYearlyPremium: data.isYearlyPremium || false,
+          premiumType: data.premiumType || null,
+          premiumRenewalDate: data.premiumRenewalDate || null
+        });
+      }
     } catch (error) {
       console.error('월간 프리미엄 가입 실패:', error);
       toast.showToast(t('premium_monthly_failed'), 'error');
@@ -277,11 +350,17 @@ function Premium({ user }) {
           : t('premium_yearly_success');
 
       toast.showToast(successMessage, 'success');
-      setPremiumStatus({
-        isMonthlyPremium: false,
-        isYearlyPremium: true,
-        premiumType: 'yearly'
-      });
+      // 상태 업데이트를 위해 다시 조회
+      const updatedUserDoc = await getDoc(doc(db, 'users', user.uid));
+      if (updatedUserDoc.exists()) {
+        const data = updatedUserDoc.data();
+        setPremiumStatus({
+          isMonthlyPremium: data.isMonthlyPremium || false,
+          isYearlyPremium: data.isYearlyPremium || false,
+          premiumType: data.premiumType || null,
+          premiumRenewalDate: data.premiumRenewalDate || null
+        });
+      }
     } catch (error) {
       console.error('연간 프리미엄 가입 실패:', error);
       toast.showToast(t('premium_yearly_failed'), 'error');
@@ -291,9 +370,103 @@ function Premium({ user }) {
     }
   };
 
+  // 프리미엄 해지 함수
+  const handleCancelPremium = () => {
+    setCancelModal(true);
+  };
+
+  // 실제 해지 로직
+  const doCancelPremium = async () => {
+    if (!user?.uid) return;
+    setIsCancelling(true);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        isMonthlyPremium: false,
+        isYearlyPremium: false,
+        premiumType: null,
+        premiumStartDate: null,
+        premiumRenewalDate: null,
+        premiumFreeNovelCount: 0,
+        premiumCancelled: true,
+        updatedAt: Timestamp.now()
+      });
+      setPremiumStatus({
+        isMonthlyPremium: false,
+        isYearlyPremium: false,
+        premiumType: null,
+        premiumRenewalDate: null
+      });
+      toast.showToast(t('premium_cancel_success') || '프리미엄이 해지되었습니다.', 'success');
+    } catch (error) {
+      console.error('프리미엄 해지 실패:', error);
+      toast.showToast(t('premium_cancel_failed') || '프리미엄 해지에 실패했습니다.', 'error');
+    } finally {
+      setIsCancelling(false);
+      setCancelModal(false);
+    }
+  };
+
+  // 페이지 포커스 시 프리미엄 상태 다시 조회
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user?.uid) {
+        const fetchUser = async () => {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              setPremiumStatus({
+                isMonthlyPremium: data.isMonthlyPremium || false,
+                isYearlyPremium: data.isYearlyPremium || false,
+                premiumType: data.premiumType || null,
+                premiumRenewalDate: data.premiumRenewalDate || null
+              });
+            }
+          } catch (error) {
+            console.error('프리미엄 상태 조회 실패:', error);
+          }
+        };
+        fetchUser();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]);
+
   return (
     <Container theme={theme}>
       <Header user={user} title={t('premium') || '프리미엄'} />
+
+      {/* 구독 관리 섹션 - 프리미엄 회원에게만 표시 */}
+      {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+        <SubscriptionSection theme={theme} style={{ marginTop: '0' }}>
+          <SubscriptionTitle theme={theme}>
+            {t('subscription_manage') || '구독 관리'}
+          </SubscriptionTitle>
+          <SubscriptionInfo>
+            <SubscriptionStatus theme={theme}>
+              {premiumStatus.isMonthlyPremium && `💎 ${t('premium_monthly')}`}
+              {premiumStatus.isYearlyPremium && `👑 ${t('premium_yearly')}`}
+            </SubscriptionStatus>
+            {premiumStatus.premiumRenewalDate && (
+              <SubscriptionDetail theme={theme}>
+                {t('subscription_next_renewal_date') || '다음 갱신일'}{' '}
+                {new Date(
+                  premiumStatus.premiumRenewalDate.seconds
+                    ? premiumStatus.premiumRenewalDate.seconds * 1000
+                    : premiumStatus.premiumRenewalDate
+                ).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </SubscriptionDetail>
+            )}
+          </SubscriptionInfo>
+        </SubscriptionSection>
+      )}
 
       {/* 프리미엄 결제 비교 카드 UI */}
       {!premiumStatus.isYearlyPremium && (
@@ -451,61 +624,11 @@ function Premium({ user }) {
         </>
       )}
 
-      {/* 연간 프리미엄 회원인 경우 축하 메시지 */}
-      {premiumStatus.isYearlyPremium && (
-        <PremiumSection theme={theme} style={{
-          marginTop: '24px',
-          background: 'linear-gradient(135deg, rgba(228, 98, 98, 0.1) 0%, rgba(212, 85, 85, 0.1) 100%)',
-          border: '2px solid #e46262'
-        }}>
-          <PremiumTitle theme={theme}>
-            <span style={{ color: '#e46262' }}>👑</span>
-            {t('premium_yearly')}
-          </PremiumTitle>
-          <div style={{
-            textAlign: 'center',
-            padding: '16px 0',
-            color: theme.text,
-            fontSize: '15px',
-            lineHeight: '1.6'
-          }}>
-            프리미엄 회원이 되신 것을 축하합니다! 🎉<br />
-            모든 프리미엄 혜택을 자유롭게 이용하실 수 있습니다.
-          </div>
-        </PremiumSection>
-      )}
-
-      {/* 월간 프리미엄 회원인 경우 축하 메시지 */}
-      {premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-        <PremiumSection theme={theme} style={{
-          marginTop: '24px',
-          background: 'linear-gradient(135deg, rgba(228, 98, 98, 0.1) 0%, rgba(212, 85, 85, 0.1) 100%)',
-          border: '2px solid #e46262'
-        }}>
-          <PremiumTitle theme={theme}>
-            <span style={{ color: '#e46262' }}>👑</span>
-            {t('premium_monthly')}
-          </PremiumTitle>
-          <div style={{
-            textAlign: 'center',
-            padding: '16px 0',
-            color: theme.text,
-            fontSize: '15px',
-            lineHeight: '1.6'
-          }}>
-            프리미엄 회원이 되신 것을 축하합니다! 🎉<br />
-            모든 프리미엄 혜택을 자유롭게 이용하실 수 있습니다.
-          </div>
-        </PremiumSection>
-      )}
-
-      {/* 프리미엄 기능 섹션 - 모든 사용자에게 표시 */}
-      <PremiumSection theme={theme} style={{ marginTop: '24px' }}>
+      {/* 프리미엄 기능 섹션 - 모든 사용자에게 표시 (결제 카드 아래로 이동) */}
+      <PremiumSection theme={theme} style={{ marginTop: '0', marginBottom: '24px' }}>
         <PremiumTitle theme={theme}>
           <span style={{ color: '#e46262' }}>👑</span>
-          {premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium
-            ? t('premium_current_benefits')
-            : t('premium_benefits')}
+          {t('premium_benefits')}
         </PremiumTitle>
         <FeatureList>
           {premiumFeatures.map((feature) => (
@@ -515,6 +638,21 @@ function Premium({ user }) {
           ))}
         </FeatureList>
       </PremiumSection>
+
+      {/* 해지하기 버튼 - 페이지 가장 아래 */}
+      {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+        <div style={{ marginTop: '24px', marginBottom: '24px', textAlign: 'center' }}>
+          <SubscriptionDetail theme={theme} style={{ marginBottom: '0', fontSize: '14px' }}>
+            프리미엄 해지 즉시<br />모든 프리미엄 혜택이 중단됩니다.
+          </SubscriptionDetail>
+          <CancelButton
+            onClick={handleCancelPremium}
+            disabled={isCancelling}
+          >
+            {isCancelling ? (t('processing') || '처리 중...') : (t('premium_cancel_button') || '구독 해지')}
+          </CancelButton>
+        </div>
+      )}
 
       {/* 프리미엄 가입 확인 모달 */}
       <ConfirmModal
@@ -539,6 +677,24 @@ function Premium({ user }) {
           else if (modal.type === 'yearly') doYearlyPremium();
         }}
         confirmText={t('premium_subscribe_confirm_button')}
+      />
+
+      {/* 프리미엄 해지 확인 모달 */}
+      <ConfirmModal
+        open={cancelModal}
+        title={
+          premiumStatus.isMonthlyPremium
+            ? t('premium_cancel_monthly_title') || '월간 프리미엄 해지'
+            : t('premium_cancel_yearly_title') || '연간 프리미엄 해지'
+        }
+        description={
+          premiumStatus.isMonthlyPremium
+            ? t('premium_cancel_monthly_desc') || '월간 프리미엄을 해지하시겠습니까?'
+            : t('premium_cancel_yearly_desc') || '연간 프리미엄을 해지하시겠습니까?'
+        }
+        onCancel={() => setCancelModal(false)}
+        onConfirm={doCancelPremium}
+        confirmText={t('premium_cancel_button') || '구독 해지'}
       />
 
       <Navigation />
