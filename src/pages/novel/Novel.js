@@ -540,20 +540,20 @@ const AddButton = styled.button`
 
 // CTA 카드 스타일
 const NovelCTACard = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5'};
+  background: ${({ theme }) => theme.novelProgressCardBg || '#FFFFFF'};
+  border: 1px solid ${({ theme }) => theme.novelProgressCardBorder || '#E5E5E5'};
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 16px ${({ theme }) => theme.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.08)'};
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)'};
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px ${({ theme }) => theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.12)'};
+    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.12)'};
   }
   
   &:active {
@@ -654,7 +654,7 @@ const NovelCTAProgressText = styled.div`
 const NovelCTAProgressBar = styled.div`
   width: 100%;
   height: 16px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5'};
+  background: ${({ theme }) => theme.novelProgressBarBg || '#E5E5E5'};
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -662,7 +662,7 @@ const NovelCTAProgressBar = styled.div`
 
 const NovelCTAProgressFill = styled.div`
   height: 100%;
-  background: linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%);
+  background: ${({ theme }) => theme.novelProgressBarFill || 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'};
   border-radius: 8px;
   transition: width 0.3s ease;
   width: ${({ progress }) => progress}%;
@@ -1869,17 +1869,17 @@ const Novel = ({ user }) => {
             {/* <Title>Novel</Title> */}
 
             {/* 소설 만들기 CTA */}
-            <NovelCTACard onClick={openCurrentWeekDiaryModal} theme={theme}>
-                <NovelCTAContent theme={theme}>
+            <NovelCTACard onClick={openCurrentWeekDiaryModal}>
+                <NovelCTAContent>
                     <NovelCTAProgress>
-                        <NovelCTAProgressText theme={theme}>
+                        <NovelCTAProgressText>
                             <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
                             <span>{(() => {
                                 const { count, total } = getCurrentWeekProgress();
                                 return `${count}/${total}`;
                             })()}</span>
                         </NovelCTAProgressText>
-                        <NovelCTAProgressBar theme={theme}>
+                        <NovelCTAProgressBar>
                             <NovelCTAProgressFill progress={getCurrentWeekProgress().progress} />
                         </NovelCTAProgressBar>
                     </NovelCTAProgress>

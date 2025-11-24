@@ -34,7 +34,8 @@ import InviteFriendIcon from '../../components/icons/InviteFriendIcon';
 import GearIcon from '../../components/icons/GearIcon';
 import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../ThemeContext';
+import { useTheme as useThemeContext } from '../../ThemeContext';
+import { useTheme } from 'styled-components';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -434,11 +435,11 @@ const FriendRequestBadge = styled.span`
 const PremiumUpgradeCard = styled.div`
   width: 100%;
   margin: 24px 0 32px 0;
-  background: linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%);
+  background: ${({ theme }) => theme.premiumUpgradeCardBg || 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)'};
   border-radius: 16px;
   padding: 18px 24px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 216, 155, 0.4);
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 216, 155, 0.4)'};
   transition: all 0.2s ease;
   text-align: center;
   position: relative;
@@ -451,7 +452,9 @@ const PremiumUpgradeCard = styled.div`
     right: -25%;
     width: 150%;
     height: 150%;
-    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+    background: ${({ theme }) => theme.mode === 'dark'
+    ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+    : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)'};
     animation: shimmer 4s infinite;
   }
   
@@ -462,7 +465,7 @@ const PremiumUpgradeCard = styled.div`
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 216, 155, 0.5);
+    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 216, 155, 0.5)'};
   }
 `;
 
@@ -492,6 +495,7 @@ function MyPage({ user }) {
 
   // 네비게이션 및 테마
   const navigate = useNavigate();
+  const themeContext = useThemeContext();
   const theme = useTheme();
   const { t } = useTranslation();
 
@@ -1156,7 +1160,7 @@ function MyPage({ user }) {
                     <span style={{
                       fontSize: '18px',
                       fontWeight: 700,
-                      color: '#8B6914',
+                      color: theme.premiumUpgradeCardText || '#8B6914',
                       wordBreak: 'keep-all',
                       overflowWrap: 'break-word'
                     }}>
@@ -1166,7 +1170,7 @@ function MyPage({ user }) {
                   </div>
                   <div style={{
                     fontSize: '14px',
-                    color: 'rgba(139, 105, 20, 0.85)',
+                    color: theme.premiumUpgradeCardDesc || 'rgba(139, 105, 20, 0.85)',
                     lineHeight: '1.4',
                     marginBottom: '12px',
                     display: 'flex',
@@ -1183,8 +1187,8 @@ function MyPage({ user }) {
                     <span>프리미엄 스티커</span>
                   </div>
                   <div style={{
-                    background: 'white',
-                    color: '#D4A017',
+                    background: theme.premiumUpgradeCardButtonBg || 'white',
+                    color: theme.premiumUpgradeCardButtonText || '#D4A017',
                     padding: '10px 30px',
                     borderRadius: '10px',
                     fontWeight: 700,
@@ -1218,43 +1222,43 @@ function MyPage({ user }) {
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
-                  <RecentActivityIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <RecentActivityIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('stats')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
-                  <GearIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <GearIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('personal_settings')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/shop')}>
                 <MenuIcon as="div">
-                  <ShopIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <ShopIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('shop')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/potion-gift')}>
                 <MenuIcon as="div">
-                  <GiftIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <GiftIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('potion_gift') || '포션 선물'}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
-                  <CrownIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <CrownIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('premium') || '프리미엄'}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
-                  <CustomerServiceIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <CustomerServiceIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('support')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/app-info')}>
                 <MenuIcon as="div">
-                  <AppInfoIcon color={theme.theme === 'dark' ? '#fff' : '#222'} />
+                  <AppInfoIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
                 </MenuIcon>
                 <MenuLabel>{t('app_info')}</MenuLabel>
               </MenuButton>

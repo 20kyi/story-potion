@@ -114,6 +114,13 @@ const DiaryPreviewContainer = styled.div`
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
+  
+  /* 일기가 없을 때 가운데 정렬 */
+  ${props => props.$isEmpty && `
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  `}
 `;
 /* 일기 최근 미리보기 이미지 */
 const DiaryPreviewImage = styled.img`
@@ -178,11 +185,14 @@ const DiaryPreviewTitle = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.cardText || theme.text};
   margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: ${props => props.$isEmpty ? 'normal' : 'nowrap'};
+  overflow: ${props => props.$isEmpty ? 'visible' : 'hidden'};
+  text-overflow: ${props => props.$isEmpty ? 'clip' : 'ellipsis'};
   width: 100%;
   flex-shrink: 0;
+  text-align: ${props => props.$isEmpty ? 'center' : 'left'};
+  word-break: ${props => props.$isEmpty ? 'keep-all' : 'normal'};
+  overflow-wrap: ${props => props.$isEmpty ? 'break-word' : 'normal'};
   // @media (min-width: 768px) {
   //   font-size: 22px;
   // }
@@ -192,18 +202,19 @@ const DiaryPreviewContent = styled.div`
   font-size: 13px;
   color: ${({ theme }) => theme.cardSubText || theme.diaryContent || theme.text};
   opacity: 0.9;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: ${props => props.lineClamp || 3};
-  -webkit-box-orient: vertical;
+  overflow: ${props => props.$isEmpty ? 'visible' : 'hidden'};
+  text-overflow: ${props => props.$isEmpty ? 'clip' : 'ellipsis'};
+  display: ${props => props.$isEmpty ? 'block' : '-webkit-box'};
+  -webkit-line-clamp: ${props => props.$isEmpty ? 'none' : (props.lineClamp || 3)};
+  -webkit-box-orient: ${props => props.$isEmpty ? 'unset' : 'vertical'};
   line-height: 1.3;
   width: 100%;
   word-break: keep-all;
   overflow-wrap: break-word;
   white-space: normal;
-  flex: 1;
+  flex: ${props => props.$isEmpty ? '0' : '1'};
   min-height: 0;
+  text-align: ${props => props.$isEmpty ? 'center' : 'left'};
   // @media (min-width: 768px) {
   //   font-size: 16px;
   // }
@@ -493,9 +504,11 @@ const PotionShopButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%);
+  background: ${({ theme }) => theme.potionShopButtonBg || 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%)'};
   border-radius: 28px;
-  box-shadow: 0 4px 16px rgba(165, 180, 252, 0.3);
+  box-shadow: ${({ theme }) => theme.mode === 'dark'
+    ? '0 4px 16px rgba(0,0,0,0.3)'
+    : '0 4px 16px rgba(165, 180, 252, 0.3)'};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -504,7 +517,9 @@ const PotionShopButton = styled.div`
   transition: box-shadow 0.2s;
   gap: 10px;
   &:hover { 
-    box-shadow: 0 6px 20px rgba(165, 180, 252, 0.4); 
+    box-shadow: ${({ theme }) => theme.mode === 'dark'
+    ? '0 6px 20px rgba(0,0,0,0.4)'
+    : '0 6px 20px rgba(165, 180, 252, 0.4)'}; 
   }
 `;
 
@@ -583,14 +598,14 @@ const CarouselContainer = styled.div`
 `;
 
 const PremiumBanner = styled(motion.div)`
-  background: linear-gradient(135deg, #ffe29f 0%, #ffc371 100%);
+  background: ${({ theme }) => theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'};
   border-radius: 20px;
   padding: 20px;
   margin-top: 12px;
   margin-bottom: 20px;
-  color: #8B4513;
+  color: ${({ theme }) => theme.premiumBannerText || '#8B4513'};
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 226, 159, 0.4);
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 226, 159, 0.4)'};
   position: relative;
   overflow: hidden;
   
@@ -601,7 +616,9 @@ const PremiumBanner = styled(motion.div)`
     right: -25%;
     width: 150%;
     height: 150%;
-    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+    background: ${({ theme }) => theme.mode === 'dark'
+    ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+    : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)'};
     animation: shimmer 4s infinite;
   }
   
@@ -656,7 +673,7 @@ const PremiumBannerDesc = styled.div`
   font-size: 14px;
   opacity: 0.9;
   line-height: 1.4;
-  color: #8B4513;
+  color: ${({ theme }) => theme.premiumBannerText || '#8B4513'};
   word-break: keep-all;
   overflow-wrap: break-word;
   text-align: center;
@@ -668,14 +685,14 @@ const PremiumBannerDesc = styled.div`
 `;
 
 const PremiumBannerButton = styled.div`
-  background: white;
-  color: #8B4513;
+  background: ${({ theme }) => theme.premiumBannerButtonBg || 'white'};
+  color: ${({ theme }) => theme.premiumBannerText || '#8B4513'};
   padding: 12px 40px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 15px;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.15)'};
   transition: transform 0.2s;
   align-self: center;
   text-align: center;
@@ -703,13 +720,13 @@ const CarouselSlide = styled.div`
 `;
 
 const AICreateCard = styled(motion.div)`
-  background: linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%);
-  border: 2px solid #FFD4CC;
+  background: ${({ theme }) => theme.aiCreateCardBg || 'linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%)'};
+  border: 2px solid ${({ theme }) => theme.aiCreateCardBorder || '#FFD4CC'};
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 180, 170, 0.2);
+  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 180, 170, 0.2)'};
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -721,7 +738,9 @@ const AICreateCard = styled(motion.div)`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+    background: ${({ theme }) => theme.mode === 'dark'
+    ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+    : 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)'};
     animation: shimmer 4s infinite;
   }
   
@@ -732,8 +751,8 @@ const AICreateCard = styled(motion.div)`
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 180, 170, 0.3);
-    border-color: #FFC4B8;
+    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 180, 170, 0.3)'};
+    border-color: ${({ theme }) => theme.mode === 'dark' ? '#5A4545' : '#FFC4B8'};
   }
   
   &:active {
@@ -747,14 +766,14 @@ const AICreateContent = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  color: #8B3E2E;
+  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
 `;
 
 const AICreateIcon = styled.div`
   font-size: 40px;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 4px rgba(139, 62, 46, 0.2));
-  color: #8B3E2E;
+  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
 `;
 
 const AICreateText = styled.div`
@@ -766,7 +785,7 @@ const AICreateTitle = styled.div`
   font-size: 32px !important;
   font-weight: 700;
   margin-bottom: 6px;
-  color: #8B3E2E;
+  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
   line-height: 1.3;
   word-break: keep-all;
   word-wrap: break-word;
@@ -784,7 +803,7 @@ const AICreateTitle = styled.div`
 
 const AICreateDesc = styled.div`
   font-size: 14px;
-  color: #A05245;
+  color: ${({ theme }) => theme.aiCreateCardDesc || '#A05245'};
   line-height: 1.4;
   word-break: keep-all;
   word-wrap: break-word;
@@ -800,7 +819,7 @@ const AICreateArrow = styled.div`
   font-size: 24px;
   font-weight: 700;
   flex-shrink: 0;
-  color: #8B3E2E;
+  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
   opacity: 0.8;
   transition: all 0.2s;
   
@@ -1120,29 +1139,6 @@ function Home({ user }) {
           </AICreateContent>
         </AICreateCard>
 
-        {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
-        {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-          <PremiumBanner
-            onClick={() => navigate('/my/premium')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <PremiumBannerContent>
-              <PremiumBannerLeft>
-                <PremiumBannerTitle>
-                  👑 {t('premium_benefits')} 👑
-                </PremiumBannerTitle>
-                <PremiumBannerDesc>
-                  {t('premium_benefits_desc')}
-                </PremiumBannerDesc>
-              </PremiumBannerLeft>
-              <PremiumBannerButton>
-                {t('premium_monthly_subscribe_button')}
-              </PremiumBannerButton>
-            </PremiumBannerContent>
-          </PremiumBanner>
-        )}
-
         {/* 오늘의 주제 섹션 */}
         <TopicSection>
           <SectionLabel style={{ marginTop: '0', marginBottom: '12px' }}>💡 {t('home_topic_title')}</SectionLabel>
@@ -1173,9 +1169,9 @@ function Home({ user }) {
                 </DiaryPreviewTextContainer>
               </DiaryPreviewContainer>
             ) : (
-              <DiaryPreviewContainer>
-                <DiaryPreviewTitle>{t('home_no_diary_yet')}</DiaryPreviewTitle>
-                <DiaryPreviewContent lineClamp={6}>{t('home_write_first_diary')}</DiaryPreviewContent>
+              <DiaryPreviewContainer $isEmpty={true}>
+                <DiaryPreviewTitle $isEmpty={true}>{t('home_no_diary_yet')}</DiaryPreviewTitle>
+                <DiaryPreviewContent $isEmpty={true}>{t('home_write_first_diary')}</DiaryPreviewContent>
               </DiaryPreviewContainer>
             )}
           </RecentDiaryCard>
@@ -1195,6 +1191,29 @@ function Home({ user }) {
             </PotionShopButton>
           </RightColumn>
         </MainButtonRow>
+
+        {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
+        {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
+          <PremiumBanner
+            onClick={() => navigate('/my/premium')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <PremiumBannerContent>
+              <PremiumBannerLeft>
+                <PremiumBannerTitle>
+                  👑 {t('premium_benefits')} 👑
+                </PremiumBannerTitle>
+                <PremiumBannerDesc>
+                  {t('premium_benefits_desc')}
+                </PremiumBannerDesc>
+              </PremiumBannerLeft>
+              <PremiumBannerButton>
+                {t('premium_monthly_subscribe_button')}
+              </PremiumBannerButton>
+            </PremiumBannerContent>
+          </PremiumBanner>
+        )}
       </ContentGrid>
 
       <Navigation />

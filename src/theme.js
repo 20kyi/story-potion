@@ -26,6 +26,26 @@ export const lightTheme = {
     secondaryMint: '#E6F6F2', // 연민트(서브 버튼)
     secondaryMintHover: '#B2E9DB', // 민트 버튼 hover
     secondaryMintText: '#2DBD85', // 민트 텍스트/테두리
+    // 홈화면 버튼 라이트모드 색상 (기본값 유지)
+    aiCreateCardBg: 'linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%)',
+    aiCreateCardBorder: '#FFD4CC',
+    aiCreateCardText: '#8B3E2E',
+    aiCreateCardDesc: '#A05245',
+    premiumBannerBg: 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)',
+    premiumBannerText: '#8B4513',
+    premiumBannerButtonBg: 'white',
+    potionShopButtonBg: 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%)',
+    // 소설 페이지 진행도 카드 라이트모드 색상 (기본값 유지)
+    novelProgressCardBg: '#FFFFFF',
+    novelProgressCardBorder: '#E5E5E5',
+    novelProgressBarBg: '#E5E5E5',
+    novelProgressBarFill: 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)',
+    // 마이페이지 프리미엄 혜택 카드 라이트모드 색상 (기본값 유지)
+    premiumUpgradeCardBg: 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)',
+    premiumUpgradeCardText: '#8B6914',
+    premiumUpgradeCardDesc: 'rgba(139, 105, 20, 0.85)',
+    premiumUpgradeCardButtonBg: 'white',
+    premiumUpgradeCardButtonText: '#D4A017',
 };
 
 // darkTheme: 다크 모드 색상
@@ -53,4 +73,24 @@ export const darkTheme = {
     secondaryMint: '#2A3A3A', // 다크에서 민트 대신 어두운 배경
     secondaryMintHover: '#1A2828',
     secondaryMintText: '#2DBD85',
+    // 홈화면 버튼 다크모드 색상
+    aiCreateCardBg: 'linear-gradient(135deg, #3A2A2A 0%, #2A1F1F 50%, #1F1717 100%)', // AI 소설 만들기 카드 배경
+    aiCreateCardBorder: '#4A3535', // AI 소설 만들기 카드 테두리
+    aiCreateCardText: '#FFB3B3', // AI 소설 만들기 텍스트
+    aiCreateCardDesc: '#D4A5A5', // AI 소설 만들기 설명 텍스트
+    premiumBannerBg: 'linear-gradient(135deg, #4A3A2A 0%, #3A2A1F 100%)', // 프리미엄 배너 배경
+    premiumBannerText: '#FFD4A5', // 프리미엄 배너 텍스트
+    premiumBannerButtonBg: '#2A1F1F', // 프리미엄 배너 버튼 배경
+    potionShopButtonBg: 'linear-gradient(135deg, #2A2A3A 0%, #1F1F2A 50%, #17171F 100%)', // 포션 상점 버튼 배경
+    // 소설 페이지 진행도 카드 다크모드 색상
+    novelProgressCardBg: 'linear-gradient(135deg, #2A2A2A 0%, #1F1F1F 100%)', // 이번주 일기 진행도 카드 배경
+    novelProgressCardBorder: '#3A3A3A', // 이번주 일기 진행도 카드 테두리
+    novelProgressBarBg: '#3A3A3A', // 진행도 바 배경
+    novelProgressBarFill: 'linear-gradient(90deg, #A67A7A 0%, #B88585 100%)', // 진행도 바 채움
+    // 마이페이지 프리미엄 혜택 카드 다크모드 색상
+    premiumUpgradeCardBg: 'linear-gradient(135deg, #3A2F1F 0%, #2A1F0F 50%, #1F1505 100%)', // 프리미엄 혜택 카드 배경
+    premiumUpgradeCardText: '#FFD4A5', // 프리미엄 혜택 카드 텍스트
+    premiumUpgradeCardDesc: 'rgba(255, 212, 165, 0.85)', // 프리미엄 혜택 카드 설명 텍스트
+    premiumUpgradeCardButtonBg: '#2A1F0F', // 프리미엄 혜택 카드 버튼 배경
+    premiumUpgradeCardButtonText: '#FFD4A5', // 프리미엄 혜택 카드 버튼 텍스트
 }; 
