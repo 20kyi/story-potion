@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import styled from 'styled-components';
 
 const DebugPanelContainer = styled.div`
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  left: ${props => props.left}px;
+  top: ${props => props.top}px;
   z-index: 99999;
   font-family: monospace;
   font-size: 12px;
+  transform: translate(-50%, -50%);
+  user-select: none;
 `;
 
 const ToggleButton = styled.button`
@@ -18,23 +20,29 @@ const ToggleButton = styled.button`
   background: #e46262;
   color: white;
   border: none;
-  cursor: pointer;
+  cursor: ${props => props.isDragging ? 'grabbing' : 'grab'};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  touch-action: none;
   
   &:active {
-    transform: scale(0.95);
+    transform: ${props => props.isDragging ? 'scale(1)' : 'scale(0.95)'};
+  }
+  
+  &:hover {
+    background: ${props => props.isDragging ? '#e46262' : '#d45555'};
   }
 `;
 
 const Panel = styled.div`
   position: absolute;
   bottom: 60px;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 300px;
   max-height: 400px;
   background: rgba(0, 0, 0, 0.9);
@@ -52,6 +60,12 @@ const Panel = styled.div`
   &::-webkit-scrollbar-thumb {
     background: #555;
     border-radius: 3px;
+  }
+  
+  /* 화면 밖으로 나가지 않도록 조정 */
+  @media (max-width: 400px) {
+    width: calc(100vw - 40px);
+    max-width: 300px;
   }
 `;
 
@@ -89,6 +103,133 @@ const DebugPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logCount, setLogCount] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragStateRef = useRef({ isDragging: false, dragStart: { x: 0, y: 0 }, position: { x: 0, y: 0 } });
+
+  // 저장된 위치 불러오기
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('debugPanelPosition');
+    if (savedPosition) {
+      try {
+        const { x, y } = JSON.parse(savedPosition);
+        setPosition({ x, y });
+      } catch (e) {
+        // 기본 위치 사용
+        setPosition({ 
+          x: window.innerWidth - 45, 
+          y: window.innerHeight - 45 
+        });
+      }
+    } else {
+      // 기본 위치 (오른쪽 하단)
+      setPosition({ 
+        x: window.innerWidth - 45, 
+        y: window.innerHeight - 45 
+      });
+    }
+  }, []);
+
+  // 위치 저장
+  useEffect(() => {
+    if (position.x > 0 && position.y > 0) {
+      localStorage.setItem('debugPanelPosition', JSON.stringify(position));
+    }
+  }, [position]);
+
+  // dragStateRef 업데이트
+  useEffect(() => {
+    dragStateRef.current.isDragging = isDragging;
+    dragStateRef.current.dragStart = dragStart;
+    dragStateRef.current.position = position;
+  }, [isDragging, dragStart, position]);
+
+  // 드래그 핸들러
+  const handleDragStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const newDragStart = {
+      x: clientX - position.x,
+      y: clientY - position.y
+    };
+    setDragStart(newDragStart);
+    dragStateRef.current.dragStart = newDragStart;
+  };
+
+  // 전역 드래그 이벤트 리스너
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e) => {
+      if (!dragStateRef.current.isDragging) return;
+      e.preventDefault();
+      
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      
+      let newX = clientX - dragStateRef.current.dragStart.x;
+      let newY = clientY - dragStateRef.current.dragStart.y;
+      
+      // 화면 경계 체크
+      const buttonSize = 50;
+      const minX = buttonSize / 2;
+      const maxX = window.innerWidth - buttonSize / 2;
+      const minY = buttonSize / 2;
+      const maxY = window.innerHeight - buttonSize / 2;
+      
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+      
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleTouchMove = (e) => {
+      if (!dragStateRef.current.isDragging) return;
+      e.preventDefault();
+      
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      
+      let newX = clientX - dragStateRef.current.dragStart.x;
+      let newY = clientY - dragStateRef.current.dragStart.y;
+      
+      // 화면 경계 체크
+      const buttonSize = 50;
+      const minX = buttonSize / 2;
+      const maxX = window.innerWidth - buttonSize / 2;
+      const minY = buttonSize / 2;
+      const maxY = window.innerHeight - buttonSize / 2;
+      
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+      
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging]);
 
   useEffect(() => {
     // 모바일 환경에서만 표시
@@ -164,10 +305,18 @@ const DebugPanel = () => {
   }
 
   return (
-    <DebugPanelContainer>
+    <DebugPanelContainer left={position.x} top={position.y}>
       <ToggleButton 
-        onClick={() => setIsOpen(!isOpen)}
-        title="디버깅 패널 열기/닫기"
+        onClick={(e) => {
+          // 드래그 중이면 클릭 이벤트 무시
+          if (!isDragging) {
+            setIsOpen(!isOpen);
+          }
+        }}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        isDragging={isDragging}
+        title="드래그하여 이동, 클릭하여 열기/닫기"
       >
         🐛
         {logCount > 0 && (

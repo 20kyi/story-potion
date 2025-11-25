@@ -4,7 +4,11 @@ import { doc, addDoc, collection, updateDoc, increment, Timestamp } from 'fireba
 import { db } from '../firebase';
 
 // Billing 플러그인 등록
+// Capacitor 7에서는 네이티브 플러그인이 자동으로 등록되어야 하지만,
+// UNIMPLEMENTED 에러가 발생하는 경우 플러그인이 빌드에 포함되지 않았을 수 있습니다
 const Billing = registerPlugin('Billing', {
+  // Android는 네이티브 플러그인이 자동으로 등록되어야 합니다
+  // web 구현만 명시적으로 지정
   web: () => import('./billing.web').then(m => new m.BillingWeb()),
 });
 
@@ -102,23 +106,59 @@ class InAppPurchaseService {
 
   // 초기화
   async initialize() {
+    console.log('[인앱결제] initialize 시작', {
+      isAvailable: this.isAvailable,
+      platform: Capacitor.getPlatform(),
+      hasBilling: !!Billing
+    });
+
     if (!this.isAvailable) {
-      console.log('인앱 결제는 네이티브 플랫폼에서만 사용 가능합니다.');
+      console.log('[인앱결제] 네이티브 플랫폼이 아님 - 인앱 결제는 네이티브 플랫폼에서만 사용 가능합니다.');
+      return false;
+    }
+
+    // Billing 플러그인 존재 여부 확인
+    if (!Billing) {
+      console.error('[인앱결제] Billing 플러그인을 찾을 수 없습니다.');
+      return false;
+    }
+
+    // 플러그인 메서드 존재 여부 확인
+    if (typeof Billing.initialize !== 'function') {
+      console.error('[인앱결제] Billing.initialize 메서드를 찾을 수 없습니다.', Billing);
       return false;
     }
 
     try {
+      console.log('[인앱결제] Billing.initialize 호출');
       const result = await Billing.initialize();
-      if (result.success) {
+      console.log('[인앱결제] Billing.initialize 결과', result);
+
+      if (result && result.success) {
         this.isInitialized = true;
-        console.log('인앱 결제 초기화 완료');
+        console.log('[인앱결제] 초기화 완료');
         return true;
       } else {
-        console.error('인앱 결제 초기화 실패');
+        console.error('[인앱결제] 초기화 실패 - result.success가 false', result);
         return false;
       }
     } catch (error) {
-      console.error('인앱 결제 초기화 실패:', error);
+      console.error('[인앱결제] 초기화 실패 - 예외 발생:', error);
+      console.error('[인앱결제] 에러 상세:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        errorName: error.name
+      });
+
+      // UNIMPLEMENTED 에러인 경우 특별 처리
+      if (error.code === 'UNIMPLEMENTED' || error.message?.includes('not implemented')) {
+        console.error('[인앱결제] ⚠️ 플러그인이 구현되지 않았습니다. 다음을 확인하세요:');
+        console.error('[인앱결제] 1. BillingPlugin.java가 빌드에 포함되었는지 확인');
+        console.error('[인앱결제] 2. Android Studio에서 Clean & Rebuild 실행');
+        console.error('[인앱결제] 3. Android Logcat에서 BillingPlugin 로드 로그 확인');
+      }
+
       return false;
     }
   }
@@ -147,49 +187,127 @@ class InAppPurchaseService {
 
   // 구매 시작
   async purchaseProduct(productId, productType = 'inapp') {
+    console.log('[인앱결제] purchaseProduct 시작', { productId, productType, isInitialized: this.isInitialized, isAvailable: this.isAvailable });
+
     if (!this.isInitialized) {
+      console.log('[인앱결제] 초기화되지 않음, 초기화 시도');
       await this.initialize();
     }
 
     if (!this.isAvailable) {
+      console.error('[인앱결제] 네이티브 플랫폼이 아님');
       throw new Error('인앱 결제는 네이티브 플랫폼에서만 사용 가능합니다.');
     }
 
     try {
+      console.log('[인앱결제] Billing.purchaseProduct 호출 시작', { productId, productType });
       const result = await Billing.purchaseProduct({
         productId: productId,
         productType: productType
       });
 
+      console.log('[인앱결제] Billing.purchaseProduct 결과', { result, hasPurchase: !!result?.purchase });
+
       if (result.purchase) {
-        // 구매 완료 처리
-        await this.handlePurchaseSuccess(result.purchase);
-        return result.purchase;
+        // purchase 객체의 유효성 검증
+        if (!result.purchase.purchaseToken || !result.purchase.orderId) {
+          console.error('[인앱결제] purchase 객체가 유효하지 않음 - purchaseToken 또는 orderId가 없음', {
+            hasPurchaseToken: !!result.purchase.purchaseToken,
+            hasOrderId: !!result.purchase.orderId,
+            purchase: result.purchase
+          });
+          throw new Error('인앱 결제 정보가 유효하지 않습니다. purchaseToken 또는 orderId가 없습니다.');
+        }
+
+        console.log('[인앱결제] 구매 성공, handlePurchaseSuccess 호출', {
+          orderId: result.purchase.orderId,
+          purchaseToken: result.purchase.purchaseToken?.substring(0, 20) + '...',
+          isAcknowledged: result.purchase.isAcknowledged
+        });
+
+        try {
+          // 구매 완료 처리
+          await this.handlePurchaseSuccess(result.purchase);
+          console.log('[인앱결제] handlePurchaseSuccess 완료');
+          return result.purchase;
+        } catch (handleError) {
+          console.error('[인앱결제] handlePurchaseSuccess 실패:', handleError);
+          // handlePurchaseSuccess 실패 시에도 purchase는 반환하지 않음
+          throw new Error('구매 완료 처리 중 오류가 발생했습니다: ' + handleError.message);
+        }
       }
 
-      return null;
+      console.warn('[인앱결제] result.purchase가 null 또는 undefined', { result });
+
+      // 더 자세한 에러 정보 제공
+      if (result && result.error) {
+        console.error('[인앱결제] result에 에러 정보 있음', result.error);
+        throw new Error(result.error || '인앱 결제가 완료되지 않았습니다.');
+      }
+
+      throw new Error('인앱 결제 창이 표시되지 않았거나 사용자가 취소했습니다.');
     } catch (error) {
-      console.error('구매 실패:', error);
-      throw error;
+      console.error('[인앱결제] 구매 실패:', error);
+      console.error('[인앱결제] 에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        productId,
+        productType,
+        errorName: error.name
+      });
+
+      // 에러 메시지 개선
+      let errorMessage = error.message;
+
+      // 일반적인 에러 메시지 개선
+      if (errorMessage.includes('Failed to get product details')) {
+        errorMessage = '상품 정보를 가져올 수 없습니다. Google Play Console에서 상품이 등록되어 있는지 확인해주세요.';
+      } else if (errorMessage.includes('Billing service not connected')) {
+        errorMessage = '인앱 결제 서비스에 연결할 수 없습니다. 앱을 재시작해주세요.';
+      } else if (errorMessage.includes('User canceled')) {
+        errorMessage = '인앱 결제가 취소되었습니다.';
+      } else if (errorMessage.includes('Failed to launch billing flow')) {
+        errorMessage = '결제 창을 열 수 없습니다. Google Play 서비스를 확인해주세요.';
+      }
+
+      const improvedError = new Error(errorMessage);
+      improvedError.originalError = error;
+      throw improvedError;
     }
   }
 
   // 구매 완료 처리
   async handlePurchaseSuccess(purchase) {
+    console.log('[인앱결제] handlePurchaseSuccess 시작', purchase);
+
     try {
       // 구매 확인 (acknowledge)
       if (purchase.purchaseToken && !purchase.isAcknowledged) {
+        console.log('[인앱결제] acknowledgePurchase 호출', { purchaseToken: purchase.purchaseToken });
         await Billing.acknowledgePurchase({
           purchaseToken: purchase.purchaseToken
+        });
+        console.log('[인앱결제] acknowledgePurchase 완료');
+      } else {
+        console.log('[인앱결제] acknowledgePurchase 건너뜀', {
+          hasToken: !!purchase.purchaseToken,
+          isAcknowledged: purchase.isAcknowledged
         });
       }
 
       // 구매 내역 저장 (Firebase)
+      console.log('[인앱결제] Firebase에 구매 내역 저장 시작');
       await this.savePurchaseToFirebase(purchase);
+      console.log('[인앱결제] Firebase에 구매 내역 저장 완료');
 
-      console.log('구매 완료 처리됨:', purchase);
+      console.log('[인앱결제] 구매 완료 처리됨:', purchase);
     } catch (error) {
-      console.error('구매 완료 처리 실패:', error);
+      console.error('[인앱결제] 구매 완료 처리 실패:', error);
+      console.error('[인앱결제] 에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        purchase
+      });
       throw error;
     }
   }

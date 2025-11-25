@@ -39,8 +39,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void initialize(PluginCall call) {
+        android.util.Log.d("BillingPlugin", "[인앱결제] initialize 시작");
+        
         Activity activity = getActivity();
         if (activity == null) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] Activity가 null");
             call.reject("Activity is null");
             return;
         }
@@ -50,22 +53,28 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                 .enablePendingPurchases()
                 .build();
 
+        android.util.Log.d("BillingPlugin", "[인앱결제] BillingClient 생성 완료, 연결 시작");
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
+                android.util.Log.d("BillingPlugin", "[인앱결제] onBillingSetupFinished - responseCode: " + billingResult.getResponseCode());
+                
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     isServiceConnected = true;
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 초기화 성공");
                     JSObject result = new JSObject();
                     result.put("success", true);
                     call.resolve(result);
                 } else {
                     isServiceConnected = false;
+                    android.util.Log.e("BillingPlugin", "[인앱결제] 초기화 실패: " + billingResult.getDebugMessage());
                     call.reject("Billing setup failed: " + billingResult.getDebugMessage());
                 }
             }
 
             @Override
             public void onBillingServiceDisconnected() {
+                android.util.Log.w("BillingPlugin", "[인앱결제] Billing service 연결 끊김");
                 isServiceConnected = false;
             }
         });
@@ -164,7 +173,10 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void purchaseProduct(PluginCall call) {
+        android.util.Log.d("BillingPlugin", "[인앱결제] purchaseProduct 시작");
+        
         if (!isServiceConnected) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] Billing service가 연결되지 않음");
             call.reject("Billing service not connected. Call initialize first.");
             return;
         }
@@ -172,13 +184,17 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         String productId = call.getString("productId");
         String productType = call.getString("productType", "inapp");
 
+        android.util.Log.d("BillingPlugin", "[인앱결제] 파라미터 - productId: " + productId + ", productType: " + productType);
+
         if (productId == null || productId.isEmpty()) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] productId가 없음");
             call.reject("productId is required");
             return;
         }
 
         // Store the call for later use in onPurchasesUpdated
         saveCall(call);
+        android.util.Log.d("BillingPlugin", "[인앱결제] PluginCall 저장 완료");
 
         QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
@@ -193,18 +209,39 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                 .setProductList(productList)
                 .build();
 
+        android.util.Log.d("BillingPlugin", "[인앱결제] queryProductDetailsAsync 호출");
         billingClient.queryProductDetailsAsync(params, new ProductDetailsResponseListener() {
             @Override
             public void onProductDetailsResponse(BillingResult billingResult, List<ProductDetails> productDetailsList) {
+                android.util.Log.d("BillingPlugin", "[인앱결제] queryProductDetailsAsync 응답 - responseCode: " + billingResult.getResponseCode() + 
+                    ", productDetailsList size: " + (productDetailsList != null ? productDetailsList.size() : 0));
+                
                 if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK || 
-                    productDetailsList.isEmpty()) {
-                    call.reject("Failed to get product details: " + billingResult.getDebugMessage());
+                    productDetailsList == null || productDetailsList.isEmpty()) {
+                    String errorMsg = "Failed to get product details: " + billingResult.getDebugMessage() + 
+                        " (ResponseCode: " + billingResult.getResponseCode() + ")";
+                    android.util.Log.e("BillingPlugin", "[인앱결제] 상품 정보 조회 실패: " + errorMsg);
+                    
+                    // 일반적인 에러 코드에 대한 설명 추가
+                    String userFriendlyMsg = errorMsg;
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_UNAVAILABLE) {
+                        userFriendlyMsg = "상품을 찾을 수 없습니다. Google Play Console에서 상품 ID '" + productId + "'가 등록되어 있는지 확인해주세요.";
+                    } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE) {
+                        userFriendlyMsg = "Google Play 서비스를 사용할 수 없습니다. 네트워크 연결을 확인해주세요.";
+                    } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
+                        userFriendlyMsg = "인앱 결제를 사용할 수 없습니다. Google Play 서비스가 설치되어 있는지 확인해주세요.";
+                    }
+                    
+                    call.reject(userFriendlyMsg);
                     return;
                 }
 
                 ProductDetails productDetails = productDetailsList.get(0);
+                android.util.Log.d("BillingPlugin", "[인앱결제] 상품 정보 조회 성공 - productId: " + productDetails.getProductId());
+                
                 Activity activity = getActivity();
                 if (activity == null) {
+                    android.util.Log.e("BillingPlugin", "[인앱결제] Activity가 null");
                     call.reject("Activity is null");
                     return;
                 }
@@ -216,9 +253,14 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                                 .build()
                         ));
 
+                android.util.Log.d("BillingPlugin", "[인앱결제] launchBillingFlow 호출");
                 BillingResult result = billingClient.launchBillingFlow(activity, flowParamsBuilder.build());
+                
                 if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+                    android.util.Log.e("BillingPlugin", "[인앱결제] launchBillingFlow 실패: " + result.getDebugMessage());
                     call.reject("Failed to launch billing flow: " + result.getDebugMessage());
+                } else {
+                    android.util.Log.d("BillingPlugin", "[인앱결제] launchBillingFlow 성공 - 결제 창 표시됨");
                 }
             }
         });
@@ -311,14 +353,22 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @Override
     public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
+        android.util.Log.d("BillingPlugin", "[인앱결제] onPurchasesUpdated 호출 - responseCode: " + billingResult.getResponseCode() + 
+            ", purchases: " + (purchases != null ? purchases.size() : 0));
+        
         PluginCall savedCall = getSavedCall();
         if (savedCall == null) {
+            android.util.Log.w("BillingPlugin", "[인앱결제] savedCall이 null - 이전 호출이 없음");
             return;
         }
 
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+            android.util.Log.d("BillingPlugin", "[인앱결제] 구매 성공 처리 시작");
             for (Purchase purchase : purchases) {
                 try {
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 구매 정보 - orderId: " + purchase.getOrderId() + 
+                        ", productIds: " + purchase.getProducts());
+                    
                     JSONObject purchaseObj = new JSONObject();
                     purchaseObj.put("orderId", purchase.getOrderId());
                     purchaseObj.put("packageName", purchase.getPackageName());
@@ -336,16 +386,21 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
                     JSObject result = new JSObject();
                     result.put("purchase", purchaseObj);
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 구매 성공 - resolve 호출");
                     savedCall.resolve(result);
                     return;
                 } catch (JSONException e) {
+                    android.util.Log.e("BillingPlugin", "[인앱결제] JSON 생성 실패: " + e.getMessage(), e);
                     // Continue to next purchase
                 }
             }
+            android.util.Log.w("BillingPlugin", "[인앱결제] 유효한 구매를 찾을 수 없음");
             savedCall.reject("No valid purchase found");
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
+            android.util.Log.d("BillingPlugin", "[인앱결제] 사용자가 구매 취소");
             savedCall.reject("User canceled the purchase");
         } else {
+            android.util.Log.e("BillingPlugin", "[인앱결제] 구매 실패: " + billingResult.getDebugMessage());
             savedCall.reject("Purchase failed: " + billingResult.getDebugMessage());
         }
     }

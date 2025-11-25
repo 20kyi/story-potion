@@ -58,6 +58,7 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Google Play Billing은 INTERNET 권한만 필요하며, BILLING 권한은 자동으로 추가됩니다 -->
     <!-- 사진 접근 권한 (Android 13 이상) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!-- 사진 접근 권한 (Android 12 이하) -->

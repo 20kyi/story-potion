@@ -68,6 +68,7 @@ import AppInfo from './pages/mypage/AppInfo';
 import TermsOfService from './pages/mypage/TermsOfService';
 import PrivacyPolicy from './pages/mypage/PrivacyPolicy';
 import { inAppPurchaseService } from './utils/inAppPurchase';
+import DebugPanel from './components/DebugPanel';
 import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
 import { convertKakaoImageUrlToHttps } from './utils/profileImageUtils';
 import LoadingScreen from './components/LoadingScreen';
@@ -136,6 +137,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/loading-test" element={user ? <LoadingTest user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
+            <DebugPanel />
         </div>
     );
 };

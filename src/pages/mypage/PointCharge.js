@@ -410,60 +410,97 @@ function PointCharge({ user }) {
     setIsLoading(true);
     try {
       const packageData = packages.find(p => p.id === selectedPackage);
+      console.log('[포인트충전] doPurchase 시작', { 
+        packageId: packageData?.id, 
+        productId: packageData?.productId,
+        isAvailable: inAppPurchaseService.isAvailable 
+      });
       
       // 인앱 결제 시도
       if (inAppPurchaseService.isAvailable) {
+        console.log('[포인트충전] 인앱 결제 가능, purchaseProduct 호출');
         try {
           const purchase = await inAppPurchaseService.purchaseProduct(packageData.productId);
+          console.log('[포인트충전] purchaseProduct 결과', { purchase, hasPurchase: !!purchase });
+          
           if (purchase) {
-            // 인앱 결제 성공 시 포인트 지급
-            const bonusPoints = packageData.bonusPoints || 0;
-            const totalPoints = packageData.points + bonusPoints;
+            // purchase 객체의 유효성 검증
+            if (!purchase.purchaseToken || !purchase.orderId) {
+              console.error('[포인트충전] purchase 객체가 유효하지 않음', purchase);
+              toast.showToast('인앱 결제 정보가 유효하지 않습니다. 다시 시도해주세요.', 'error');
+              return;
+            }
             
-            await updateDoc(doc(db, 'users', user.uid), {
-              point: increment(totalPoints)
+            console.log('[포인트충전] 인앱 결제 성공, 포인트 지급 시작', {
+              orderId: purchase.orderId,
+              purchaseToken: purchase.purchaseToken?.substring(0, 20) + '...'
             });
             
-            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-              type: 'charge',
-              amount: totalPoints,
-              desc: `인앱 결제 - ${packageData.points}p + ${bonusPoints}p 보너스`,
-              purchaseToken: purchase.purchaseToken,
-              createdAt: new Date()
-            });
-            
-            setCurrentPoints(prev => prev + totalPoints);
-            toast.showToast(t('point_charge_success', { amount: totalPoints }), 'success');
-            setSelectedPackage(null);
+            try {
+              // 인앱 결제 성공 시 포인트 지급
+              const bonusPoints = packageData.bonusPoints || 0;
+              const totalPoints = packageData.points + bonusPoints;
+              
+              await updateDoc(doc(db, 'users', user.uid), {
+                point: increment(totalPoints)
+              });
+              
+              await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+                type: 'charge',
+                amount: totalPoints,
+                desc: `인앱 결제 - ${packageData.points}p + ${bonusPoints}p 보너스`,
+                purchaseToken: purchase.purchaseToken,
+                orderId: purchase.orderId,
+                createdAt: new Date()
+              });
+              
+              setCurrentPoints(prev => prev + totalPoints);
+              toast.showToast(t('point_charge_success', { amount: totalPoints }), 'success');
+              setSelectedPackage(null);
+              console.log('[포인트충전] 인앱 결제 완료 및 포인트 지급 완료');
+              return;
+            } catch (dbError) {
+              console.error('[포인트충전] 포인트 지급 중 오류 발생:', dbError);
+              toast.showToast('포인트 지급 중 오류가 발생했습니다. 고객센터로 문의해주세요.', 'error');
+              return;
+            }
+          } else {
+            console.warn('[포인트충전] purchase가 null - 인앱 결제 창이 표시되지 않았거나 사용자가 취소함');
+            toast.showToast('인앱 결제가 완료되지 않았습니다. 다시 시도해주세요.', 'error');
             return;
           }
         } catch (error) {
-          console.error('인앱 결제 실패:', error);
-          toast.showToast(t('point_charge_inapp_failed'), 'error');
+          console.error('[포인트충전] 인앱 결제 실패:', error);
+          console.error('[포인트충전] 에러 상세:', {
+            message: error.message,
+            stack: error.stack,
+            productId: packageData.productId,
+            errorName: error.name
+          });
+          
+          // 에러 메시지에 따라 다른 메시지 표시
+          let errorMessage = t('point_charge_inapp_failed');
+          if (error.message && error.message.includes('canceled')) {
+            errorMessage = '인앱 결제가 취소되었습니다.';
+          } else if (error.message && error.message.includes('User canceled')) {
+            errorMessage = '인앱 결제가 취소되었습니다.';
+          }
+          
+          toast.showToast(errorMessage, 'error');
+          return; // 에러 발생 시 포인트 지급하지 않음
         }
+      } else {
+        console.warn('[포인트충전] 인앱 결제 불가능 - 네이티브 플랫폼이 아님');
+        toast.showToast('인앱 결제는 앱에서만 사용 가능합니다.', 'error');
+        return;
       }
       
-      // 인앱 결제가 불가능하거나 실패한 경우 기존 로직 사용 (테스트용)
-      const bonusPoints = packageData.bonusPoints || 0;
-      const totalPoints = packageData.points + bonusPoints;
-      
-      await updateDoc(doc(db, 'users', user.uid), {
-        point: increment(totalPoints)
-      });
-      
-      await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-        type: 'charge',
-        amount: totalPoints,
-        desc: `포인트 충전 (${packageData.points}p + ${bonusPoints}p 보너스)`,
-        createdAt: new Date()
-      });
-      
-      setCurrentPoints(prev => prev + totalPoints);
-      toast.showToast(t('point_charge_success', { amount: totalPoints }), 'success');
-      setSelectedPackage(null);
-      
     } catch (error) {
-      console.error('포인트 충전 실패:', error);
+      console.error('[포인트충전] 포인트 충전 실패:', error);
+      console.error('[포인트충전] 에러 상세:', {
+        message: error.message,
+        stack: error.stack
+      });
       toast.showToast(t('point_charge_failed'), 'error');
     } finally {
       setIsLoading(false);
