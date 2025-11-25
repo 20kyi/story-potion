@@ -121,6 +121,8 @@ function AppInfo({ user }) {
   const [appVersion, setAppVersion] = useState('1.0.0');
   const [storageUsed, setStorageUsed] = useState('0 MB');
   const [cacheSize, setCacheSize] = useState('0 MB');
+  const [versionClickCount, setVersionClickCount] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
 
   // 저장공간 사용량 계산 (localStorage, sessionStorage, IndexedDB, Firebase 캐시 포함)
   const calculateStorage = async () => {
@@ -287,6 +289,34 @@ function AppInfo({ user }) {
     calculateStorage();
     calculateCacheSize();
   }, [user?.uid]);
+
+  // 버전 클릭 핸들러
+  const handleVersionClick = () => {
+    const now = Date.now();
+    const CLICK_RESET_TIME = 2000; // 2초 내에 클릭하지 않으면 카운트 리셋
+    
+    // 2초 이내에 클릭한 경우
+    if (now - lastClickTime < CLICK_RESET_TIME) {
+      const newCount = versionClickCount + 1;
+      setVersionClickCount(newCount);
+      setLastClickTime(now);
+      
+      // 10번 클릭했을 때 디버그 모드 토글
+      if (newCount === 10) {
+        const currentDebugMode = localStorage.getItem('debugModeEnabled') === 'true';
+        const newDebugMode = !currentDebugMode;
+        localStorage.setItem('debugModeEnabled', String(newDebugMode));
+        setVersionClickCount(0);
+        
+        // 커스텀 이벤트 발생시켜 DebugPanel에 알림 (페이지 새로고침 없이 즉시 업데이트)
+        window.dispatchEvent(new CustomEvent('debugModeChanged', { detail: { enabled: newDebugMode } }));
+      }
+    } else {
+      // 시간이 지나서 리셋된 경우 새로 시작
+      setVersionClickCount(1);
+      setLastClickTime(now);
+    }
+  };
 
   // 캐시 삭제
   const handleClearCache = async () => {
@@ -669,7 +699,14 @@ function AppInfo({ user }) {
 
           <InfoItem theme={theme}>
             <InfoLabel theme={theme}>{t('app_version')}</InfoLabel>
-            <InfoValue theme={theme}>{appVersion}</InfoValue>
+            <InfoValue 
+              theme={theme}
+              onClick={handleVersionClick}
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+              title="버전 정보를 10번 클릭하면 디버그 모드를 활성화/비활성화할 수 있습니다"
+            >
+              {appVersion}
+            </InfoValue>
           </InfoItem>
 
           <InfoItem theme={theme}>

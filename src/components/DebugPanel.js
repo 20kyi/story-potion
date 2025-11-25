@@ -106,7 +106,37 @@ const DebugPanel = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [debugModeEnabled, setDebugModeEnabled] = useState(false);
   const dragStateRef = useRef({ isDragging: false, dragStart: { x: 0, y: 0 }, position: { x: 0, y: 0 } });
+
+  // 디버그 모드 상태 확인
+  useEffect(() => {
+    const checkDebugMode = () => {
+      const enabled = localStorage.getItem('debugModeEnabled') === 'true';
+      setDebugModeEnabled(enabled);
+    };
+    
+    checkDebugMode();
+    
+    // storage 이벤트 리스너 추가 (다른 탭에서 변경된 경우 감지)
+    window.addEventListener('storage', checkDebugMode);
+    
+    // 커스텀 이벤트 리스너 추가 (같은 탭에서 변경된 경우 감지)
+    const handleDebugModeChange = (event) => {
+      // 이벤트에 detail이 있으면 직접 사용, 없으면 localStorage 확인
+      if (event.detail && typeof event.detail.enabled === 'boolean') {
+        setDebugModeEnabled(event.detail.enabled);
+      } else {
+        checkDebugMode();
+      }
+    };
+    window.addEventListener('debugModeChanged', handleDebugModeChange);
+    
+    return () => {
+      window.removeEventListener('storage', checkDebugMode);
+      window.removeEventListener('debugModeChanged', handleDebugModeChange);
+    };
+  }, []);
 
   // 저장된 위치 불러오기
   useEffect(() => {
@@ -299,8 +329,8 @@ const DebugPanel = () => {
     };
   }, []);
 
-  // 모바일 환경에서만 렌더링
-  if (Capacitor.getPlatform() === 'web') {
+  // 디버그 모드가 활성화되지 않았거나 웹 환경이면 렌더링하지 않음
+  if (!debugModeEnabled || Capacitor.getPlatform() === 'web') {
     return null;
   }
 
