@@ -325,6 +325,7 @@
     "font_size": "Font Size",
     "subscription_manage": "Subscription Management",
     "subscription_next_renewal_date": "Next renewal date:",
+    "subscription_expiry_date": "Subscription expiry date:",
     "premium_cancel_notice": "All premium benefits will stop immediately after cancellation.",
     "premium_cancel_button": "Unsubscribe",
     "premium_cancel_monthly_title": "Cancel Monthly Premium",

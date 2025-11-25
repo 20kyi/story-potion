@@ -335,6 +335,7 @@
     "font_size": "폰트 크기",
     "subscription_manage": "구독 관리",
     "subscription_next_renewal_date": "다음 구독 갱신일:",
+    "subscription_expiry_date": "구독 만료일:",
     "premium_cancel_notice": "프리미엄 해지 시 즉시 모든 프리미엄 혜택이 중단됩니다.",
     "premium_cancel_button": "해지하기",
     "premium_cancel_monthly_title": "월간 프리미엄 해지",

@@ -9,8 +9,6 @@ const Billing = registerPlugin('Billing', {
 });
 
 // 상품 ID 정의
-// 일회성 제품: 언더스코어 사용 (points_100)
-// 구독 제품: 하이픈 사용 (monthly-premium)
 export const PRODUCT_IDS = {
   POINTS_100: 'points_100',
   POINTS_500: 'points_500',
@@ -227,7 +225,7 @@ class InAppPurchaseService {
     }
   }
 
-  // 구독 상태 확인
+  // 구독 상태 확인 (Google Play에서 실제 구독 상태 확인)
   async getSubscriptionStatus(productId) {
     if (!this.isInitialized) {
       await this.initialize();
@@ -246,12 +244,110 @@ class InAppPurchaseService {
         const subscription = result.purchases.find(p =>
           p.products && p.products.includes(productId)
         );
-        return subscription ? subscription.isAcknowledged : false;
+        if (subscription) {
+          // isAutoRenewing이 false면 취소 예정 상태
+          // 하지만 유예 기간 중이거나 해지일 전까지는 구독이 유지됨
+          return {
+            isActive: subscription.isAcknowledged,
+            isAutoRenewing: subscription.isAutoRenewing || false,
+            purchaseToken: subscription.purchaseToken,
+            purchaseTime: subscription.purchaseTime
+          };
+        }
       }
-      return false;
+      return { isActive: false, isAutoRenewing: false };
     } catch (error) {
       console.error('구독 상태 확인 실패:', error);
-      return false;
+      return { isActive: false, isAutoRenewing: false };
+    }
+  }
+
+  // 구독 상태 동기화 (Google Play와 Firebase 동기화)
+  async syncSubscriptionStatus(userId) {
+    if (!this.isAvailable || !userId) {
+      return;
+    }
+
+    try {
+      const { doc, getDoc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+
+      // Google Play에서 구독 상태 확인
+      const monthlyStatus = await this.getSubscriptionStatus(PRODUCT_IDS.MONTHLY_PREMIUM);
+      const yearlyStatus = await this.getSubscriptionStatus(PRODUCT_IDS.YEARLY_PREMIUM);
+
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        return;
+      }
+
+      const userData = userDoc.data();
+      const updates = {};
+
+      // 월간 구독 상태 확인
+      if (monthlyStatus.isActive) {
+        // Google Play에서 활성화되어 있으면 취소 상태 해제 (취소 철회)
+        if (userData.premiumCancelled && monthlyStatus.isAutoRenewing) {
+          updates.premiumCancelled = false;
+        }
+      } else if (userData.isMonthlyPremium) {
+        // Google Play에서 비활성화되었는데 Firebase에는 활성화되어 있으면
+        // 유예 기간 종료 또는 실제 해지 확인
+        const renewalDate = userData.premiumRenewalDate;
+        if (renewalDate) {
+          let renewal;
+          if (renewalDate.seconds) {
+            renewal = new Date(renewalDate.seconds * 1000);
+          } else if (renewalDate.toDate) {
+            renewal = renewalDate.toDate();
+          } else {
+            renewal = new Date(renewalDate);
+          }
+
+          const now = new Date();
+          // 해지일이 지났으면 실제 해지 처리
+          if (renewal <= now) {
+            updates.isMonthlyPremium = false;
+            updates.premiumType = null;
+            updates.premiumFreeNovelCount = 0;
+          }
+        }
+      }
+
+      // 연간 구독 상태 확인
+      if (yearlyStatus.isActive) {
+        if (userData.premiumCancelled && yearlyStatus.isAutoRenewing) {
+          updates.premiumCancelled = false;
+        }
+      } else if (userData.isYearlyPremium) {
+        const renewalDate = userData.premiumRenewalDate;
+        if (renewalDate) {
+          let renewal;
+          if (renewalDate.seconds) {
+            renewal = new Date(renewalDate.seconds * 1000);
+          } else if (renewalDate.toDate) {
+            renewal = renewalDate.toDate();
+          } else {
+            renewal = new Date(renewalDate);
+          }
+
+          const now = new Date();
+          if (renewal <= now) {
+            updates.isYearlyPremium = false;
+            updates.premiumType = null;
+            updates.premiumFreeNovelCount = 0;
+          }
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updates.updatedAt = new Date();
+        await updateDoc(userRef, updates);
+      }
+    } catch (error) {
+      console.error('구독 상태 동기화 실패:', error);
     }
   }
 

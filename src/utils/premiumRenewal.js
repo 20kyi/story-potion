@@ -23,10 +23,38 @@ export const checkAndRenewMonthlyPremium = async (userId) => {
 
         const userData = userDoc.data();
 
-        // 월간 프리미엄 회원이 아니거나 해지된 경우
-        // premiumCancelled 필드가 true인 경우 갱신하지 않음
-        if (!userData.isMonthlyPremium || userData.premiumCancelled === true) {
+        // 월간 프리미엄 회원이 아니면 갱신하지 않음
+        if (!userData.isMonthlyPremium) {
             return false;
+        }
+
+        // premiumCancelled가 true이고 갱신일이 지났으면 해지 처리
+        if (userData.premiumCancelled === true) {
+            // 갱신일이 지났는지 확인
+            let renewalDate;
+            if (userData.premiumRenewalDate.seconds) {
+                renewalDate = new Date(userData.premiumRenewalDate.seconds * 1000);
+            } else if (userData.premiumRenewalDate.toDate) {
+                renewalDate = userData.premiumRenewalDate.toDate();
+            } else {
+                renewalDate = new Date(userData.premiumRenewalDate);
+            }
+
+            const now = new Date();
+            // 갱신일이 지났으면 실제 해지 처리
+            if (renewalDate <= now) {
+                await updateDoc(userRef, {
+                    isMonthlyPremium: false,
+                    isYearlyPremium: false,
+                    premiumType: null,
+                    premiumStartDate: null,
+                    premiumRenewalDate: null,
+                    premiumFreeNovelCount: 0,
+                    updatedAt: new Date()
+                });
+                return false;
+            }
+            // 갱신일이 아직 지나지 않았으면 구독 유지 (해지일까지 혜택 제공)
         }
 
         // premiumRenewalDate 확인

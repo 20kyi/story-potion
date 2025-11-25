@@ -10,6 +10,7 @@ import { useTheme } from '../../ThemeContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useLanguage } from '../../LanguageContext';
 import { auth } from '../../firebase';
+import { inAppPurchaseService, PRODUCT_IDS } from '../../utils/inAppPurchase';
 
 const Container = styled.div`
   display: flex;
@@ -192,17 +193,27 @@ function Premium({ user }) {
     isMonthlyPremium: false,
     isYearlyPremium: false,
     premiumType: null,
-    premiumRenewalDate: null
+    premiumRenewalDate: null,
+    premiumCancelled: false
   });
   const [modal, setModal] = useState({ open: false, type: null });
   const [cancelModal, setCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // 프리미엄 상태 조회
+  // 프리미엄 상태 조회 및 Google Play 동기화
   useEffect(() => {
     if (user?.uid) {
       const fetchUser = async () => {
         try {
+          // Google Play 구독 상태 동기화 (네이티브 플랫폼에서만)
+          if (inAppPurchaseService.isAvailable) {
+            try {
+              await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+            } catch (error) {
+              console.error('구독 상태 동기화 실패:', error);
+            }
+          }
+
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
@@ -210,7 +221,8 @@ function Premium({ user }) {
               isMonthlyPremium: data.isMonthlyPremium || false,
               isYearlyPremium: data.isYearlyPremium || false,
               premiumType: data.premiumType || null,
-              premiumRenewalDate: data.premiumRenewalDate || null
+              premiumRenewalDate: data.premiumRenewalDate || null,
+              premiumCancelled: data.premiumCancelled || false
             });
           }
         } catch (error) {
@@ -294,6 +306,55 @@ function Premium({ user }) {
   const doMonthlyPremium = async () => {
     setIsLoading(true);
     try {
+      // 인앱 결제 시도
+      if (inAppPurchaseService.isAvailable) {
+        try {
+          const purchase = await inAppPurchaseService.purchaseProduct(
+            PRODUCT_IDS.MONTHLY_PREMIUM,
+            'subs'
+          );
+          if (purchase) {
+            // 인앱 결제 성공 시 프리미엄 활성화
+            const now = new Date();
+            const renewalDate = new Date(now);
+            renewalDate.setMonth(now.getMonth() + 1);
+
+            // 프리미엄 무료권 다음 충전 시점 계산 (결제 시점 + 7일)
+            const nextFreeNovelChargeDate = new Date(now);
+            nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
+            await updateDoc(doc(db, 'users', user.uid), {
+              isMonthlyPremium: true,
+              isYearlyPremium: false,
+              premiumType: 'monthly',
+              premiumStartDate: Timestamp.fromDate(now),
+              premiumRenewalDate: Timestamp.fromDate(renewalDate),
+              premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
+              premiumFreeNovelCount: 1, // 결제 시점에 무료권 1개 지급
+              premiumCancelled: false,
+              updatedAt: Timestamp.now()
+            });
+            toast.showToast(t('premium_monthly_success'), 'success');
+            // 상태 업데이트를 위해 다시 조회
+            const updatedUserDoc = await getDoc(doc(db, 'users', user.uid));
+            if (updatedUserDoc.exists()) {
+              const data = updatedUserDoc.data();
+              setPremiumStatus({
+                isMonthlyPremium: data.isMonthlyPremium || false,
+                isYearlyPremium: data.isYearlyPremium || false,
+                premiumType: data.premiumType || null,
+                premiumRenewalDate: data.premiumRenewalDate || null
+              });
+            }
+            return;
+          }
+        } catch (error) {
+          console.error('인앱 결제 실패:', error);
+          toast.showToast('인앱 결제에 실패했습니다. 다시 시도해주세요.', 'error');
+        }
+      }
+
+      // 인앱 결제가 불가능하거나 실패한 경우 기존 로직 사용 (테스트용)
       const now = new Date();
       const renewalDate = new Date(now);
       renewalDate.setMonth(now.getMonth() + 1);
@@ -371,6 +432,67 @@ function Premium({ user }) {
     }
 
     try {
+      // 인앱 결제 시도
+      if (inAppPurchaseService.isAvailable) {
+        try {
+          const purchase = await inAppPurchaseService.purchaseProduct(
+            PRODUCT_IDS.YEARLY_PREMIUM,
+            'subs'
+          );
+          if (purchase) {
+            // 인앱 결제 성공 시 프리미엄 활성화
+            const now = new Date();
+            let renewalDate = new Date(now);
+            renewalDate.setFullYear(now.getFullYear() + 1);
+
+            // 월간 프리미엄의 남은 기간을 연간 프리미엄에 추가
+            if (extraDays > 0) {
+              renewalDate.setDate(renewalDate.getDate() + extraDays);
+              console.log(`연간 프리미엄 갱신일: ${renewalDate.toLocaleDateString()}, 추가된 일수: ${extraDays}일`);
+            }
+
+            // 프리미엄 무료권 다음 충전 시점 계산 (결제 시점 + 7일)
+            const nextFreeNovelChargeDate = new Date(now);
+            nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
+            await updateDoc(doc(db, 'users', user.uid), {
+              isMonthlyPremium: false,
+              isYearlyPremium: true,
+              premiumType: 'yearly',
+              premiumStartDate: Timestamp.fromDate(now),
+              premiumRenewalDate: Timestamp.fromDate(renewalDate),
+              premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
+              premiumFreeNovelCount: 1, // 결제 시점에 무료권 1개 지급
+              premiumCancelled: false,
+              updatedAt: Timestamp.now()
+            });
+
+            const successMessage =
+              extraDays > 0
+                ? t('premium_yearly_success_with_extra', { days: extraDays })
+                : t('premium_yearly_success');
+
+            toast.showToast(successMessage, 'success');
+            // 상태 업데이트를 위해 다시 조회
+            const updatedUserDoc = await getDoc(doc(db, 'users', user.uid));
+            if (updatedUserDoc.exists()) {
+              const data = updatedUserDoc.data();
+              setPremiumStatus({
+                isMonthlyPremium: data.isMonthlyPremium || false,
+                isYearlyPremium: data.isYearlyPremium || false,
+                premiumType: data.premiumType || null,
+                premiumRenewalDate: data.premiumRenewalDate || null
+              });
+            }
+            return;
+          }
+        } catch (error) {
+          console.error('인앱 결제 실패:', error);
+          toast.showToast('인앱 결제에 실패했습니다. 다시 시도해주세요.', 'error');
+        }
+      }
+
+      // 인앱 결제가 불가능하거나 실패한 경우 기존 로직 사용 (테스트용)
       const now = new Date();
       let renewalDate = new Date(now);
       renewalDate.setFullYear(now.getFullYear() + 1);
@@ -428,28 +550,83 @@ function Premium({ user }) {
     setCancelModal(true);
   };
 
+  // 구독 취소 철회 함수
+  const handleResumePremium = async () => {
+    if (!user?.uid) return;
+    setIsLoading(true);
+    try {
+      // Google Play 구독 상태 확인
+      if (inAppPurchaseService.isAvailable) {
+        try {
+          const monthlyStatus = await inAppPurchaseService.getSubscriptionStatus(PRODUCT_IDS.MONTHLY_PREMIUM);
+          const yearlyStatus = await inAppPurchaseService.getSubscriptionStatus(PRODUCT_IDS.YEARLY_PREMIUM);
+          
+          const isActive = (premiumStatus.isMonthlyPremium && monthlyStatus.isActive) || 
+                          (premiumStatus.isYearlyPremium && yearlyStatus.isActive);
+          
+          if (!isActive) {
+            toast.showToast('Google Play에서 구독이 활성화되어 있지 않습니다. Google Play 스토어에서 구독을 확인해주세요.', 'error');
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('구독 상태 확인 실패:', error);
+        }
+      }
+
+      // 취소 철회 처리
+      await updateDoc(doc(db, 'users', user.uid), {
+        premiumCancelled: false,
+        updatedAt: Timestamp.now()
+      });
+
+      // 상태 업데이트
+      setPremiumStatus(prev => ({
+        ...prev,
+        premiumCancelled: false
+      }));
+
+      toast.showToast('구독 취소가 철회되었습니다. 구독이 계속됩니다.', 'success');
+    } catch (error) {
+      console.error('구독 취소 철회 실패:', error);
+      toast.showToast('구독 취소 철회에 실패했습니다.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // 실제 해지 로직
   const doCancelPremium = async () => {
     if (!user?.uid) return;
     setIsCancelling(true);
     try {
+      // Google Play 구독 취소는 Google Play Console에서 처리
+      // 앱에서는 취소 예정 상태만 표시하고, 해지일까지는 구독 유지
+      // premiumRenewalDate까지는 구독이 유지되므로 즉시 해지하지 않음
       await updateDoc(doc(db, 'users', user.uid), {
-        isMonthlyPremium: false,
-        isYearlyPremium: false,
-        premiumType: null,
-        premiumStartDate: null,
-        premiumRenewalDate: null,
-        premiumFreeNovelCount: 0,
-        premiumCancelled: true,
+        premiumCancelled: true, // 취소 예정 표시
+        // isMonthlyPremium, isYearlyPremium, premiumRenewalDate는 유지
+        // 해지일(premiumRenewalDate)까지는 구독 혜택 유지
         updatedAt: Timestamp.now()
       });
-      setPremiumStatus({
-        isMonthlyPremium: false,
-        isYearlyPremium: false,
-        premiumType: null,
-        premiumRenewalDate: null
-      });
-      toast.showToast(t('premium_cancel_success') || '프리미엄이 해지되었습니다.', 'success');
+      
+      // 사용자에게 안내 메시지 표시
+      const renewalDate = premiumStatus.premiumRenewalDate;
+      let message = '구독 취소가 예약되었습니다. ';
+      if (renewalDate) {
+        const date = renewalDate.toDate ? renewalDate.toDate() : new Date(renewalDate.seconds * 1000);
+        message += `해지일(${date.toLocaleDateString('ko-KR')})까지는 모든 프리미엄 혜택을 이용하실 수 있습니다.`;
+      } else {
+        message += '해지일까지는 모든 프리미엄 혜택을 이용하실 수 있습니다.';
+      }
+      
+      toast.showToast(message, 'success');
+      
+      // 로컬 상태 즉시 업데이트 (UI 반영)
+      setPremiumStatus(prev => ({
+        ...prev,
+        premiumCancelled: true
+      }));
     } catch (error) {
       console.error('프리미엄 해지 실패:', error);
       toast.showToast(t('premium_cancel_failed') || '프리미엄 해지에 실패했습니다.', 'error');
@@ -459,12 +636,21 @@ function Premium({ user }) {
     }
   };
 
-  // 페이지 포커스 시 프리미엄 상태 다시 조회
+  // 페이지 포커스 시 프리미엄 상태 다시 조회 및 동기화
   useEffect(() => {
     const handleFocus = () => {
       if (user?.uid) {
         const fetchUser = async () => {
           try {
+            // Google Play 구독 상태 동기화
+            if (inAppPurchaseService.isAvailable) {
+              try {
+                await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+              } catch (error) {
+                console.error('구독 상태 동기화 실패:', error);
+              }
+            }
+
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
               const data = userDoc.data();
@@ -472,7 +658,8 @@ function Premium({ user }) {
                 isMonthlyPremium: data.isMonthlyPremium || false,
                 isYearlyPremium: data.isYearlyPremium || false,
                 premiumType: data.premiumType || null,
-                premiumRenewalDate: data.premiumRenewalDate || null
+                premiumRenewalDate: data.premiumRenewalDate || null,
+                premiumCancelled: data.premiumCancelled || false
               });
             }
           } catch (error) {
@@ -508,7 +695,9 @@ function Premium({ user }) {
               <SubscriptionDetail theme={theme}>
                 {premiumStatus.premiumType === 'trial'
                   ? '체험 종료일'
-                  : (t('subscription_next_renewal_date') || '다음 갱신일')}{' '}
+                  : premiumStatus.premiumCancelled
+                    ? (t('subscription_expiry_date') || '구독 만료일')
+                    : (t('subscription_next_renewal_date') || '다음 갱신일')}{' '}
                 {new Date(
                   premiumStatus.premiumRenewalDate.seconds
                     ? premiumStatus.premiumRenewalDate.seconds * 1000
@@ -521,6 +710,40 @@ function Premium({ user }) {
               </SubscriptionDetail>
             )}
           </SubscriptionInfo>
+          
+          {/* 취소 철회 버튼 - 구독 관리 카드 안에 포함 (취소 예정 상태일 때만) */}
+          {premiumStatus.premiumCancelled && (
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <SubscriptionDetail theme={theme} style={{ marginBottom: '12px', fontSize: '13px', color: '#e74c3c' }}>
+                구독 취소가 예약되어 있습니다.
+                {premiumStatus.premiumRenewalDate && (
+                  <>
+                    <br />
+                    해지일({new Date(
+                      premiumStatus.premiumRenewalDate.seconds 
+                        ? premiumStatus.premiumRenewalDate.seconds * 1000 
+                        : premiumStatus.premiumRenewalDate.toDate 
+                          ? premiumStatus.premiumRenewalDate.toDate() 
+                          : premiumStatus.premiumRenewalDate
+                    ).toLocaleDateString('ko-KR')})까지는 모든 프리미엄 혜택을 이용하실 수 있습니다.
+                  </>
+                )}
+              </SubscriptionDetail>
+              <PremiumButton
+                style={{ 
+                  width: '100%', 
+                  fontSize: 14, 
+                  padding: '12px 0',
+                  background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
+                  boxShadow: '0 4px 12px rgba(46, 204, 113, 0.3)'
+                }}
+                onClick={handleResumePremium}
+                disabled={isLoading}
+              >
+                {isLoading ? '처리 중...' : '구독 취소 철회'}
+              </PremiumButton>
+            </div>
+          )}
         </SubscriptionSection>
       )}
 
@@ -760,10 +983,10 @@ function Premium({ user }) {
         </FeatureList>
       </PremiumSection>
 
-      {/* 해지하기 버튼 - 페이지 가장 아래 */}
-      {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
+      {/* 해지하기 버튼 - 페이지 맨 아래 (정상 구독 상태일 때만) */}
+      {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && !premiumStatus.premiumCancelled && (
         <div style={{ marginTop: '24px', marginBottom: '24px', textAlign: 'center' }}>
-          <SubscriptionDetail theme={theme} style={{ marginBottom: '0', fontSize: '14px' }}>
+          <SubscriptionDetail theme={theme} style={{ marginBottom: '12px', fontSize: '14px' }}>
             프리미엄 해지 즉시<br />모든 프리미엄 혜택이 중단됩니다.
           </SubscriptionDetail>
           <CancelButton
@@ -815,8 +1038,12 @@ function Premium({ user }) {
         }
         description={
           premiumStatus.isMonthlyPremium
-            ? t('premium_cancel_monthly_desc') || '월간 프리미엄을 해지하시겠습니까?'
-            : t('premium_cancel_yearly_desc') || '연간 프리미엄을 해지하시겠습니까?'
+            ? (premiumStatus.premiumRenewalDate 
+                ? `월간 프리미엄 구독을 취소하시겠습니까?\n\n구독 취소 후 해지일(${new Date(premiumStatus.premiumRenewalDate.seconds ? premiumStatus.premiumRenewalDate.seconds * 1000 : premiumStatus.premiumRenewalDate.toDate ? premiumStatus.premiumRenewalDate.toDate() : premiumStatus.premiumRenewalDate).toLocaleDateString('ko-KR')})까지는 모든 프리미엄 혜택을 이용하실 수 있습니다.\n\n월간 구독은 7일의 유예 기간이 있으며, 이 기간 동안 결제가 실패하면 구독이 해지됩니다.`
+                : t('premium_cancel_monthly_desc') || '월간 프리미엄을 해지하시겠습니까?')
+            : (premiumStatus.premiumRenewalDate
+                ? `연간 프리미엄 구독을 취소하시겠습니까?\n\n구독 취소 후 해지일(${new Date(premiumStatus.premiumRenewalDate.seconds ? premiumStatus.premiumRenewalDate.seconds * 1000 : premiumStatus.premiumRenewalDate.toDate ? premiumStatus.premiumRenewalDate.toDate() : premiumStatus.premiumRenewalDate).toLocaleDateString('ko-KR')})까지는 모든 프리미엄 혜택을 이용하실 수 있습니다.\n\n연간 구독은 14일의 유예 기간이 있으며, 이 기간 동안 결제가 실패하면 구독이 해지됩니다.`
+                : t('premium_cancel_yearly_desc') || '연간 프리미엄을 해지하시겠습니까?')
         }
         onCancel={() => setCancelModal(false)}
         onConfirm={doCancelPremium}
