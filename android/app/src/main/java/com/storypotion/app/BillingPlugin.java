@@ -246,11 +246,26 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     return;
                 }
 
+                BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder = 
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails);
+
+                // 구독 상품의 경우 오퍼 토큰 설정 필요
+                if (productType.equals("subs")) {
+                    List<ProductDetails.SubscriptionOfferDetails> offers = 
+                        productDetails.getSubscriptionOfferDetails();
+                    if (offers != null && !offers.isEmpty()) {
+                        String offerToken = offers.get(0).getOfferToken();
+                        android.util.Log.d("BillingPlugin", "[인앱결제] 구독 오퍼 토큰 설정: " + offerToken);
+                        productDetailsParamsBuilder.setOfferToken(offerToken);
+                    } else {
+                        android.util.Log.w("BillingPlugin", "[인앱결제] 구독 오퍼를 찾을 수 없음");
+                    }
+                }
+
                 BillingFlowParams.Builder flowParamsBuilder = BillingFlowParams.newBuilder()
                         .setProductDetailsParamsList(Arrays.asList(
-                            BillingFlowParams.ProductDetailsParams.newBuilder()
-                                .setProductDetails(productDetails)
-                                .build()
+                            productDetailsParamsBuilder.build()
                         ));
 
                 android.util.Log.d("BillingPlugin", "[인앱결제] launchBillingFlow 호출");
