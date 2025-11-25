@@ -28,34 +28,10 @@ export const checkAndRenewMonthlyPremium = async (userId) => {
             return false;
         }
 
-        // premiumCancelled가 true이고 갱신일이 지났으면 해지 처리
-        if (userData.premiumCancelled === true) {
-            // 갱신일이 지났는지 확인
-            let renewalDate;
-            if (userData.premiumRenewalDate.seconds) {
-                renewalDate = new Date(userData.premiumRenewalDate.seconds * 1000);
-            } else if (userData.premiumRenewalDate.toDate) {
-                renewalDate = userData.premiumRenewalDate.toDate();
-            } else {
-                renewalDate = new Date(userData.premiumRenewalDate);
-            }
-
-            const now = new Date();
-            // 갱신일이 지났으면 실제 해지 처리
-            if (renewalDate <= now) {
-                await updateDoc(userRef, {
-                    isMonthlyPremium: false,
-                    isYearlyPremium: false,
-                    premiumType: null,
-                    premiumStartDate: null,
-                    premiumRenewalDate: null,
-                    premiumFreeNovelCount: 0,
-                    updatedAt: new Date()
-                });
-                return false;
-            }
-            // 갱신일이 아직 지나지 않았으면 구독 유지 (해지일까지 혜택 제공)
-        }
+        // 실제 갱신은 Google Play Store에서 처리되므로
+        // 이 함수는 더 이상 자동 갱신을 수행하지 않음
+        // Google Play Store에서 결제가 실패하거나 구독이 해지되면
+        // syncSubscriptionStatus 함수에서 처리됨
 
         // premiumRenewalDate 확인
         if (!userData.premiumRenewalDate) {

@@ -350,7 +350,7 @@ class InAppPurchaseService {
     }
 
     if (!this.isAvailable) {
-      return false;
+      return { isActive: false, isAutoRenewing: false, exists: false };
     }
 
     try {
@@ -363,26 +363,81 @@ class InAppPurchaseService {
           p.products && p.products.includes(productId)
         );
         if (subscription) {
-          // isAutoRenewing이 false면 취소 예정 상태
-          // 하지만 유예 기간 중이거나 해지일 전까지는 구독이 유지됨
+          // 구독이 존재함
+          // ProductDetails에서 구독 기간 정보 가져와서 만료일 계산
+          let expiryTimeMillis = subscription.expiryTimeMillis || null;
+          try {
+            const productDetails = await Billing.queryProductDetails({
+              productIds: [productId],
+              productType: 'subs'
+            });
+
+            if (productDetails.products && productDetails.products.length > 0) {
+              const product = productDetails.products[0];
+              // 구독 기간 정보는 ProductDetails에 직접 포함되지 않으므로
+              // purchaseTime을 기준으로 계산해야 함
+              // 하지만 정확한 만료일은 Google Play Developer API를 통해 가져와야 함
+              // 일단 purchaseTime만 반환하고, JavaScript에서 계산
+              console.log('[구독 상태] ProductDetails 조회 성공', { productId });
+            }
+          } catch (error) {
+            console.warn('[구독 상태] ProductDetails 조회 실패:', error);
+          }
+
+          // 구독이 활성화되어 있는지 확인
+          // isAcknowledged가 true이고, expiryTimeMillis가 없거나 현재 시간보다 미래이면 활성화됨
+          const now = Date.now();
+          const isActive = subscription.isAcknowledged &&
+            (expiryTimeMillis === null || expiryTimeMillis > now);
+
+          console.log('[구독 상태] 구독 상태 확인', {
+            productId,
+            isAcknowledged: subscription.isAcknowledged,
+            expiryTimeMillis,
+            now,
+            isActive,
+            isAutoRenewing: subscription.isAutoRenewing
+          });
+
           return {
-            isActive: subscription.isAcknowledged,
+            isActive: isActive,
             isAutoRenewing: subscription.isAutoRenewing || false,
+            exists: true,
             purchaseToken: subscription.purchaseToken,
-            purchaseTime: subscription.purchaseTime
+            purchaseTime: subscription.purchaseTime,
+            expiryTimeMillis: expiryTimeMillis
           };
         }
       }
-      return { isActive: false, isAutoRenewing: false };
+      // Google Play Store에서 구독을 찾을 수 없음
+      console.log(`[구독 상태] ${productId} 구독을 Google Play Store에서 찾을 수 없음`);
+      return { isActive: false, isAutoRenewing: false, exists: false };
     } catch (error) {
       console.error('구독 상태 확인 실패:', error);
-      return { isActive: false, isAutoRenewing: false };
+      return { isActive: false, isAutoRenewing: false, exists: false };
     }
+  }
+
+  // 웹에서 구독 상태 동기화 (웹에서는 Google Play Store API를 직접 호출할 수 없으므로 동기화하지 않음)
+  async syncSubscriptionStatusWeb(userId) {
+    if (!userId) {
+      return;
+    }
+
+    // 웹에서는 Google Play Store 상태를 직접 확인할 수 없으므로 동기화하지 않음
+    // 네이티브 플랫폼에서만 Google Play Store 상태를 확인하여 동기화
+    console.log('[구독 동기화 - 웹] 웹 플랫폼에서는 Google Play Store 상태를 직접 확인할 수 없으므로 동기화하지 않음');
   }
 
   // 구독 상태 동기화 (Google Play와 Firebase 동기화)
   async syncSubscriptionStatus(userId) {
-    if (!this.isAvailable || !userId) {
+    if (!userId) {
+      return;
+    }
+
+    // 웹에서는 Google Play Store 상태를 직접 확인할 수 없으므로 동기화하지 않음
+    if (!this.isAvailable) {
+      console.log('[구독 동기화] 웹 플랫폼에서는 Google Play Store 상태를 직접 확인할 수 없으므로 동기화하지 않음');
       return;
     }
 
@@ -405,58 +460,89 @@ class InAppPurchaseService {
       const updates = {};
 
       // 월간 구독 상태 확인
+      // Google Play Store에서 구독 상태를 확인하여 앱 상태와 동기화
       if (monthlyStatus.isActive) {
-        // Google Play에서 활성화되어 있으면 취소 상태 해제 (취소 철회)
-        if (userData.premiumCancelled && monthlyStatus.isAutoRenewing) {
-          updates.premiumCancelled = false;
+        // Google Play Store에서 활성화되어 있으면 프리미엄 활성화
+        console.log('[구독 동기화] 월간 구독 활성화됨 - 프리미엄 활성화');
+
+        // Firebase 상태와 다르면 업데이트
+        if (!userData.isMonthlyPremium || userData.premiumType !== 'monthly') {
+          const now = new Date();
+          const nextFreeNovelChargeDate = new Date(now);
+          nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
+          updates.isMonthlyPremium = true;
+          updates.isYearlyPremium = false;
+          updates.premiumType = 'monthly';
+          updates.premiumStartDate = Timestamp.fromDate(now);
+          // 프리미엄 무료권이 없으면 지급
+          if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
+            updates.premiumFreeNovelCount = 1;
+            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
+          }
         }
       } else if (userData.isMonthlyPremium) {
         // Google Play에서 비활성화되었는데 Firebase에는 활성화되어 있으면
-        // 유예 기간 종료 또는 실제 해지 확인
-        const renewalDate = userData.premiumRenewalDate;
-        if (renewalDate) {
-          let renewal;
-          if (renewalDate.seconds) {
-            renewal = new Date(renewalDate.seconds * 1000);
-          } else if (renewalDate.toDate) {
-            renewal = renewalDate.toDate();
-          } else {
-            renewal = new Date(renewalDate);
-          }
+        // Google Play Store 상태를 기준으로 해지 처리
+        console.log('[구독 동기화] 월간 구독 비활성화 감지 - Google Play Store 상태 확인', {
+          isActive: monthlyStatus.isActive,
+          isAutoRenewing: monthlyStatus.isAutoRenewing,
+          exists: monthlyStatus.exists
+        });
 
-          const now = new Date();
-          // 해지일이 지났으면 실제 해지 처리
-          if (renewal <= now) {
-            updates.isMonthlyPremium = false;
-            updates.premiumType = null;
-            updates.premiumFreeNovelCount = 0;
-          }
+        // Google Play Store에서 구독이 없거나 비활성화되어 있으면 해지 처리
+        if (!monthlyStatus.exists || !monthlyStatus.isActive) {
+          console.log('[구독 동기화] 월간 구독이 Google Play Store에 없거나 비활성화됨 - 일반 회원으로 전환');
+          updates.isMonthlyPremium = false;
+          updates.isYearlyPremium = false;
+          updates.premiumType = null;
+          updates.premiumStartDate = null;
+          updates.premiumRenewalDate = null;
+          updates.premiumFreeNovelCount = 0;
+          updates.premiumCancelled = false;
         }
       }
 
       // 연간 구독 상태 확인
       if (yearlyStatus.isActive) {
-        if (userData.premiumCancelled && yearlyStatus.isAutoRenewing) {
-          updates.premiumCancelled = false;
+        // Google Play Store에서 활성화되어 있으면 프리미엄 활성화
+        console.log('[구독 동기화] 연간 구독 활성화됨 - 프리미엄 활성화');
+
+        // Firebase 상태와 다르면 업데이트
+        if (!userData.isYearlyPremium || userData.premiumType !== 'yearly') {
+          const now = new Date();
+          const nextFreeNovelChargeDate = new Date(now);
+          nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+
+          updates.isMonthlyPremium = false;
+          updates.isYearlyPremium = true;
+          updates.premiumType = 'yearly';
+          updates.premiumStartDate = Timestamp.fromDate(now);
+          // 프리미엄 무료권이 없으면 지급
+          if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
+            updates.premiumFreeNovelCount = 1;
+            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
+          }
         }
       } else if (userData.isYearlyPremium) {
-        const renewalDate = userData.premiumRenewalDate;
-        if (renewalDate) {
-          let renewal;
-          if (renewalDate.seconds) {
-            renewal = new Date(renewalDate.seconds * 1000);
-          } else if (renewalDate.toDate) {
-            renewal = renewalDate.toDate();
-          } else {
-            renewal = new Date(renewalDate);
-          }
+        // Google Play에서 비활성화되었는데 Firebase에는 활성화되어 있으면
+        // Google Play Store 상태를 기준으로 해지 처리
+        console.log('[구독 동기화] 연간 구독 비활성화 감지 - Google Play Store 상태 확인', {
+          isActive: yearlyStatus.isActive,
+          isAutoRenewing: yearlyStatus.isAutoRenewing,
+          exists: yearlyStatus.exists
+        });
 
-          const now = new Date();
-          if (renewal <= now) {
-            updates.isYearlyPremium = false;
-            updates.premiumType = null;
-            updates.premiumFreeNovelCount = 0;
-          }
+        // Google Play Store에서 구독이 없거나 비활성화되어 있으면 해지 처리
+        if (!yearlyStatus.exists || !yearlyStatus.isActive) {
+          console.log('[구독 동기화] 연간 구독이 Google Play Store에 없거나 비활성화됨 - 일반 회원으로 전환');
+          updates.isMonthlyPremium = false;
+          updates.isYearlyPremium = false;
+          updates.premiumType = null;
+          updates.premiumStartDate = null;
+          updates.premiumRenewalDate = null;
+          updates.premiumFreeNovelCount = 0;
+          updates.premiumCancelled = false;
         }
       }
 
@@ -503,6 +589,38 @@ class InAppPurchaseService {
       return true;
     } catch (error) {
       console.error('구독 취소 실패:', error);
+      return false;
+    }
+  }
+
+  // Google Play Store의 구독 관리 페이지 열기
+  async openSubscriptionManagement() {
+    if (!this.isAvailable) {
+      console.warn('[인앱결제] 구독 관리 페이지는 앱에서만 사용 가능합니다.');
+      return false;
+    }
+
+    try {
+      console.log('[인앱결제] 구독 관리 페이지 열기 시작');
+      console.log('[인앱결제] Billing 객체:', Billing);
+
+      if (!Billing || typeof Billing.openSubscriptionManagement !== 'function') {
+        console.error('[인앱결제] Billing.openSubscriptionManagement 메서드를 찾을 수 없습니다.');
+        return false;
+      }
+
+      const result = await Billing.openSubscriptionManagement();
+      console.log('[인앱결제] 구독 관리 페이지 열기 결과:', result);
+      console.log('[인앱결제] result.success:', result?.success);
+
+      return result && result.success;
+    } catch (error) {
+      console.error('[인앱결제] 구독 관리 페이지 열기 실패:', error);
+      console.error('[인앱결제] 에러 상세:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       return false;
     }
   }

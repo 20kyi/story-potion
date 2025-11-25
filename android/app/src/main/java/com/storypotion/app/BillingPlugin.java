@@ -2,6 +2,8 @@ package com.storypotion.app;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -36,11 +38,13 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     private BillingClient billingClient;
     private boolean isServiceConnected = false;
+    // 구독 상품의 ProductDetails를 저장 (만료일 계산용)
+    private java.util.Map<String, ProductDetails> productDetailsCache = new java.util.HashMap<>();
 
     @PluginMethod
     public void initialize(PluginCall call) {
         android.util.Log.d("BillingPlugin", "[인앱결제] initialize 시작");
-        
+
         Activity activity = getActivity();
         if (activity == null) {
             android.util.Log.e("BillingPlugin", "[인앱결제] Activity가 null");
@@ -57,8 +61,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
-                android.util.Log.d("BillingPlugin", "[인앱결제] onBillingSetupFinished - responseCode: " + billingResult.getResponseCode());
-                
+                android.util.Log.d("BillingPlugin",
+                        "[인앱결제] onBillingSetupFinished - responseCode: " + billingResult.getResponseCode());
+
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     isServiceConnected = true;
                     android.util.Log.d("BillingPlugin", "[인앱결제] 초기화 성공");
@@ -109,8 +114,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         for (String productId : productIds) {
             productList.add(QueryProductDetailsParams.Product.newBuilder()
                     .setProductId(productId)
-                    .setProductType(productType.equals("subs") ? 
-                        BillingClient.ProductType.SUBS : BillingClient.ProductType.INAPP)
+                    .setProductType(productType.equals("subs") ? BillingClient.ProductType.SUBS
+                            : BillingClient.ProductType.INAPP)
                     .build());
         }
 
@@ -133,15 +138,15 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                         product.put("productId", productDetails.getProductId());
                         product.put("title", productDetails.getTitle());
                         product.put("description", productDetails.getDescription());
-                        
+
                         if (productType.equals("subs")) {
                             // 구독 상품의 경우 첫 번째 가격 정보 사용
                             if (!productDetails.getSubscriptionOfferDetails().isEmpty()) {
-                                ProductDetails.SubscriptionOfferDetails offer = 
-                                    productDetails.getSubscriptionOfferDetails().get(0);
+                                ProductDetails.SubscriptionOfferDetails offer = productDetails
+                                        .getSubscriptionOfferDetails().get(0);
                                 if (!offer.getPricingPhases().getPricingPhaseList().isEmpty()) {
-                                    ProductDetails.PricingPhase phase = 
-                                        offer.getPricingPhases().getPricingPhaseList().get(0);
+                                    ProductDetails.PricingPhase phase = offer.getPricingPhases().getPricingPhaseList()
+                                            .get(0);
                                     product.put("price", phase.getPriceAmountMicros() / 1000000.0);
                                     product.put("priceCurrencyCode", phase.getPriceCurrencyCode());
                                     product.put("priceFormatted", phase.getFormattedPrice());
@@ -149,15 +154,15 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                             }
                         } else {
                             // 일회성 상품의 경우
-                            ProductDetails.OneTimePurchaseOfferDetails oneTimeDetails = 
-                                productDetails.getOneTimePurchaseOfferDetails();
+                            ProductDetails.OneTimePurchaseOfferDetails oneTimeDetails = productDetails
+                                    .getOneTimePurchaseOfferDetails();
                             if (oneTimeDetails != null) {
                                 product.put("price", oneTimeDetails.getPriceAmountMicros() / 1000000.0);
                                 product.put("priceCurrencyCode", oneTimeDetails.getPriceCurrencyCode());
                                 product.put("priceFormatted", oneTimeDetails.getFormattedPrice());
                             }
                         }
-                        
+
                         products.put(product);
                     } catch (JSONException e) {
                         // Skip this product if JSON creation fails
@@ -174,7 +179,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     @PluginMethod
     public void purchaseProduct(PluginCall call) {
         android.util.Log.d("BillingPlugin", "[인앱결제] purchaseProduct 시작");
-        
+
         if (!isServiceConnected) {
             android.util.Log.e("BillingPlugin", "[인앱결제] Billing service가 연결되지 않음");
             call.reject("Billing service not connected. Call initialize first.");
@@ -198,8 +203,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
         QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
-                .setProductType(productType.equals("subs") ? 
-                    BillingClient.ProductType.SUBS : BillingClient.ProductType.INAPP)
+                .setProductType(
+                        productType.equals("subs") ? BillingClient.ProductType.SUBS : BillingClient.ProductType.INAPP)
                 .build();
 
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
@@ -213,32 +218,43 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         billingClient.queryProductDetailsAsync(params, new ProductDetailsResponseListener() {
             @Override
             public void onProductDetailsResponse(BillingResult billingResult, List<ProductDetails> productDetailsList) {
-                android.util.Log.d("BillingPlugin", "[인앱결제] queryProductDetailsAsync 응답 - responseCode: " + billingResult.getResponseCode() + 
-                    ", productDetailsList size: " + (productDetailsList != null ? productDetailsList.size() : 0));
-                
-                if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK || 
-                    productDetailsList == null || productDetailsList.isEmpty()) {
-                    String errorMsg = "Failed to get product details: " + billingResult.getDebugMessage() + 
-                        " (ResponseCode: " + billingResult.getResponseCode() + ")";
+                android.util.Log.d("BillingPlugin",
+                        "[인앱결제] queryProductDetailsAsync 응답 - responseCode: " + billingResult.getResponseCode() +
+                                ", productDetailsList size: "
+                                + (productDetailsList != null ? productDetailsList.size() : 0));
+
+                if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK ||
+                        productDetailsList == null || productDetailsList.isEmpty()) {
+                    String errorMsg = "Failed to get product details: " + billingResult.getDebugMessage() +
+                            " (ResponseCode: " + billingResult.getResponseCode() + ")";
                     android.util.Log.e("BillingPlugin", "[인앱결제] 상품 정보 조회 실패: " + errorMsg);
-                    
+
                     // 일반적인 에러 코드에 대한 설명 추가
                     String userFriendlyMsg = errorMsg;
                     if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_UNAVAILABLE) {
-                        userFriendlyMsg = "상품을 찾을 수 없습니다. Google Play Console에서 상품 ID '" + productId + "'가 등록되어 있는지 확인해주세요.";
-                    } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE) {
+                        userFriendlyMsg = "상품을 찾을 수 없습니다. Google Play Console에서 상품 ID '" + productId
+                                + "'가 등록되어 있는지 확인해주세요.";
+                    } else if (billingResult
+                            .getResponseCode() == BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE) {
                         userFriendlyMsg = "Google Play 서비스를 사용할 수 없습니다. 네트워크 연결을 확인해주세요.";
-                    } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
+                    } else if (billingResult
+                            .getResponseCode() == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
                         userFriendlyMsg = "인앱 결제를 사용할 수 없습니다. Google Play 서비스가 설치되어 있는지 확인해주세요.";
                     }
-                    
+
                     call.reject(userFriendlyMsg);
                     return;
                 }
 
                 ProductDetails productDetails = productDetailsList.get(0);
                 android.util.Log.d("BillingPlugin", "[인앱결제] 상품 정보 조회 성공 - productId: " + productDetails.getProductId());
-                
+
+                // 구독 상품의 경우 ProductDetails를 캐시에 저장 (만료일 계산용)
+                if (productType.equals("subs")) {
+                    productDetailsCache.put(productId, productDetails);
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 구독 ProductDetails 캐시 저장: " + productId);
+                }
+
                 Activity activity = getActivity();
                 if (activity == null) {
                     android.util.Log.e("BillingPlugin", "[인앱결제] Activity가 null");
@@ -246,14 +262,13 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     return;
                 }
 
-                BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder = 
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder = BillingFlowParams.ProductDetailsParams
+                        .newBuilder()
                         .setProductDetails(productDetails);
 
                 // 구독 상품의 경우 오퍼 토큰 설정 필요
                 if (productType.equals("subs")) {
-                    List<ProductDetails.SubscriptionOfferDetails> offers = 
-                        productDetails.getSubscriptionOfferDetails();
+                    List<ProductDetails.SubscriptionOfferDetails> offers = productDetails.getSubscriptionOfferDetails();
                     if (offers != null && !offers.isEmpty()) {
                         String offerToken = offers.get(0).getOfferToken();
                         android.util.Log.d("BillingPlugin", "[인앱결제] 구독 오퍼 토큰 설정: " + offerToken);
@@ -265,12 +280,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
                 BillingFlowParams.Builder flowParamsBuilder = BillingFlowParams.newBuilder()
                         .setProductDetailsParamsList(Arrays.asList(
-                            productDetailsParamsBuilder.build()
-                        ));
+                                productDetailsParamsBuilder.build()));
 
                 android.util.Log.d("BillingPlugin", "[인앱결제] launchBillingFlow 호출");
                 BillingResult result = billingClient.launchBillingFlow(activity, flowParamsBuilder.build());
-                
+
                 if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                     android.util.Log.e("BillingPlugin", "[인앱결제] launchBillingFlow 실패: " + result.getDebugMessage());
                     call.reject("Failed to launch billing flow: " + result.getDebugMessage());
@@ -320,8 +334,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         }
 
         String productType = call.getString("productType", "inapp");
-        String billingType = productType.equals("subs") ? 
-            BillingClient.ProductType.SUBS : BillingClient.ProductType.INAPP;
+        String billingType = productType.equals("subs") ? BillingClient.ProductType.SUBS
+                : BillingClient.ProductType.INAPP;
 
         QueryPurchasesParams params = QueryPurchasesParams.newBuilder()
                 .setProductType(billingType)
@@ -346,13 +360,40 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                         purchaseObj.put("signature", purchase.getSignature());
                         purchaseObj.put("isAcknowledged", purchase.isAcknowledged());
                         purchaseObj.put("isAutoRenewing", purchase.isAutoRenewing());
-                        
+
+                        // 구독의 경우 만료일 정보 추가 (Google Play Store에서 가져옴)
+                        if (billingType == BillingClient.ProductType.SUBS && !purchase.getProducts().isEmpty()) {
+                            String productId = purchase.getProducts().get(0);
+                            ProductDetails cachedProductDetails = productDetailsCache.get(productId);
+
+                            if (cachedProductDetails != null) {
+                                // ProductDetails에서 구독 기간 정보 가져오기
+                                List<ProductDetails.SubscriptionOfferDetails> offers = cachedProductDetails
+                                        .getSubscriptionOfferDetails();
+                                if (offers != null && !offers.isEmpty()) {
+                                    ProductDetails.SubscriptionOfferDetails offer = offers.get(0);
+                                    // 구독 기간 정보 가져오기
+                                    // Google Play Billing Library에서는 구독 기간을 직접 제공하지 않으므로
+                                    // purchaseTime을 기준으로 계산해야 함
+                                    // 하지만 정확한 만료일은 Google Play Developer API를 통해 가져와야 함
+                                    android.util.Log.d("BillingPlugin", "[인앱결제] 구독 ProductDetails에서 기간 정보 확인");
+
+                                    // 구독 기간 정보를 JSON에 추가하려면 ProductDetails를 다시 조회해야 함
+                                    // 일단 purchaseTime만 반환하고, JavaScript에서 ProductDetails를 조회하여 계산
+                                }
+                            } else {
+                                // ProductDetails가 캐시에 없으면 다시 조회
+                                android.util.Log.d("BillingPlugin",
+                                        "[인앱결제] 구독 ProductDetails 캐시에 없음, 다시 조회 필요: " + productId);
+                            }
+                        }
+
                         JSONArray products = new JSONArray();
                         for (String productId : purchase.getProducts()) {
                             products.put(productId);
                         }
                         purchaseObj.put("products", products);
-                        
+
                         purchasesArray.put(purchaseObj);
                     } catch (JSONException e) {
                         // Skip this purchase if JSON creation fails
@@ -366,11 +407,50 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         });
     }
 
+    @PluginMethod
+    public void openSubscriptionManagement(PluginCall call) {
+        android.util.Log.d("BillingPlugin", "[인앱결제] 구독 관리 페이지 열기");
+
+        Activity activity = getActivity();
+        if (activity == null) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] Activity가 null");
+            call.reject("Activity is null");
+            return;
+        }
+
+        try {
+            // Google Play Store의 구독 관리 페이지 URL
+            String packageName = activity.getPackageName();
+            String url = "https://play.google.com/store/account/subscriptions?package=" + packageName;
+
+            android.util.Log.d("BillingPlugin", "[인앱결제] 구독 관리 페이지 URL: " + url);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+            intent.setPackage("com.android.vending"); // Google Play Store 앱으로 열기
+
+            // Google Play Store 앱이 없으면 브라우저로 열기
+            if (intent.resolveActivity(activity.getPackageManager()) == null) {
+                intent.setPackage(null);
+            }
+
+            activity.startActivity(intent);
+
+            JSObject result = new JSObject();
+            result.put("success", true);
+            call.resolve(result);
+        } catch (Exception e) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] 구독 관리 페이지 열기 실패: " + e.getMessage(), e);
+            call.reject("Failed to open subscription management: " + e.getMessage());
+        }
+    }
+
     @Override
     public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
-        android.util.Log.d("BillingPlugin", "[인앱결제] onPurchasesUpdated 호출 - responseCode: " + billingResult.getResponseCode() + 
-            ", purchases: " + (purchases != null ? purchases.size() : 0));
-        
+        android.util.Log.d("BillingPlugin",
+                "[인앱결제] onPurchasesUpdated 호출 - responseCode: " + billingResult.getResponseCode() +
+                        ", purchases: " + (purchases != null ? purchases.size() : 0));
+
         PluginCall savedCall = getSavedCall();
         if (savedCall == null) {
             android.util.Log.w("BillingPlugin", "[인앱결제] savedCall이 null - 이전 호출이 없음");
@@ -381,9 +461,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             android.util.Log.d("BillingPlugin", "[인앱결제] 구매 성공 처리 시작");
             for (Purchase purchase : purchases) {
                 try {
-                    android.util.Log.d("BillingPlugin", "[인앱결제] 구매 정보 - orderId: " + purchase.getOrderId() + 
-                        ", productIds: " + purchase.getProducts());
-                    
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 구매 정보 - orderId: " + purchase.getOrderId() +
+                            ", productIds: " + purchase.getProducts());
+
                     JSONObject purchaseObj = new JSONObject();
                     purchaseObj.put("orderId", purchase.getOrderId());
                     purchaseObj.put("packageName", purchase.getPackageName());
@@ -392,7 +472,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     purchaseObj.put("signature", purchase.getSignature());
                     purchaseObj.put("isAcknowledged", purchase.isAcknowledged());
                     purchaseObj.put("isAutoRenewing", purchase.isAutoRenewing());
-                    
+
                     JSONArray products = new JSONArray();
                     for (String productId : purchase.getProducts()) {
                         products.put(productId);
@@ -420,4 +500,3 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         }
     }
 }
-
