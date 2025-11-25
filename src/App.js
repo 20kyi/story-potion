@@ -769,6 +769,8 @@ function App() {
                                     await user.reload();
 
                                     console.log('✅ 카카오 로그인 성공 (기존 사용자, 딥링크)');
+                                    // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                    window.dispatchEvent(new Event('kakaoLoginSuccess'));
                                 } else {
                                     // 신규 사용자 - Firestore에 사용자 정보 저장
                                     const userRef = doc(db, 'users', user.uid);
@@ -804,13 +806,23 @@ function App() {
                                     await user.reload();
 
                                     console.log('✅ 카카오 로그인 성공 (신규 사용자, 딥링크)');
+                                    // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                    window.dispatchEvent(new Event('kakaoLoginSuccess'));
                                 }
                             } else {
                                 console.error('❌ 카카오 인증 실패:', result.data.error);
+                                // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                window.dispatchEvent(new Event('kakaoLoginFailed'));
                             }
+                        } else {
+                            console.warn('⚠️ 카카오 code를 찾을 수 없습니다.');
+                            // 로딩 상태 해제를 위한 전역 이벤트 발생
+                            window.dispatchEvent(new Event('kakaoLoginFailed'));
                         }
                     } catch (error) {
                         console.error('❌ 카카오 콜백 딥링크 처리 실패:', error);
+                        // 로딩 상태 해제를 위한 전역 이벤트 발생
+                        window.dispatchEvent(new Event('kakaoLoginFailed'));
                     }
                     return;
                 }
@@ -1040,12 +1052,18 @@ function App() {
                                 }
                             } else {
                                 console.error('❌ 카카오 인증 실패:', result.data.error);
+                                // 로딩 상태 해제를 위한 전역 이벤트 발생
+                                window.dispatchEvent(new Event('kakaoLoginFailed'));
                             }
                         } else {
                             console.warn('⚠️ 카카오 code를 찾을 수 없습니다.');
+                            // 로딩 상태 해제를 위한 전역 이벤트 발생
+                            window.dispatchEvent(new Event('kakaoLoginFailed'));
                         }
                     } catch (error) {
                         console.error('❌ 카카오 콜백 처리 실패:', error);
+                        // 로딩 상태 해제를 위한 전역 이벤트 발생
+                        window.dispatchEvent(new Event('kakaoLoginFailed'));
                     }
                     return; // 카카오 콜백 처리 완료
                 }

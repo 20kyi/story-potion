@@ -11,7 +11,8 @@ import {
   signInWithPopup,
   signInWithCredential,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  onAuthStateChanged
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -55,6 +56,9 @@ function Login() {
   // 비밀번호 찾기 방법 선택 (이메일만 사용)
   const [resetMethod] = useState('email'); // 이메일 인증만 사용
 
+  // 카카오 로그인 로딩 상태
+  const [kakaoLoading, setKakaoLoading] = useState(false);
+
   // 보안 질문 관련 상태
   const [securityEmail, setSecurityEmail] = useState('');
   const [securityQuestions, setSecurityQuestions] = useState([]);
@@ -77,6 +81,47 @@ function Login() {
       document.body.className = originalTheme;
     };
   }, []);
+
+    // 카카오 로그인 성공 시 자동으로 홈으로 이동
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        // 카카오 로그인 중이고 사용자가 로그인된 경우
+        if (kakaoLoading && user) {
+          console.log('✅ 카카오 로그인 성공 감지, 홈으로 이동');
+          setKakaoLoading(false);
+          navigate('/');
+        }
+      });
+
+      // 카카오 로그인 성공 이벤트 리스너
+      const handleKakaoLoginSuccess = () => {
+        console.log('✅ 카카오 로그인 성공 이벤트 수신');
+        // auth 상태 변화를 기다리기 위해 약간의 지연
+        setTimeout(() => {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            setKakaoLoading(false);
+            navigate('/');
+          }
+        }, 500);
+      };
+
+      // 카카오 로그인 실패 이벤트 리스너
+      const handleKakaoLoginFailed = () => {
+        console.log('❌ 카카오 로그인 실패 이벤트 수신');
+        setKakaoLoading(false);
+        setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+      };
+
+      window.addEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
+      window.addEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
+
+      return () => {
+        unsubscribe();
+        window.removeEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
+        window.removeEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
+      };
+    }, [kakaoLoading, navigate]);
 
   useEffect(() => {
     let onShow, onHide;
@@ -320,6 +365,7 @@ function Login() {
   const handleKakaoLogin = async () => {
     console.log('카카오 로그인 버튼 클릭됨');
     setError('');
+    setKakaoLoading(true); // 로딩 상태 시작
 
     try {
       // 카카오 REST API 키 (환경 변수로 관리)
@@ -329,6 +375,7 @@ function Login() {
 
       if (!KAKAO_REST_API_KEY || KAKAO_REST_API_KEY.trim() === '') {
         setError('카카오 REST API 키가 설정되지 않았습니다. .env 파일에 REACT_APP_KAKAO_REST_API_KEY를 추가하고 개발 서버를 재시작해주세요.');
+        setKakaoLoading(false);
         return;
       }
 
@@ -366,6 +413,12 @@ function Login() {
         // 모바일: Capacitor Browser 사용
         Browser.addListener('browserFinished', () => {
           console.log('카카오 로그인 브라우저가 닫혔습니다.');
+          // 브라우저가 닫혔지만 로그인이 완료되지 않은 경우 로딩 해제
+          setTimeout(() => {
+            if (kakaoLoading && !auth.currentUser) {
+              setKakaoLoading(false);
+            }
+          }, 2000);
         });
 
         await Browser.open({ url: authUrl });
@@ -378,6 +431,7 @@ function Login() {
     } catch (e) {
       console.error('카카오 로그인 실패:', e);
       setError('카카오 로그인에 실패했습니다: ' + (e.message || '알 수 없는 오류'));
+      setKakaoLoading(false);
     }
   };
 
@@ -672,10 +726,153 @@ function Login() {
             <Divider>또는</Divider>
             <SocialLoginContainer>
               <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle size={16} /></SocialButton>
-              <SocialButton color="#FEE500" onClick={handleKakaoLogin}><RiKakaoTalkFill size={16} style={{ color: '#3c1e1e' }} /></SocialButton>
+              <SocialButton 
+                color="#FEE500" 
+                onClick={handleKakaoLogin}
+                disabled={kakaoLoading}
+                style={{ 
+                  opacity: kakaoLoading ? 0.6 : 1,
+                  cursor: kakaoLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {kakaoLoading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid #3c1e1e',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite'
+                    }}></span>
+                    <RiKakaoTalkFill size={16} style={{ color: '#3c1e1e' }} />
+                  </span>
+                ) : (
+                  <RiKakaoTalkFill size={16} style={{ color: '#3c1e1e' }} />
+                )}
+              </SocialButton>
               <SocialButton onClick={handleNaverLogin}><NaverIcon>N</NaverIcon></SocialButton>
               <SocialButton color="#000000" onClick={handleAppleLogin}><FaApple size={16} /></SocialButton>
             </SocialLoginContainer>
+            {kakaoLoading && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0, 0, 0, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999
+              }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '32px',
+                  animation: 'fadeIn 0.3s ease-in-out'
+                }}>
+                  {/* 카카오 아이콘 */}
+                  <div style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #FEE500 0%, #FDD835 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#3c1e1e',
+                    boxShadow: '0 8px 24px rgba(254, 229, 0, 0.3)',
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                  }}>
+                    <RiKakaoTalkFill size={70} />
+                  </div>
+
+                  {/* 로딩 텍스트 */}
+                  <div style={{
+                    textAlign: 'center',
+                    color: '#fff'
+                  }}>
+                    <h2 style={{
+                      margin: '0 0 12px 0',
+                      fontSize: '24px',
+                      fontWeight: '700',
+                      color: '#fff'
+                    }}>
+                      카카오 로그인 처리 중
+                    </h2>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '16px',
+                      color: '#fff',
+                      opacity: 0.8
+                    }}>
+                      잠시만 기다려주세요
+                    </p>
+                  </div>
+
+                  {/* 로딩 인디케이터 */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {[0, 1, 2].map((index) => (
+                      <div
+                        key={index}
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          background: '#FEE500',
+                          animation: `bounce 1.4s ease-in-out infinite`,
+                          animationDelay: `${index * 0.2}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <style>{`
+                  @keyframes fadeIn {
+                    from {
+                      opacity: 0;
+                      transform: translateY(20px);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: translateY(0);
+                    }
+                  }
+
+                  @keyframes pulse {
+                    0%, 100% {
+                      transform: scale(1);
+                      box-shadow: 0 8px 24px rgba(254, 229, 0, 0.3);
+                    }
+                    50% {
+                      transform: scale(1.05);
+                      box-shadow: 0 12px 32px rgba(254, 229, 0, 0.4);
+                    }
+                  }
+
+                  @keyframes bounce {
+                    0%, 80%, 100% {
+                      transform: scale(0.8);
+                      opacity: 0.5;
+                    }
+                    40% {
+                      transform: scale(1.2);
+                      opacity: 1;
+                    }
+                  }
+                `}</style>
+              </div>
+            )}
             <SignupLink>
               계정이 없으신가요?
               <Link to="/terms-agreement">회원가입</Link>
