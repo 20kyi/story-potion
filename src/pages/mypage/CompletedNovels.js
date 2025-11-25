@@ -339,10 +339,10 @@ const BatchActionButton = styled.button`
   min-height: 48px;
   touch-action: manipulation;
   background: ${({ variant, theme }) => {
-    if (variant === 'public') return '#cb6565';
-    if (variant === 'private') return '#666';
-    return theme.card || '#f5f5f5';
-  }};
+        if (variant === 'public') return '#cb6565';
+        if (variant === 'private') return '#666';
+        return theme.card || '#f5f5f5';
+    }};
   color: ${({ variant }) => variant ? '#fff' : '#333'};
   flex: 1;
   
@@ -387,10 +387,10 @@ const QuickActionButton = styled.button`
   touch-action: manipulation;
   white-space: nowrap;
   background: ${({ variant }) => {
-    if (variant === 'public') return '#cb6565';
-    if (variant === 'private') return '#666';
-    return 'transparent';
-  }};
+        if (variant === 'public') return '#cb6565';
+        if (variant === 'private') return '#666';
+        return 'transparent';
+    }};
   color: #fff;
   
   &:active {
@@ -495,7 +495,9 @@ function CompletedNovels({ user }) {
                 const novelsRef = collection(db, 'novels');
                 const novelsQ = query(novelsRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
                 const novelsSnap = await getDocs(novelsQ);
-                const fetchedNovels = novelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const fetchedNovels = novelsSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(novel => novel.deleted !== true); // 삭제되지 않은 소설만
 
                 // 구매자 수 조회 (최적화: 모든 사용자의 viewedNovels를 한 번에 조회)
                 const usersRef = collection(db, 'users');
@@ -585,14 +587,14 @@ function CompletedNovels({ user }) {
     const handleTogglePublic = async (novel, e) => {
         e.stopPropagation(); // 소설 클릭 이벤트 방지
         if (!novel || !novel.id) return;
-        
+
         // 비공개로 전환하는 경우에만 확인 모달 표시
         if (novel.isPublic !== false) {
             setNovelToToggle(novel);
             setPrivateConfirmOpen(true);
             return;
         }
-        
+
         // 공개로 전환하는 경우 바로 실행
         const newIsPublic = !novel.isPublic;
         try {
@@ -600,8 +602,8 @@ function CompletedNovels({ user }) {
                 isPublic: newIsPublic
             });
             // 로컬 상태 업데이트
-            setNovels(prevNovels => 
-                prevNovels.map(n => 
+            setNovels(prevNovels =>
+                prevNovels.map(n =>
                     n.id === novel.id ? { ...n, isPublic: newIsPublic } : n
                 )
             );
@@ -613,15 +615,15 @@ function CompletedNovels({ user }) {
     const confirmTogglePrivate = async () => {
         setPrivateConfirmOpen(false);
         if (!novelToToggle || !novelToToggle.id) return;
-        
+
         const newIsPublic = false;
         try {
             await updateDoc(doc(db, 'novels', novelToToggle.id), {
                 isPublic: newIsPublic
             });
             // 로컬 상태 업데이트
-            setNovels(prevNovels => 
-                prevNovels.map(n => 
+            setNovels(prevNovels =>
+                prevNovels.map(n =>
                     n.id === novelToToggle.id ? { ...n, isPublic: newIsPublic } : n
                 )
             );
@@ -665,7 +667,7 @@ function CompletedNovels({ user }) {
     // 일괄 처리
     const handleBatchAction = (action) => {
         if (selectedNovels.size === 0) return;
-        
+
         // 비공개로 전환하는 경우에만 확인 모달 표시
         if (action === 'private') {
             setBatchAction(action);
@@ -678,27 +680,27 @@ function CompletedNovels({ user }) {
 
     const executeBatchAction = async (action) => {
         if (selectedNovels.size === 0) return;
-        
+
         const newIsPublic = action === 'public';
         const batch = writeBatch(db);
         const novelIds = Array.from(selectedNovels);
-        
+
         try {
             // Firestore 배치 업데이트
             novelIds.forEach(novelId => {
                 const novelRef = doc(db, 'novels', novelId);
                 batch.update(novelRef, { isPublic: newIsPublic });
             });
-            
+
             await batch.commit();
-            
+
             // 로컬 상태 업데이트
-            setNovels(prevNovels => 
-                prevNovels.map(n => 
+            setNovels(prevNovels =>
+                prevNovels.map(n =>
                     selectedNovels.has(n.id) ? { ...n, isPublic: newIsPublic } : n
                 )
             );
-            
+
             // 선택 초기화
             setSelectedNovels(new Set());
             setShowCheckboxes(false);
@@ -717,7 +719,7 @@ function CompletedNovels({ user }) {
     return (
         <Container theme={theme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="완성된 소설" />
-            
+
             <ViewToggle>
                 <TopBar>
                     <FilterRow>
@@ -760,8 +762,8 @@ function CompletedNovels({ user }) {
                             </QuickActionButtons>
                         )}
                         <ActionButtonsContainer>
-                            <ToggleButton 
-                                $active={viewMode === 'card'} 
+                            <ToggleButton
+                                $active={viewMode === 'card'}
                                 onClick={() => {
                                     setViewMode('card');
                                     localStorage.setItem('completedNovelsViewMode', 'card');
@@ -770,8 +772,8 @@ function CompletedNovels({ user }) {
                             >
                                 <GridIcon width={20} height={20} />
                             </ToggleButton>
-                            <ToggleButton 
-                                $active={viewMode === 'list'} 
+                            <ToggleButton
+                                $active={viewMode === 'list'}
                                 onClick={() => {
                                     setViewMode('list');
                                     localStorage.setItem('completedNovelsViewMode', 'list');
@@ -803,58 +805,58 @@ function CompletedNovels({ user }) {
                         {filteredNovels
                             .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                             .map((novel) => {
-                        const genreKey = getGenreKey(novel.genre);
-                        return (
-                            <NovelItem
-                                key={novel.id}
-                                $viewMode={viewMode}
-                                $selected={selectedNovels.has(novel.id)}
-                                onClick={() => {
-                                    if (!showCheckboxes) {
-                                        navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
-                                    }
-                                }}
-                            >
-                                {showCheckboxes && (
-                                    <NovelCheckbox
-                                        type="checkbox"
-                                        checked={selectedNovels.has(novel.id)}
-                                        onChange={(e) => toggleNovelSelection(novel.id, e)}
-                                    />
-                                )}
-                                <NovelCover 
-                                    src={novel.imageUrl || '/novel_banner/default.png'} 
-                                    alt={novel.title}
-                                    $viewMode={viewMode}
-                                />
-                                <NovelInfo $viewMode={viewMode}>
-                                    <NovelTitle $viewMode={viewMode} theme={theme}>{novel.title}</NovelTitle>
-                                    <NovelMeta theme={theme} $viewMode={viewMode}>
-                                        <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
-                                        {novel.purchaseCount > 0 && (
-                                            <PurchaseBadge theme={theme}>{novel.purchaseCount}</PurchaseBadge>
-                                        )}
-                                    </NovelMeta>
-                                    {!showCheckboxes && (
-                                        <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
-                                            <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
-                                            <PublicToggleButton
-                                                active={novel.isPublic !== false}
-                                                onClick={(e) => handleTogglePublic(novel, e)}
+                                const genreKey = getGenreKey(novel.genre);
+                                return (
+                                    <NovelItem
+                                        key={novel.id}
+                                        $viewMode={viewMode}
+                                        $selected={selectedNovels.has(novel.id)}
+                                        onClick={() => {
+                                            if (!showCheckboxes) {
+                                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
+                                            }
+                                        }}
+                                    >
+                                        {showCheckboxes && (
+                                            <NovelCheckbox
+                                                type="checkbox"
+                                                checked={selectedNovels.has(novel.id)}
+                                                onChange={(e) => toggleNovelSelection(novel.id, e)}
                                             />
-                                        </PublicStatus>
-                                    )}
-                                    {showCheckboxes && (
-                                        <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
-                                            <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
-                                        </PublicStatus>
-                                    )}
-                                </NovelInfo>
-                            </NovelItem>
-                        );
-                        })}
+                                        )}
+                                        <NovelCover
+                                            src={novel.imageUrl || '/novel_banner/default.png'}
+                                            alt={novel.title}
+                                            $viewMode={viewMode}
+                                        />
+                                        <NovelInfo $viewMode={viewMode}>
+                                            <NovelTitle $viewMode={viewMode} theme={theme}>{novel.title}</NovelTitle>
+                                            <NovelMeta theme={theme} $viewMode={viewMode}>
+                                                <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
+                                                {novel.purchaseCount > 0 && (
+                                                    <PurchaseBadge theme={theme}>{novel.purchaseCount}</PurchaseBadge>
+                                                )}
+                                            </NovelMeta>
+                                            {!showCheckboxes && (
+                                                <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
+                                                    <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
+                                                    <PublicToggleButton
+                                                        active={novel.isPublic !== false}
+                                                        onClick={(e) => handleTogglePublic(novel, e)}
+                                                    />
+                                                </PublicStatus>
+                                            )}
+                                            {showCheckboxes && (
+                                                <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
+                                                    <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
+                                                </PublicStatus>
+                                            )}
+                                        </NovelInfo>
+                                    </NovelItem>
+                                );
+                            })}
                     </NovelListWrapper>
-                    
+
                     {/* 페이지네이션 */}
                     {filteredNovels.length > itemsPerPage && (
                         <PaginationContainer theme={theme}>
@@ -879,7 +881,7 @@ function CompletedNovels({ user }) {
                     )}
                 </>
             )}
-            
+
             <ConfirmModal
                 open={privateConfirmOpen}
                 title="소설 비공개 전환"
@@ -902,7 +904,7 @@ function CompletedNovels({ user }) {
                 onConfirm={confirmBatchPrivate}
                 confirmText="확인"
             />
-            
+
             <Navigation />
         </Container>
     );

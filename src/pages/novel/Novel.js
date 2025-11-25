@@ -1146,8 +1146,8 @@ const Novel = ({ user }) => {
                     if (novel.deleted !== true) {
                         allMyNovels.push({ id: doc.id, ...novel });
                     }
-                    // year, month, weekNum이 모두 있는 경우에만 맵에 추가
-                    if (novel.year && novel.month && novel.weekNum) {
+                    // year, month, weekNum이 모두 있고 삭제되지 않은 경우에만 맵에 추가
+                    if (novel.year && novel.month && novel.weekNum && novel.deleted !== true) {
                         const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
                         // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
                         if (!newNovelsMap[weekKey]) {
@@ -1387,8 +1387,8 @@ const Novel = ({ user }) => {
                         if (novel.deleted !== true) {
                             allMyNovels.push({ id: doc.id, ...novel });
                         }
-                        // year, month, weekNum이 모두 있는 경우에만 맵에 추가
-                        if (novel.year && novel.month && novel.weekNum) {
+                        // year, month, weekNum이 모두 있고 삭제되지 않은 경우에만 맵에 추가
+                        if (novel.year && novel.month && novel.weekNum && novel.deleted !== true) {
                             const weekKey = `${novel.year}년 ${novel.month}월 ${novel.weekNum}주차`;
                             // 같은 주차에 여러 소설이 있을 수 있으므로 배열로 저장
                             if (!newNovelsMap[weekKey]) {

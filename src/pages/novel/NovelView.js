@@ -1179,19 +1179,47 @@ function NovelView({ user }) {
     }, [isReadingMode, readingMode, currentPage, pages.length]);
 
     const handleDelete = () => {
-        if (!novel || !novel.id) return;
+        console.log('handleDelete 호출:', { novel, hasId: !!novel?.id, userId: user?.uid, novelUserId: novel?.userId });
+        if (!novel || !novel.id) {
+            console.error('소설 삭제 불가: novel 또는 novel.id가 없습니다.', { novel });
+            setAlertModal({
+                open: true,
+                title: '',
+                message: '소설 정보를 찾을 수 없습니다.'
+            });
+            return;
+        }
+        if (novel.userId !== user?.uid) {
+            console.error('소설 삭제 불가: 소유자가 아닙니다.', { novelUserId: novel.userId, currentUserId: user?.uid });
+            setAlertModal({
+                open: true,
+                title: '',
+                message: '소설을 삭제할 권한이 없습니다.'
+            });
+            return;
+        }
         setDeleteConfirmOpen(true);
     };
 
     const confirmDelete = async () => {
         setDeleteConfirmOpen(false);
-        if (!novel || !novel.id) return;
+        if (!novel || !novel.id) {
+            console.error('소설 삭제 실패: novel 또는 novel.id가 없습니다.', { novel });
+            setAlertModal({
+                open: true,
+                title: '',
+                message: t('novel_delete_failed') + ': 소설 정보를 찾을 수 없습니다.'
+            });
+            return;
+        }
         try {
+            console.log('소설 삭제 시도:', { novelId: novel.id, userId: user?.uid, novelUserId: novel.userId });
             // 실제 삭제 대신 deleted 플래그 설정 (구매한 사용자들이 계속 접근할 수 있도록)
             await updateDoc(doc(db, 'novels', novel.id), {
                 deleted: true,
                 deletedAt: Timestamp.now()
             });
+            console.log('소설 삭제 성공:', novel.id);
             setAlertModal({
                 open: true,
                 title: '',
@@ -1201,10 +1229,11 @@ function NovelView({ user }) {
                 navigate('/novel', { state: { novelDeleted: true } });
             }, 1000);
         } catch (error) {
+            console.error('소설 삭제 실패:', error);
             setAlertModal({
                 open: true,
                 title: '',
-                message: t('novel_delete_failed')
+                message: t('novel_delete_failed') + ': ' + (error.message || '알 수 없는 오류가 발생했습니다.')
             });
         }
     };

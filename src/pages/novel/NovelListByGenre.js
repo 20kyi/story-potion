@@ -155,10 +155,12 @@ const NovelListByGenre = ({ user }) => {
         );
 
         const querySnapshot = await getDocs(q);
-        const fetchedNovels = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const fetchedNovels = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter(novel => novel.deleted !== true); // 삭제되지 않은 소설만
         console.log('fetchedNovels:', fetchedNovels);
         setNovels(fetchedNovels);
       } catch (error) {
