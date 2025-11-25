@@ -1,8 +1,19 @@
 package com.storypotion.app;
 
+import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
+// 커스텀 빌링 플러그인
+import com.storypotion.app.BillingPlugin;
+
 public class MainActivity extends BridgeActivity {
-    // Capacitor 7에서는 @CapacitorPlugin 어노테이션이 있는 플러그인이 자동으로 등록됩니다.
-    // BillingPlugin은 @CapacitorPlugin(name = "Billing") 어노테이션이 있으므로 자동 등록되어야 합니다.
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        // ✅ 커스텀 플러그인 등록 (여기가 핵심!)
+        registerPlugin(BillingPlugin.class);
+
+        // 반드시 마지막에 super 호출
+        super.onCreate(savedInstanceState);
+    }
 }

@@ -18,6 +18,10 @@ try {
     console.log('🔄 Capacitor 동기화 중...');
     execSync('npx cap sync android', { stdio: 'inherit' });
 
+    // 2-1. Billing 플러그인 수정 (cap sync로 재생성된 파일에 BillingPlugin 추가)
+    console.log('🔧 Billing 플러그인 수정 중...');
+    execSync('node scripts/fix-billing-plugin.js', { stdio: 'inherit' });
+
     // 3. 키스토어 확인
     const keystorePath = path.join(__dirname, '../android/app/story-potion-release-key.keystore');
     if (!fs.existsSync(keystorePath)) {
