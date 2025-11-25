@@ -312,6 +312,50 @@ class InAppPurchaseService {
     }
   }
 
+  // 소비성 상품 소비 처리 (재구매 가능하도록)
+  async consumePurchase(purchaseToken) {
+    console.log('[인앱결제] consumePurchase 시작', { purchaseToken: purchaseToken?.substring(0, 20) + '...' });
+
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!this.isAvailable) {
+      console.warn('[인앱결제] 네이티브 플랫폼이 아님 - 소비 처리 불가');
+      return false;
+    }
+
+    if (!purchaseToken) {
+      console.error('[인앱결제] purchaseToken이 없음');
+      throw new Error('purchaseToken is required');
+    }
+
+    try {
+      console.log('[인앱결제] Billing.consumePurchase 호출');
+      const result = await Billing.consumePurchase({
+        purchaseToken: purchaseToken
+      });
+
+      console.log('[인앱결제] Billing.consumePurchase 결과', result);
+
+      if (result && result.success) {
+        console.log('[인앱결제] 소비 성공');
+        return true;
+      } else {
+        console.error('[인앱결제] 소비 실패 - result.success가 false', result);
+        throw new Error('소비 처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('[인앱결제] 소비 처리 실패:', error);
+      console.error('[인앱결제] 에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        purchaseToken: purchaseToken?.substring(0, 20) + '...'
+      });
+      throw error;
+    }
+  }
+
   // Firebase에 구매 내역 저장
   async savePurchaseToFirebase(purchase) {
     try {
@@ -625,6 +669,72 @@ class InAppPurchaseService {
     }
   }
 
+  // 미소비 포인트 구매 자동 소비 처리
+  async consumeUnconsumedPointPurchases() {
+    console.log('[인앱결제] 미소비 포인트 구매 확인 시작');
+
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!this.isAvailable) {
+      console.log('[인앱결제] 네이티브 플랫폼이 아님 - 미소비 구매 확인 건너뜀');
+      return;
+    }
+
+    try {
+      // 모든 미소비 구매 조회
+      const purchases = await this.getPurchaseHistory('inapp');
+      console.log('[인앱결제] 미소비 구매 목록:', purchases);
+
+      if (!purchases || purchases.length === 0) {
+        console.log('[인앱결제] 미소비 구매 없음');
+        return;
+      }
+
+      // 포인트 상품 ID 목록
+      const pointProductIds = [
+        PRODUCT_IDS.POINTS_100,
+        PRODUCT_IDS.POINTS_500,
+        PRODUCT_IDS.POINTS_1000,
+        PRODUCT_IDS.POINTS_2000
+      ];
+
+      // 포인트 상품만 필터링하여 소비 처리
+      for (const purchase of purchases) {
+        const productIds = purchase.products || [];
+        const isPointProduct = productIds.some(productId => pointProductIds.includes(productId));
+
+        if (isPointProduct && purchase.purchaseToken) {
+          console.log('[인앱결제] 미소비 포인트 구매 발견, 소비 처리 시작', {
+            productIds,
+            orderId: purchase.orderId,
+            purchaseToken: purchase.purchaseToken?.substring(0, 20) + '...'
+          });
+
+          try {
+            // 이미 포인트가 지급되었는지 확인하기 위해 Firebase에서 구매 내역 확인
+            // 하지만 중복 체크 없이 일단 소비 처리만 진행
+            // (이미 포인트가 지급된 경우라도 소비는 필요하므로)
+            await this.consumePurchase(purchase.purchaseToken);
+            console.log('[인앱결제] 미소비 포인트 구매 소비 처리 완료', {
+              productIds,
+              orderId: purchase.orderId
+            });
+          } catch (consumeError) {
+            console.error('[인앱결제] 미소비 포인트 구매 소비 처리 실패:', consumeError);
+            // 하나 실패해도 계속 진행
+          }
+        }
+      }
+
+      console.log('[인앱결제] 미소비 포인트 구매 확인 및 소비 처리 완료');
+    } catch (error) {
+      console.error('[인앱결제] 미소비 포인트 구매 확인 실패:', error);
+      // 에러가 발생해도 앱 동작에는 영향 없음
+    }
+  }
+
   // 테스트 모드 확인
   isTestMode() {
     return process.env.NODE_ENV === 'development';
@@ -639,3 +749,5 @@ export const initializeInAppPurchase = () => inAppPurchaseService.initialize();
 export const purchaseProduct = (productId) => inAppPurchaseService.purchaseProduct(productId);
 export const getProducts = (productIds) => inAppPurchaseService.getProducts(productIds);
 export const getSubscriptionStatus = (productId) => inAppPurchaseService.getSubscriptionStatus(productId);
+export const consumePurchase = (purchaseToken) => inAppPurchaseService.consumePurchase(purchaseToken);
+export const consumeUnconsumedPointPurchases = () => inAppPurchaseService.consumeUnconsumedPointPurchases();

@@ -11,7 +11,7 @@ import { useTheme } from 'styled-components';
 import PointIcon from '../../components/icons/PointIcon';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useTranslation } from '../../LanguageContext';
-import { inAppPurchaseService, PRODUCT_IDS, PRODUCT_INFO } from '../../utils/inAppPurchase';
+import { inAppPurchaseService, PRODUCT_IDS, PRODUCT_INFO, consumeUnconsumedPointPurchases } from '../../utils/inAppPurchase';
 
 const Container = styled.div`
   display: flex;
@@ -347,6 +347,23 @@ function PointCharge({ user }) {
     }
   };
 
+  // 페이지 진입 시 미소비 포인트 구매 자동 소비 처리
+  useEffect(() => {
+    const handleUnconsumedPurchases = async () => {
+      if (inAppPurchaseService.isAvailable) {
+        console.log('[포인트충전] 페이지 진입 - 미소비 구매 확인 시작');
+        try {
+          await consumeUnconsumedPointPurchases();
+          console.log('[포인트충전] 미소비 구매 처리 완료');
+        } catch (error) {
+          console.error('[포인트충전] 미소비 구매 처리 실패:', error);
+          // 에러가 발생해도 페이지는 정상 동작
+        }
+      }
+    };
+    handleUnconsumedPurchases();
+  }, []);
+
   // 현재 포인트 조회
   useEffect(() => {
     if (user?.uid) {
@@ -410,19 +427,19 @@ function PointCharge({ user }) {
     setIsLoading(true);
     try {
       const packageData = packages.find(p => p.id === selectedPackage);
-      console.log('[포인트충전] doPurchase 시작', { 
-        packageId: packageData?.id, 
+      console.log('[포인트충전] doPurchase 시작', {
+        packageId: packageData?.id,
         productId: packageData?.productId,
-        isAvailable: inAppPurchaseService.isAvailable 
+        isAvailable: inAppPurchaseService.isAvailable
       });
-      
+
       // 인앱 결제 시도
       if (inAppPurchaseService.isAvailable) {
         console.log('[포인트충전] 인앱 결제 가능, purchaseProduct 호출');
         try {
           const purchase = await inAppPurchaseService.purchaseProduct(packageData.productId);
           console.log('[포인트충전] purchaseProduct 결과', { purchase, hasPurchase: !!purchase });
-          
+
           if (purchase) {
             // purchase 객체의 유효성 검증
             if (!purchase.purchaseToken || !purchase.orderId) {
@@ -430,21 +447,21 @@ function PointCharge({ user }) {
               toast.showToast('인앱 결제 정보가 유효하지 않습니다. 다시 시도해주세요.', 'error');
               return;
             }
-            
+
             console.log('[포인트충전] 인앱 결제 성공, 포인트 지급 시작', {
               orderId: purchase.orderId,
               purchaseToken: purchase.purchaseToken?.substring(0, 20) + '...'
             });
-            
+
             try {
               // 인앱 결제 성공 시 포인트 지급
               const bonusPoints = packageData.bonusPoints || 0;
               const totalPoints = packageData.points + bonusPoints;
-              
+
               await updateDoc(doc(db, 'users', user.uid), {
                 point: increment(totalPoints)
               });
-              
+
               await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
                 type: 'charge',
                 amount: totalPoints,
@@ -453,20 +470,34 @@ function PointCharge({ user }) {
                 orderId: purchase.orderId,
                 createdAt: new Date()
               });
-              
+
+              // 소비성 상품이므로 구매 후 소비 처리 (재구매 가능하도록)
+              try {
+                console.log('[포인트충전] 소비성 상품 소비 처리 시작');
+                await inAppPurchaseService.consumePurchase(purchase.purchaseToken);
+                console.log('[포인트충전] 소비성 상품 소비 처리 완료 - 재구매 가능');
+              } catch (consumeError) {
+                console.error('[포인트충전] 소비 처리 실패 (포인트는 이미 지급됨):', consumeError);
+                // 소비 처리가 실패해도 포인트는 이미 지급되었으므로 경고만 표시
+                // 사용자에게는 성공 메시지를 보여주고, 로그에만 기록
+              }
+
               setCurrentPoints(prev => prev + totalPoints);
               toast.showToast(t('point_charge_success', { amount: totalPoints }), 'success');
               setSelectedPackage(null);
+              setModal(false);
               console.log('[포인트충전] 인앱 결제 완료 및 포인트 지급 완료');
               return;
             } catch (dbError) {
               console.error('[포인트충전] 포인트 지급 중 오류 발생:', dbError);
               toast.showToast('포인트 지급 중 오류가 발생했습니다. 고객센터로 문의해주세요.', 'error');
+              setModal(false);
               return;
             }
           } else {
             console.warn('[포인트충전] purchase가 null - 인앱 결제 창이 표시되지 않았거나 사용자가 취소함');
             toast.showToast('인앱 결제가 완료되지 않았습니다. 다시 시도해주세요.', 'error');
+            setModal(false);
             return;
           }
         } catch (error) {
@@ -477,7 +508,7 @@ function PointCharge({ user }) {
             productId: packageData.productId,
             errorName: error.name
           });
-          
+
           // 에러 메시지에 따라 다른 메시지 표시
           let errorMessage = t('point_charge_inapp_failed');
           if (error.message && error.message.includes('canceled')) {
@@ -485,16 +516,18 @@ function PointCharge({ user }) {
           } else if (error.message && error.message.includes('User canceled')) {
             errorMessage = '인앱 결제가 취소되었습니다.';
           }
-          
+
           toast.showToast(errorMessage, 'error');
+          setModal(false);
           return; // 에러 발생 시 포인트 지급하지 않음
         }
       } else {
         console.warn('[포인트충전] 인앱 결제 불가능 - 네이티브 플랫폼이 아님');
         toast.showToast('인앱 결제는 앱에서만 사용 가능합니다.', 'error');
+        setModal(false);
         return;
       }
-      
+
     } catch (error) {
       console.error('[포인트충전] 포인트 충전 실패:', error);
       console.error('[포인트충전] 에러 상세:', {
@@ -502,9 +535,9 @@ function PointCharge({ user }) {
         stack: error.stack
       });
       toast.showToast(t('point_charge_failed'), 'error');
+      setModal(false);
     } finally {
       setIsLoading(false);
-      setModal(false);
     }
   };
 
@@ -646,12 +679,18 @@ function PointCharge({ user }) {
         description={
           selectedPackage
             ? t('point_charge_confirm_desc', {
-                points: packages.find(p => p.id === selectedPackage)?.points || '',
-              })
+              points: packages.find(p => p.id === selectedPackage)?.points || '',
+            })
             : ''
         }
         onCancel={() => setModal(false)}
-        onConfirm={doPurchase}
+        onConfirm={() => {
+          setModal(false);
+          // 모달을 닫은 후 구매 프로세스 시작
+          setTimeout(() => {
+            doPurchase();
+          }, 100);
+        }}
         confirmText={t('point_charge_do')}
       />
 

@@ -327,6 +327,48 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     }
 
     @PluginMethod
+    public void consumePurchase(PluginCall call) {
+        android.util.Log.d("BillingPlugin", "[인앱결제] consumePurchase 시작");
+
+        if (!isServiceConnected) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] Billing service가 연결되지 않음");
+            call.reject("Billing service not connected. Call initialize first.");
+            return;
+        }
+
+        String purchaseToken = call.getString("purchaseToken");
+        if (purchaseToken == null || purchaseToken.isEmpty()) {
+            android.util.Log.e("BillingPlugin", "[인앱결제] purchaseToken이 없음");
+            call.reject("purchaseToken is required");
+            return;
+        }
+
+        android.util.Log.d("BillingPlugin", "[인앱결제] 소비 시작 - purchaseToken: " + purchaseToken.substring(0, 20) + "...");
+
+        ConsumeParams consumeParams = ConsumeParams.newBuilder()
+                .setPurchaseToken(purchaseToken)
+                .build();
+
+        billingClient.consumeAsync(consumeParams, new ConsumeResponseListener() {
+            @Override
+            public void onConsumeResponse(BillingResult billingResult, String purchaseToken) {
+                android.util.Log.d("BillingPlugin",
+                        "[인앱결제] onConsumeResponse - responseCode: " + billingResult.getResponseCode());
+
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    android.util.Log.d("BillingPlugin", "[인앱결제] 소비 성공");
+                    JSObject result = new JSObject();
+                    result.put("success", true);
+                    call.resolve(result);
+                } else {
+                    android.util.Log.e("BillingPlugin", "[인앱결제] 소비 실패: " + billingResult.getDebugMessage());
+                    call.reject("Failed to consume purchase: " + billingResult.getDebugMessage());
+                }
+            }
+        });
+    }
+
+    @PluginMethod
     public void queryPurchases(PluginCall call) {
         if (!isServiceConnected) {
             call.reject("Billing service not connected. Call initialize first.");

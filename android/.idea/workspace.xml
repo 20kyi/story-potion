@@ -10,13 +10,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19bf4b53-a466-4813-836f-be877b915fcf" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/storypotion/app/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/storypotion/app/MainActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../scripts/build-playstore.js" beforeDir="false" afterPath="$PROJECT_DIR$/../scripts/build-playstore.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/storypotion/app/BillingPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/storypotion/app/BillingPlugin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/pages/mypage/PointCharge.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/pages/mypage/PointCharge.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/utils/inAppPurchase.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/utils/inAppPurchase.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
