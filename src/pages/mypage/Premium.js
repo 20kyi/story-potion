@@ -644,9 +644,9 @@ function Premium({ user }) {
                 <PremiumButton
                   style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
                   onClick={handleMonthlyPremium}
-                  disabled={true}
+                  disabled={isLoading}
                 >
-                  구독하기
+                  {isLoading ? '처리 중...' : '구독하기'}
                 </PremiumButton>
               </PremiumCard>
             )}
@@ -736,9 +736,9 @@ function Premium({ user }) {
               <PremiumButton
                 style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
                 onClick={handleYearlyPremium}
-                disabled={true}
+                disabled={isLoading}
               >
-                구독하기
+                {isLoading ? '처리 중...' : '구독하기'}
               </PremiumButton>
             </YearlyPremiumCard>
           </div>

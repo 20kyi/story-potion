@@ -7,7 +7,7 @@ android {
         applicationId "com.storypotion.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 34
+        versionCode 41
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -60,6 +60,8 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.android.billingclient:billing:7.1.1'
+    implementation 'com.android.billingclient:billing-ktx:7.1.1'
 }
 
 apply from: 'capacitor.build.gradle'

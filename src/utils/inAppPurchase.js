@@ -1,14 +1,23 @@
-// import { Billing } from '@capacitor-community/billing';
 import { Capacitor } from '@capacitor/core';
+import { registerPlugin } from '@capacitor/core';
+import { doc, addDoc, collection, updateDoc, increment, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase';
+
+// Billing 플러그인 등록
+const Billing = registerPlugin('Billing', {
+  web: () => import('./billing.web').then(m => new m.BillingWeb()),
+});
 
 // 상품 ID 정의
+// 일회성 제품: 언더스코어 사용 (points_100)
+// 구독 제품: 하이픈 사용 (monthly-premium)
 export const PRODUCT_IDS = {
   POINTS_100: 'points_100',
   POINTS_500: 'points_500',
   POINTS_1000: 'points_1000',
   POINTS_2000: 'points_2000',
-  MONTHLY_PREMIUM: 'monthly_premium',
-  YEARLY_PREMIUM: 'yearly_premium',
+  MONTHLY_PREMIUM: 'premium_monthly',
+  YEARLY_PREMIUM: 'premium_yearly',
   POTION_ROMANCE: 'potion_romance',
   POTION_FANTASY: 'potion_fantasy',
   POTION_MYSTERY: 'potion_mystery',
@@ -101,10 +110,15 @@ class InAppPurchaseService {
     }
 
     try {
-      // await Billing.initialize();
-      this.isInitialized = true;
-      console.log('인앱 결제 초기화 완료 (임시 비활성화)');
-      return true;
+      const result = await Billing.initialize();
+      if (result.success) {
+        this.isInitialized = true;
+        console.log('인앱 결제 초기화 완료');
+        return true;
+      } else {
+        console.error('인앱 결제 초기화 실패');
+        return false;
+      }
     } catch (error) {
       console.error('인앱 결제 초기화 실패:', error);
       return false;
@@ -112,18 +126,21 @@ class InAppPurchaseService {
   }
 
   // 상품 정보 조회
-  async getProducts(productIds) {
+  async getProducts(productIds, productType = 'inapp') {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
-    try {
-      // const result = await Billing.querySkuDetails({
-      //   skus: productIds
-      // });
-      // return result.products || [];
-      console.log('인앱 결제 기능이 임시로 비활성화되었습니다.');
+    if (!this.isAvailable) {
       return [];
+    }
+
+    try {
+      const result = await Billing.queryProductDetails({
+        productIds: productIds,
+        productType: productType
+      });
+      return result.products || [];
     } catch (error) {
       console.error('상품 정보 조회 실패:', error);
       return [];
@@ -131,23 +148,27 @@ class InAppPurchaseService {
   }
 
   // 구매 시작
-  async purchaseProduct(productId) {
+  async purchaseProduct(productId, productType = 'inapp') {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
+    if (!this.isAvailable) {
+      throw new Error('인앱 결제는 네이티브 플랫폼에서만 사용 가능합니다.');
+    }
+
     try {
-      // const result = await Billing.purchaseProduct({
-      //   sku: productId
-      // });
+      const result = await Billing.purchaseProduct({
+        productId: productId,
+        productType: productType
+      });
 
-      // if (result.purchase) {
-      //   // 구매 완료 처리
-      //   await this.handlePurchaseSuccess(result.purchase);
-      //   return result.purchase;
-      // }
+      if (result.purchase) {
+        // 구매 완료 처리
+        await this.handlePurchaseSuccess(result.purchase);
+        return result.purchase;
+      }
 
-      console.log('인앱 결제 기능이 임시로 비활성화되었습니다.');
       return null;
     } catch (error) {
       console.error('구매 실패:', error);
@@ -158,10 +179,12 @@ class InAppPurchaseService {
   // 구매 완료 처리
   async handlePurchaseSuccess(purchase) {
     try {
-      // 구매 확인
-      // await Billing.acknowledgePurchase({
-      //   purchaseToken: purchase.purchaseToken
-      // });
+      // 구매 확인 (acknowledge)
+      if (purchase.purchaseToken && !purchase.isAcknowledged) {
+        await Billing.acknowledgePurchase({
+          purchaseToken: purchase.purchaseToken
+        });
+      }
 
       // 구매 내역 저장 (Firebase)
       await this.savePurchaseToFirebase(purchase);
@@ -175,12 +198,33 @@ class InAppPurchaseService {
 
   // Firebase에 구매 내역 저장
   async savePurchaseToFirebase(purchase) {
-    // Firebase 관련 import는 실제 사용 시 추가
-    // import { doc, addDoc, collection, updateDoc, increment } from 'firebase/firestore';
-    // import { db } from '../firebase';
+    try {
+      // 현재 사용자 정보 가져오기
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
 
-    console.log('Firebase에 구매 내역 저장:', purchase);
-    // 실제 구현은 Firebase 설정에 따라 추가
+      if (!currentUser) {
+        console.warn('사용자가 로그인되지 않아 구매 내역을 저장할 수 없습니다.');
+        return;
+      }
+
+      // 구매 내역 저장
+      await addDoc(collection(db, 'users', currentUser.uid, 'purchases'), {
+        orderId: purchase.orderId,
+        purchaseToken: purchase.purchaseToken,
+        products: purchase.products || [],
+        purchaseTime: Timestamp.fromMillis(purchase.purchaseTime || Date.now()),
+        isAcknowledged: purchase.isAcknowledged || false,
+        isAutoRenewing: purchase.isAutoRenewing || false,
+        createdAt: Timestamp.now()
+      });
+
+      console.log('Firebase에 구매 내역 저장 완료:', purchase);
+    } catch (error) {
+      console.error('Firebase에 구매 내역 저장 실패:', error);
+      // 저장 실패해도 구매는 완료된 것으로 처리
+    }
   }
 
   // 구독 상태 확인
@@ -189,14 +233,21 @@ class InAppPurchaseService {
       await this.initialize();
     }
 
-    try {
-      // const result = await Billing.queryPurchases({
-      //   skuType: 'subs'
-      // });
+    if (!this.isAvailable) {
+      return false;
+    }
 
-      // const subscription = result.purchases.find(p => p.sku === productId);
-      // return subscription ? subscription.isAcknowledged : false;
-      console.log('인앱 결제 기능이 임시로 비활성화되었습니다.');
+    try {
+      const result = await Billing.queryPurchases({
+        productType: 'subs'
+      });
+
+      if (result.purchases && result.purchases.length > 0) {
+        const subscription = result.purchases.find(p =>
+          p.products && p.products.includes(productId)
+        );
+        return subscription ? subscription.isAcknowledged : false;
+      }
       return false;
     } catch (error) {
       console.error('구독 상태 확인 실패:', error);
@@ -205,18 +256,20 @@ class InAppPurchaseService {
   }
 
   // 구매 내역 조회
-  async getPurchaseHistory() {
+  async getPurchaseHistory(productType = 'inapp') {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
-    try {
-      // const result = await Billing.queryPurchases({
-      //   skuType: 'inapp'
-      // });
-      // return result.purchases || [];
-      console.log('인앱 결제 기능이 임시로 비활성화되었습니다.');
+    if (!this.isAvailable) {
       return [];
+    }
+
+    try {
+      const result = await Billing.queryPurchases({
+        productType: productType
+      });
+      return result.purchases || [];
     } catch (error) {
       console.error('구매 내역 조회 실패:', error);
       return [];
