@@ -174,7 +174,7 @@ const DisplayImage = styled.img`
   width: 32px;
   height: 32px;
   margin-bottom: 2px;
-  border-radius: 50%;
+  border-radius: ${props => props.$isSticker ? '0' : '50%'};
   object-fit: cover;
 `;
 
@@ -628,14 +628,19 @@ function Diary({ user }) {
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
 
-            // 우선순위: 사진 > 감정 이모티콘 > 날씨 이모티콘
+            // 우선순위: 사진 > 스티커 > 감정 이모티콘 > 날씨 이모티콘
             let displayImg = null;
+            let isSticker = false;
             if (diary) {
                 if (diary.imageUrls && diary.imageUrls.length > 0) {
                     // 사진이 있으면 첫 번째 사진 표시
                     displayImg = diary.imageUrls[0];
+                } else if (diary.stickers && diary.stickers.length > 0) {
+                    // 사진이 없으면 첫 번째 스티커 표시
+                    displayImg = diary.stickers[0].src;
+                    isSticker = true;
                 } else if (diary.emotion) {
-                    // 사진이 없으면 감정 이모티콘 표시
+                    // 스티커도 없으면 감정 이모티콘 표시
                     displayImg = emotionImageMap[diary.emotion];
                 } else if (diary.weather) {
                     // 감정 이모티콘도 없으면 날씨 이모티콘 표시
@@ -657,7 +662,7 @@ function Diary({ user }) {
                         {isToday && <TodayCircle />}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
                         <ImageContainer>
-                            {displayImg && <DisplayImage src={displayImg} alt="대표 이미지" />}
+                            {displayImg && <DisplayImage src={displayImg} alt="대표 이미지" $isSticker={isSticker} />}
                         </ImageContainer>
                     </DateButton>
                 </DateCell>
