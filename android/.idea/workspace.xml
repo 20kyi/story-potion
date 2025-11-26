@@ -10,15 +10,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19bf4b53-a466-4813-836f-be877b915fcf" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/icons/diary.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/icons/diary.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/icons/home.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/icons/home.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/icons/my.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/icons/my.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/icons/novel.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/icons/novel.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/build/reports/problems/problems-report.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
