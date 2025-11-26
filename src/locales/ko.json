@@ -465,5 +465,9 @@
     "no_notifications": "알림이 없습니다.",
     "mark_all_read": "모두 읽음",
     "google_password_notice": "구글 계정으로 로그인하신 경우, 비밀번호는 구글 계정 설정에서 변경하실 수 있습니다.",
-    "kakao_password_notice": "카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다."
+    "kakao_password_notice": "카카오 계정으로 로그인하신 경우, 비밀번호는 카카오 계정 설정에서 변경하실 수 있습니다.",
+    "nav_home": "홈",
+    "nav_diary": "일기",
+    "nav_novel": "소설",
+    "nav_mypage": "마이페이지"
 }
