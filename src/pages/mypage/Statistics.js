@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useTranslation } from '../../LanguageContext';
+import { useTheme as useStyledTheme } from 'styled-components';
+import { useTheme as useThemeContext } from '../../ThemeContext';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
@@ -34,6 +36,22 @@ const StatCard = styled.div`
   position: relative;
   background-clip: padding-box;
 
+  /* 점선 내부 테두리 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 2px dashed ${({ theme }) =>
+        theme.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.25)'
+            : 'rgba(0, 0, 0, 0.15)'};
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
   &:hover {
     box-shadow: 0 8px 24px rgba(0,0,0,0.13);
     transform: translateY(-2px);
@@ -42,47 +60,46 @@ const StatCard = styled.div`
 const StatImage = styled.img`
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
   margin-bottom: 12px;
 `;
 const StatLabel = styled.div`
   font-weight: 700;
   margin-bottom: 6px;
-  font-size: 1.08rem;
-  color: ${({ color }) => color || '#333'};
+  font-size: 0.95rem;
+  color: ${({ color, theme }) => color || theme.primary || theme.text};
   text-align: center;
 `;
 const StatNumber = styled.div`
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  color: ${({ color }) => color || '#222'};
+  color: ${({ color, theme }) => color || theme.primary || theme.text};
   margin-bottom: 2px;
   text-align: center;
 `;
 const Rank1 = styled.div`
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   font-weight: 700;
   margin-bottom: 2px;
-  color: #e462a0;
+  color: ${({ color, theme }) => color || theme.primary || '#e462a0'};
 `;
 const Rank2 = styled.div`
-  font-size: 0.98rem;
+  font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 2px;
-  color: #e462a0;
+  color: ${({ color, theme }) => color || theme.primary || '#e462a0'};
 `;
 const Rank3 = styled.div`
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #e462a0;
+  color: ${({ color, theme }) => color || theme.primary || '#e462a0'};
 `;
 
 // 아래에만 적용되는 StatNumberSmall 추가
 const StatNumberSmall = styled(StatNumber)`
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 `;
 
 
@@ -117,7 +134,7 @@ const FavoriteGenreText = styled.div`
   text-align: center;
   margin-top: 32px;
   margin-bottom: 20px;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text || '#333'};
 `;
@@ -159,6 +176,8 @@ const genreBannerData = {
 function Statistics({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const theme = useStyledTheme();
+    const { actualTheme } = useThemeContext();
     const [diaryCount, setDiaryCount] = useState(0);
     const [novelCount, setNovelCount] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
@@ -166,6 +185,21 @@ function Statistics({ user }) {
     const [loading, setLoading] = useState(true);
     const [favoriteGenre, setFavoriteGenre] = useState('-');
     const [favoriteGenreCount, setFavoriteGenreCount] = useState(0);
+
+    // 앱 컨셉에 맞는 조화로운 5가지 색상 팔레트 (라이트/다크 모드 대응)
+    const statColors = actualTheme === 'dark' ? {
+        diary: '#ffb3b3',      // 로즈/코랄 (primary)
+        interest: '#e8a8d0',    // 핑크/라벤더
+        streak: '#c49dd4',      // 보라/퍼플
+        novel: '#7bc4b0',       // 민트/그린
+        genre: '#8bb5e0'        // 블루/스카이
+    } : {
+        diary: '#e46262',      // 로즈/코랄 (primary)
+        interest: '#d47fb8',    // 핑크/라벤더
+        streak: '#a67ac7',      // 보라/퍼플
+        novel: '#5db89f',       // 민트/그린
+        genre: '#6ba3d4'        // 블루/스카이
+    };
 
     useEffect(() => {
         if (!user) return;
@@ -312,30 +346,30 @@ function Statistics({ user }) {
                     </FavoriteGenreContainer>
                 )}
                 {loading ? (
-                    <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{t('loading')}</div>
+                    <div style={{ textAlign: 'center', color: theme.cardSubText || '#888', marginTop: 40 }}>{t('loading')}</div>
                 ) : (
                     <StatsGrid>
                         {/* 작성한 일기 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '1 / 4' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성된일기.png'} alt={t('stat_diary_count')} />
-                            <StatLabel color="#ff8800">{t('stat_diary_count')}</StatLabel>
-                            <StatNumber color="#e46262">{diaryCount}</StatNumber>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성한일기.png'} alt={t('stat_diary_count')} />
+                            <StatLabel color={statColors.diary}>{t('stat_diary_count')}</StatLabel>
+                            <StatNumber color={statColors.diary}>{diaryCount}</StatNumber>
                         </StatCard>
-                        {/* 완성된 소설 */}
+                        {/* 내 관심사 */}
                         <StatCard style={{ gridColumn: 1, gridRow: '4 / 7' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/내관심사.png'} alt={t('stat_interest')} />
-                            <StatLabel color="#e462a0">{t('stat_interest')}</StatLabel>
-                            <Rank1>1위: {topWords[0]}</Rank1>
-                            <Rank2>2위: {topWords[1]}</Rank2>
-                            <Rank3>3위: {topWords[2]}</Rank3>
+                            <StatLabel color={statColors.interest}>{t('stat_interest')}</StatLabel>
+                            <Rank1 color={statColors.interest}>🥇 {topWords[0]}</Rank1>
+                            <Rank2 color={statColors.interest}>🥈 {topWords[1]}</Rank2>
+                            <Rank3 color={statColors.interest}>🥉 {topWords[2]}</Rank3>
                         </StatCard>
                         {/* 연속일수 */}
                         <StatCard style={{ gridColumn: 2, gridRow: '1 / 3' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/연속일수.png'} alt={t('stat_streak')} />
-                            <StatLabel color="#a259d9">{t('stat_streak')}</StatLabel>
-                            <StatNumber color="#a259d9">{maxStreak}</StatNumber>
+                            <StatLabel color={statColors.streak}>{t('stat_streak')}</StatLabel>
+                            <StatNumber color={statColors.streak}>{maxStreak}</StatNumber>
                         </StatCard>
-                        {/* 완성된 소설 */}
+                        {/* 완성한 소설 */}
                         <StatCard
                             style={{ gridColumn: 2, gridRow: '3 / 5', cursor: novelCount > 0 ? 'pointer' : 'default' }}
                             onClick={() => {
@@ -345,14 +379,14 @@ function Statistics({ user }) {
                             }}
                         >
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/완성된소설.png'} alt={t('stat_novel_count')} />
-                            <StatLabel color="#1abc3b">{t('stat_novel_count')}</StatLabel>
-                            <StatNumber color="#1abc3b">{novelCount}</StatNumber>
+                            <StatLabel color={statColors.novel}>{t('stat_novel_count')}</StatLabel>
+                            <StatNumber color={statColors.novel}>{novelCount}</StatNumber>
                         </StatCard>
-                        {/* Total Potion -> 가장 많이 쓴 소설 장르*/}
+                        {/* 최애 장르 */}
                         <StatCard style={{ gridColumn: 2, gridRow: '5 / 7' }}>
-                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/토탈포션.png'} alt={t('stat_favorite_genre')} />
-                            <StatLabel color="#3498f3">{t('stat_favorite_genre')}</StatLabel>
-                            <StatNumberSmall color="#3498f3">{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}${t('unit_count') || '편'})` : t('no_data') || '데이터 없음'}</StatNumberSmall>
+                            <StatImage src={process.env.PUBLIC_URL + '/my_stats/최애장르.png'} alt={t('stat_favorite_genre')} />
+                            <StatLabel color={statColors.genre}>{t('stat_favorite_genre')}</StatLabel>
+                            <StatNumberSmall color={statColors.genre}>{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}${t('unit_count') || '편'})` : t('no_data') || '데이터 없음'}</StatNumberSmall>
                         </StatCard>
                     </StatsGrid>
                 )}
