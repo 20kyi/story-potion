@@ -19,7 +19,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: transparent;
+  background-color: ${({ theme }) => theme.mode === 'light' ? 'transparent' : 'transparent'};
   color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
@@ -350,19 +350,35 @@ function NovelCreate({ user }) {
         const originalBodyBackground = document.body.style.background;
         const originalBodyClass = document.body.className;
         const currentTheme = themeContext.actualTheme === 'dark' ? darkTheme : lightTheme;
+        const isLightMode = themeContext.actualTheme === 'light';
+
+        // 라이트 모드 기본 우드톤 배경
+        const woodToneGradient = 'linear-gradient(135deg, #E8D5C4 0%, #D4A574 25%, #C19A6B 50%, #D4A574 75%, #E8D5C4 100%)';
 
         if (selectedPotion !== null && selectedPotion !== undefined) {
             const potion = potionImages[selectedPotion];
             if (potion) {
-                // 중심에서 퍼져나가는 방사형 그라데이션 (더 진한 색상)
-                document.body.style.background = `radial-gradient(circle at center, ${potion.color}60 0%, ${potion.colorLight}50 20%, ${potion.color}40 40%, ${potion.color}20 60%, ${currentTheme.background} 100%)`;
-                document.body.style.backgroundAttachment = 'fixed';
+                // 라이트 모드일 때는 우드톤 배경 유지, 다크 모드일 때만 포션 그라데이션 적용
+                if (isLightMode) {
+                    document.body.style.background = woodToneGradient;
+                    document.body.style.backgroundAttachment = 'fixed';
+                } else {
+                    document.body.style.background = `radial-gradient(circle at center, ${potion.color}60 0%, ${potion.colorLight}50 20%, ${potion.color}40 40%, ${potion.color}20 60%, ${currentTheme.background} 100%)`;
+                    document.body.style.backgroundAttachment = 'fixed';
+                }
                 document.body.style.transition = 'background 0.6s ease';
             }
         } else {
-            // 포션이 선택되지 않았을 때 원래 배경색으로 복구
-            document.body.style.background = '';
-            document.body.style.backgroundAttachment = '';
+            // 포션이 선택되지 않았을 때 배경색 설정
+            if (isLightMode) {
+                // 라이트 모드일 때 우드톤 배경 적용
+                document.body.style.background = woodToneGradient;
+                document.body.style.backgroundAttachment = 'fixed';
+            } else {
+                // 다크 모드일 때 원래 배경색 사용
+                document.body.style.background = '';
+                document.body.style.backgroundAttachment = '';
+            }
         }
 
         // 컴포넌트 언마운트 시 원래 배경색으로 복구
@@ -866,19 +882,21 @@ function NovelCreate({ user }) {
                             alignItems: 'center',
                             gap: '16px',
                             padding: '12px 20px',
-                            background: 'rgba(52, 152, 243, 0.1)',
+                            background: 'linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(193, 154, 107, 0.25) 100%)',
                             borderRadius: '25px',
                             margin: '0 auto 20px auto',
                             width: 'fit-content',
                             fontSize: '14px',
                             fontWeight: '600',
-                            color: '#3498f3'
+                            color: '#5C3E2A',
+                            border: '1px solid rgba(193, 154, 107, 0.4)',
+                            boxShadow: '0 2px 8px rgba(193, 154, 107, 0.15)'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <PointIcon width={16} height={16} color="#3498f3" />
+                                <PointIcon width={16} height={16} color="#8B6F47" />
                                 {currentPoints.toLocaleString()}p
                             </div>
-                            <div style={{ width: '1px', height: '20px', background: '#3498f3', opacity: 0.3 }}></div>
+                            <div style={{ width: '1px', height: '20px', background: '#8B6F47', opacity: 0.3 }}></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <span style={{ fontSize: '12px' }}>보유 포션 </span>
                                 {Object.values(ownedPotions).reduce((sum, count) => sum + (count || 0), 0)}개
@@ -910,6 +928,16 @@ function NovelCreate({ user }) {
                             0% { transform: rotate(0deg); }
                             100% { transform: rotate(360deg); }
                         }
+                        @keyframes pulse {
+                            0%, 100% { 
+                                transform: scale(1);
+                                box-shadow: 0 4px 12px rgba(255, 193, 7, 0.5), 0 0 8px rgba(255, 215, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                            }
+                            50% { 
+                                transform: scale(1.1);
+                                box-shadow: 0 6px 16px rgba(255, 193, 7, 0.7), 0 0 12px rgba(255, 215, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                            }
+                        }
                     `}</style>
                 </div>
             ) : (
@@ -917,6 +945,28 @@ function NovelCreate({ user }) {
                     {!isNovelGenerated ? (
                         <>
                             <PotionSelectSection>
+                                <style>{`
+                                    @keyframes potionCountPulse {
+                                        0%, 100% { 
+                                            transform: scale(1);
+                                            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.5), 0 0 8px rgba(255, 215, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                                        }
+                                        50% { 
+                                            transform: scale(1.08);
+                                            box-shadow: 0 6px 16px rgba(255, 193, 7, 0.7), 0 0 12px rgba(255, 215, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                                        }
+                                    }
+                                    @keyframes potionGlow {
+                                        0%, 100% { 
+                                            filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4)) drop-shadow(0 0 8px rgba(255, 193, 7, 0.3));
+                                            transform: scale(1);
+                                        }
+                                        50% { 
+                                            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) drop-shadow(0 0 12px rgba(255, 193, 7, 0.5));
+                                            transform: scale(1.02);
+                                        }
+                                    }
+                                `}</style>
                                 {/* 마법서재 배경 이미지와 포션 배치 */}
                                 <div style={{
                                     position: 'relative',
@@ -929,7 +979,7 @@ function NovelCreate({ user }) {
                                 }}>
                                     {/* 마법서재 배경 이미지 */}
                                     <img
-                                        src="/마법서재2.png"
+                                        src="/마법서재.png"
                                         alt="magic library"
                                         style={{
                                             width: '100%',
@@ -942,20 +992,19 @@ function NovelCreate({ user }) {
                                     {/* 포션들을 각 칸에 배치 (2행 3열) */}
                                     <div style={{
                                         position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        width: '100%',
-                                        height: '100%',
+                                        bottom: 0,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        width: '85%',
+                                        height: '85%',
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(3, 1fr)',
                                         gridTemplateRows: 'repeat(2, 1fr)',
                                         gap: 0,
-                                        padding: '14% 9% 14% 9%',
+                                        padding: 0,
                                         zIndex: 2,
                                         pointerEvents: 'none',
-                                        boxSizing: 'border-box',
-                                        alignItems: 'center',
-                                        justifyItems: 'center'
+                                        boxSizing: 'border-box'
                                     }}>
                                         {potionImages.map((potion, idx) => {
                                             const potionId = potion.genre === '로맨스' ? 'romance' :
@@ -980,10 +1029,9 @@ function NovelCreate({ user }) {
                                                 return null;
                                             }
 
-                                            // 맨 왼쪽 포션 (idx 0, 3)과 맨 오른쪽 포션 (idx 2, 5) 위치 조정
+                                            // 맨 왼쪽 포션과 맨 오른쪽 포션 위치 조정
                                             const isLeftColumn = idx % 3 === 0;
                                             const isRightColumn = idx % 3 === 2;
-                                            // 아랫줄 포션 (idx 3, 4, 5)은 아래로 더 이동
                                             const isBottomRow = idx >= 3;
 
                                             return (
@@ -991,6 +1039,7 @@ function NovelCreate({ user }) {
                                                     key={potion.genre}
                                                     style={{
                                                         display: 'flex',
+                                                        flexDirection: 'column',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         position: 'relative',
@@ -998,27 +1047,29 @@ function NovelCreate({ user }) {
                                                         cursor: isDisabled ? 'not-allowed' : 'pointer',
                                                         width: '100%',
                                                         height: '100%',
-                                                        marginLeft: isLeftColumn ? '-10%' : '0',
-                                                        marginRight: isRightColumn ? '-10%' : '0',
-                                                        paddingTop: isBottomRow ? '15%' : '0'
+                                                        transform: isLeftColumn ? 'translateX(15%)' : isRightColumn ? 'translateX(-15%)' : 'none',
+                                                        paddingBottom: isBottomRow ? 0 : undefined
                                                     }}
                                                     selected={selectedPotion === idx}
                                                     onClick={isDisabled ? undefined : () => setSelectedPotion(idx)}
-                                                    whileHover={isDisabled ? {} : { scale: 1.1, y: isBottomRow ? -5 + 15 : -5 }}
+                                                    whileHover={isDisabled ? {} : { scale: 1.1, y: -5 }}
                                                     whileTap={isDisabled ? {} : { scale: 0.95 }}
-                                                    animate={selectedPotion === idx ? { scale: 1.15, y: isBottomRow ? -8 + 15 : -8 } : { scale: 1, y: isBottomRow ? 15 : 0 }}
+                                                    animate={selectedPotion === idx ? { scale: 1.15, y: -8 } : { scale: 1, y: 0 }}
                                                     transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                                                 >
                                                     <div style={{
                                                         position: 'relative',
-                                                        display: 'inline-block',
-                                                        width: '70px',
-                                                        height: '70px',
-                                                        minWidth: '70px',
-                                                        minHeight: '70px',
-                                                        maxWidth: '70px',
-                                                        maxHeight: '70px',
-                                                        overflow: 'hidden'
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        width: 'clamp(50px, 12vw, 90px)',
+                                                        height: 'clamp(50px, 12vw, 90px)',
+                                                        minWidth: 'clamp(50px, 12vw, 90px)',
+                                                        minHeight: 'clamp(50px, 12vw, 90px)',
+                                                        maxWidth: 'clamp(50px, 12vw, 90px)',
+                                                        maxHeight: 'clamp(50px, 12vw, 90px)',
+                                                        overflow: 'visible',
+                                                        flexShrink: 0
                                                     }}>
                                                         <StyledPotionImg
                                                             src={potion.src}
@@ -1035,7 +1086,8 @@ function NovelCreate({ user }) {
                                                                 objectFit: 'contain',
                                                                 objectPosition: 'center',
                                                                 display: 'block',
-                                                                boxSizing: 'border-box'
+                                                                boxSizing: 'border-box',
+                                                                animation: isDisabled ? 'none' : 'potionGlow 3s ease-in-out infinite'
                                                             }}
                                                         />
                                                         {/* 일반 회원이고 비활성화된 경우 PREMIUM 표시 */}
@@ -1063,31 +1115,30 @@ function NovelCreate({ user }) {
                                                                 <span>PREMIUM</span>
                                                             </div>
                                                         )}
-                                                        {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
-                                                        {!isFreeMode && !isDisabled && potionId && ownedPotions[potionId] > 0 && (
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                top: '-6px',
-                                                                right: '-6px',
-                                                                background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
-                                                                color: 'white',
-                                                                borderRadius: '12px',
-                                                                minWidth: '20px',
-                                                                height: '20px',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                fontSize: '10px',
-                                                                fontWeight: '700',
-                                                                border: '2px solid white',
-                                                                boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
-                                                                zIndex: 10,
-                                                                padding: '0 4px'
-                                                            }}>
-                                                                {ownedPotions[potionId]}
-                                                            </div>
-                                                        )}
                                                     </div>
+                                                    {/* 포션 아래 장르와 개수 표시 (한 줄) */}
+                                                    {!isDisabled && (
+                                                        <div style={{
+                                                            fontSize: 'clamp(9px, 1.5vw, 11px)',
+                                                            fontWeight: '600',
+                                                            color: '#fff',
+                                                            textAlign: 'center',
+                                                            lineHeight: '1.3',
+                                                            whiteSpace: 'nowrap',
+                                                            marginTop: isBottomRow ? '4%' : '8%'
+                                                        }}>
+                                                            {t(potion.key)}
+                                                            {!isFreeMode && potionId && ownedPotions[potionId] > 0 && (
+                                                                <span style={{
+                                                                    marginLeft: '4px',
+                                                                    color: '#e46262',
+                                                                    fontWeight: '700'
+                                                                }}>
+                                                                    {ownedPotions[potionId]}개
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </motion.div>
                                             );
                                         })}
@@ -1193,13 +1244,22 @@ function NovelCreate({ user }) {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                top: 0, left: 0, width: '100%', height: '100%',
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                                fontWeight: 700, fontSize: 16, color: '#fff', textShadow: '0 2px 8px #0008',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: 700,
+                                                fontSize: 16,
+                                                color: '#3A2A1F',
+                                                textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
                                                 pointerEvents: 'none',
                                                 userSelect: 'none',
                                                 whiteSpace: 'nowrap',
                                                 padding: '0 8px',
+                                                textAlign: 'center',
                                             }}
                                         >
                                             {isLoading
@@ -1207,49 +1267,6 @@ function NovelCreate({ user }) {
                                                 : selectedPotion !== null
                                                     ? t('novel_generate_button_with_genre', { genre: t(potionImages[selectedPotion].key) })
                                                     : t('novel_generate_button')}
-                                            {selectedPotion !== null && !isLoading && (() => {
-                                                // useFree가 false로 명시된 경우 포션 사용만 표시
-                                                if (useFree === false) {
-                                                    const hasPotions = (() => {
-                                                        const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
-                                                            potionImages[selectedPotion].genre === '역사' ? 'historical' :
-                                                                potionImages[selectedPotion].genre === '추리' ? 'mystery' :
-                                                                    potionImages[selectedPotion].genre === '공포' ? 'horror' :
-                                                                        potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
-                                                                            potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
-                                                        return potionId && ownedPotions[potionId] && ownedPotions[potionId] > 0;
-                                                    })();
-                                                    if (hasPotions) {
-                                                        return (
-                                                            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
-                                                                {t('novel_generate_potion_use')}
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return null;
-                                                }
-
-
-                                                const hasPotions = (() => {
-                                                    const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
-                                                        potionImages[selectedPotion].genre === '역사' ? 'historical' :
-                                                            potionImages[selectedPotion].genre === '추리' ? 'mystery' :
-                                                                potionImages[selectedPotion].genre === '공포' ? 'horror' :
-                                                                    potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
-                                                                        potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
-                                                    return potionId && ownedPotions[potionId] && ownedPotions[potionId] > 0;
-                                                })();
-
-                                                // 포션 사용만 가능 (프리미엄 무료권 기능 제거)
-                                                if (hasPotions) {
-                                                    return (
-                                                        <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, whiteSpace: 'nowrap' }}>
-                                                            {t('novel_generate_potion_use')}
-                                                        </div>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
                                         </div>
                                     </div>
                                 </div>

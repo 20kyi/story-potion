@@ -406,7 +406,7 @@ ${getCreativeTransformationGuidance(true)}
 
 * **Selected Genre:** Fairy Tale
 * **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
-* **Style Guidelines:** Transform the events and emotions from the diary entries into a bright and heartwarming fairy tale. Develop the progression of magical adventures, create gentle lessons, and reveal the depth of characters through meaningful storytelling. The writing style should be bright, imaginative, and heartwarming with rich descriptions. Naturally incorporate magical elements and lessons, and vividly depict the growth, friendship, and warm moments between "I" and the surrounding characters.
+* **Style Guidelines:** Transform the events and emotions from the diary entries into a bright and heartwarming fairy tale. Develop the progression of magical adventures, create gentle lessons, and reveal the depth of characters through meaningful storytelling. **IMPORTANT: Write the fairy tale as if you are telling a story to a child. Use a warm, friendly, and gentle tone throughout. Avoid formal or essay-like writing. The writing style should be bright, imaginative, and heartwarming with rich descriptions. Naturally incorporate magical elements and lessons, and vividly depict the growth, friendship, and warm moments between "I" and the surrounding characters.**
 
 **STEP 4: Output Requirements:**
 
@@ -425,7 +425,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a fairy tale that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on imagination, gentle lessons, and heartwarming moments.`,
+First, create the narrative summary table, then write a fairy tale that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. **Write as if telling a story to a child - use a warm, friendly, and gentle tone throughout. Avoid formal or essay-like writing.** Focus on imagination, gentle lessons, and heartwarming moments.`,
             titlePrompt: `Read the following fairy tale carefully and suggest only one most fitting title in English that captures the essence, magical elements, and heartwarming moments of the story. The title should be charming, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
 [Novel Content]
@@ -450,7 +450,7 @@ ${getCreativeTransformationGuidance(false)}
 
 * **선택 장르:** 동화
 * **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
-* **스타일 지침:** 일기 속 사건과 감정을 밝고 따뜻한 동화로 발전시키고, 마법적 모험의 진행을 그려내며, 의미 있는 스토리텔링을 통해 인물의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 밝고 상상력이 풍부하며, 따뜻하고 풍부한 묘사가 있어야 합니다. 마법적 요소와 교훈을 자연스럽게 녹여내고, "나"와 주변 인물들의 성장과 우정, 따뜻한 순간들을 생생하게 그려내세요.
+* **스타일 지침:** 일기 속 사건과 감정을 밝고 따뜻한 동화로 발전시키고, 마법적 모험의 진행을 그려내며, 의미 있는 스토리텔링을 통해 인물의 깊이를 드러내는 플롯을 구성해야 합니다. **중요: 동화는 어린아이에게 말하듯이 써야 합니다. "~했어요", "~였어요", "~이었어요" 같은 존댓말 톤을 사용하세요. 수필처럼 딱딱하거나 문학적이지 말고, 마치 어린아이에게 이야기를 들려주는 듯 따뜻하고 친근한 톤으로 작성하세요. 문체는 밝고 상상력이 풍부하며, 따뜻하고 풍부한 묘사가 있어야 합니다. 마법적 요소와 교훈을 자연스럽게 녹여내고, "나"와 주변 인물들의 성장과 우정, 따뜻한 순간들을 생생하게 그려내세요.
 
 **4단계: 출력 조건:**
 
@@ -469,7 +469,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 동화를 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 동화를 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. **반드시 어린아이에게 말하듯이 "~했어요", "~였어요" 같은 존댓말 톤을 사용하고, 수필처럼 딱딱하지 않게 따뜻하고 친근한 톤으로 작성하세요.** 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요.`,
             titlePrompt: `다음 동화를 자세히 읽고, 이야기의 본질, 마법적 요소, 따뜻한 순간들을 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 매력적이고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
