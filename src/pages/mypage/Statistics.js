@@ -58,12 +58,12 @@ const StatCard = styled.div`
   }
 `;
 const StatImage = styled.img`
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border-radius: 0;
   object-fit: contain;
   background: transparent;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 `;
 const StatLabel = styled.div`
   font-weight: 700;

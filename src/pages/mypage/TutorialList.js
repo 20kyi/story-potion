@@ -136,7 +136,7 @@ function TutorialList({ user }) {
             return;
         }
         
-        navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre)}?userId=${tutorialNovel.userId}`, {
+        navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre, tutorialNovel.id)}?userId=${tutorialNovel.userId}`, {
             state: { tutorialNovel, returnPath: '/my/tutorial' }
         });
     };

@@ -40,9 +40,10 @@ exports.generateNovel = functions.runWith({
             );
         }
 
-        const { diaryContents, genre, userName, language } = data;
+        const { diaryContents, diaryData, genre, userName, language } = data;
         console.log("요청 데이터:", {
             diaryContentsLength: diaryContents?.length || 0,
+            diaryDataCount: diaryData?.length || 0,
             genre: genre,
             userName: userName,
             language: language
@@ -83,200 +84,8 @@ exports.generateNovel = functions.runWith({
 
             const targetLanguage = language === 'en' ? 'en' : 'ko';
 
-            // 1. 장르별 프롬프트 분기 함수 정의
-            function getPrompts(genre, diaryContents, novelContent, lang) {
-                const isEnglish = lang === 'en';
-                let contentPrompt, titlePrompt, imagePrompt;
-
-                const diaryBanClauseKo = `아래는 한 주간의 일기입니다.
-- 절대 일기와 관련된 인물, 사건, 배경, 감정, 구체적 내용, 메타적 언급(예: '이 일기를 바탕으로', '경험', '방문', '실제', '반영', '참고', '소재', '영감' 등)과 관련된 단어, 상황, 구조, 시점, 경험을 사용하지 마세요.
-- 일기와 관련된 그 어떤 흔적도 남기지 말고, 완전히 새로운 세계관, 인물, 사건, 대화, 분위기로 창작하세요.
-- 반드시 한국어로 소설을 작성하세요.
-`;
-
-                const diaryBanClauseEn = `Below is a week of diary entries.
-- Do NOT use any content, characters, events, background, emotions, meta references (such as “based on this diary”, “the writer experienced”, “visited”, “real”, “inspired by”, etc.), or any structure, perspective, or experience related to the diary.
-- Leave absolutely no trace of the diary. Write a completely new, original, and unrelated story with a new world, characters, events, dialogues, and atmosphere.
-- The novel must be written in English.
-`;
-
-                const diaryBanClause = isEnglish ? diaryBanClauseEn : diaryBanClauseKo;
-                switch (genre) {
-                    case '로맨스':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional romance novelist.
-${diaryBanClause}
-Write a long, immersive romance novel as if it will be published in a bookstore. Include rich emotions, conversations between characters, and inner monologues. Focus on love, excitement, and the changes in relationships. Do not separate introduction/body/conclusion—write it as one continuous, natural story.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a warm and emotional romance novel. Suggest only one most fitting title in English, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 로맨스 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 로맨스 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`;
-                        break;
-                    case '추리':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional mystery novelist.
-${diaryBanClause}
-Write a long, immersive mystery novel as if it will be published in a bookstore. Include clues, twists, psychological tension, investigation process, dialogues, and inner monologues. Do not separate introduction/body/conclusion—write it as one continuous, natural story.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a mystery novel full of deduction and twists. Suggest only one most fitting English title, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 추리 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 추리 소설처럼 치밀하고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 단서, 반전, 추리, 탐정의 추리 과정, 인물 간의 심리전과 대화, 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`;
-                        break;
-                    case '역사':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional historical novelist.
-${diaryBanClause}
-Write a long, immersive historical novel with vivid setting, accurate details, and rich descriptions of people's lives and events. Include dialogues and inner monologues. Write it as one continuous story.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a historical novel with a vivid sense of era. Suggest only one most fitting English title, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 역사 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 역사 소설처럼 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`;
-                        break;
-                    case '동화':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional children's fairy tale writer.
-${diaryBanClause}
-Write a bright, heartwarming, and meaningful fairy tale that feels like a published storybook. Use imagination, gentle lessons, dialogues, and inner monologues. Write it as one continuous story.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a bright and heartwarming fairy tale. Suggest only one most fitting English title, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 동화 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 동화처럼 밝고 환상적이며 교훈적이고, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 이야기로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`;
-                        break;
-                    case '판타지':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional fantasy novelist.
-${diaryBanClause}
-Write a long, immersive fantasy novel with a rich world, magic, mysterious beings, and adventures. Include dialogues and inner monologues and write it as one continuous story.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a fantasy novel set in a mysterious world. Suggest only one most fitting English title, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 판타지 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 판타지 소설처럼 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`;
-                        break;
-                    case '공포':
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional horror novelist.
-${diaryBanClause}
-Write a long, immersive psychological horror novel focusing on tension, unease, and atmosphere rather than gore. Avoid explicit violence, blood, ghosts, or corpses. Use strange memories, odd behaviors, subtle supernatural hints, dialogues, and inner monologues.
-
-[Diary entries]
-${diaryContents}`;
-                            titlePrompt = `This is a horror novel with strong psychological tension. Suggest only one most fitting English title, with no explanation.
-
-[Novel]
-${novelContent?.substring(0, 1000)}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 공포 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 공포 소설처럼 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 충분히 길고 몰입감 있게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 직접적인 폭력, 피, 유령, 시체 등은 피하고, 심리적 공포와 분위기, 내면 묘사에 집중해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요. 정체불명의 존재, 이상한 기억의 공백, 반복되는 꿈, 사진 속 괴이한 형체, 이상한 말투 등 공포 요소를 자유롭게 활용해 주세요. 배경은 일상적일수록 좋지만, 점점 이상한 기운이나 초자연적 사건이 드러나도록 구성해 주세요.
-
-[일기 내용]
-${diaryContents}`;
-                            titlePrompt = `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
-
-[소설 내용]
-${novelContent?.substring(0, 1000)}`;
-                        }
-                        imagePrompt = `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`;
-                        break;
-                    default:
-                        if (isEnglish) {
-                            contentPrompt = `You are a professional '${genre}' novelist.
-${diaryBanClause}
-Write a long, immersive novel as if it will be published in a bookstore. Include dialogues and inner monologues and write it as one continuous story.
-
-[Diary entries]
-${diaryContents}`;
-                        } else {
-                            contentPrompt = `당신은 실제 출판되는 장편 '${genre}' 소설 작가입니다.
-${diaryBanClause}
-소설은 실제 서점에서 판매되는 소설처럼 문학적이고 몰입감 있게, 충분히 길고 풍부하게 써주세요. 등장인물, 동물, 사물들이 서로 대화하고, 혼자 생각하는 장면을 꼭 포함해 주세요. 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
-
-[일기 내용]
-${diaryContents}`;
-                        }
-                }
-                return { contentPrompt, titlePrompt, imagePrompt };
-            }
+            // 프롬프트 모듈 불러오기
+            const { getPrompts } = require('./prompts/prompts');
 
             // 재시도 헬퍼 함수 (exponential backoff)
             async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
@@ -315,7 +124,8 @@ ${diaryContents}`;
             console.log("장르:", genre);
             console.log("타겟 언어:", targetLanguage);
             console.log("일기 내용 길이:", diaryContents?.length || 0);
-            const { contentPrompt } = getPrompts(genre, diaryContents, null, targetLanguage);
+            console.log("일기 데이터 개수:", diaryData?.length || 0);
+            const { contentPrompt } = getPrompts(genre, diaryContents, null, targetLanguage, diaryData);
             console.log("프롬프트 길이:", contentPrompt?.length || 0);
             let contentResponse;
             try {
@@ -354,12 +164,104 @@ ${diaryContents}`;
             if (!contentResponse?.choices?.[0]?.message?.content) {
                 throw new Error("소설 내용 생성 응답이 올바르지 않습니다.");
             }
-            const novelContent = contentResponse.choices[0].message.content;
-            console.log("소설 내용 생성 완료, 길이:", novelContent.length);
+            const fullResponse = contentResponse.choices[0].message.content;
+            console.log("소설 내용 생성 완료, 길이:", fullResponse.length);
+
+            // 요약표와 소설 본문 분리
+            let narrativeSummary = '';
+            let novelContent = fullResponse;
+
+            // 요약표가 포함되어 있는지 확인하고 추출
+            const summaryMarkers = [
+                /##?\s*서사\s*요약표/i,
+                /##?\s*Narrative\s*Summary\s*Table/i,
+                /##?\s*7일간의\s*서사\s*요약표/i,
+                /##?\s*7-Day\s*Narrative\s*Summary/i,
+                /##?\s*요약표/i,
+                /##?\s*Summary\s*Table/i,
+            ];
+
+            // 요약표 시작 지점 찾기
+            let summaryStartIndex = -1;
+            let summaryMarker = '';
+            for (const marker of summaryMarkers) {
+                const match = fullResponse.match(marker);
+                if (match) {
+                    summaryStartIndex = match.index;
+                    summaryMarker = match[0];
+                    break;
+                }
+            }
+
+            // 소설 본문 시작 지점 찾기 (제목이나 본문 시작 표시)
+            const novelStartMarkers = [
+                /##?\s*소설\s*시작/i,
+                /##?\s*Begin\s*the\s*Novel/i,
+                /##?\s*소설\s*제목/i,
+                /##?\s*Novel\s*Title/i,
+                /^#\s+[^#]/m, // 제목 형식 (# 제목) - 단, ##가 아닌 #로 시작
+            ];
+
+            let novelStartIndex = -1;
+            for (const marker of novelStartMarkers) {
+                const match = fullResponse.match(marker);
+                if (match && match.index > (summaryStartIndex || 0)) {
+                    novelStartIndex = match.index;
+                    break;
+                }
+            }
+
+            // 요약표와 소설 본문 분리
+            if (summaryStartIndex >= 0 && novelStartIndex > summaryStartIndex) {
+                // 요약표와 소설 시작 마커가 모두 있는 경우
+                narrativeSummary = fullResponse.substring(summaryStartIndex, novelStartIndex).trim();
+                novelContent = fullResponse.substring(novelStartIndex).trim();
+
+                // 소설 본문에서 마커 제거
+                novelContent = novelContent.replace(/^##?\s*(소설\s*시작|Begin\s*the\s*Novel|소설\s*제목|Novel\s*Title)[\s:]*/i, '').trim();
+            } else if (summaryStartIndex >= 0) {
+                // 요약표만 있고 소설 시작 마커가 없는 경우
+                // 요약표 다음에 실제 소설이 시작되는 부분 찾기
+                // 요약표 섹션은 보통 500-1500자 정도
+                const summarySectionEnd = summaryStartIndex + 1500;
+                const possibleNovelStart = fullResponse.indexOf('\n\n##', summaryStartIndex + 200);
+
+                if (possibleNovelStart > summaryStartIndex && possibleNovelStart < summarySectionEnd) {
+                    // 다른 섹션이 발견된 경우
+                    narrativeSummary = fullResponse.substring(summaryStartIndex, possibleNovelStart).trim();
+                    novelContent = fullResponse.substring(possibleNovelStart).trim();
+                } else {
+                    // 요약표 다음에 빈 줄이 2개 이상 있는 부분 찾기
+                    const doubleNewlineIndex = fullResponse.indexOf('\n\n\n', summaryStartIndex + 200);
+                    if (doubleNewlineIndex > summaryStartIndex && doubleNewlineIndex < summarySectionEnd) {
+                        narrativeSummary = fullResponse.substring(summaryStartIndex, doubleNewlineIndex).trim();
+                        novelContent = fullResponse.substring(doubleNewlineIndex).trim();
+                    } else {
+                        // 요약표가 전체 응답의 일부인 경우, 요약표 이후를 소설로 간주
+                        const estimatedSummaryEnd = summaryStartIndex + 1200;
+                        narrativeSummary = fullResponse.substring(summaryStartIndex, estimatedSummaryEnd).trim();
+                        novelContent = fullResponse.substring(estimatedSummaryEnd).trim();
+                    }
+                }
+            }
+
+            // 요약표 마커 제거
+            if (narrativeSummary) {
+                narrativeSummary = narrativeSummary.replace(/^##?\s*(서사\s*요약표|Narrative\s*Summary\s*Table|7일간의\s*서사\s*요약표|7-Day\s*Narrative\s*Summary|요약표|Summary\s*Table)[\s:]*/i, '').trim();
+            }
+
+            // 요약표가 없으면 전체를 소설로 간주
+            if (!narrativeSummary || narrativeSummary.length < 50) {
+                novelContent = fullResponse;
+                narrativeSummary = '';
+            }
+
+            console.log("요약표 추출 완료, 길이:", narrativeSummary.length);
+            console.log("소설 본문 길이:", novelContent.length);
 
             // 3. 소설 제목 생성
             console.log("소설 제목 생성 시작...");
-            const { titlePrompt } = getPrompts(genre, diaryContents, novelContent, targetLanguage);
+            const { titlePrompt } = getPrompts(genre, diaryContents, novelContent, targetLanguage, diaryData);
             let titleResponse;
             try {
                 titleResponse = await retryWithBackoff(async () => {
@@ -449,8 +351,13 @@ ${diaryContents}`;
                 const imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
                 console.log("Storage 업로드 완료:", imageUrl);
 
-                // 6. 모든 결과 반환
-                return { content: novelContent, title: novelTitle, imageUrl: imageUrl };
+                // 6. 모든 결과 반환 (요약표 포함)
+                return {
+                    content: novelContent,
+                    title: novelTitle,
+                    imageUrl: imageUrl,
+                    narrativeSummary: narrativeSummary || null // 요약표 추가
+                };
             } catch (error) {
                 console.error("Storage 업로드 실패:", error);
                 throw new Error(`Storage 업로드 실패: ${error.message}`);
@@ -1037,7 +944,7 @@ exports.chargePremiumFreeNovel = functions.pubsub.schedule('every 1 hours').time
 // 기존 프리미엄 사용자 무료 생성권 마이그레이션 함수
 exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, context) => {
     console.log('프리미엄 무료 생성권 마이그레이션 시작...');
-    
+
     if (!context.auth) {
         throw new functions.https.HttpsError(
             'unauthenticated',
@@ -1086,10 +993,10 @@ exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, conte
         }
 
         const now = new Date();
-        
+
         // 경과 일수 계산
         const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-        
+
         // 총 충전 횟수 계산 (7일마다 1개씩)
         // 시작일 당일에도 1개 지급되므로 +1
         const totalCharged = Math.floor(elapsedDays / 7) + 1;
@@ -1109,7 +1016,7 @@ exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, conte
         // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
         const lastChargeDate = new Date(startDate);
         lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
-        
+
         // 다음 충전 시점 = 마지막 충전일 + 7일
         const nextChargeDate = new Date(lastChargeDate);
         nextChargeDate.setDate(nextChargeDate.getDate() + 7);
@@ -1154,7 +1061,7 @@ exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, conte
 // 모든 프리미엄 사용자 무료 생성권 일괄 마이그레이션 함수
 exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, context) => {
     console.log('모든 프리미엄 사용자 무료 생성권 일괄 마이그레이션 시작...');
-    
+
     if (!context.auth) {
         throw new functions.https.HttpsError(
             'unauthenticated',
@@ -1167,7 +1074,7 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
         const monthlyPremiumUsers = await admin.firestore().collection('users')
             .where('isMonthlyPremium', '==', true)
             .get();
-        
+
         const yearlyPremiumUsers = await admin.firestore().collection('users')
             .where('isYearlyPremium', '==', true)
             .get();
@@ -1192,7 +1099,7 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
                 }
 
                 const userData = userDoc.data();
-                
+
                 // 이미 마이그레이션된 사용자는 스킵 (premiumFreeNovelCount가 있으면)
                 if (userData.premiumFreeNovelCount !== undefined) {
                     console.log(`이미 마이그레이션됨: ${userId}`);
@@ -1215,10 +1122,10 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
                 }
 
                 const now = new Date();
-                
+
                 // 경과 일수 계산
                 const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-                
+
                 // 총 충전 횟수 계산 (7일마다 1개씩)
                 // 시작일 당일에도 1개 지급되므로 +1
                 const totalCharged = Math.floor(elapsedDays / 7) + 1;
@@ -1238,7 +1145,7 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
                 // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
                 const lastChargeDate = new Date(startDate);
                 lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
-                
+
                 // 다음 충전 시점 = 마지막 충전일 + 7일
                 const nextChargeDate = new Date(lastChargeDate);
                 nextChargeDate.setDate(nextChargeDate.getDate() + 7);
@@ -1612,7 +1519,7 @@ exports.sendEventNotification = functions.https.onCall(async (data, context) => 
 // 비밀번호 재설정을 위한 이메일 인증 코드 발송
 exports.sendPasswordResetCode = functions.https.onCall(async (data, context) => {
     const { email } = data;
-    
+
     if (!email) {
         throw new functions.https.HttpsError(
             'invalid-argument',
@@ -1637,7 +1544,7 @@ exports.sendPasswordResetCode = functions.https.onCall(async (data, context) => 
 
         // 6자리 인증 코드 생성
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         // Firestore에 인증 코드 저장 (5분 만료)
         const codeRef = admin.firestore().collection('passwordResetCodes').doc();
         await codeRef.set({
@@ -1685,7 +1592,7 @@ exports.sendPasswordResetCode = functions.https.onCall(async (data, context) => 
 </body>
 </html>
         `;
-        
+
         const emailText = `안녕하세요.
 
 비밀번호 재설정을 요청하셨습니다.
@@ -1703,7 +1610,7 @@ Story Potion 팀`;
         // firebase functions:config:set gmail.email="your-email@gmail.com" gmail.password="your-app-password"
         const gmailEmail = functions.config().gmail?.email;
         const gmailPassword = functions.config().gmail?.password;
-        
+
         if (gmailEmail && gmailPassword) {
             // nodemailer를 사용한 이메일 발송
             const transporter = nodemailer.createTransport({
@@ -1736,7 +1643,7 @@ Story Potion 팀`;
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 sent: false
             });
-            
+
             // 개발 환경에서는 코드를 반환
             if (process.env.NODE_ENV === 'development' || !gmailEmail) {
                 console.log('개발 환경 - 인증 코드:', code);
@@ -1764,7 +1671,7 @@ Story Potion 팀`;
 // 이메일 인증 코드 확인 및 비밀번호 재설정
 exports.verifyPasswordResetCode = functions.https.onCall(async (data, context) => {
     const { email, code, newPassword } = data;
-    
+
     if (!email || !code || !newPassword) {
         throw new functions.https.HttpsError(
             'invalid-argument',
@@ -1948,18 +1855,18 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
 
         // 카카오 REST API 키 (Firebase Functions 설정에서 가져오기)
         // 우선순위: 1) 환경 변수, 2) Functions 설정, 3) 하드코딩 (테스트용)
-        const KAKAO_REST_API_KEY = 
-            process.env.KAKAO_REST_API_KEY || 
-            functions.config().kakao?.rest_api_key || 
+        const KAKAO_REST_API_KEY =
+            process.env.KAKAO_REST_API_KEY ||
+            functions.config().kakao?.rest_api_key ||
             '10c127c108feaa420dc5331b6ff00a8e'; // 테스트용 - 나중에 제거 필요
-        
+
         if (!KAKAO_REST_API_KEY) {
             throw new functions.https.HttpsError(
                 'failed-precondition',
                 '카카오 REST API 키가 설정되지 않았습니다.'
             );
         }
-        
+
         console.log('카카오 REST API 키 사용:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
 
         // 1. code를 access_token으로 교환
@@ -1967,7 +1874,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         console.log('토큰 교환 시 사용할 리다이렉트 URI:', finalRedirectUri);
         console.log('인증 코드:', code);
         console.log('클라이언트 ID:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
-        
+
         const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
             method: 'POST',
             headers: {
@@ -1987,7 +1894,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
             console.error('사용된 리다이렉트 URI:', finalRedirectUri);
             console.error('카카오 REST API 키:', KAKAO_REST_API_KEY ? '설정됨' : '설정되지 않음');
             console.error('HTTP 상태 코드:', tokenResponse.status);
-            
+
             // 에러 메시지에 카카오 API 응답 포함
             let errorMessage = '카카오 인증 토큰 교환에 실패했습니다.';
             try {
@@ -2001,7 +1908,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
                 // JSON 파싱 실패 시 원본 텍스트 사용
                 errorMessage += ` (${errorText})`;
             }
-            
+
             throw new functions.https.HttpsError(
                 'internal',
                 errorMessage
@@ -2069,7 +1976,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
             // 현재 사용 중인 서비스 계정 정보 로깅
             const app = admin.app();
             console.log('Firebase Admin 앱 이름:', app.name);
-            
+
             customToken = await admin.auth().createCustomToken(uid, {
                 provider: 'kakao',
                 kakaoId: kakaoId,
@@ -2080,16 +1987,16 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
             console.error('에러 코드:', tokenError.code);
             console.error('에러 메시지:', tokenError.message);
             console.error('에러 상세:', JSON.stringify(tokenError, null, 2));
-            
+
             // 권한 오류인 경우 더 자세한 안내
-            if (tokenError.code === 'auth/insufficient-permission' || 
+            if (tokenError.code === 'auth/insufficient-permission' ||
                 tokenError.message?.includes('Permission') ||
                 tokenError.message?.includes('iam.serviceAccounts.signBlob')) {
-                
+
                 // 권한 오류이지만, Firestore에 사용자 정보는 저장할 수 있으므로
                 // 커스텀 토큰 없이 사용자 정보만 반환하고 클라이언트에서 처리하도록 변경
                 console.warn('⚠️ 커스텀 토큰 생성 권한이 없습니다. 사용자 정보만 반환합니다.');
-                
+
                 // Firestore에 사용자 정보는 저장
                 const userRef = db.collection('users').doc(uid);
                 const userData = {
@@ -2120,7 +2027,7 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
                 } else {
                     await userRef.update(userData);
                 }
-                
+
                 // 커스텀 토큰 없이 사용자 정보만 반환
                 // 클라이언트에서 Firebase Auth 없이 Firestore에서 직접 사용자 정보를 사용하도록 처리
                 return {

@@ -1192,7 +1192,7 @@ function Home({ user }) {
                 return (
                   <>
                     <TutorialBox
-                      onClick={() => navigate(`/novel/${createNovelUrl(appTutorial.year, appTutorial.month, appTutorial.weekNum, appTutorial.genre)}?userId=${appTutorial.userId}`, {
+                      onClick={() => navigate(`/novel/${createNovelUrl(appTutorial.year, appTutorial.month, appTutorial.weekNum, appTutorial.genre, appTutorial.id)}?userId=${appTutorial.userId}`, {
                         state: { tutorialNovel: appTutorial, returnPath: '/' }
                       })}
                     >
@@ -1203,7 +1203,7 @@ function Home({ user }) {
                       <TutorialTitle>{appTutorial.title}</TutorialTitle>
                     </TutorialBox>
                     <TutorialBox
-                      onClick={() => navigate(`/novel/${createNovelUrl(novelTutorial.year, novelTutorial.month, novelTutorial.weekNum, novelTutorial.genre)}?userId=${novelTutorial.userId}`, {
+                      onClick={() => navigate(`/novel/${createNovelUrl(novelTutorial.year, novelTutorial.month, novelTutorial.weekNum, novelTutorial.genre, novelTutorial.id)}?userId=${novelTutorial.userId}`, {
                         state: { tutorialNovel: novelTutorial, returnPath: '/' }
                       })}
                     >

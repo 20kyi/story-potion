@@ -174,7 +174,7 @@ const NovelListByGenre = ({ user }) => {
   }, [user, genre]);
 
   const handleNovelClick = (novel) => {
-    navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
+    navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`);
   };
 
   const bannerImage = genreBanners[genre];

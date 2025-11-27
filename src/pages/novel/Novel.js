@@ -1156,6 +1156,30 @@ const Novel = ({ user }) => {
                         newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                     }
                 });
+                
+                // 같은 주차, 같은 장르의 소설이 여러 개 있을 때 최신 것만 유지
+                Object.keys(newNovelsMap).forEach(weekKey => {
+                    const novels = newNovelsMap[weekKey];
+                    // 장르별로 그룹화
+                    const novelsByGenre = {};
+                    novels.forEach(novel => {
+                        const genreKey = novel.genre || 'default';
+                        if (!novelsByGenre[genreKey]) {
+                            novelsByGenre[genreKey] = [];
+                        }
+                        novelsByGenre[genreKey].push(novel);
+                    });
+                    // 각 장르별로 최신 것만 유지 (이미 createdAt desc로 정렬되어 있음)
+                    const filteredNovels = Object.values(novelsByGenre).map(genreNovels => {
+                        // createdAt 기준으로 정렬 (최신순)
+                        return genreNovels.sort((a, b) => {
+                            const aTime = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+                            const bTime = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+                            return bTime - aTime;
+                        })[0]; // 가장 최신 것만
+                    });
+                    newNovelsMap[weekKey] = filteredNovels;
+                });
                 setNovelsMap(newNovelsMap);
                 // 최근 5개만 표시
                 setMyNovels(allMyNovels.slice(0, 5));
@@ -1397,6 +1421,31 @@ const Novel = ({ user }) => {
                             newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                         }
                     });
+                    
+                    // 같은 주차, 같은 장르의 소설이 여러 개 있을 때 최신 것만 유지
+                    Object.keys(newNovelsMap).forEach(weekKey => {
+                        const novels = newNovelsMap[weekKey];
+                        // 장르별로 그룹화
+                        const novelsByGenre = {};
+                        novels.forEach(novel => {
+                            const genreKey = novel.genre || 'default';
+                            if (!novelsByGenre[genreKey]) {
+                                novelsByGenre[genreKey] = [];
+                            }
+                            novelsByGenre[genreKey].push(novel);
+                        });
+                        // 각 장르별로 최신 것만 유지 (이미 createdAt desc로 정렬되어 있음)
+                        const filteredNovels = Object.values(novelsByGenre).map(genreNovels => {
+                            // createdAt 기준으로 정렬 (최신순)
+                            return genreNovels.sort((a, b) => {
+                                const aTime = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+                                const bTime = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+                                return bTime - aTime;
+                            })[0]; // 가장 최신 것만
+                        });
+                        newNovelsMap[weekKey] = filteredNovels;
+                    });
+                    
                     setNovelsMap(newNovelsMap);
                     // 최근 5개만 표시
                     setMyNovels(allMyNovels.slice(0, 5));
@@ -2066,7 +2115,7 @@ const Novel = ({ user }) => {
                         {myNovels.map(novel => (
                             <NovelBox
                                 key={novel.id}
-                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}
+                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`)}
                             >
                                 <NovelCoverImage
                                     src={novel.imageUrl || '/novel_banner/default.png'}
@@ -2099,7 +2148,7 @@ const Novel = ({ user }) => {
                         {purchasedNovels.map(novel => (
                             <NovelBox
                                 key={novel.id}
-                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`, {
+                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
                                     state: { returnPath: '/novel' }
                                 })}
                             >
@@ -2299,7 +2348,8 @@ const Novel = ({ user }) => {
                                         currentDate.getFullYear(),
                                         currentDate.getMonth() + 1,
                                         week.weekNum,
-                                        firstNovel.genre
+                                        firstNovel.genre,
+                                        firstNovel.id
                                     );
                                     navigate(`/novel/${novelKey}`);
                                 }
@@ -2471,7 +2521,8 @@ const Novel = ({ user }) => {
                                         currentDate.getFullYear(),
                                         currentDate.getMonth() + 1,
                                         week.weekNum,
-                                        firstNovel.genre
+                                        firstNovel.genre,
+                                        firstNovel.id
                                     );
                                     navigate(`/novel/${novelKey}`);
                                 }
@@ -2646,7 +2697,8 @@ const Novel = ({ user }) => {
                                             novel.year,
                                             novel.month,
                                             novel.weekNum,
-                                            novel.genre
+                                            novel.genre,
+                                            novel.id
                                         );
                                         navigate(`/novel/${novelKey}`);
                                         setSelectedWeekNovels(null);

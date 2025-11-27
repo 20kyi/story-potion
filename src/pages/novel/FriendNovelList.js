@@ -549,7 +549,7 @@ function FriendNovelList({ user }) {
                             filteredNovels.map((novel) => (
                                 <NovelItem
                                     key={novel.id}
-                                    onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}?userId=${novel.userId}`) : undefined}
+                                    onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`) : undefined}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'flex-start',

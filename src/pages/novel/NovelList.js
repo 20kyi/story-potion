@@ -155,7 +155,7 @@ function NovelList() {
             {novels.map((novel) => (
               <NovelItem
                 key={novel.id}
-                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`)}
+                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`)}
               >
                 <NovelTitle>{novel.title}</NovelTitle>
                 <NovelDate>{formatDate(novel.date)}</NovelDate>

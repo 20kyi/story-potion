@@ -816,7 +816,7 @@ function CompletedNovels({ user }) {
                                         $selected={selectedNovels.has(novel.id)}
                                         onClick={() => {
                                             if (!showCheckboxes) {
-                                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre)}`);
+                                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`);
                                             }
                                         }}
                                     >

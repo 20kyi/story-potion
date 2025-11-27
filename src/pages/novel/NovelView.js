@@ -7,7 +7,7 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { parseNovelUrl } from '../../utils/novelUtils';
 import { isTutorialNovel } from '../../utils/tutorialNovel';
 import { db } from '../../firebase';
-import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc, runTransaction, doc as fsDoc, setDoc, getDoc as getFsDoc, addDoc, Timestamp, updateDoc, orderBy } from 'firebase/firestore';
 import { getFsDoc as getDocFS } from 'firebase/firestore';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { useTheme } from '../../ThemeContext';
@@ -797,30 +797,62 @@ function NovelView({ user }) {
                 }
 
                 if (isDateKey) {
-                    // 연-월-주차(및 장르)로 쿼리 (targetUserId 사용)
-                    const { year, month, weekNum, genre } = parsedUrl;
-                    const novelsRef = collection(db, 'novels');
-                    let q = query(
-                        novelsRef,
-                        where('year', '==', year),
-                        where('month', '==', month),
-                        where('weekNum', '==', weekNum),
-                        where('userId', '==', targetUserId)
-                    );
-                    // 장르가 있으면 장르 필터 추가
-                    if (genre) {
-                        q = query(q, where('genre', '==', genre));
+                    const { year, month, weekNum, genre, id: novelId } = parsedUrl;
+                    
+                    // ID가 있으면 ID로 직접 조회 (가장 우선)
+                    if (novelId) {
+                        try {
+                            const novelRef = doc(db, 'novels', novelId);
+                            const novelSnap = await getDoc(novelRef);
+                            if (novelSnap.exists()) {
+                                const novelData = novelSnap.data();
+                                // 삭제되지 않고, 사용자가 일치하는 소설만 가져오기
+                                if (novelData.deleted !== true && novelData.userId === targetUserId) {
+                                    fetchedNovel = { ...novelData, id: novelSnap.id };
+                                }
+                            }
+                        } catch (error) {
+                            console.error('ID로 소설 조회 실패:', error);
+                        }
                     }
-                    const snapshot = await getDocs(q);
-                    if (!snapshot.empty) {
-                        fetchedNovel = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    
+                    // ID로 조회 실패했거나 ID가 없는 경우 연-월-주차(및 장르)로 쿼리
+                    if (!fetchedNovel) {
+                        const novelsRef = collection(db, 'novels');
+                        let q = query(
+                            novelsRef,
+                            where('year', '==', year),
+                            where('month', '==', month),
+                            where('weekNum', '==', weekNum),
+                            where('userId', '==', targetUserId),
+                            orderBy('createdAt', 'desc') // 최신순 정렬
+                        );
+                        // 장르가 있으면 장르 필터 추가
+                        if (genre) {
+                            q = query(q, where('genre', '==', genre));
+                        }
+                        const snapshot = await getDocs(q);
+                        if (!snapshot.empty) {
+                            // 삭제되지 않은 소설 중 가장 최신 것만 선택
+                            const validNovels = snapshot.docs
+                                .map(doc => ({ id: doc.id, ...doc.data() }))
+                                .filter(novel => novel.deleted !== true);
+                            
+                            if (validNovels.length > 0) {
+                                fetchedNovel = validNovels[0]; // 이미 createdAt desc로 정렬되어 있으므로 첫 번째가 최신
+                            }
+                        }
                     }
                 } else {
                     // 기존: 랜덤 문서 ID로 접근
                     const novelRef = doc(db, 'novels', id);
                     const novelSnap = await getDoc(novelRef);
                     if (novelSnap.exists()) {
-                        fetchedNovel = { ...novelSnap.data(), id: novelSnap.id };
+                        const novelData = novelSnap.data();
+                        // 삭제되지 않은 소설만 가져오기
+                        if (novelData.deleted !== true) {
+                            fetchedNovel = { ...novelData, id: novelSnap.id };
+                        }
                     }
                 }
                 if (!fetchedNovel) {
