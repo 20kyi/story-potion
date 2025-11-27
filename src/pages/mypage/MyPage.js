@@ -1224,13 +1224,13 @@ function MyPage({ user }) {
                     justifyContent: 'center',
                     gap: '4px'
                   }}>
-                    <span>광고 제거</span>
+                    <span>일기 사진 4개 업로드</span>
                     <span>·</span>
-                    <span>AI 일기</span>
+                    <span>일기 전용 스티커</span>
                     <span>·</span>
-                    <span>주간 무료 포션</span>
+                    <span>한 주에 여러 장르 소설 생성</span>
                     <span>·</span>
-                    <span>프리미엄 스티커</span>
+                    <span>AI 일기 생성</span>
                   </div>
                   <div style={{
                     background: theme.premiumUpgradeCardButtonBg || 'white',

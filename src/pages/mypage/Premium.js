@@ -172,15 +172,14 @@ const CancelButton = styled.button`
 `;
 
 const premiumFeatures = [
-  { id: 'ads', titleKey: 'premium_feature_ads_title', descKey: 'premium_feature_ads_desc' },
-  { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
+  { id: 'photo-upload', titleKey: 'premium_feature_photo_upload_title', descKey: 'premium_feature_photo_upload_desc' },
+  { id: 'premium-sticker', titleKey: 'premium_feature_sticker_title', descKey: 'premium_feature_sticker_desc' },
   {
     id: 'free-potion-on-weekly-novel',
     titleKey: 'premium_feature_free_potion_title',
     descKey: 'premium_feature_free_potion_desc',
   },
-  { id: 'premium-sticker', titleKey: 'premium_feature_sticker_title', descKey: 'premium_feature_sticker_desc' },
-  { id: 'photo-upload', titleKey: 'premium_feature_photo_upload_title', descKey: 'premium_feature_photo_upload_desc' },
+  { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
 ];
 
 function Premium({ user }) {
