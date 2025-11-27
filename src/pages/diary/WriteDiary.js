@@ -677,6 +677,7 @@ function WriteDiary({ user }) {
     // AI 보강 관련 state
     const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
     const [enhancedContent, setEnhancedContent] = useState('');
+    const [enhancedTitle, setEnhancedTitle] = useState('');
     const [isEnhancing, setIsEnhancing] = useState(false);
 
     // 스티커 관련 state
@@ -1541,6 +1542,7 @@ function WriteDiary({ user }) {
 
             if (result.data?.enhancedContent) {
                 setEnhancedContent(result.data.enhancedContent);
+                setEnhancedTitle(result.data.enhancedTitle || '');
                 setIsEnhanceModalOpen(true);
             } else {
                 toast.showToast('AI 보강에 실패했습니다.', 'error');
@@ -2373,6 +2375,12 @@ function WriteDiary({ user }) {
                                 </EnhanceModalClose>
                             </EnhanceModalHeader>
                             <EnhanceModalBody>
+                                {enhancedTitle && (
+                                    <EnhanceSection>
+                                        <EnhanceLabel isDark={isDark}>AI로 생성한 제목</EnhanceLabel>
+                                        <EnhanceText isDark={isDark} style={{ fontWeight: 'bold', fontSize: '18px' }}>{enhancedTitle}</EnhanceText>
+                                    </EnhanceSection>
+                                )}
                                 <EnhanceSection>
                                     <EnhanceLabel isDark={isDark}>원본 일기</EnhanceLabel>
                                     <EnhanceText isDark={isDark}>{diary.content}</EnhanceText>
@@ -2393,7 +2401,11 @@ function WriteDiary({ user }) {
                                 </EnhanceCancelButton>
                                 <EnhanceApplyButton
                                     onClick={() => {
-                                        setDiary(prev => ({ ...prev, content: enhancedContent }));
+                                        setDiary(prev => ({ 
+                                            ...prev, 
+                                            content: enhancedContent,
+                                            title: enhancedTitle || prev.title
+                                        }));
                                         toast.showToast('AI 일기가 수정되었습니다!', 'success');
                                         setIsEnhanceModalOpen(false);
                                     }}

@@ -533,6 +533,15 @@ exports.enhanceDiary = functions.runWith({
 2. **Length:** The entry must be structured into a minimum of 3 paragraphs, aiming for 200-400 words.
 3. **Core Focus:** Absolutely maintain the core subject and emotion of the original entry, augmenting it with detailed descriptions and personal reflection.
 
+## Writing Style Guidelines
+1. **Formal Written Style:** Write in a formal written style (문어체), not conversational or casual.
+2. **Sentence Endings:** All sentences must end in declarative form (e.g., "~했다", "~이었다").
+3. **Avoid Excessive Emotion:** Prohibit excessive emotional expressions, exclamations, and colloquialisms.
+4. **Simple Language:** Minimize difficult literary words, metaphors, and similes.
+5. **Fact-Based:** Record facts concisely and clearly.
+6. **No Distortion:** Do not distort content. Naturally supplement context based on the information provided by the user.
+7. **Professional Tone:** Prohibit friendly or playful speech patterns.
+
 ## Mandatory Content Expansion
 * **Setting Description:** Add sensory details (sight, sound, smell, etc.) to paint a vivid picture of the atmosphere or location where the event took place.
 * **Emotional Depth:** Expand upon the user's emotion, exploring the 'why' and the 'internal thoughts' surrounding the event.
@@ -543,12 +552,21 @@ Output ONLY the refined diary text. Do not include any titles, introductory phra
 
 [Original Diary]
 ${diaryContent}`
-                : `당신은 감성적이고 문학적인 작가입니다. 당신의 임무는 사용자가 제공한 간단하고 핵심적인 일기 내용을 바탕으로, 그 감정과 경험을 최대한 살려 더 풍부하고 구체적이며 매력적인 문체의 일기로 확장하고 수정하는 것입니다.
+                : `당신의 임무는 사용자가 제공한 간단하고 핵심적인 일기 내용을 바탕으로, 그 감정과 경험을 최대한 살려 더 풍부하고 구체적인 일기로 확장하고 수정하는 것입니다.
 
 ## 스타일 및 목표
 1. 문체: 따뜻하고, 회고적이며, 감성적인 에세이 문체로 작성합니다.
-2. 길이: 최소 3문단, 200~400자 분량으로 작성합니다.
+2. 길이: 최소 2~3문단, 200~400자 분량으로 작성합니다.
 3. 핵심: 원본 일기의 핵심 내용과 감정을 절대 놓치지 않고, 이를 구체적인 묘사와 개인적인 성찰로 보강해야 합니다.
+
+## 문체 지침
+1. **문어체 기반 서술:** 구어체나 대화체가 아닌 문어체로 작성합니다.
+2. **평서체 마무리:** 모든 문장은 "~했다", "~이었다"와 같은 평서체로 마무리합니다.
+3. **과도한 표현 금지:** 과도한 감정표현, 감탄사, 구어체를 사용하지 않습니다.
+4. **단순한 어휘:** 어려운 문학적 단어나 은유, 비유를 최소화합니다.
+5. **사실 위주 기록:** 사실을 위주로 간결하게 기록합니다.
+6. **내용 왜곡 금지:** 내용을 왜곡하지 않으며, 사용자가 제공한 정보를 기반으로 자연스럽게 맥락을 보완합니다.
+7. **정중한 말투:** 친근하거나 장난스러운 말투를 사용하지 않습니다.
 
 ## 확장할 내용 (필수 포함)
 * 주변 묘사: 사건이 일어난 장소의 분위기나 오감을 자극하는 디테일을 추가합니다.
@@ -576,7 +594,41 @@ ${diaryContent}`;
             const enhancedContent = response.choices[0].message.content.trim();
             console.log("ai 일기 완료, 길이:", enhancedContent.length);
 
-            return { enhancedContent };
+            // 일기 제목 생성
+            console.log("일기 제목 생성 시작...");
+            const titlePrompt = isEnglish
+                ? `Based on the following diary entry, suggest only one most fitting title in English. The title should be concise, meaningful, and reflect the core emotion or event of the diary. Do not include any explanation, only the title.
+
+[Diary Entry]
+${enhancedContent}`
+                : `다음 일기 내용을 바탕으로 가장 어울리는 제목 하나만 추천해줘. 제목은 간결하고 의미 있으며, 일기의 핵심 감정이나 사건을 반영해야 해. 설명 없이 제목만 말해줘.
+
+[일기 내용]
+${enhancedContent}`;
+
+            let titleResponse;
+            try {
+                titleResponse = await openai.chat.completions.create({
+                    model: "gpt-4o",
+                    messages: [{ role: "user", content: titlePrompt }],
+                    temperature: 0.8,
+                    max_tokens: 60,
+                });
+            } catch (error) {
+                console.error("일기 제목 생성 실패:", error.message);
+                // 제목 생성 실패해도 일기 내용은 반환
+                return { enhancedContent, enhancedTitle: null };
+            }
+
+            if (!titleResponse?.choices?.[0]?.message?.content) {
+                console.warn("일기 제목 생성 응답이 올바르지 않습니다.");
+                return { enhancedContent, enhancedTitle: null };
+            }
+
+            const enhancedTitle = titleResponse.choices[0].message.content.replace(/"/g, '').trim();
+            console.log("일기 제목 생성 완료:", enhancedTitle);
+
+            return { enhancedContent, enhancedTitle };
         } catch (error) {
             console.error("ai 일기 실패 - 상세 에러:", {
                 message: error.message,
