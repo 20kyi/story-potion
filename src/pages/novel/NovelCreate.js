@@ -217,11 +217,6 @@ const PotionItem = styled.div`
 `;
 
 const StyledPotionImg = styled(motion.img)`
-  width: 80px;
-  height: 80px;
-  max-width: 90px;
-  max-height: 90px;
-  object-fit: contain;
   margin: 0;
   padding: 0;
   border: none !important;
@@ -922,189 +917,182 @@ function NovelCreate({ user }) {
                     {!isNovelGenerated ? (
                         <>
                             <PotionSelectSection>
-                                {/* 첫 번째 줄 포션 */}
-                                <PotionGrid style={{ marginTop: 40, marginBottom: 0 }}>
-                                    {potionImages.slice(0, 3).map((potion, idx) => {
-                                        const potionId = potion.genre === '로맨스' ? 'romance' :
-                                            potion.genre === '역사' ? 'historical' :
-                                                potion.genre === '추리' ? 'mystery' :
-                                                    potion.genre === '공포' ? 'horror' :
-                                                        potion.genre === '동화' ? 'fairytale' :
-                                                            potion.genre === '판타지' ? 'fantasy' : null;
+                                {/* 마법서재 배경 이미지와 포션 배치 */}
+                                <div style={{
+                                    position: 'relative',
+                                    width: '90%',
+                                    maxWidth: 'clamp(320px, 90vw, 500px)',
+                                    margin: '40px auto 30px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center'
+                                }}>
+                                    {/* 마법서재 배경 이미지 */}
+                                    <img
+                                        src="/마법서재2.png"
+                                        alt="magic library"
+                                        style={{
+                                            width: '100%',
+                                            height: 'auto',
+                                            position: 'relative',
+                                            zIndex: 1
+                                        }}
+                                    />
 
-                                        // 무료 생성 모드는 useFree가 true일 때만 (프리미엄 무료권 기능 제거)
-                                        // useFree가 false로 명시된 경우는 무료 모드를 사용하지 않음
-                                        const isFreeMode = useFree === true;
-                                        if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
-                                            return null;
-                                        }
+                                    {/* 포션들을 각 칸에 배치 (2행 3열) */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(3, 1fr)',
+                                        gridTemplateRows: 'repeat(2, 1fr)',
+                                        gap: 0,
+                                        padding: '14% 9% 14% 9%',
+                                        zIndex: 2,
+                                        pointerEvents: 'none',
+                                        boxSizing: 'border-box',
+                                        alignItems: 'center',
+                                        justifyItems: 'center'
+                                    }}>
+                                        {potionImages.map((potion, idx) => {
+                                            const potionId = potion.genre === '로맨스' ? 'romance' :
+                                                potion.genre === '역사' ? 'historical' :
+                                                    potion.genre === '추리' ? 'mystery' :
+                                                        potion.genre === '공포' ? 'horror' :
+                                                            potion.genre === '동화' ? 'fairytale' :
+                                                                potion.genre === '판타지' ? 'fantasy' : null;
 
-                                        // 일반 회원이고 이미 다른 장르의 소설이 있는 경우 비활성화
-                                        const isDisabled = !isPremium && existingGenres.length > 0 && !existingGenres.includes(potion.genre);
+                                            // 무료 생성 모드는 useFree가 true일 때만 (프리미엄 무료권 기능 제거)
+                                            // useFree가 false로 명시된 경우는 무료 모드를 사용하지 않음
+                                            const isFreeMode = useFree === true;
+                                            if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
+                                                return null;
+                                            }
 
-                                        // 프리미엄 회원이 아니고 이미 생성된 장르는 표시하지 않음 (같은 장르는 표시)
-                                        if (!isPremium && existingGenres.includes(potion.genre)) {
-                                            return null;
-                                        }
+                                            // 일반 회원이고 이미 다른 장르의 소설이 있는 경우 비활성화
+                                            const isDisabled = !isPremium && existingGenres.length > 0 && !existingGenres.includes(potion.genre);
 
-                                        return (
-                                            <motion.div
-                                                key={potion.genre}
-                                                as={PotionItem}
-                                                selected={selectedPotion === idx}
-                                                onClick={isDisabled ? undefined : () => setSelectedPotion(idx)}
-                                                whileHover={isDisabled ? {} : { scale: 1.03, rotate: -4 }}
-                                                whileTap={isDisabled ? {} : { scale: 0.97, rotate: 2 }}
-                                                animate={selectedPotion === idx ? { scale: 1.04, rotate: 1 } : { scale: 1, rotate: 0 }}
-                                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                                                style={{
-                                                    zIndex: selectedPotion === idx ? 2 : 1,
-                                                    opacity: isDisabled ? 0.5 : 1,
-                                                    cursor: isDisabled ? 'not-allowed' : 'pointer'
-                                                }}
-                                            >
-                                                <div style={{ position: 'relative', display: 'inline-block' }}>
-                                                    <StyledPotionImg
-                                                        src={potion.src}
-                                                        alt={t(potion.key)}
-                                                        selected={selectedPotion === idx}
-                                                        initial={{ scale: 0.8, opacity: 0 }}
-                                                        animate={{ scale: 1, opacity: 1 }}
-                                                        whileHover={isDisabled ? {} : { scale: 1.2 }}
-                                                        transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                                                        style={{ opacity: isDisabled ? 0.5 : 1 }}
-                                                    />
-                                                    {/* 일반 회원이고 비활성화된 경우 PREMIUM 표시 */}
-                                                    {isDisabled && (
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            top: '50%',
-                                                            left: '50%',
-                                                            transform: 'translate(-50%, -50%)',
-                                                            background: 'linear-gradient(135deg, rgba(228, 163, 13, 0.95) 0%, rgba(255, 226, 148, 0.95) 100%)',
-                                                            color: '#fff',
-                                                            borderRadius: '8px',
-                                                            padding: '4px 8px',
-                                                            fontSize: '10px',
-                                                            fontWeight: '700',
-                                                            border: '2px solid #e4a30d',
-                                                            boxShadow: '0 2px 8px rgba(228, 163, 13, 0.5)',
-                                                            zIndex: 20,
-                                                            whiteSpace: 'nowrap',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px'
-                                                        }}>
-                                                            <span>👑</span>
-                                                            <span>PREMIUM</span>
-                                                        </div>
-                                                    )}
-                                                    {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
-                                                    {!isFreeMode && !isDisabled && potionId && ownedPotions[potionId] > 0 && (
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            top: '-6px',
-                                                            right: '-6px',
-                                                            background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
-                                                            color: 'white',
-                                                            borderRadius: '12px',
-                                                            minWidth: '20px',
-                                                            height: '20px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            fontSize: '10px',
-                                                            fontWeight: '700',
-                                                            border: '2px solid white',
-                                                            boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
-                                                            zIndex: 10,
-                                                            padding: '0 4px'
-                                                        }}>
-                                                            {ownedPotions[potionId]}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </PotionGrid>
-                                {/* 첫 번째 선반 */}
-                                <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 0, zIndex: 1, position: 'relative' }} />
-                                {/* 두 번째 줄 포션 */}
-                                <PotionGrid style={{ marginTop: 10, marginBottom: 0 }}>
-                                    {potionImages.slice(3, 6).map((potion, idx) => {
-                                        const potionId = potion.genre === '로맨스' ? 'romance' :
-                                            potion.genre === '역사' ? 'historical' :
-                                                potion.genre === '추리' ? 'mystery' :
-                                                    potion.genre === '공포' ? 'horror' :
-                                                        potion.genre === '동화' ? 'fairytale' :
-                                                            potion.genre === '판타지' ? 'fantasy' : null;
+                                            // 프리미엄 회원이 아니고 이미 생성된 장르는 표시하지 않음 (같은 장르는 표시)
+                                            if (!isPremium && existingGenres.includes(potion.genre)) {
+                                                return null;
+                                            }
 
-                                        // 무료 생성 모드는 useFree가 true일 때만 (프리미엄 무료권 기능 제거)
-                                        // useFree가 false로 명시된 경우는 무료 모드를 사용하지 않음
-                                        const isFreeMode = useFree === true;
-                                        if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
-                                            return null;
-                                        }
+                                            // 맨 왼쪽 포션 (idx 0, 3)과 맨 오른쪽 포션 (idx 2, 5) 위치 조정
+                                            const isLeftColumn = idx % 3 === 0;
+                                            const isRightColumn = idx % 3 === 2;
+                                            // 아랫줄 포션 (idx 3, 4, 5)은 아래로 더 이동
+                                            const isBottomRow = idx >= 3;
 
-                                        // 이미 생성된 장르는 선택할 수 없도록 필터링
-                                        if (existingGenres.includes(potion.genre)) {
-                                            return null;
-                                        }
-
-                                        return (
-                                            <motion.div
-                                                key={potion.genre}
-                                                as={PotionItem}
-                                                selected={selectedPotion === idx + 3}
-                                                onClick={() => setSelectedPotion(idx + 3)}
-                                                whileHover={{ scale: 1.03, rotate: -4 }}
-                                                whileTap={{ scale: 0.97, rotate: 2 }}
-                                                animate={selectedPotion === idx + 3 ? { scale: 1.04, rotate: 1 } : { scale: 1, rotate: 0 }}
-                                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                                                style={{ zIndex: selectedPotion === idx + 3 ? 2 : 1 }}
-                                            >
-                                                <div style={{ position: 'relative', display: 'inline-block' }}>
-                                                    <StyledPotionImg
-                                                        src={potion.src}
-                                                        alt={t(potion.key)}
-                                                        selected={selectedPotion === idx + 3}
-                                                        initial={{ scale: 0.8, opacity: 0 }}
-                                                        animate={{ scale: 1, opacity: 1 }}
-                                                        whileHover={{ scale: 1.2 }}
-                                                        transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                                                    />
-                                                    {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
-                                                    {!isFreeMode && potionId && ownedPotions[potionId] > 0 && (
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            top: '-6px',
-                                                            right: '-6px',
-                                                            background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
-                                                            color: 'white',
-                                                            borderRadius: '12px',
-                                                            minWidth: '20px',
-                                                            height: '20px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            fontSize: '10px',
-                                                            fontWeight: '700',
-                                                            border: '2px solid white',
-                                                            boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
-                                                            zIndex: 10,
-                                                            padding: '0 4px'
-                                                        }}>
-                                                            {ownedPotions[potionId]}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </PotionGrid>
-                                {/* 두 번째 선반 */}
-                                <img src="/shelf.png" alt="shelf" style={{ width: '90%', maxWidth: 420, marginTop: -10, marginBottom: 30, zIndex: 1, position: 'relative' }} />
+                                            return (
+                                                <motion.div
+                                                    key={potion.genre}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        position: 'relative',
+                                                        pointerEvents: 'auto',
+                                                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        marginLeft: isLeftColumn ? '-10%' : '0',
+                                                        marginRight: isRightColumn ? '-10%' : '0',
+                                                        paddingTop: isBottomRow ? '15%' : '0'
+                                                    }}
+                                                    selected={selectedPotion === idx}
+                                                    onClick={isDisabled ? undefined : () => setSelectedPotion(idx)}
+                                                    whileHover={isDisabled ? {} : { scale: 1.1, y: isBottomRow ? -5 + 15 : -5 }}
+                                                    whileTap={isDisabled ? {} : { scale: 0.95 }}
+                                                    animate={selectedPotion === idx ? { scale: 1.15, y: isBottomRow ? -8 + 15 : -8 } : { scale: 1, y: isBottomRow ? 15 : 0 }}
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                                >
+                                                    <div style={{
+                                                        position: 'relative',
+                                                        display: 'inline-block',
+                                                        width: '70px',
+                                                        height: '70px',
+                                                        minWidth: '70px',
+                                                        minHeight: '70px',
+                                                        maxWidth: '70px',
+                                                        maxHeight: '70px',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        <StyledPotionImg
+                                                            src={potion.src}
+                                                            alt={t(potion.key)}
+                                                            selected={selectedPotion === idx}
+                                                            initial={{ scale: 0.8, opacity: 0 }}
+                                                            animate={{ scale: 1, opacity: 1 }}
+                                                            whileHover={isDisabled ? {} : { scale: 1.2 }}
+                                                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                                            style={{
+                                                                opacity: isDisabled ? 0.5 : 1,
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'contain',
+                                                                objectPosition: 'center',
+                                                                display: 'block',
+                                                                boxSizing: 'border-box'
+                                                            }}
+                                                        />
+                                                        {/* 일반 회원이고 비활성화된 경우 PREMIUM 표시 */}
+                                                        {isDisabled && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '50%',
+                                                                left: '50%',
+                                                                transform: 'translate(-50%, -50%)',
+                                                                background: 'linear-gradient(135deg, rgba(228, 163, 13, 0.95) 0%, rgba(255, 226, 148, 0.95) 100%)',
+                                                                color: '#fff',
+                                                                borderRadius: '8px',
+                                                                padding: '4px 8px',
+                                                                fontSize: '10px',
+                                                                fontWeight: '700',
+                                                                border: '2px solid #e4a30d',
+                                                                boxShadow: '0 2px 8px rgba(228, 163, 13, 0.5)',
+                                                                zIndex: 20,
+                                                                whiteSpace: 'nowrap',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px'
+                                                            }}>
+                                                                <span>👑</span>
+                                                                <span>PREMIUM</span>
+                                                            </div>
+                                                        )}
+                                                        {/* 포션 개수 표시 (무료 모드가 아닐 때만) */}
+                                                        {!isFreeMode && !isDisabled && potionId && ownedPotions[potionId] > 0 && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '-6px',
+                                                                right: '-6px',
+                                                                background: 'linear-gradient(135deg, #e46262 0%, #cb6565 100%)',
+                                                                color: 'white',
+                                                                borderRadius: '12px',
+                                                                minWidth: '20px',
+                                                                height: '20px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '10px',
+                                                                fontWeight: '700',
+                                                                border: '2px solid white',
+                                                                boxShadow: '0 3px 8px rgba(228, 98, 98, 0.4), 0 1px 3px rgba(0,0,0,0.1)',
+                                                                zIndex: 10,
+                                                                padding: '0 4px'
+                                                            }}>
+                                                                {ownedPotions[potionId]}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
 
                                 {/* 포션이 없을 때 안내 (useFree가 false이거나 무료권이 없고 포션이 없을 때) */}
                                 {Object.values(ownedPotions).every(count => !count || count <= 0) && (

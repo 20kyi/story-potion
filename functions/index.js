@@ -256,6 +256,40 @@ exports.generateNovel = functions.runWith({
                 narrativeSummary = '';
             }
 
+            // 소설 본문에서 제목 제거 (다양한 패턴 처리)
+            // 1. 마크다운 제목 형식 제거 (# 제목, ## 제목 등)
+            novelContent = novelContent.replace(/^#{1,3}\s+[^\n]+\n+/gm, '');
+
+            // 2. "제목:", "Title:" 같은 패턴 제거
+            novelContent = novelContent.replace(/^(제목|Title|소설\s*제목|Novel\s*Title)[\s:：]\s*[^\n]+\n+/gim, '');
+
+            // 3. 따옴표로 감싼 제목 제거 (첫 줄에 있는 경우)
+            const lines = novelContent.split('\n');
+            if (lines.length > 0) {
+                const firstLine = lines[0].trim();
+                // 첫 줄이 따옴표로 시작하고 끝나며, 길이가 50자 이하인 경우 제목으로 간주
+                if ((firstLine.startsWith('"') && firstLine.endsWith('"')) ||
+                    (firstLine.startsWith("'") && firstLine.endsWith("'")) ||
+                    (firstLine.startsWith('「') && firstLine.endsWith('」')) ||
+                    (firstLine.startsWith('『') && firstLine.endsWith('』'))) {
+                    if (firstLine.length <= 50) {
+                        lines.shift();
+                        novelContent = lines.join('\n').trim();
+                    }
+                }
+                // 첫 줄이 짧고(30자 이하) 마침표나 느낌표로 끝나지 않는 경우 제목으로 간주
+                else if (firstLine.length <= 30 && !firstLine.match(/[。.!?]$/)) {
+                    // 다음 줄이 빈 줄이거나 소설 본문이 시작되는 경우에만 제거
+                    if (lines.length > 1 && (lines[1].trim() === '' || lines[1].match(/^[가-힣a-zA-Z]/))) {
+                        lines.shift();
+                        novelContent = lines.join('\n').trim();
+                    }
+                }
+            }
+
+            // 4. 앞뒤 공백 정리
+            novelContent = novelContent.trim();
+
             console.log("요약표 추출 완료, 길이:", narrativeSummary.length);
             console.log("소설 본문 길이:", novelContent.length);
 
@@ -298,12 +332,40 @@ exports.generateNovel = functions.runWith({
             // 4. 소설 표지 이미지 생성
             console.log("소설 표지 이미지 생성 시작...");
             const { imagePrompt } = getPrompts(genre, diaryContents, novelContent);
+
+            // DALL-E 2 프롬프트 최대 길이: 1000자
+            const MAX_PROMPT_LENGTH = 1000;
+            const storyPrefix = " Story: ";
+            const imagePromptLength = imagePrompt.length;
+            const prefixLength = storyPrefix.length;
+            const availableLength = MAX_PROMPT_LENGTH - imagePromptLength - prefixLength;
+
+            // 사용 가능한 길이만큼만 novelContent 추가
+            const storyContent = availableLength > 0
+                ? novelContent.substring(0, availableLength)
+                : '';
+
+            const fullImagePrompt = storyContent
+                ? imagePrompt + storyPrefix + storyContent
+                : imagePrompt;
+
+            // 최종 프롬프트 길이 확인 및 제한
+            const finalPrompt = fullImagePrompt.length > MAX_PROMPT_LENGTH
+                ? fullImagePrompt.substring(0, MAX_PROMPT_LENGTH)
+                : fullImagePrompt;
+
+            console.log("이미지 프롬프트 길이:", {
+                imagePromptLength: imagePromptLength,
+                storyContentLength: storyContent.length,
+                finalPromptLength: finalPrompt.length
+            });
+
             let imageResponse;
             try {
                 imageResponse = await retryWithBackoff(async () => {
                     return await openai.images.generate({
                         model: "dall-e-2",
-                        prompt: imagePrompt + ` Story: ${novelContent.substring(0, 700)}`,
+                        prompt: finalPrompt,
                         n: 1,
                         size: "512x512",
                         response_format: "b64_json",

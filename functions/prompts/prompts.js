@@ -123,7 +123,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -138,10 +138,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a romance novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on love, excitement, and the changes in relationships.`,
-            titlePrompt: `This is a warm and emotional romance novel. Suggest only one most fitting title in English, with no explanation.
+            titlePrompt: `Read the following romance novel carefully and suggest only one most fitting title in English that captures the essence, emotions, and key themes of the story. The title should be meaningful, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`
         };
     } else {
@@ -176,7 +176,7 @@ ${getCreativeTransformationGuidance(false)}
 **4단계: 출력 조건:**
 
 * 길이는 최소 2,000자 이상, 최대 4,000자 이내입니다.
-* 소설 제목을 반드시 포함해야 합니다.
+* 소설 제목은 포함하지 마세요. 소설 본문만 작성하세요.
 * 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 **5단계: 일기 내용 (입력 데이터):**
@@ -191,10 +191,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 로맨스 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요.`,
-            titlePrompt: `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 로맨스 소설을 자세히 읽고, 이야기의 본질, 감정, 핵심 주제를 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 의미 있고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A warm, dreamy romantic illustration of a couple or symbolic objects, soft colors, gentle atmosphere. No text, no words, no violence.`
         };
     }
@@ -225,7 +225,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -240,10 +240,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a mystery novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Vividly portray "I"'s reasoning process, observations, and suspicions, and structure the story so that clues are gradually revealed.`,
-            titlePrompt: `This is a mystery novel full of deduction and twists. Suggest only one most fitting English title, with no explanation.
+            titlePrompt: `Read the following mystery novel carefully and suggest only one most fitting title in English that captures the essence, key clues, and mysterious atmosphere of the story. The title should be intriguing, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`
         };
     } else {
@@ -269,7 +269,7 @@ ${getCreativeTransformationGuidance(false)}
 **4단계: 출력 조건:**
 
 * 길이는 최소 2,000자 이상, 최대 4,000자 이내입니다.
-* 소설 제목을 반드시 포함해야 합니다.
+* 소설 제목은 포함하지 마세요. 소설 본문만 작성하세요.
 * 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 **5단계: 일기 내용 (입력 데이터):**
@@ -284,10 +284,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 추리 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. "나"의 추리 과정과 관찰, 의심을 생생하게 그려내고, 단서들이 점진적으로 드러나도록 구성하세요.`,
-            titlePrompt: `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 추리 소설을 자세히 읽고, 이야기의 본질, 핵심 단서, 미스터리한 분위기를 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 흥미롭고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A classic, peaceful illustration inspired by detective stories. Use soft colors and gentle atmosphere. No people, no violence, no text.`
         };
     }
@@ -318,7 +318,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -333,10 +333,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a historical novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Set the story in a vivid historical period with accurate details and rich descriptions of people's lives and events.`,
-            titlePrompt: `This is a historical novel with a vivid sense of era. Suggest only one most fitting English title, with no explanation.
+            titlePrompt: `Read the following historical novel carefully and suggest only one most fitting title in English that captures the essence, historical period, and key events of the story. The title should be meaningful, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`
         };
     } else {
@@ -362,7 +362,7 @@ ${getCreativeTransformationGuidance(false)}
 **4단계: 출력 조건:**
 
 * 길이는 최소 2,000자 이상, 최대 4,000자 이내입니다.
-* 소설 제목을 반드시 포함해야 합니다.
+* 소설 제목은 포함하지 마세요. 소설 본문만 작성하세요.
 * 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 **5단계: 일기 내용 (입력 데이터):**
@@ -377,10 +377,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 역사 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 해주세요.`,
-            titlePrompt: `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 역사 소설을 자세히 읽고, 이야기의 본질, 역사적 시대, 핵심 사건을 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 의미 있고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A beautiful, classic historical illustration with traditional buildings and nature. Use warm colors and peaceful mood. No people, no violence, no text.`
         };
     }
@@ -411,7 +411,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -426,10 +426,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a fairy tale that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on imagination, gentle lessons, and heartwarming moments.`,
-            titlePrompt: `This is a bright and heartwarming fairy tale. Suggest only one most fitting English title, with no explanation.
+            titlePrompt: `Read the following fairy tale carefully and suggest only one most fitting title in English that captures the essence, magical elements, and heartwarming moments of the story. The title should be charming, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A cute, adorable fairy tale illustration in soft pastel colors. The illustration should be directly related to the story content, featuring key characters, magical elements, or important scenes from the story. Use gentle, warm colors like soft pink, light blue, pale yellow, and lavender. The style should be charming and whimsical, like a children's book illustration. Include friendly characters, magical elements, or symbolic objects that represent the story. No text, no scary elements, no violence.`
         };
     } else {
@@ -470,10 +470,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 동화를 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요.`,
-            titlePrompt: `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 동화를 자세히 읽고, 이야기의 본질, 마법적 요소, 따뜻한 순간들을 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 매력적이고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A cute, adorable fairy tale illustration in soft pastel colors. The illustration should be directly related to the story content, featuring key characters, magical elements, or important scenes from the story. Use gentle, warm colors like soft pink, light blue, pale yellow, and lavender. The style should be charming and whimsical, like a children's book illustration. Include friendly characters, magical elements, or symbolic objects that represent the story. No text, no scary elements, no violence.`
         };
     }
@@ -504,7 +504,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -519,10 +519,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a fantasy novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Feature a rich world, magic, mysterious beings, and adventures.`,
-            titlePrompt: `This is a fantasy novel set in a mysterious world. Suggest only one most fitting English title, with no explanation.
+            titlePrompt: `Read the following fantasy novel carefully and suggest only one most fitting title in English that captures the essence, magical world, and key adventures of the story. The title should be mysterious, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`
         };
     } else {
@@ -548,7 +548,7 @@ ${getCreativeTransformationGuidance(false)}
 **4단계: 출력 조건:**
 
 * 길이는 최소 2,000자 이상, 최대 4,000자 이내입니다.
-* 소설 제목을 반드시 포함해야 합니다.
+* 소설 제목은 포함하지 마세요. 소설 본문만 작성하세요.
 * 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 **5단계: 일기 내용 (입력 데이터):**
@@ -563,10 +563,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 판타지 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 해주세요.`,
-            titlePrompt: `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 판타지 소설을 자세히 읽고, 이야기의 본질, 마법적 세계, 핵심 모험을 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 신비롭고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A dreamy, magical fantasy landscape with bright colors and gentle light. No creatures, no people, no violence, no text.`
         };
     }
@@ -597,7 +597,7 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Output Requirements:**
 
 * Length: Minimum 2,000 characters, maximum 4,000 characters.
-* Must include a novel title.
+* Do NOT include a novel title in the story content. Write only the story itself.
 * The novel should be structured as one continuous, natural story without separating introduction/body/conclusion.
 
 **STEP 5: Diary Content (Input Data):**
@@ -612,10 +612,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.en}
 
 First, create the narrative summary table, then write a psychological horror novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on tension, unease, and atmosphere, vividly portraying "I"'s fear, anxiety, and suspicion.`,
-            titlePrompt: `This is a horror novel with strong psychological tension. Suggest only one most fitting English title, with no explanation.
+            titlePrompt: `Read the following horror novel carefully and suggest only one most fitting title in English that captures the essence, psychological tension, and key mysterious elements of the story. The title should be atmospheric, memorable, and directly related to the story's content. Do not include any explanation, only the title.
 
-[Novel]
-${novelContent?.substring(0, 1000)}`,
+[Novel Content]
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`
         };
     } else {
@@ -641,7 +641,7 @@ ${getCreativeTransformationGuidance(false)}
 **4단계: 출력 조건:**
 
 * 길이는 최소 2,000자 이상, 최대 4,000자 이내입니다.
-* 소설 제목을 반드시 포함해야 합니다.
+* 소설 제목은 포함하지 마세요. 소설 본문만 작성하세요.
 * 구성은 서론/본론/결말 등 구분 없이, 자연스럽게 한 편의 소설로 이어지게 해주세요.
 
 **5단계: 일기 내용 (입력 데이터):**
@@ -656,10 +656,10 @@ ${diaryContents}
 ${COMMON_SECTIONS.responseStructure.ko}
 
 먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 공포 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 해주세요.`,
-            titlePrompt: `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
+            titlePrompt: `다음 공포 소설을 자세히 읽고, 이야기의 본질, 심리적 긴장감, 핵심 미스터리 요소를 담은 가장 어울리는 제목 하나만 추천해줘. 제목은 분위기 있고 기억에 남으며, 소설 내용과 직접적으로 연관되어야 해. 설명 없이 제목만 말해줘.
 
 [소설 내용]
-${novelContent?.substring(0, 1000)}`,
+${novelContent?.substring(0, 2000)}`,
             imagePrompt: `A calm, atmospheric illustration with subtle shadows and soft colors. No scary elements, no people, no violence, no text.`
         };
     }
