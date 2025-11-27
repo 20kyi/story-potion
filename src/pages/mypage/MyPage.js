@@ -36,7 +36,7 @@ import CrownIcon from '../../components/icons/CrownIcon';
 import { useNavigate } from 'react-router-dom';
 import { useTheme as useThemeContext } from '../../ThemeContext';
 import { useTheme } from 'styled-components';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
@@ -52,6 +52,7 @@ import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
 import { getFriendsList, subscribeToFriendRequests } from '../../utils/friendSystem';
 import { useTranslation } from '../../LanguageContext';
+import { inAppPurchaseService } from '../../utils/inAppPurchase';
 
 // 관리자 아이콘 추가
 const AdminIcon = ({ color = '#222' }) => (
@@ -588,33 +589,78 @@ function MyPage({ user }) {
           const potions = userData.potions || {};
           const totalPotions = Object.values(potions).reduce((sum, count) => sum + (count || 0), 0);
           setPotionCount(totalPotions);
-
-          const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
-          setPremiumStatus({
-            isMonthlyPremium: userData.isMonthlyPremium || false,
-            isYearlyPremium: userData.isYearlyPremium || false,
-            premiumType: userData.premiumType || null
-          });
-
         } else {
           // 문서가 없는 경우 기본값 설정
           setPotionCount(0);
+        }
+      }).catch(() => {
+        // 에러 발생 시 기본값 설정
+        setPotionCount(0);
+      });
+    }
+  }, [user]);
+
+  // 구독 상태 실시간 조회 및 Google Play 동기화
+  useEffect(() => {
+    if (user?.uid) {
+      // 네이티브 플랫폼에서 구독 상태 동기화
+      const syncStatus = async () => {
+        try {
+          await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+        } catch (error) {
+          console.error('구독 상태 동기화 실패:', error);
+        }
+      };
+      syncStatus();
+
+      // Firebase에서 실시간으로 구독 상태 확인 (네이티브 앱에서 동기화한 결과 반영)
+      const userRef = doc(db, 'users', user.uid);
+      const unsubscribe = onSnapshot(userRef, (userDoc) => {
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setPremiumStatus({
+            isMonthlyPremium: data.isMonthlyPremium || false,
+            isYearlyPremium: data.isYearlyPremium || false,
+            premiumType: data.premiumType || null
+          });
+        } else {
+          // 문서가 없는 경우 기본값 설정
           setPremiumStatus({
             isMonthlyPremium: false,
             isYearlyPremium: false,
             premiumType: null
           });
         }
-      }).catch(() => {
+      }, (error) => {
+        console.error('구독 상태 실시간 조회 실패:', error);
         // 에러 발생 시 기본값 설정
-        setPotionCount(0);
         setPremiumStatus({
           isMonthlyPremium: false,
           isYearlyPremium: false,
           premiumType: null
         });
       });
+
+      return () => {
+        unsubscribe();
+      };
     }
+  }, [user]);
+
+  // 페이지 포커스 시 네이티브 플랫폼에서 구독 상태 동기화
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user?.uid) {
+        // 네이티브 플랫폼에서만 구독 상태 동기화 (웹에서는 Firebase 실시간 업데이트로 반영됨)
+        inAppPurchaseService.syncSubscriptionStatus(user.uid).catch(error => {
+          console.error('구독 상태 동기화 실패:', error);
+        });
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [user]);
 
   // 친구 수 정보를 가져오기
