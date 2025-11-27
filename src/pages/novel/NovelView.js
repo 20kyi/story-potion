@@ -331,6 +331,27 @@ const PurchaseNotice = styled.div`
   font-family: inherit;
 `;
 
+// 읽기 모드용 큰 표지
+const ReadingModeCover = styled.img`
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  margin: 0 auto 32px auto;
+  display: block;
+`;
+
+const ReadingModeCoverContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 0 24px;
+  max-width: 680px;
+  margin: 0 auto;
+`;
+
 // 읽기 모드 컨트롤
 const ReadingModeContainer = styled.div`
   position: fixed;
@@ -702,7 +723,7 @@ function NovelView({ user }) {
     const [error, setError] = useState('');
     const [accessGranted, setAccessGranted] = useState(false);
     const [purchaseCount, setPurchaseCount] = useState(0);
-    const [showCoverView, setShowCoverView] = useState(true); // 표지 보기 모드로 시작
+    const [showCoverView, setShowCoverView] = useState(false); // 바로 소설 내용 보기 페이지로 시작
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [privateConfirmOpen, setPrivateConfirmOpen] = useState(false);
     const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
@@ -717,6 +738,7 @@ function NovelView({ user }) {
 
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
+    const [showReadingModeCover, setShowReadingModeCover] = useState(false); // 읽기 모드 진입 전 표지 보기
     const [fontSize, setFontSize] = useState(() => {
         const saved = localStorage.getItem('novel_reading_fontSize');
         return saved ? parseInt(saved) : 18;
@@ -762,7 +784,7 @@ function NovelView({ user }) {
                 if (location.state?.tutorialNovel) {
                     fetchedNovel = location.state.tutorialNovel;
                     setNovel(fetchedNovel);
-                    setShowCoverView(true);
+                    setShowCoverView(false);
                     setIsReadingMode(false);
                     setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
                     setOwnerName(fetchedNovel.ownerName || '스토리 포션');
@@ -788,8 +810,9 @@ function NovelView({ user }) {
                     }
                     fetchedNovel = getTutorialNovel(userCreatedAt);
                     setNovel(fetchedNovel);
-                    setShowCoverView(true);
+                    setShowCoverView(false);
                     setIsReadingMode(false);
+                    setShowReadingModeCover(false);
                     setAccessGranted(true); // 튜토리얼 책은 항상 접근 가능
                     setOwnerName(fetchedNovel.ownerName || '스토리 포션');
                     setLoading(false);
@@ -861,8 +884,9 @@ function NovelView({ user }) {
                     return;
                 }
                 setNovel(fetchedNovel);
-                setShowCoverView(true); // 소설이 로드될 때마다 표지 보기 모드로 리셋
+                setShowCoverView(false); // 소설이 로드될 때마다 바로 소설 내용 보기 페이지로 이동
                 setIsReadingMode(false); // 읽기 모드도 리셋
+                setShowReadingModeCover(false); // 읽기 모드 표지 보기도 리셋
 
                 // 작가 정보 가져오기
                 if (fetchedNovel.userId) {
@@ -1333,6 +1357,31 @@ function NovelView({ user }) {
         );
     }
 
+    // 읽기 모드 진입 전 표지 보기 모드
+    if (showReadingModeCover) {
+        const isTutorial = isTutorialNovel(novel);
+        return (
+            <Container>
+                <Header user={user} />
+                <CoverViewContainer onClick={() => {
+                    setShowReadingModeCover(false);
+                    setIsReadingMode(true);
+                }}>
+                    <LargeCover
+                        src={novel.imageUrl || (isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : '/novel_banner/default.png')}
+                        alt={novel.title}
+                    />
+                    <CoverTitle>{novel.title}</CoverTitle>
+                    {ownerName && (
+                        <CoverAuthor theme={theme}>by {ownerName}</CoverAuthor>
+                    )}
+                    <CoverHint>표지를 터치하거나 클릭하여 읽기 모드로 들어가세요</CoverHint>
+                </CoverViewContainer>
+                <Navigation />
+            </Container>
+        );
+    }
+
     // 표지 보기 모드
     if (showCoverView) {
         const isTutorial = isTutorialNovel(novel);
@@ -1402,6 +1451,7 @@ function NovelView({ user }) {
                             <ControlButton readTheme={readTheme} onClick={() => {
                                 setShowSettings(false);
                                 setIsReadingMode(false);
+                                setShowReadingModeCover(false);
                             }}>
                                 <BackIcon
                                     size={20}
@@ -1610,7 +1660,10 @@ function NovelView({ user }) {
                     }}
                 >
                     <ReadingControls readTheme={readTheme} data-settings-area>
-                        <ControlButton readTheme={readTheme} onClick={() => setIsReadingMode(false)}>
+                        <ControlButton readTheme={readTheme} onClick={() => {
+                            setIsReadingMode(false);
+                            setShowReadingModeCover(false);
+                        }}>
                             <BackIcon
                                 size={20}
                                 color={readTheme === 'sepia' ? '#5c4b37' : readTheme === 'dark' ? '#e8e8e8' : '#333'}
@@ -1788,7 +1841,7 @@ function NovelView({ user }) {
                         🗑️ 소설 삭제
                     </DeleteButton>
                 )}
-                <ReadingModeButton onClick={() => setIsReadingMode(true)}>
+                <ReadingModeButton onClick={() => setShowReadingModeCover(true)}>
                     📖 읽기 모드
                 </ReadingModeButton>
             </ActionButtonsContainer>
