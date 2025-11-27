@@ -1265,6 +1265,13 @@ const Novel = ({ user }) => {
 
             // 4. Fetch premium free novel status and potions
             try {
+                // 구독 상태 동기화
+                try {
+                    await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+                } catch (syncError) {
+                    console.error('구독 상태 동기화 실패:', syncError);
+                }
+
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     const userData = userDoc.data();

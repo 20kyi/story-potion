@@ -554,6 +554,14 @@ function App() {
                     console.error('프리미엄 갱신 확인 중 오류:', error);
                 }
 
+                // 구독 상태 동기화 (Google Play와 Firebase 동기화)
+                try {
+                    await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+                    console.log('✅ 구독 상태 동기화 완료');
+                } catch (error) {
+                    console.error('구독 상태 동기화 실패:', error);
+                }
+
                 // 앱 환경에서 FCM 토큰 자동 등록
                 if (Capacitor.getPlatform() !== 'web') {
                     try {
@@ -600,7 +608,7 @@ function App() {
             }
         });
 
-        // 앱이 포그라운드로 돌아올 때 상태 확인
+        // 앱이 포그라운드로 돌아올 때 상태 확인 및 구독 상태 동기화
         CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
             if (isActive) {
                 console.log('📱 앱이 활성화되었습니다. 로그인 상태 확인 중...');
@@ -608,6 +616,13 @@ function App() {
                 const currentUser = auth.currentUser;
                 if (currentUser) {
                     console.log('✅ 사용자가 이미 로그인되어 있습니다:', currentUser.email);
+                    // 구독 상태 동기화
+                    try {
+                        await inAppPurchaseService.syncSubscriptionStatus(currentUser.uid);
+                        console.log('✅ 앱 활성화 시 구독 상태 동기화 완료');
+                    } catch (error) {
+                        console.error('앱 활성화 시 구독 상태 동기화 실패:', error);
+                    }
                 }
             }
         });

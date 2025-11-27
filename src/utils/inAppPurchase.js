@@ -489,9 +489,18 @@ class InAppPurchaseService {
       const { doc, getDoc, updateDoc, collection, query, where, getDocs } = await import('firebase/firestore');
       const { db } = await import('../firebase');
 
+      console.log('[구독 동기화] 시작', { userId });
+      console.log('[구독 동기화] ⚠️ 주의: Google Play Billing API는 기기에서 로그인한 Google 계정의 구독만 반환합니다.');
+      console.log('[구독 동기화] ⚠️ 앱에서 로그인한 Firebase 사용자와 Google Play 계정이 다를 수 있습니다.');
+
       // Google Play에서 구독 상태 확인
       const monthlyStatus = await this.getSubscriptionStatus(PRODUCT_IDS.MONTHLY_PREMIUM);
       const yearlyStatus = await this.getSubscriptionStatus(PRODUCT_IDS.YEARLY_PREMIUM);
+      
+      console.log('[구독 동기화] Google Play 구독 상태', {
+        monthly: { isActive: monthlyStatus.isActive, hasToken: !!monthlyStatus.purchaseToken },
+        yearly: { isActive: yearlyStatus.isActive, hasToken: !!yearlyStatus.purchaseToken }
+      });
 
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -524,19 +533,16 @@ class InAppPurchaseService {
         const isUserPurchase = await checkPurchaseToken(monthlyStatus.purchaseToken);
         
         if (!isUserPurchase) {
-          console.log('[구독 동기화] 월간 구독이 활성화되어 있지만 현재 사용자의 구매 내역에 없음 - 다른 계정에서 구매한 것으로 판단하여 무시');
+          console.warn('[구독 동기화] ⚠️ 월간 구독이 Google Play에서 활성화되어 있지만 현재 Firebase 사용자의 구매 내역에 없음');
+          console.warn('[구독 동기화] ⚠️ 이는 다음 중 하나일 수 있습니다:');
+          console.warn('[구독 동기화] ⚠️ 1. 기기에서 로그인한 Google 계정과 앱에서 로그인한 Firebase 사용자가 다른 경우');
+          console.warn('[구독 동기화] ⚠️ 2. 다른 계정에서 구매한 구독이 기기에 남아있는 경우');
+          console.warn('[구독 동기화] ⚠️ 이 구독은 무시되며, 현재 사용자의 구독 상태는 변경되지 않습니다.');
+          
           // 다른 계정에서 구매한 구독이므로 무시
-          // 하지만 현재 사용자가 이미 프리미엄으로 설정되어 있다면 해지 처리
-          if (userData.isMonthlyPremium || userData.isYearlyPremium) {
-            console.log('[구독 동기화] 현재 사용자의 구독이 아니므로 프리미엄 해지 처리');
-            updates.isMonthlyPremium = false;
-            updates.isYearlyPremium = false;
-            updates.premiumType = null;
-            updates.premiumStartDate = null;
-            updates.premiumRenewalDate = null;
-            updates.premiumFreeNovelCount = 0;
-            updates.premiumCancelled = false;
-          }
+          // 현재 사용자가 이미 프리미엄으로 설정되어 있고, Google Play에서도 활성화되어 있지만
+          // 구매 내역에 없으면 다른 계정의 구독이므로 해지하지 않음 (안전을 위해)
+          // 단, Google Play에서 구독이 없고 Firebase에만 있으면 해지는 아래 로직에서 처리됨
         } else {
           // Google Play Store에서 활성화되어 있고, 현재 사용자의 구매 내역에 있으면 프리미엄 활성화
           console.log('[구독 동기화] 월간 구독 활성화됨 - 현재 사용자의 구매 내역 확인됨 - 프리미엄 활성화');
@@ -586,19 +592,16 @@ class InAppPurchaseService {
         const isUserPurchase = await checkPurchaseToken(yearlyStatus.purchaseToken);
         
         if (!isUserPurchase) {
-          console.log('[구독 동기화] 연간 구독이 활성화되어 있지만 현재 사용자의 구매 내역에 없음 - 다른 계정에서 구매한 것으로 판단하여 무시');
+          console.warn('[구독 동기화] ⚠️ 연간 구독이 Google Play에서 활성화되어 있지만 현재 Firebase 사용자의 구매 내역에 없음');
+          console.warn('[구독 동기화] ⚠️ 이는 다음 중 하나일 수 있습니다:');
+          console.warn('[구독 동기화] ⚠️ 1. 기기에서 로그인한 Google 계정과 앱에서 로그인한 Firebase 사용자가 다른 경우');
+          console.warn('[구독 동기화] ⚠️ 2. 다른 계정에서 구매한 구독이 기기에 남아있는 경우');
+          console.warn('[구독 동기화] ⚠️ 이 구독은 무시되며, 현재 사용자의 구독 상태는 변경되지 않습니다.');
+          
           // 다른 계정에서 구매한 구독이므로 무시
-          // 하지만 현재 사용자가 이미 프리미엄으로 설정되어 있다면 해지 처리
-          if (userData.isMonthlyPremium || userData.isYearlyPremium) {
-            console.log('[구독 동기화] 현재 사용자의 구독이 아니므로 프리미엄 해지 처리');
-            updates.isMonthlyPremium = false;
-            updates.isYearlyPremium = false;
-            updates.premiumType = null;
-            updates.premiumStartDate = null;
-            updates.premiumRenewalDate = null;
-            updates.premiumFreeNovelCount = 0;
-            updates.premiumCancelled = false;
-          }
+          // 현재 사용자가 이미 프리미엄으로 설정되어 있고, Google Play에서도 활성화되어 있지만
+          // 구매 내역에 없으면 다른 계정의 구독이므로 해지하지 않음 (안전을 위해)
+          // 단, Google Play에서 구독이 없고 Firebase에만 있으면 해지는 아래 로직에서 처리됨
         } else {
           // Google Play Store에서 활성화되어 있고, 현재 사용자의 구매 내역에 있으면 프리미엄 활성화
           console.log('[구독 동기화] 연간 구독 활성화됨 - 현재 사용자의 구매 내역 확인됨 - 프리미엄 활성화');
@@ -645,9 +648,19 @@ class InAppPurchaseService {
       if (Object.keys(updates).length > 0) {
         updates.updatedAt = new Date();
         await updateDoc(userRef, updates);
+        console.log('[구독 동기화] ✅ 구독 상태 업데이트 완료', updates);
+      } else {
+        console.log('[구독 동기화] ✅ 구독 상태 변경 사항 없음');
       }
+      
+      console.log('[구독 동기화] 완료', { userId });
     } catch (error) {
-      console.error('구독 상태 동기화 실패:', error);
+      console.error('[구독 동기화] ❌ 구독 상태 동기화 실패:', error);
+      console.error('[구독 동기화] 에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        userId
+      });
     }
   }
 

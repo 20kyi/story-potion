@@ -5,7 +5,7 @@ import Navigation from '../../components/Navigation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createNovelUrl } from '../../utils/novelUtils';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, addDoc, Timestamp, updateDoc, increment, getDoc, onSnapshot } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useToast } from '../../components/ui/ToastProvider';
 import { motion } from 'framer-motion';
@@ -14,6 +14,7 @@ import { usePrompt } from '../../hooks/usePrompt';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { useTheme as useThemeContext } from '../../ThemeContext';
 import { lightTheme, darkTheme } from '../../theme';
+import { inAppPurchaseService } from '../../utils/inAppPurchase';
 
 const Container = styled.div`
   display: flex;
@@ -468,7 +469,7 @@ function NovelCreate({ user }) {
         fetchDiaries();
     }, [user?.uid, dateRange]);
 
-    // 포인트와 보유 포션 조회
+    // 포인트와 보유 포션 조회 및 프리미엄 상태 실시간 업데이트
     useEffect(() => {
         if (!user?.uid) {
             console.log('사용자 데이터 fetch 스킵: 사용자 없음');
@@ -477,22 +478,48 @@ function NovelCreate({ user }) {
 
         console.log('사용자 데이터 fetch useEffect 실행:', { userId: user.uid });
 
-        const fetchUserData = async () => {
+        // 네이티브 플랫폼에서 구독 상태 동기화
+        const syncStatus = async () => {
             try {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    console.log('사용자 데이터 fetch 완료:', { point: userData.point, potions: userData.potions });
-                    setCurrentPoints(userData.point || 0);
-                    setOwnedPotions(userData.potions || {});
-                    const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
-                    setIsPremium(isPremiumUser);
-                }
+                await inAppPurchaseService.syncSubscriptionStatus(user.uid);
             } catch (error) {
-                console.error('사용자 데이터 조회 실패:', error);
+                console.error('구독 상태 동기화 실패:', error);
             }
         };
-        fetchUserData();
+        syncStatus();
+
+        // Firebase에서 실시간으로 구독 상태 확인 (네이티브 앱에서 동기화한 결과 반영)
+        const userRef = doc(db, 'users', user.uid);
+        const unsubscribe = onSnapshot(userRef, (userDoc) => {
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                console.log('사용자 데이터 실시간 업데이트:', {
+                    point: userData.point,
+                    potions: userData.potions,
+                    isMonthlyPremium: userData.isMonthlyPremium,
+                    isYearlyPremium: userData.isYearlyPremium
+                });
+                setCurrentPoints(userData.point || 0);
+                setOwnedPotions(userData.potions || {});
+                const isPremiumUser = userData.isMonthlyPremium || userData.isYearlyPremium || false;
+                setIsPremium(isPremiumUser);
+            } else {
+                // 문서가 없는 경우 기본값 설정
+                setCurrentPoints(0);
+                setOwnedPotions({});
+                setIsPremium(false);
+            }
+        }, (error) => {
+            console.error('사용자 데이터 실시간 조회 실패:', error);
+            // 에러 발생 시 기본값 설정
+            setCurrentPoints(0);
+            setOwnedPotions({});
+            setIsPremium(false);
+        });
+
+        return () => {
+            unsubscribe();
+        };
     }, [user?.uid, novelDeleted]);
 
     // 이미 생성된 소설이 있는지 확인 (같은 장르인 경우에만 리다이렉트)

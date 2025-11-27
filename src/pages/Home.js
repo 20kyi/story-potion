@@ -18,6 +18,7 @@ import { checkWeeklyBonus } from '../utils/weeklyBonus';
 import { useTranslation } from '../LanguageContext';
 import { motion } from 'framer-motion';
 import { getAppTutorialNovel, getNovelCreationTutorialNovel } from '../utils/tutorialNovel';
+import { inAppPurchaseService } from '../utils/inAppPurchase';
 
 
 const Container = styled.div`
@@ -1078,8 +1079,15 @@ function Home({ user }) {
         setPurchasedNovels([]);
       }
 
-      // Fetch user's potions
+      // Fetch user's potions and premium status
       try {
+        // 구독 상태 동기화
+        try {
+          await inAppPurchaseService.syncSubscriptionStatus(user.uid);
+        } catch (syncError) {
+          console.error('구독 상태 동기화 실패:', syncError);
+        }
+
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
