@@ -1552,10 +1552,17 @@ function NovelView({ user }) {
                             </PageIndicator>
                             <PageButton
                                 readTheme={readTheme}
-                                onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
-                                disabled={currentPage >= pages.length - 1}
+                                onClick={() => {
+                                    if (currentPage >= pages.length - 1) {
+                                        // 마지막 페이지에서 다음 버튼 클릭 시 읽기 모드 종료
+                                        setIsReadingMode(false);
+                                        setShowReadingModeCover(false);
+                                    } else {
+                                        setCurrentPage(Math.min(pages.length - 1, currentPage + 1));
+                                    }
+                                }}
                             >
-                                다음
+                                {currentPage >= pages.length - 1 ? '나가기' : '다음'}
                             </PageButton>
                         </PageNavigation>
                         <SettingsPanel show={showSettings} readTheme={readTheme} data-settings-area>
