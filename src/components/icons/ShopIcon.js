@@ -3,8 +3,21 @@
 import React from 'react';
 
 const ShopIcon = ({ width = 24, height = 24, color = '#181725' }) => (
-    <svg width={width} height={height} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 12L12 4H36L42 12M6 12V40C6 41.0609 6.42143 42.0783 7.17157 42.8284C7.92172 43.5786 8.93913 44 10 44H38C39.0609 44 40.0783 43.5786 40.8284 42.8284C41.5786 42.0783 42 41.0609 42 40V12M6 12H42M32 20C32 22.1217 31.1571 24.1566 29.6569 25.6569C28.1566 27.1571 26.1217 28 24 28C21.8783 28 19.8434 27.1571 18.3431 25.6569C16.8429 24.1566 16 22.1217 16 20" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={width} height={height} viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clipPath="url(#clip0_875_970)">
+            <path 
+                d="M17.25 0.75H14.25L12.24 10.7925C12.1714 11.1378 11.9836 11.448 11.7093 11.6687C11.4351 11.8895 11.092 12.0067 10.74 12H3.45C3.09803 12.0067 2.75489 11.8895 2.48066 11.6687C2.20643 11.448 2.01859 11.1378 1.95 10.7925L0.750002 4.5H13.5M10.5 15.75C10.5 16.1642 10.8358 16.5 11.25 16.5C11.6642 16.5 12 16.1642 12 15.75C12 15.3358 11.6642 15 11.25 15C10.8358 15 10.5 15.3358 10.5 15.75ZM2.25 15.75C2.25 16.1642 2.58579 16.5 3 16.5C3.41421 16.5 3.75 16.1642 3.75 15.75C3.75 15.3358 3.41421 15 3 15C2.58579 15 2.25 15.3358 2.25 15.75Z" 
+                stroke={color} 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+            />
+        </g>
+        <defs>
+            <clipPath id="clip0_875_970">
+                <rect width="18" height="18" fill="white" transform="matrix(-1 0 0 1 18 0)"/>
+            </clipPath>
+        </defs>
     </svg>
 );
 
