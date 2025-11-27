@@ -47,27 +47,29 @@ function getCreativeTransformationGuidance(isEng) {
 
 **IMPORTANT: You must create a completely original fictional story. Do NOT simply summarize or retell the diary entries.**
 
-* **Use diary entries ONLY as inspiration**: Extract the emotional essence, relationship dynamics, and narrative structure from the diaries, but create entirely new characters, settings, events, and dialogues.
-* **Create original characters**: Do not use the same names, appearances, or exact situations from the diary. Invent new characters with distinct personalities, backgrounds, and motivations.
-* **Build a fictional world**: Create a unique setting, atmosphere, and context that is completely separate from the diary writer's real life.
-* **Write original dialogues**: Create natural, engaging conversations that reveal character depth and advance the plot. Do not paraphrase diary content.
-* **Add fictional elements**: Introduce conflicts, obstacles, surprises, and resolutions that are not in the original diary entries.
+* **Narrative Perspective**: The protagonist is "I" (first person). Write the entire story from the first-person perspective of the diary writer.
+* **Characters from Diary**: Use the characters mentioned in the diary entries as they appear. Extract all character names, relationships, and roles from the diary and incorporate them into the story. Do not create entirely new characters - use the people mentioned in the diary.
+* **Use diary entries as foundation**: Extract the emotional essence, relationship dynamics, and narrative structure from the diaries, but transform them into a compelling fictional narrative with dramatic scenes and dialogues.
+* **Build a fictional world**: Create a unique setting, atmosphere, and context that transforms the diary's real-life events into a fictional story appropriate for the genre.
+* **Write original dialogues**: Create natural, engaging conversations that reveal character depth and advance the plot. Transform diary content into dramatic dialogue and scenes.
+* **Add fictional elements**: Introduce conflicts, obstacles, surprises, and resolutions that enhance the story while staying true to the core relationships and events from the diary.
 * **Show, don't tell**: Use vivid descriptions, sensory details, and dramatic scenes instead of simply narrating what happened.
 * **Create dramatic tension**: Build suspense, conflict, and emotional intensity through original plot developments.
-* **Avoid diary-like language**: Do not use phrases like "I felt", "I went", "I met" in a diary style. Write in third person or first person narrative style appropriate for the genre.`;
+* **First-person narrative style**: Write in first person ("I") throughout. Use natural, literary first-person narration appropriate for the genre, not diary-style writing.`;
     } else {
         return `**중요: 창의적 변환 - 일기 요약 금지**
 
 **반드시 완전히 독창적인 소설을 창작해야 합니다. 일기 내용을 단순히 요약하거나 재현하지 마세요.**
 
-* **일기는 영감으로만 사용**: 일기에서 감정의 본질, 관계의 역학, 서사 구조만 추출하고, 완전히 새로운 인물, 배경, 사건, 대화를 창작하세요.
-* **독창적인 인물 창조**: 일기의 이름, 외모, 정확한 상황을 그대로 사용하지 마세요. 독특한 성격, 배경, 동기를 가진 새로운 인물을 만들어내세요.
-* **가상의 세계 구축**: 일기 작성자의 실제 삶과 완전히 분리된 독특한 배경, 분위기, 맥락을 만들어내세요.
-* **독창적인 대화 작성**: 인물의 깊이를 드러내고 플롯을 발전시키는 자연스럽고 매력적인 대화를 창작하세요. 일기 내용을 바꿔 말하지 마세요.
-* **가상의 요소 추가**: 원본 일기에 없는 갈등, 장애물, 놀라움, 해결책을 도입하세요.
+* **서술 시점**: 주인공은 "나"입니다. 소설 전체를 일기 작성자인 "나"의 1인칭 시점으로 작성하세요.
+* **일기 인물 활용**: 일기에 언급된 인물들을 그대로 사용하세요. 일기에서 등장하는 모든 인물의 이름, 관계, 역할을 추출하여 소설에 반영하세요. 완전히 새로운 인물을 만들지 말고, 일기에 언급된 인물들을 사용하세요.
+* **일기는 기반으로 사용**: 일기에서 감정의 본질, 관계의 역학, 서사 구조를 추출하되, 이를 극적인 장면과 대화가 있는 매력적인 소설로 변환하세요.
+* **가상의 세계 구축**: 일기의 실제 사건을 장르에 맞는 가상의 이야기로 변환하는 독특한 배경, 분위기, 맥락을 만들어내세요.
+* **독창적인 대화 작성**: 인물의 깊이를 드러내고 플롯을 발전시키는 자연스럽고 매력적인 대화를 창작하세요. 일기 내용을 극적인 대화와 장면으로 변환하세요.
+* **가상의 요소 추가**: 일기의 핵심 관계와 사건을 유지하면서 이야기를 풍성하게 만드는 갈등, 장애물, 놀라움, 해결책을 도입하세요.
 * **보여주기, 말하지 않기**: 단순히 무슨 일이 일어났는지 서술하는 대신 생생한 묘사, 감각적 세부사항, 극적인 장면을 사용하세요.
 * **극적인 긴장감 조성**: 독창적인 플롯 전개를 통해 서스펜스, 갈등, 감정적 강도를 구축하세요.
-* **일기체 언어 피하기**: "나는 느꼈다", "나는 갔다", "나는 만났다" 같은 일기체 표현을 사용하지 마세요. 장르에 적합한 3인칭 또는 1인칭 서술체로 작성하세요.`;
+* **1인칭 서술체**: 소설 전체를 "나"의 1인칭 시점으로 작성하세요. 일기체가 아닌 장르에 적합한 자연스러운 문학적 1인칭 서술체를 사용하세요.`;
     }
 }
 
@@ -115,7 +117,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 4: Genre and Style:**
 
 * **Selected Genre:** Romance Novel
-* **Style Guidelines:** Transform the emotions and relationships from the diary entries into a compelling love story. Develop the progression of feelings, create tension-filled romantic moments, and reveal the depth of relationships through powerful emotional revelations. The writing style should be warm and emotional with rich psychological descriptions.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Transform the emotions and relationships from the diary entries into a compelling love story. Develop the progression of feelings, create tension-filled romantic moments, and reveal the depth of relationships through powerful emotional revelations. The writing style should be warm and emotional with rich psychological descriptions. Delicately portray the subtle changes in excitement and emotions, and vividly depict non-verbal communication such as conversations, eye contact, and gestures between characters.
 
 **STEP 4: Output Requirements:**
 
@@ -134,7 +137,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a romance novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow, focusing on love, excitement, and the changes in relationships.`,
+First, create the narrative summary table, then write a romance novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on love, excitement, and the changes in relationships.`,
             titlePrompt: `This is a warm and emotional romance novel. Suggest only one most fitting title in English, with no explanation.
 
 [Novel]
@@ -167,7 +170,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 로맨스 소설
-* **스타일 지침:** 일기 속 감정과 관계를 매력적인 사랑 이야기로 발전시키고, 감정의 변화 과정을 그려내며, 강력한 감정적 계시를 통해 관계의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 따뜻하고 감성적이며, 심리 묘사는 풍부해야 합니다.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 감정과 관계를 매력적인 사랑 이야기로 발전시키고, 감정의 변화 과정을 그려내며, 강력한 감정적 계시를 통해 관계의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 따뜻하고 감성적이며, 심리 묘사는 풍부해야 합니다. 설렘과 감정의 미묘한 변화를 섬세하게 묘사하고, 인물 간의 대화와 눈빛, 손짓 같은 비언어적 소통도 생생하게 그려내세요.
 
 **4단계: 출력 조건:**
 
@@ -186,7 +190,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 로맨스 소설을 작성하세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 로맨스 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 사랑, 설렘, 감정의 변화, 인물 간의 관계와 대화, 내면 묘사를 적극적으로 활용해 주세요.`,
             titlePrompt: `이 소설은 따뜻하고 감성적인 로맨스 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
@@ -215,7 +219,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 3: Genre and Style:**
 
 * **Selected Genre:** Mystery Novel
-* **Style Guidelines:** Develop minor questions from the diary entries into key clues, lay down tension-filled foreshadowing, and reveal hidden truths through powerful plot twists. The writing style should be dry but with sharp psychological descriptions.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Develop minor questions from the diary entries into key clues, lay down tension-filled foreshadowing, and reveal hidden truths through powerful plot twists. The writing style should be dry but with sharp psychological descriptions. Vividly portray "I"'s reasoning process, suspicions, and observations, and structure the story so that clues are gradually revealed. Delicately describe the process of understanding the hidden meanings in characters' words and actions.
 
 **STEP 4: Output Requirements:**
 
@@ -234,7 +239,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a mystery novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow.`,
+First, create the narrative summary table, then write a mystery novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Vividly portray "I"'s reasoning process, observations, and suspicions, and structure the story so that clues are gradually revealed.`,
             titlePrompt: `This is a mystery novel full of deduction and twists. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
@@ -258,7 +263,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 추리 소설
-* **스타일 지침:** 일기 속 사소한 의문을 핵심 단서로 발전시키고, 긴장감 있는 복선을 깔아 강력한 반전을 통해 숨겨진 진실을 밝히는 치밀한 플롯을 구성해야 합니다. 문체는 건조하지만 심리 묘사는 날카로워야 합니다.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 사소한 의문을 핵심 단서로 발전시키고, 긴장감 있는 복선을 깔아 강력한 반전을 통해 숨겨진 진실을 밝히는 치밀한 플롯을 구성해야 합니다. 문체는 건조하지만 심리 묘사는 날카로워야 합니다. "나"의 추리 과정과 의심, 관찰을 생생하게 그려내고, 단서들이 점진적으로 드러나도록 구성하세요. 인물들의 말과 행동에 숨겨진 의미를 파악하는 과정을 섬세하게 묘사하세요.
 
 **4단계: 출력 조건:**
 
@@ -277,7 +283,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 추리 소설을 작성하세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 추리 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. "나"의 추리 과정과 관찰, 의심을 생생하게 그려내고, 단서들이 점진적으로 드러나도록 구성하세요.`,
             titlePrompt: `이 소설은 추리와 반전이 있는 추리 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
@@ -306,7 +312,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 3: Genre and Style:**
 
 * **Selected Genre:** Historical Novel
-* **Style Guidelines:** Transform the events and emotions from the diary entries into a vivid historical setting. Develop the progression of historical events, create rich period details, and reveal the depth of characters' lives through powerful historical context. The writing style should be immersive with accurate historical details and rich descriptions.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Transform the events and emotions from the diary entries into a vivid historical setting. Develop the progression of historical events, create rich period details, and reveal the depth of characters' lives through powerful historical context. The writing style should be immersive with accurate historical details and rich descriptions. Vividly describe the atmosphere of the era, clothing, architecture, and way of life, and depict how "I" and the surrounding characters' lives unfold within historical events.
 
 **STEP 4: Output Requirements:**
 
@@ -325,7 +332,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a historical novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow, set in a vivid historical period with accurate details and rich descriptions of people's lives and events.`,
+First, create the narrative summary table, then write a historical novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Set the story in a vivid historical period with accurate details and rich descriptions of people's lives and events.`,
             titlePrompt: `This is a historical novel with a vivid sense of era. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
@@ -349,7 +356,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 역사 소설
-* **스타일 지침:** 일기 속 사건과 감정을 생생한 역사적 배경으로 발전시키고, 시대적 세부사항을 풍부하게 그려내며, 강력한 역사적 맥락을 통해 인물의 삶의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 몰입감 있게, 정확한 역사적 세부사항과 풍부한 묘사가 있어야 합니다.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 사건과 감정을 생생한 역사적 배경으로 발전시키고, 시대적 세부사항을 풍부하게 그려내며, 강력한 역사적 맥락을 통해 인물의 삶의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 몰입감 있게, 정확한 역사적 세부사항과 풍부한 묘사가 있어야 합니다. 시대의 분위기, 복식, 건축물, 생활 방식 등을 생생하게 묘사하고, 역사적 사건 속에서 "나"와 주변 인물들의 삶이 어떻게 펼쳐지는지 그려내세요.
 
 **4단계: 출력 조건:**
 
@@ -368,7 +376,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 역사 소설을 작성하세요. 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 해주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 역사 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 시대적 배경과 고증, 인물의 삶과 사건, 대화와 내면 묘사가 풍부하게 드러나도록 해주세요.`,
             titlePrompt: `이 소설은 시대적 배경이 살아있는 역사 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
@@ -397,7 +405,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 3: Genre and Style:**
 
 * **Selected Genre:** Fairy Tale
-* **Style Guidelines:** Transform the events and emotions from the diary entries into a bright and heartwarming fairy tale. Develop the progression of magical adventures, create gentle lessons, and reveal the depth of characters through meaningful storytelling. The writing style should be bright, imaginative, and heartwarming with rich descriptions.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Transform the events and emotions from the diary entries into a bright and heartwarming fairy tale. Develop the progression of magical adventures, create gentle lessons, and reveal the depth of characters through meaningful storytelling. The writing style should be bright, imaginative, and heartwarming with rich descriptions. Naturally incorporate magical elements and lessons, and vividly depict the growth, friendship, and warm moments between "I" and the surrounding characters.
 
 **STEP 4: Output Requirements:**
 
@@ -416,12 +425,12 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a fairy tale that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow, focusing on imagination, gentle lessons, and heartwarming moments.`,
+First, create the narrative summary table, then write a fairy tale that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on imagination, gentle lessons, and heartwarming moments.`,
             titlePrompt: `This is a bright and heartwarming fairy tale. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
 ${novelContent?.substring(0, 1000)}`,
-            imagePrompt: `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`
+            imagePrompt: `A cute, adorable fairy tale illustration in soft pastel colors. The illustration should be directly related to the story content, featuring key characters, magical elements, or important scenes from the story. Use gentle, warm colors like soft pink, light blue, pale yellow, and lavender. The style should be charming and whimsical, like a children's book illustration. Include friendly characters, magical elements, or symbolic objects that represent the story. No text, no scary elements, no violence.`
         };
     } else {
         return {
@@ -440,7 +449,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 동화
-* **스타일 지침:** 일기 속 사건과 감정을 밝고 따뜻한 동화로 발전시키고, 마법적 모험의 진행을 그려내며, 의미 있는 스토리텔링을 통해 인물의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 밝고 상상력이 풍부하며, 따뜻하고 풍부한 묘사가 있어야 합니다.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 사건과 감정을 밝고 따뜻한 동화로 발전시키고, 마법적 모험의 진행을 그려내며, 의미 있는 스토리텔링을 통해 인물의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 밝고 상상력이 풍부하며, 따뜻하고 풍부한 묘사가 있어야 합니다. 마법적 요소와 교훈을 자연스럽게 녹여내고, "나"와 주변 인물들의 성장과 우정, 따뜻한 순간들을 생생하게 그려내세요.
 
 **4단계: 출력 조건:**
 
@@ -459,12 +469,12 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 동화를 작성하세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 동화를 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 상상력과 교훈, 따뜻한 분위기, 인물 간의 대화와 내면 묘사를 적극적으로 활용해 주세요.`,
             titlePrompt: `이 소설은 밝고 따뜻한 동화야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
 ${novelContent?.substring(0, 1000)}`,
-            imagePrompt: `A colorful, cheerful fairy tale illustration with magical elements, friendly animals, and a bright atmosphere. No text, no scary elements, no violence.`
+            imagePrompt: `A cute, adorable fairy tale illustration in soft pastel colors. The illustration should be directly related to the story content, featuring key characters, magical elements, or important scenes from the story. Use gentle, warm colors like soft pink, light blue, pale yellow, and lavender. The style should be charming and whimsical, like a children's book illustration. Include friendly characters, magical elements, or symbolic objects that represent the story. No text, no scary elements, no violence.`
         };
     }
 }
@@ -488,7 +498,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 3: Genre and Style:**
 
 * **Selected Genre:** Fantasy Novel
-* **Style Guidelines:** Transform the events and emotions from the diary entries into a rich fantasy world. Develop the progression of magical elements, create mysterious beings and adventures, and reveal the depth of the fantasy world through powerful narrative revelations. The writing style should be immersive with rich world-building and magical descriptions.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Transform the events and emotions from the diary entries into a rich fantasy world. Develop the progression of magical elements, create mysterious beings and adventures, and reveal the depth of the fantasy world through powerful narrative revelations. The writing style should be immersive with rich world-building and magical descriptions. Consistently build the rules and magic system of the fantasy world, and dynamically portray "I"'s adventures, growth, and relationships with surrounding characters.
 
 **STEP 4: Output Requirements:**
 
@@ -507,7 +518,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a fantasy novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow, featuring a rich world, magic, mysterious beings, and adventures.`,
+First, create the narrative summary table, then write a fantasy novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Feature a rich world, magic, mysterious beings, and adventures.`,
             titlePrompt: `This is a fantasy novel set in a mysterious world. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
@@ -531,7 +542,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 판타지 소설
-* **스타일 지침:** 일기 속 사건과 감정을 풍부한 판타지 세계로 발전시키고, 마법적 요소의 진행을 그려내며, 강력한 서사적 계시를 통해 판타지 세계의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 몰입감 있게, 풍부한 세계관 구축과 마법적 묘사가 있어야 합니다.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 사건과 감정을 풍부한 판타지 세계로 발전시키고, 마법적 요소의 진행을 그려내며, 강력한 서사적 계시를 통해 판타지 세계의 깊이를 드러내는 플롯을 구성해야 합니다. 문체는 몰입감 있게, 풍부한 세계관 구축과 마법적 묘사가 있어야 합니다. 판타지 세계의 규칙과 마법 시스템을 일관되게 구축하고, "나"의 모험과 성장, 주변 인물들과의 관계를 역동적으로 그려내세요.
 
 **4단계: 출력 조건:**
 
@@ -550,7 +562,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 판타지 소설을 작성하세요. 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 해주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 판타지 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 세계관, 마법, 신비로운 존재, 모험, 인물 간의 관계와 대화, 내면 묘사가 풍부하게 드러나도록 해주세요.`,
             titlePrompt: `이 소설은 신비로운 세계관의 판타지 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
@@ -579,7 +591,8 @@ ${getCreativeTransformationGuidance(true)}
 **STEP 3: Genre and Style:**
 
 * **Selected Genre:** Horror Novel
-* **Style Guidelines:** Transform the events and emotions from the diary entries into a psychological horror story. Develop the progression of tension and unease, create subtle supernatural hints, and reveal hidden fears through powerful psychological revelations. The writing style should focus on tension, unease, and atmosphere rather than gore. Avoid explicit violence, blood, ghosts, or corpses. Use strange memories, odd behaviors, subtle supernatural hints, dialogues, and inner monologues.
+* **Protagonist and Perspective:** The protagonist is "I" (first person). Write the entire story from the first-person perspective. Use the characters mentioned in the diary entries as they appear.
+* **Style Guidelines:** Transform the events and emotions from the diary entries into a psychological horror story. Develop the progression of tension and unease, create subtle supernatural hints, and reveal hidden fears through powerful psychological revelations. The writing style should focus on tension, unease, and atmosphere rather than gore. Avoid explicit violence, blood, ghosts, or corpses. Use strange memories, odd behaviors, subtle supernatural hints, dialogues, and inner monologues. Vividly portray "I"'s fear, anxiety, and suspicion, and heighten tension through the strange behaviors or changes of surrounding characters.
 
 **STEP 4: Output Requirements:**
 
@@ -598,7 +611,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.en}
 
-First, create the narrative summary table, then write a psychological horror novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow, focusing on tension, unease, and atmosphere.`,
+First, create the narrative summary table, then write a psychological horror novel that transforms the diary entries into a cohesive narrative with strong plot continuity and natural flow. The protagonist is "I" (first person), and use the characters mentioned in the diary entries as they appear. Focus on tension, unease, and atmosphere, vividly portraying "I"'s fear, anxiety, and suspicion.`,
             titlePrompt: `This is a horror novel with strong psychological tension. Suggest only one most fitting English title, with no explanation.
 
 [Novel]
@@ -622,7 +635,8 @@ ${getCreativeTransformationGuidance(false)}
 **3단계: 장르 및 스타일:**
 
 * **선택 장르:** 공포 소설
-* **스타일 지침:** 일기 속 사건과 감정을 심리적 공포 이야기로 발전시키고, 긴장과 불안의 진행을 그려내며, 강력한 심리적 계시를 통해 숨겨진 공포를 드러내는 플롯을 구성해야 합니다. 문체는 긴장감, 불안, 분위기에 집중해야 하며, 직접적인 폭력, 피, 유령, 시체 등은 피하고, 심리적 공포와 분위기, 내면 묘사에 집중해 주세요. 정체불명의 존재, 이상한 기억의 공백, 반복되는 꿈, 사진 속 괴이한 형체, 이상한 말투 등 공포 요소를 자유롭게 활용해 주세요. 배경은 일상적일수록 좋지만, 점점 이상한 기운이나 초자연적 사건이 드러나도록 구성해 주세요.
+* **주인공 및 시점:** 주인공은 "나"이며, 소설 전체를 1인칭 시점으로 작성하세요. 일기에 언급된 인물들을 등장인물로 사용하세요.
+* **스타일 지침:** 일기 속 사건과 감정을 심리적 공포 이야기로 발전시키고, 긴장과 불안의 진행을 그려내며, 강력한 심리적 계시를 통해 숨겨진 공포를 드러내는 플롯을 구성해야 합니다. 문체는 긴장감, 불안, 분위기에 집중해야 하며, 직접적인 폭력, 피, 유령, 시체 등은 피하고, 심리적 공포와 분위기, 내면 묘사에 집중해 주세요. 정체불명의 존재, 이상한 기억의 공백, 반복되는 꿈, 사진 속 괴이한 형체, 이상한 말투 등 공포 요소를 자유롭게 활용해 주세요. 배경은 일상적일수록 좋지만, 점점 이상한 기운이나 초자연적 사건이 드러나도록 구성해 주세요. "나"의 두려움과 불안, 의심을 생생하게 그려내고, 주변 인물들의 이상한 행동이나 변화를 통해 긴장감을 높이세요.
 
 **4단계: 출력 조건:**
 
@@ -641,7 +655,7 @@ ${diaryContents}
 
 ${COMMON_SECTIONS.responseStructure.ko}
 
-먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 공포 소설을 작성하세요. 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 해주세요.`,
+먼저 서사 요약표를 작성한 후, 일기 데이터를 바탕으로 서사적 관계성과 자연스러운 연속성을 가진 공포 소설을 작성하세요. 주인공은 "나"이며 1인칭 시점으로, 일기에 언급된 인물들을 등장인물로 사용하세요. 심리적 긴장감, 불안, 이상함, 인물의 내면 변화와 대화, 분위기 묘사가 풍부하게 드러나도록 해주세요.`,
             titlePrompt: `이 소설은 심리적 긴장감이 있는 공포 소설이야. 가장 어울리는 제목 하나만 추천해줘. 설명 없이 제목만 말해줘.
 
 [소설 내용]
