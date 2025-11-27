@@ -12,13 +12,14 @@ import { motion } from 'framer-motion';
 import PointIcon from '../../components/icons/PointIcon';
 import { usePrompt } from '../../hooks/usePrompt';
 import { useLanguage, useTranslation } from '../../LanguageContext';
-import { useTheme } from '../../ThemeContext';
+import { useTheme as useThemeContext } from '../../ThemeContext';
+import { lightTheme, darkTheme } from '../../theme';
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.background};
+  background-color: transparent;
   color: ${({ theme }) => theme.text};
   padding: 20px;
   padding-top: 40px;
@@ -162,12 +163,12 @@ const loadingMessagesKeys = [
 ];
 
 const potionImages = [
-    { genre: '로맨스', key: 'novel_genre_romance', src: '/potion/romance.png' },
-    { genre: '역사', key: 'novel_genre_historical', src: '/potion/historical.png' },
-    { genre: '추리', key: 'novel_genre_mystery', src: '/potion/mystery.png' },
-    { genre: '공포', key: 'novel_genre_horror', src: '/potion/horror.png' },
-    { genre: '동화', key: 'novel_genre_fairytale', src: '/potion/fairytale.png' },
-    { genre: '판타지', key: 'novel_genre_fantasy', src: '/potion/fantasy.png' },
+    { genre: '로맨스', key: 'novel_genre_romance', src: '/potion/romance.png', color: '#FF1493', colorLight: '#FF69B4' },
+    { genre: '역사', key: 'novel_genre_historical', src: '/potion/historical.png', color: '#DAA520', colorLight: '#F0C050' },
+    { genre: '추리', key: 'novel_genre_mystery', src: '/potion/mystery.png', color: '#006400', colorLight: '#228B22' },
+    { genre: '공포', key: 'novel_genre_horror', src: '/potion/horror.png', color: '#4B0082', colorLight: '#9370DB' },
+    { genre: '동화', key: 'novel_genre_fairytale', src: '/potion/fairytale.png', color: '#87CEEB', colorLight: '#B0E0E6' },
+    { genre: '판타지', key: 'novel_genre_fantasy', src: '/potion/fantasy.png', color: '#4169E1', colorLight: '#87CEEB' },
 ];
 
 const PotionSelectSection = styled.div`
@@ -325,7 +326,8 @@ function NovelCreate({ user }) {
     const toast = useToast();
     const { t } = useTranslation();
     const { language } = useLanguage();
-    const theme = useTheme();
+    const themeContext = useThemeContext();
+    const theme = themeContext.actualTheme === 'dark' ? darkTheme : lightTheme;
     const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted, useFree } = location.state || {};
     // 이전 페이지 경로 저장 (없으면 기본값으로 '/novel')
     const previousPath = returnPath || '/novel';
@@ -347,6 +349,34 @@ function NovelCreate({ user }) {
     const [isPremium, setIsPremium] = useState(false);
     const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const selectedGenre = selectedPotion !== null ? potionImages[selectedPotion].genre : null;
+
+    // 포션 선택 시 앱 전체 배경색 변경 (body 배경색)
+    useEffect(() => {
+        const originalBodyBackground = document.body.style.background;
+        const originalBodyClass = document.body.className;
+        const currentTheme = themeContext.actualTheme === 'dark' ? darkTheme : lightTheme;
+
+        if (selectedPotion !== null && selectedPotion !== undefined) {
+            const potion = potionImages[selectedPotion];
+            if (potion) {
+                // 중심에서 퍼져나가는 방사형 그라데이션 (더 진한 색상)
+                document.body.style.background = `radial-gradient(circle at center, ${potion.color}60 0%, ${potion.colorLight}50 20%, ${potion.color}40 40%, ${potion.color}20 60%, ${currentTheme.background} 100%)`;
+                document.body.style.backgroundAttachment = 'fixed';
+                document.body.style.transition = 'background 0.6s ease';
+            }
+        } else {
+            // 포션이 선택되지 않았을 때 원래 배경색으로 복구
+            document.body.style.background = '';
+            document.body.style.backgroundAttachment = '';
+        }
+
+        // 컴포넌트 언마운트 시 원래 배경색으로 복구
+        return () => {
+            document.body.style.background = originalBodyBackground;
+            document.body.style.backgroundAttachment = '';
+            document.body.className = originalBodyClass;
+        };
+    }, [selectedPotion, themeContext.actualTheme]);
 
     // 뒤로가기 방지 로직 - 소설 생성 중일 때 뒤로가기 방지
     usePrompt(isLoading, (location, callback) => {
