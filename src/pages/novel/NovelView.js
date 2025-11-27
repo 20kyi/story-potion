@@ -607,9 +607,9 @@ const PageViewContainer = styled.div`
 
 const PageWrapper = styled.div`
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding-top: 60px;
-  padding-bottom: 60px;
+  padding-bottom: 120px;
   position: relative;
   touch-action: pan-y;
   background: ${({ readTheme }) => {
@@ -617,6 +617,9 @@ const PageWrapper = styled.div`
         if (readTheme === 'dark') return '#1a1a1a';
         return '#fefefe';
     }};
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const PageContent = styled.div`
@@ -629,14 +632,20 @@ const PageContent = styled.div`
     }};
   white-space: pre-line;
   padding: 40px 24px;
+  padding-bottom: 20px;
   background: transparent;
   border-radius: 0;
   font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
   text-align: ${({ textAlign }) => textAlign || 'left'};
   max-width: 680px;
-  margin: 0 auto;
-  min-height: calc(80vh);
+  width: 100%;
+  height: calc(100% - 20px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 `;
 
 const PageNavigation = styled.div`
@@ -1152,30 +1161,41 @@ function NovelView({ user }) {
         }
 
         // 페이지 높이 계산 (화면 높이 - 상단 컨트롤 - 하단 네비게이션)
-        // 최소 높이를 화면의 80%로 설정하여 짧은 소설도 충분한 페이지 길이 확보
-        const minPageHeight = window.innerHeight * 0.8;
-        const pageHeight = Math.max(minPageHeight, window.innerHeight - 60 - 100);
+        // 상단 컨트롤(60px) + 하단 네비게이션(약 80px) + 여유 공간(40px) = 180px
+        // PageWrapper의 실제 높이 = window.innerHeight - 180px
+        // PageContent의 실제 높이 = PageWrapper 높이 - padding-top(60px) - padding-bottom(120px) = window.innerHeight - 360px
+        // 하지만 PageContent 내부 padding(40px top + 20px bottom = 60px)도 고려해야 함
+        const availableHeight = window.innerHeight - 180; // PageWrapper 높이
+        const pageContentHeight = availableHeight - 60 - 120; // PageWrapper padding 제외
+        const actualContentHeight = pageContentHeight - 40 - 20; // PageContent padding 제외
+        const pageHeight = Math.max(actualContentHeight, window.innerHeight * 0.5);
 
         // 임시 요소를 만들어서 실제 렌더링 크기를 계산
         const tempDiv = document.createElement('div');
         tempDiv.style.position = 'absolute';
         tempDiv.style.visibility = 'hidden';
         tempDiv.style.width = '680px';
-        tempDiv.style.padding = '40px 32px';
+        tempDiv.style.maxWidth = '680px';
+        tempDiv.style.padding = '40px 24px';
+        tempDiv.style.paddingBottom = '20px';
         tempDiv.style.fontSize = `${fontSize}px`;
         tempDiv.style.lineHeight = `${lineHeight}`;
         tempDiv.style.fontFamily = '"Noto Serif KR", "Nanum Myeongjo", serif';
         tempDiv.style.whiteSpace = 'pre-line';
         tempDiv.style.textAlign = textAlign;
         tempDiv.style.boxSizing = 'border-box';
+        tempDiv.style.display = 'flex';
+        tempDiv.style.flexDirection = 'column';
+        tempDiv.style.justifyContent = 'flex-start';
         document.body.appendChild(tempDiv);
 
+        // 더 정확한 페이지 분할을 위해 줄 단위로 처리
         const lines = content.split('\n');
         const pages = [];
         let currentPage = '';
-        let currentHeight = 0;
 
         lines.forEach((line, lineIndex) => {
+            // 현재 줄을 추가했을 때의 텍스트
             const testText = currentPage + (currentPage ? '\n' : '') + line;
             tempDiv.textContent = testText;
             const height = tempDiv.scrollHeight;
@@ -1185,11 +1205,29 @@ function NovelView({ user }) {
                 pages.push(currentPage.trim());
                 currentPage = line;
                 tempDiv.textContent = line;
-                currentHeight = tempDiv.scrollHeight;
+                
+                // 한 줄이 페이지 높이를 넘는 경우, 단어 단위로 나누기
+                if (tempDiv.scrollHeight > pageHeight) {
+                    const words = line.split(/(\s+)/);
+                    let pageText = '';
+                    
+                    words.forEach((word) => {
+                        const testPage = pageText + word;
+                        tempDiv.textContent = testPage;
+                        
+                        if (tempDiv.scrollHeight > pageHeight && pageText.trim()) {
+                            // 현재 페이지가 꽉 찼으므로 저장하고 새 페이지 시작
+                            pages.push(pageText.trim());
+                            pageText = word;
+                        } else {
+                            pageText = testPage;
+                        }
+                    });
+                    currentPage = pageText;
+                }
             } else {
                 // 현재 페이지에 추가
                 currentPage = testText;
-                currentHeight = height;
             }
         });
 
