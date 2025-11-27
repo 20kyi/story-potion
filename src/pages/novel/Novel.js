@@ -5,12 +5,13 @@ import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, doc, getDoc, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc, limit, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '../../components/ui/ToastProvider';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import { useTheme } from '../../ThemeContext';
 import GridIcon from '../../components/icons/GridIcon';
 import ListIcon from '../../components/icons/ListIcon';
+import { inAppPurchaseService } from '../../utils/inAppPurchase';
 
 const Container = styled.div`
   display: flex;
@@ -429,6 +430,9 @@ const CreateButton = styled.button`
   background: ${({ children, completed, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'transparent';
+        // children을 문자열로 변환하여 PREMIUM 체크
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'; // 홈화면 프리미엄 배너 색상 팔레트
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
         if (children === '다른 장르 생성') return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'; // 일기 진행도 그래프 색상
         if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
@@ -438,6 +442,9 @@ const CreateButton = styled.button`
   color: ${({ children, completed, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
+        // children을 문자열로 변환하여 PREMIUM 체크
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
         if (children === '다른 장르 생성') return '#fff'; // 일기 진행도 그래프 색상 배경에 맞춰 흰색
         if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
@@ -447,6 +454,9 @@ const CreateButton = styled.button`
   border: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
         if (isFree) return '2px solid #e4a30d';
+        // children을 문자열로 변환하여 PREMIUM 체크
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        if (childrenStr.includes('PREMIUM')) return 'none'; // 프리미엄 버튼 테두리 없음
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
         if (children === '다른 장르 생성') return 'none'; // 그라데이션 배경이므로 border 없음
         if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
@@ -469,6 +479,15 @@ const CreateButton = styled.button`
     background: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
         if (isFree) return 'rgba(228, 163, 13, 0.1)';
+        // children을 문자열로 변환하여 PREMIUM 체크
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        if (childrenStr.includes('PREMIUM')) {
+            // hover 시 약간 더 밝은 그라데이션
+            if (theme.mode === 'dark') {
+                return 'linear-gradient(135deg, #5A4A3A 0%, #4A3A2F 100%)'; // 다크모드 hover
+            }
+            return 'linear-gradient(135deg, #ffe8af 0%, #ffcc81 100%)'; // 라이트모드 hover (약간 더 밝게)
+        }
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
         if (children === '다른 장르 생성') return 'linear-gradient(90deg, #B88A8A 0%, #C39595 100%)'; // hover 시 약간 어둡게
         if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
@@ -478,6 +497,9 @@ const CreateButton = styled.button`
     color: ${({ children, theme, isFree, disabled }) => {
         if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
         if (isFree) return '#e4a30d';
+        // children을 문자열로 변환하여 PREMIUM 체크
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상 (hover 시에도 동일)
         if (children === '일기 채우기' || children === '소설 만들기' || children === '다른 장르 생성') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
         return '#fff';
     }};
@@ -491,21 +513,6 @@ const ButtonGroup = styled.div`
   width: 100%;
 `;
 
-const PremiumFreeNovelStatus = styled.div`
-  margin: 16px 0;
-  padding: 12px 16px;
-  background: ${({ available, theme }) =>
-        available
-            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.15) 0%, rgba(255, 226, 148, 0.15) 100%)'
-            : theme.card};
-  border-radius: 12px;
-  border: ${({ available }) =>
-        available
-            ? '2px solid rgba(228, 163, 13, 0.4)'
-            : '1px solid rgba(0,0,0,0.1)'};
-  text-align: center;
-  font-size: 14px;
-`;
 
 const CreateOptionModal = styled.div`
   position: fixed;
@@ -1012,13 +1019,9 @@ const Novel = ({ user }) => {
     const [novelsMap, setNovelsMap] = useState({});
     const [selectedWeekNovels, setSelectedWeekNovels] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
-    const [premiumFreeNovelAvailable, setPremiumFreeNovelAvailable] = useState(false);
-    const [premiumFreeNovelCount, setPremiumFreeNovelCount] = useState(0);
-    const [premiumFreeNovelNextChargeDate, setPremiumFreeNovelNextChargeDate] = useState(null);
     const [ownedPotions, setOwnedPotions] = useState({});
     const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const [selectedWeekForCreate, setSelectedWeekForCreate] = useState(null);
-    const [timeUntilNextCharge, setTimeUntilNextCharge] = useState('');
     const [myNovels, setMyNovels] = useState([]);
     const [purchasedNovels, setPurchasedNovels] = useState([]);
     const weekRefs = useRef({});
@@ -1156,7 +1159,7 @@ const Novel = ({ user }) => {
                         newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                     }
                 });
-                
+
                 // 같은 주차, 같은 장르의 소설이 여러 개 있을 때 최신 것만 유지
                 Object.keys(newNovelsMap).forEach(weekKey => {
                     const novels = newNovelsMap[weekKey];
@@ -1269,32 +1272,6 @@ const Novel = ({ user }) => {
                     setIsPremium(isPremiumUser);
                     setOwnedPotions(userData.potions || {});
 
-                    if (isPremiumUser) {
-                        const now = new Date();
-                        let nextChargeDate = null;
-
-                        // premiumFreeNovelNextChargeDate 확인
-                        if (userData.premiumFreeNovelNextChargeDate) {
-                            if (userData.premiumFreeNovelNextChargeDate.seconds) {
-                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
-                            } else if (userData.premiumFreeNovelNextChargeDate.toDate) {
-                                nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
-                            } else {
-                                nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
-                            }
-                        }
-
-                        // premiumFreeNovelCount 확인
-                        let freeNovelCount = userData.premiumFreeNovelCount || 0;
-
-                        setPremiumFreeNovelNextChargeDate(nextChargeDate);
-                        setPremiumFreeNovelCount(freeNovelCount);
-                        setPremiumFreeNovelAvailable(freeNovelCount > 0);
-                    } else {
-                        setPremiumFreeNovelCount(0);
-                        setPremiumFreeNovelAvailable(false);
-                        setPremiumFreeNovelNextChargeDate(null);
-                    }
                 }
             } catch (error) {
                 // 오류가 나도 UI는 계속 진행되도록 함
@@ -1309,50 +1286,6 @@ const Novel = ({ user }) => {
         fetchAllData();
     }, [user, currentDate]);
 
-    // 다음 충전까지 남은 시간 계산 및 업데이트
-    useEffect(() => {
-        if (!premiumFreeNovelNextChargeDate || !isPremium) {
-            setTimeUntilNextCharge('');
-            return;
-        }
-
-        const updateTimeUntilNextCharge = () => {
-            const now = new Date();
-            let nextChargeDate;
-
-            if (premiumFreeNovelNextChargeDate.seconds) {
-                nextChargeDate = new Date(premiumFreeNovelNextChargeDate.seconds * 1000);
-            } else if (premiumFreeNovelNextChargeDate.toDate) {
-                nextChargeDate = premiumFreeNovelNextChargeDate.toDate();
-            } else {
-                nextChargeDate = new Date(premiumFreeNovelNextChargeDate);
-            }
-
-            const diff = nextChargeDate - now;
-
-            if (diff <= 0) {
-                setTimeUntilNextCharge('사용 가능');
-                return;
-            }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-            if (days > 0) {
-                setTimeUntilNextCharge(`${days}일 ${hours}시간 후`);
-            } else if (hours > 0) {
-                setTimeUntilNextCharge(`${hours}시간 ${minutes}분 후`);
-            } else {
-                setTimeUntilNextCharge(`${minutes}분 후`);
-            }
-        };
-
-        updateTimeUntilNextCharge();
-        const interval = setInterval(updateTimeUntilNextCharge, 60000); // 1분마다 업데이트
-
-        return () => clearInterval(interval);
-    }, [premiumFreeNovelNextChargeDate, isPremium]);
 
     // location state에서 소설 삭제 알림을 받으면 데이터 다시 가져오기
     useEffect(() => {
@@ -1421,7 +1354,7 @@ const Novel = ({ user }) => {
                             newNovelsMap[weekKey].push({ id: doc.id, ...novel });
                         }
                     });
-                    
+
                     // 같은 주차, 같은 장르의 소설이 여러 개 있을 때 최신 것만 유지
                     Object.keys(newNovelsMap).forEach(weekKey => {
                         const novels = newNovelsMap[weekKey];
@@ -1445,7 +1378,7 @@ const Novel = ({ user }) => {
                         });
                         newNovelsMap[weekKey] = filteredNovels;
                     });
-                    
+
                     setNovelsMap(newNovelsMap);
                     // 최근 5개만 표시
                     setMyNovels(allMyNovels.slice(0, 5));
@@ -1495,32 +1428,6 @@ const Novel = ({ user }) => {
                         setIsPremium(isPremiumUser);
                         setOwnedPotions(userData.potions || {});
 
-                        if (isPremiumUser) {
-                            const now = new Date();
-                            let nextChargeDate = null;
-
-                            // premiumFreeNovelNextChargeDate 확인
-                            if (userData.premiumFreeNovelNextChargeDate) {
-                                if (userData.premiumFreeNovelNextChargeDate.seconds) {
-                                    nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate.seconds * 1000);
-                                } else if (userData.premiumFreeNovelNextChargeDate.toDate) {
-                                    nextChargeDate = userData.premiumFreeNovelNextChargeDate.toDate();
-                                } else {
-                                    nextChargeDate = new Date(userData.premiumFreeNovelNextChargeDate);
-                                }
-                            }
-
-                            // premiumFreeNovelCount 확인
-                            let freeNovelCount = userData.premiumFreeNovelCount || 0;
-
-                            setPremiumFreeNovelNextChargeDate(nextChargeDate);
-                            setPremiumFreeNovelCount(freeNovelCount);
-                            setPremiumFreeNovelAvailable(freeNovelCount > 0);
-                        } else {
-                            setPremiumFreeNovelCount(0);
-                            setPremiumFreeNovelAvailable(false);
-                            setPremiumFreeNovelNextChargeDate(null);
-                        }
                     }
                 } catch (error) {
                     // 오류가 나도 UI는 계속 진행되도록 함
@@ -1727,7 +1634,7 @@ const Novel = ({ user }) => {
         return `${d.getMonth() + 1}/${d.getDate()}`;
     }
 
-    const handleCreateNovel = (week, useFree = false) => {
+    const handleCreateNovel = (week) => {
         const weekProgress = weeklyProgress[week.weekNum] || 0;
         if (weekProgress < 100) {
             alert(t('novel_all_diaries_needed'));
@@ -1766,13 +1673,12 @@ const Novel = ({ user }) => {
                 imageUrl: imageUrl,
                 title: novelTitle,
                 existingGenres: existingGenres,
-                returnPath: location.pathname || '/novel',
-                useFree: useFree
+                returnPath: location.pathname || '/novel'
             }
         });
     };
 
-    const handleCreateNovelClick = (week) => {
+    const handleCreateNovelClick = async (week) => {
         const weekProgress = weeklyProgress[week.weekNum] || 0;
         if (weekProgress < 100) {
             alert(t('novel_all_diaries_needed'));
@@ -1784,17 +1690,27 @@ const Novel = ({ user }) => {
         const weekKey = `${year}년 ${month}월 ${week.weekNum}주차`;
         const novelsForWeek = novelsMap[weekKey] || [];
 
-        // 무료권 사용 가능 여부와 포션 보유 여부 확인
-        const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-        const canUseFree = premiumFreeNovelCount > 0 && isPremium && novelsForWeek.length === 0;
+        // 일반 회원인 경우 같은 주차에 이미 다른 장르의 소설이 있는지 확인
+        if (!isPremium && novelsForWeek.length > 0) {
+            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+            if (existingGenres.length > 0) {
+                toast.showToast('일반 회원은 한 주에 한 장르의 소설만 생성할 수 있습니다.', 'error');
+                return;
+            }
+        }
 
-        // 무료권과 포션이 모두 가능한 경우에만 모달 표시
-        if (canUseFree && hasPotions) {
-            setSelectedWeekForCreate(week);
-            setShowCreateOptionModal(true);
-        } else {
-            // 나머지 경우는 모두 포션 사용 (useFree: false)
+        // 포션 보유 여부 확인
+        const hasPotions = Object.values(ownedPotions).some(count => count > 0);
+
+        if (hasPotions) {
+            // 포션이 있으면 바로 소설 생성 페이지로 이동
             handleCreateNovel(week, false);
+        } else {
+            // 포션이 없으면 포션 상점으로 안내
+            toast.showToast('포션이 필요합니다. 포션 상점에서 구매해주세요.', 'error');
+            setTimeout(() => {
+                navigate('/my/potion-shop');
+            }, 1500);
         }
     };
 
@@ -2170,52 +2086,6 @@ const Novel = ({ user }) => {
 
             <Divider />
 
-            {/* 프리미엄 무료권 상태 표시 */}
-            {isPremium && (
-                <PremiumFreeNovelStatus available={premiumFreeNovelCount > 0} theme={theme}>
-                    <div style={{
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        color: premiumFreeNovelCount > 0 ? '#e4a30d' : theme.text,
-                        marginBottom: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}>
-                        <span>🪄</span>
-                        <span>프리미엄 전용 무료 소설</span>
-                        <span>🪄</span>
-                    </div>
-                    <div style={{
-                        fontSize: '14px',
-                        color: theme.subText || '#666',
-                        marginBottom: '4px'
-                    }}>
-                        <span style={{
-                            color: premiumFreeNovelCount > 0 ? '#e4a30d' : theme.subText || '#666',
-                            fontWeight: '600',
-                            marginBottom: '8px',
-                            display: 'block'
-                        }}>
-                            {premiumFreeNovelCount}개 보유
-                        </span>
-                    </div>
-                    {timeUntilNextCharge && (
-                        <div style={{
-                            fontSize: '12px',
-                            color: theme.subText || '#888',
-                            marginTop: '4px'
-                        }}>
-                            {premiumFreeNovelCount > 0 ? (
-                                <span>다음 충전: {timeUntilNextCharge}</span>
-                            ) : (
-                                <span>다음 충전까지: {timeUntilNextCharge}</span>
-                            )}
-                        </div>
-                    )}
-                </PremiumFreeNovelStatus>
-            )}
 
             <WeeklySection ref={progressSectionRef}>
                 <MonthSelector>
@@ -2306,36 +2176,40 @@ const Novel = ({ user }) => {
                                     return;
                                 }
 
-                                // 무료권 사용 가능 여부와 포션 보유 여부 확인
+                                // 포션 보유 여부 확인
                                 const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-                                const canUseFree = premiumFreeNovelCount > 0 && isPremium;
 
-                                // 무료권과 포션이 모두 가능한 경우에만 모달 표시
-                                if (canUseFree && hasPotions) {
-                                    setSelectedWeekForCreate(week);
-                                    setShowCreateOptionModal(true);
-                                } else {
-                                    // 나머지 경우는 바로 소설 생성 페이지로 이동
-                                    const year = currentDate.getFullYear();
-                                    const month = currentDate.getMonth() + 1;
-                                    const novelTitle = language === 'en'
-                                        ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                        : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+                                // 바로 소설 생성 페이지로 이동
+                                const year = currentDate.getFullYear();
+                                const month = currentDate.getMonth() + 1;
+                                const novelTitle = language === 'en'
+                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
-                                    const weekStartDate = new Date(week.start);
-                                    const weekEndDate = new Date(week.end);
+                                const weekStartDate = new Date(week.start);
+                                const weekEndDate = new Date(week.end);
 
-                                    const firstDiaryWithImage = diaries.find(diary => {
-                                        const diaryDate = new Date(diary.date);
-                                        return diaryDate >= weekStartDate &&
-                                            diaryDate <= weekEndDate &&
-                                            diary.imageUrls && diary.imageUrls.length > 0;
-                                    });
-                                    const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+                                const firstDiaryWithImage = diaries.find(diary => {
+                                    const diaryDate = new Date(diary.date);
+                                    return diaryDate >= weekStartDate &&
+                                        diaryDate <= weekEndDate &&
+                                        diary.imageUrls && diary.imageUrls.length > 0;
+                                });
+                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
 
-                                    // 무료권만 있으면 무료권 사용, 아니면 포션 사용
-                                    handleCreateNovel(week, canUseFree);
-                                }
+                                navigate('/novel/create', {
+                                    state: {
+                                        year: year,
+                                        month: month,
+                                        weekNum: week.weekNum,
+                                        week: `${year}년 ${month}월 ${week.weekNum}주차`,
+                                        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
+                                        imageUrl: imageUrl,
+                                        title: novelTitle,
+                                        existingGenres: novelsForWeek.map(n => n.genre).filter(Boolean),
+                                        returnPath: location.pathname || '/novel'
+                                    }
+                                });
                             };
 
                             const handleViewNovel = () => {
@@ -2429,7 +2303,7 @@ const Novel = ({ user }) => {
                                             onClick={handleAddNovel}
                                             disabled={allGenresCreated}
                                         >
-                                            {allGenresCreated ? "완성 ✨" : "다른 장르 생성"}
+                                            {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "다른 장르 생성")}
                                         </CreateButton>
                                     ) : (
                                         <CreateButton
@@ -2468,6 +2342,12 @@ const Novel = ({ user }) => {
                             const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
 
                             const handleAddNovel = () => {
+                                // 일반 회원이고 이미 소설이 있는 경우 프리미엄 페이지로 이동
+                                if (!isPremium && novelsForWeek.length > 0) {
+                                    navigate('/my/premium');
+                                    return;
+                                }
+
                                 // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
                                 if (allGenresCreated) {
                                     return;
@@ -2479,36 +2359,40 @@ const Novel = ({ user }) => {
                                     return;
                                 }
 
-                                // 무료권 사용 가능 여부와 포션 보유 여부 확인
+                                // 포션 보유 여부 확인
                                 const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-                                const canUseFree = premiumFreeNovelCount > 0 && isPremium;
 
-                                // 무료권과 포션이 모두 가능한 경우에만 모달 표시
-                                if (canUseFree && hasPotions) {
-                                    setSelectedWeekForCreate(week);
-                                    setShowCreateOptionModal(true);
-                                } else {
-                                    // 나머지 경우는 바로 소설 생성 페이지로 이동
-                                    const year = currentDate.getFullYear();
-                                    const month = currentDate.getMonth() + 1;
-                                    const novelTitle = language === 'en'
-                                        ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                        : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
+                                // 바로 소설 생성 페이지로 이동
+                                const year = currentDate.getFullYear();
+                                const month = currentDate.getMonth() + 1;
+                                const novelTitle = language === 'en'
+                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
+                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
 
-                                    const weekStartDate = new Date(week.start);
-                                    const weekEndDate = new Date(week.end);
+                                const weekStartDate = new Date(week.start);
+                                const weekEndDate = new Date(week.end);
 
-                                    const firstDiaryWithImage = diaries.find(diary => {
-                                        const diaryDate = new Date(diary.date);
-                                        return diaryDate >= weekStartDate &&
-                                            diaryDate <= weekEndDate &&
-                                            diary.imageUrls && diary.imageUrls.length > 0;
-                                    });
-                                    const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
+                                const firstDiaryWithImage = diaries.find(diary => {
+                                    const diaryDate = new Date(diary.date);
+                                    return diaryDate >= weekStartDate &&
+                                        diaryDate <= weekEndDate &&
+                                        diary.imageUrls && diary.imageUrls.length > 0;
+                                });
+                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
 
-                                    // 무료권만 있으면 무료권 사용, 아니면 포션 사용
-                                    handleCreateNovel(week, canUseFree);
-                                }
+                                navigate('/novel/create', {
+                                    state: {
+                                        year: year,
+                                        month: month,
+                                        weekNum: week.weekNum,
+                                        week: `${year}년 ${month}월 ${week.weekNum}주차`,
+                                        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
+                                        imageUrl: imageUrl,
+                                        title: novelTitle,
+                                        existingGenres: novelsForWeek.map(n => n.genre).filter(Boolean),
+                                        returnPath: location.pathname || '/novel'
+                                    }
+                                });
                             };
 
                             const handleViewNovel = () => {
@@ -2609,7 +2493,7 @@ const Novel = ({ user }) => {
                                                 onClick={handleAddNovel}
                                                 disabled={allGenresCreated}
                                             >
-                                                {allGenresCreated ? "완성 ✨" : "다른 장르 생성"}
+                                                {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "다른 장르 생성")}
                                             </CreateButton>
                                         ) : (
                                             <CreateButton
@@ -2654,7 +2538,7 @@ const Novel = ({ user }) => {
                             🪄 프리미엄 무료권 사용
                         </CreateOptionButton>
                         <CreateOptionDesc theme={theme} style={{ marginBottom: '12px' }}>
-                            무료로 소설을 생성합니다 (7일 후 자동 충전)
+                            무료로 소설을 생성합니다 (매월 자동 충전)
                         </CreateOptionDesc>
                         <CreateOptionButton
                             isFree={false}

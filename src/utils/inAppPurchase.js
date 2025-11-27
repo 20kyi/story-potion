@@ -553,11 +553,9 @@ class InAppPurchaseService {
           updates.isYearlyPremium = false;
           updates.premiumType = 'monthly';
           updates.premiumStartDate = Timestamp.fromDate(now);
-          // 프리미엄 회원이 되는 순간 6장 지급
-          if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
-            updates.premiumFreeNovelCount = 6;
-            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
-          }
+          // 프리미엄 회원이 되는 순간 6장 지급 (항상 지급)
+          updates.premiumFreeNovelCount = 6;
+          updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
           }
         }
       } else if (userData.isMonthlyPremium) {
@@ -617,11 +615,9 @@ class InAppPurchaseService {
             updates.isYearlyPremium = true;
             updates.premiumType = 'yearly';
             updates.premiumStartDate = Timestamp.fromDate(now);
-            // 프리미엄 회원이 되는 순간 6장 지급
-            if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
-              updates.premiumFreeNovelCount = 6;
-              updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
-            }
+            // 프리미엄 회원이 되는 순간 6장 지급 (항상 지급)
+            updates.premiumFreeNovelCount = 6;
+            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
           }
         }
       } else if (userData.isYearlyPremium) {
