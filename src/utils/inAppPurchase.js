@@ -486,7 +486,7 @@ class InAppPurchaseService {
     }
 
     try {
-      const { doc, getDoc, updateDoc } = await import('firebase/firestore');
+      const { doc, getDoc, updateDoc, collection, query, where, getDocs } = await import('firebase/firestore');
       const { db } = await import('../firebase');
 
       // Google Play에서 구독 상태 확인
@@ -503,26 +503,61 @@ class InAppPurchaseService {
       const userData = userDoc.data();
       const updates = {};
 
+      // 현재 사용자의 구매 내역에서 구독 purchaseToken 확인하는 함수
+      const checkPurchaseToken = async (purchaseToken) => {
+        if (!purchaseToken) return false;
+        try {
+          const purchasesRef = collection(db, 'users', userId, 'purchases');
+          const q = query(purchasesRef, where('purchaseToken', '==', purchaseToken));
+          const querySnapshot = await getDocs(q);
+          return !querySnapshot.empty;
+        } catch (error) {
+          console.error('[구독 동기화] 구매 내역 확인 실패:', error);
+          return false;
+        }
+      };
+
       // 월간 구독 상태 확인
       // Google Play Store에서 구독 상태를 확인하여 앱 상태와 동기화
       if (monthlyStatus.isActive) {
-        // Google Play Store에서 활성화되어 있으면 프리미엄 활성화
-        console.log('[구독 동기화] 월간 구독 활성화됨 - 프리미엄 활성화');
+        // 현재 사용자가 구매한 구독인지 확인
+        const isUserPurchase = await checkPurchaseToken(monthlyStatus.purchaseToken);
+        
+        if (!isUserPurchase) {
+          console.log('[구독 동기화] 월간 구독이 활성화되어 있지만 현재 사용자의 구매 내역에 없음 - 다른 계정에서 구매한 것으로 판단하여 무시');
+          // 다른 계정에서 구매한 구독이므로 무시
+          // 하지만 현재 사용자가 이미 프리미엄으로 설정되어 있다면 해지 처리
+          if (userData.isMonthlyPremium || userData.isYearlyPremium) {
+            console.log('[구독 동기화] 현재 사용자의 구독이 아니므로 프리미엄 해지 처리');
+            updates.isMonthlyPremium = false;
+            updates.isYearlyPremium = false;
+            updates.premiumType = null;
+            updates.premiumStartDate = null;
+            updates.premiumRenewalDate = null;
+            updates.premiumFreeNovelCount = 0;
+            updates.premiumCancelled = false;
+          }
+        } else {
+          // Google Play Store에서 활성화되어 있고, 현재 사용자의 구매 내역에 있으면 프리미엄 활성화
+          console.log('[구독 동기화] 월간 구독 활성화됨 - 현재 사용자의 구매 내역 확인됨 - 프리미엄 활성화');
 
-        // Firebase 상태와 다르면 업데이트
-        if (!userData.isMonthlyPremium || userData.premiumType !== 'monthly') {
+          // Firebase 상태와 다르면 업데이트
+          if (!userData.isMonthlyPremium || userData.premiumType !== 'monthly') {
           const now = new Date();
+          // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
           const nextFreeNovelChargeDate = new Date(now);
-          nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+          nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
+          nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
 
           updates.isMonthlyPremium = true;
           updates.isYearlyPremium = false;
           updates.premiumType = 'monthly';
           updates.premiumStartDate = Timestamp.fromDate(now);
-          // 프리미엄 무료권이 없으면 지급
+          // 프리미엄 회원이 되는 순간 6장 지급
           if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
-            updates.premiumFreeNovelCount = 1;
+            updates.premiumFreeNovelCount = 6;
             updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
+          }
           }
         }
       } else if (userData.isMonthlyPremium) {
@@ -549,23 +584,44 @@ class InAppPurchaseService {
 
       // 연간 구독 상태 확인
       if (yearlyStatus.isActive) {
-        // Google Play Store에서 활성화되어 있으면 프리미엄 활성화
-        console.log('[구독 동기화] 연간 구독 활성화됨 - 프리미엄 활성화');
+        // 현재 사용자가 구매한 구독인지 확인
+        const isUserPurchase = await checkPurchaseToken(yearlyStatus.purchaseToken);
+        
+        if (!isUserPurchase) {
+          console.log('[구독 동기화] 연간 구독이 활성화되어 있지만 현재 사용자의 구매 내역에 없음 - 다른 계정에서 구매한 것으로 판단하여 무시');
+          // 다른 계정에서 구매한 구독이므로 무시
+          // 하지만 현재 사용자가 이미 프리미엄으로 설정되어 있다면 해지 처리
+          if (userData.isMonthlyPremium || userData.isYearlyPremium) {
+            console.log('[구독 동기화] 현재 사용자의 구독이 아니므로 프리미엄 해지 처리');
+            updates.isMonthlyPremium = false;
+            updates.isYearlyPremium = false;
+            updates.premiumType = null;
+            updates.premiumStartDate = null;
+            updates.premiumRenewalDate = null;
+            updates.premiumFreeNovelCount = 0;
+            updates.premiumCancelled = false;
+          }
+        } else {
+          // Google Play Store에서 활성화되어 있고, 현재 사용자의 구매 내역에 있으면 프리미엄 활성화
+          console.log('[구독 동기화] 연간 구독 활성화됨 - 현재 사용자의 구매 내역 확인됨 - 프리미엄 활성화');
 
-        // Firebase 상태와 다르면 업데이트
-        if (!userData.isYearlyPremium || userData.premiumType !== 'yearly') {
-          const now = new Date();
-          const nextFreeNovelChargeDate = new Date(now);
-          nextFreeNovelChargeDate.setDate(nextFreeNovelChargeDate.getDate() + 7);
+          // Firebase 상태와 다르면 업데이트
+          if (!userData.isYearlyPremium || userData.premiumType !== 'yearly') {
+            const now = new Date();
+            // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
+            const nextFreeNovelChargeDate = new Date(now);
+            nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
+            nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
 
-          updates.isMonthlyPremium = false;
-          updates.isYearlyPremium = true;
-          updates.premiumType = 'yearly';
-          updates.premiumStartDate = Timestamp.fromDate(now);
-          // 프리미엄 무료권이 없으면 지급
-          if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
-            updates.premiumFreeNovelCount = 1;
-            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
+            updates.isMonthlyPremium = false;
+            updates.isYearlyPremium = true;
+            updates.premiumType = 'yearly';
+            updates.premiumStartDate = Timestamp.fromDate(now);
+            // 프리미엄 회원이 되는 순간 6장 지급
+            if (!userData.premiumFreeNovelCount || userData.premiumFreeNovelCount === 0) {
+              updates.premiumFreeNovelCount = 6;
+              updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
+            }
           }
         }
       } else if (userData.isYearlyPremium) {

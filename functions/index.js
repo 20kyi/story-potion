@@ -898,18 +898,37 @@ exports.chargePremiumFreeNovel = functions.pubsub.schedule('every 1 hours').time
 
             // 충전 시점이 지났고, 프리미엄 회원인 경우에만 충전
             if (nextChargeDate <= nowDate && isPremium) {
-                // 다음 충전 시점 계산 (현재 시점 + 7일)
-                const nextChargeDateNew = new Date(nowDate);
-                nextChargeDateNew.setDate(nextChargeDateNew.getDate() + 7);
+                // 프리미엄 시작일 확인
+                let premiumStartDate;
+                if (userData.premiumStartDate?.seconds) {
+                    premiumStartDate = new Date(userData.premiumStartDate.seconds * 1000);
+                } else if (userData.premiumStartDate?.toDate) {
+                    premiumStartDate = userData.premiumStartDate.toDate();
+                } else if (userData.premiumStartDate) {
+                    premiumStartDate = new Date(userData.premiumStartDate);
+                } else {
+                    // premiumStartDate가 없으면 현재 시점으로 설정
+                    premiumStartDate = nowDate;
+                }
+
+                // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
+                const nextChargeDateNew = new Date(premiumStartDate);
+                nextChargeDateNew.setMonth(nextChargeDateNew.getMonth() + 1);
+                nextChargeDateNew.setHours(0, 0, 0, 0);
+
+                // 만약 다음 충전 시점이 현재보다 과거라면, 한 달씩 더 추가
+                while (nextChargeDateNew <= nowDate) {
+                    nextChargeDateNew.setMonth(nextChargeDateNew.getMonth() + 1);
+                }
 
                 // 현재 보유 개수 확인 (없으면 0)
                 const currentCount = userData.premiumFreeNovelCount || 0;
-                const newCount = currentCount + 1; // 1개 추가
+                const newCount = currentCount + 6; // 한 달에 6개 추가
 
                 const userRef = admin.firestore().collection('users').doc(userDoc.id);
                 batch.update(userRef, {
                     premiumFreeNovelNextChargeDate: admin.firestore.Timestamp.fromDate(nextChargeDateNew),
-                    premiumFreeNovelCount: newCount, // 무료권 1개 추가
+                    premiumFreeNovelCount: newCount, // 무료권 6개 추가
                     updatedAt: admin.firestore.Timestamp.now()
                 });
 
@@ -994,12 +1013,17 @@ exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, conte
 
         const now = new Date();
 
-        // 경과 일수 계산
-        const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        // 시작일과 현재일의 년/월 차이 계산
+        const startYear = startDate.getFullYear();
+        const startMonth = startDate.getMonth();
+        const nowYear = now.getFullYear();
+        const nowMonth = now.getMonth();
 
-        // 총 충전 횟수 계산 (7일마다 1개씩)
-        // 시작일 당일에도 1개 지급되므로 +1
-        const totalCharged = Math.floor(elapsedDays / 7) + 1;
+        // 경과 개월 수 계산 (시작일이 속한 달도 포함)
+        const elapsedMonths = (nowYear - startYear) * 12 + (nowMonth - startMonth) + 1;
+
+        // 총 충전 횟수 계산 (매월 6개씩)
+        const totalCharged = elapsedMonths * 6;
 
         // 무료 사용 기록 확인
         const freeNovelHistoryRef = admin.firestore()
@@ -1012,14 +1036,15 @@ exports.migratePremiumFreeNovelCount = functions.https.onCall(async (data, conte
         // 현재 보유 개수 계산
         const currentCount = Math.max(0, totalCharged - usedCount);
 
-        // 다음 충전 시점 계산
-        // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
-        const lastChargeDate = new Date(startDate);
-        lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
+        // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
+        const nextChargeDate = new Date(startDate);
+        nextChargeDate.setMonth(nextChargeDate.getMonth() + 1);
+        nextChargeDate.setHours(0, 0, 0, 0);
 
-        // 다음 충전 시점 = 마지막 충전일 + 7일
-        const nextChargeDate = new Date(lastChargeDate);
-        nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+        // 만약 다음 충전 시점이 현재보다 과거라면, 한 달씩 더 추가
+        while (nextChargeDate <= now) {
+            nextChargeDate.setMonth(nextChargeDate.getMonth() + 1);
+        }
 
         // 사용자 데이터 업데이트
         await userRef.update({
@@ -1123,12 +1148,17 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
 
                 const now = new Date();
 
-                // 경과 일수 계산
-                const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+                // 시작일과 현재일의 년/월 차이 계산
+                const startYear = startDate.getFullYear();
+                const startMonth = startDate.getMonth();
+                const nowYear = now.getFullYear();
+                const nowMonth = now.getMonth();
 
-                // 총 충전 횟수 계산 (7일마다 1개씩)
-                // 시작일 당일에도 1개 지급되므로 +1
-                const totalCharged = Math.floor(elapsedDays / 7) + 1;
+                // 경과 개월 수 계산 (시작일이 속한 달도 포함)
+                const elapsedMonths = (nowYear - startYear) * 12 + (nowMonth - startMonth) + 1;
+
+                // 총 충전 횟수 계산 (매월 6개씩)
+                const totalCharged = elapsedMonths * 6;
 
                 // 무료 사용 기록 확인
                 const freeNovelHistoryRef = admin.firestore()
@@ -1141,14 +1171,15 @@ exports.migrateAllPremiumFreeNovelCount = functions.https.onCall(async (data, co
                 // 현재 보유 개수 계산
                 const currentCount = Math.max(0, totalCharged - usedCount);
 
-                // 다음 충전 시점 계산
-                // 마지막 충전일 = 시작일 + (총 충전 횟수 - 1) * 7일
-                const lastChargeDate = new Date(startDate);
-                lastChargeDate.setDate(lastChargeDate.getDate() + (totalCharged - 1) * 7);
+                // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
+                const nextChargeDate = new Date(startDate);
+                nextChargeDate.setMonth(nextChargeDate.getMonth() + 1);
+                nextChargeDate.setHours(0, 0, 0, 0);
 
-                // 다음 충전 시점 = 마지막 충전일 + 7일
-                const nextChargeDate = new Date(lastChargeDate);
-                nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+                // 만약 다음 충전 시점이 현재보다 과거라면, 한 달씩 더 추가
+                while (nextChargeDate <= now) {
+                    nextChargeDate.setMonth(nextChargeDate.getMonth() + 1);
+                }
 
                 // 사용자 데이터 업데이트
                 await userRef.update({
