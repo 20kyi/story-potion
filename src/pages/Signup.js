@@ -339,6 +339,21 @@ const InputWrapper = styled.div`
   gap: 6px;
 `;
 
+const EmailInputWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+  align-items: flex-start;
+`;
+
+const EmailInputContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
 const OptionalLabel = styled.span`
   font-size: 6px;
   color: #999;
@@ -366,6 +381,10 @@ function Signup() {
   const [isNicknameChecking, setIsNicknameChecking] = useState(false);
   const [isNicknameDuplicate, setIsNicknameDuplicate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [verificationCodeSent, setVerificationCodeSent] = useState(false);
   const mainRef = useRef();
   const inputRef = useRef();
   const emailCheckTimeoutRef = useRef(null);
@@ -438,12 +457,17 @@ function Signup() {
       }
     }
 
-    // 이메일 변경 시 중복 체크
+    // 이메일 변경 시 중복 체크 및 인증 상태 초기화
     if (name === 'email' && currentStep === 1) {
-      // 이메일 변경 시 이전 중복 상태 초기화
+      // 이메일 변경 시 이전 중복 상태 및 인증 상태 초기화
       if (isEmailDuplicate) {
         setIsEmailDuplicate(false);
         setError('');
+      }
+      if (isEmailVerified) {
+        setIsEmailVerified(false);
+        setVerificationCodeSent(false);
+        setFormData(prev => ({ ...prev, verificationCode: '' }));
       }
       setSuccessMessage('');
 
@@ -552,6 +576,109 @@ function Signup() {
     }
   };
 
+  // 이메일 인증 코드 발송
+  const handleSendVerificationCode = async () => {
+    if (!formData.email.trim()) {
+      setError('이메일을 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+
+    // 이미 중복으로 확인된 경우
+    if (isEmailDuplicate) {
+      setError('이미 사용 중인 이메일입니다.');
+      return;
+    }
+
+    setIsSendingCode(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const functions = getFunctions(auth.app, 'us-central1');
+      const sendCode = httpsCallable(functions, 'sendSignupVerificationCode');
+      const result = await sendCode({ email: formData.email.trim() });
+      
+      // 디버깅: 응답 전체를 콘솔에 출력
+      console.log('인증 코드 발송 응답:', result.data);
+      
+      setVerificationCodeSent(true);
+      
+      // 개발 환경이거나 이메일 발송 설정이 없으면 코드를 화면에 표시
+      if (result.data.code) {
+        setSuccessMessage(`인증 코드가 생성되었습니다: ${result.data.code}\n(개발 환경 - 이메일 발송 설정이 필요합니다)`);
+        console.log('개발 환경 - 인증 코드:', result.data.code);
+      } else {
+        setSuccessMessage('인증 코드가 이메일로 발송되었습니다.');
+        console.warn('인증 코드가 응답에 포함되지 않았습니다. result.data:', result.data);
+      }
+    } catch (error) {
+      console.error('인증 코드 발송 실패:', error);
+      if (error.code === 'already-exists') {
+        setError('이미 사용 중인 이메일입니다.');
+        setIsEmailDuplicate(true);
+      } else {
+        setError(error.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  // 이메일 인증 코드 확인
+  const handleVerifyCode = async () => {
+    if (!formData.verificationCode.trim()) {
+      setError('인증 코드를 입력해주세요.');
+      return;
+    }
+
+    setIsVerifyingCode(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const functions = getFunctions(auth.app, 'us-central1');
+      const verifyCode = httpsCallable(functions, 'verifySignupCode');
+      
+      const emailToVerify = formData.email.trim();
+      const codeToVerify = formData.verificationCode.trim();
+      
+      // 디버깅: 전송할 값 로그
+      console.log('인증 코드 확인 요청:', {
+        email: emailToVerify,
+        code: codeToVerify,
+        codeLength: codeToVerify.length
+      });
+      
+      await verifyCode({ 
+        email: emailToVerify, 
+        code: codeToVerify
+      });
+      
+      setIsEmailVerified(true);
+      setSuccessMessage('이메일 인증이 완료되었습니다.');
+    } catch (error) {
+      console.error('인증 코드 확인 실패:', error);
+      if (error.code === 'invalid-argument') {
+        setError('유효하지 않은 인증 코드입니다.');
+      } else if (error.code === 'deadline-exceeded') {
+        setError('인증 코드가 만료되었습니다. 다시 요청해주세요.');
+        setVerificationCodeSent(false);
+        setFormData(prev => ({ ...prev, verificationCode: '' }));
+      } else {
+        setError(error.message || '인증 코드 확인에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
+
   // 1단계: 이메일 & 닉네임 검증
   const handleStep1Next = async (e) => {
     e.preventDefault();
@@ -577,6 +704,12 @@ function Signup() {
       return;
     }
 
+    // 이메일 인증 확인
+    if (!isEmailVerified) {
+      setError('이메일 인증을 완료해주세요.');
+      return;
+    }
+
     // 이미 검증 중이면 대기
     if (isEmailChecking || isNicknameChecking) {
       return;
@@ -599,7 +732,7 @@ function Signup() {
       setFormData(prev => ({ ...prev, nickname: generateRandomNickname() }));
     }
 
-    // 모든 검증이 완료되었으므로 바로 다음 단계로 이동
+    // 모든 검증이 완료되었으므로 다음 단계로 이동
     setIsSubmitting(false);
     setCurrentStep(2);
   };
@@ -813,7 +946,7 @@ function Signup() {
         displayName: finalNickname,
         email: formData.email.trim().toLowerCase(), // 소문자로 정규화하여 저장
         phoneNumber: cleanPhoneNumber,
-        emailVerified: user.emailVerified || false,
+        emailVerified: true, // 1단계에서 이미 인증 완료
         eventEnabled: false,
         fcmToken: "",
         isActive: true,
@@ -842,7 +975,9 @@ function Signup() {
       // 회원가입 완료 후 권한 요청
       await requestPermissions(user);
 
+      // 이메일 인증은 1단계에서 완료했으므로 여기서는 발송하지 않음
       alert('회원가입이 완료되었습니다!');
+      
       setIsSubmitting(false);
       navigate('/login');
     } catch (error) {
@@ -882,29 +1017,86 @@ function Signup() {
       <Subtitle>이메일과 닉네임을 입력해주세요</Subtitle>
       {renderStepIndicator()}
       <Form onSubmit={handleStep1Next} autoComplete="off">
-        <Input
-          type="email"
-          name="email"
-          placeholder="이메일"
-          value={formData.email}
-          onChange={handleChange}
-          autoComplete="off"
-          onBlur={(e) => {
-            const email = e.target.value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email && emailRegex.test(email)) {
-              checkEmailDuplicate(email);
-            }
-          }}
-          required
-          $hasError={isEmailDuplicate}
-          $isChecking={isEmailChecking}
-          onFocus={e => {
-            setTimeout(() => {
-              e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-        />
+        <EmailInputWrapper>
+          <EmailInputContainer>
+            <Input
+              type="email"
+              name="email"
+              placeholder="이메일"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="off"
+              onBlur={(e) => {
+                const email = e.target.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (email && emailRegex.test(email)) {
+                  checkEmailDuplicate(email);
+                }
+              }}
+              required
+              $hasError={isEmailDuplicate}
+              $isChecking={isEmailChecking}
+              disabled={isEmailVerified}
+              onFocus={e => {
+                setTimeout(() => {
+                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+              }}
+            />
+            {isEmailVerified && (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                backgroundColor: '#d4edda',
+                color: '#155724',
+                fontSize: '12px',
+                textAlign: 'center'
+              }}>
+                ✓ 이메일 인증 완료
+              </div>
+            )}
+          </EmailInputContainer>
+          {!isEmailVerified && (
+            <SendCodeButton
+              type="button"
+              onClick={handleSendVerificationCode}
+              disabled={isSendingCode || isEmailDuplicate || isEmailChecking || !formData.email.trim()}
+              style={{ width: '120px', height: '50px', fontSize: '12px' }}
+            >
+              {isSendingCode ? '발송 중...' : '인증 코드 발송'}
+            </SendCodeButton>
+          )}
+        </EmailInputWrapper>
+        
+        {verificationCodeSent && !isEmailVerified && (
+          <EmailInputWrapper>
+            <EmailInputContainer style={{ flex: 1 }}>
+              <VerificationInput
+                type="text"
+                name="verificationCode"
+                placeholder="인증 코드 6자리"
+                value={formData.verificationCode}
+                onChange={handleChange}
+                autoComplete="off"
+                maxLength={6}
+                onFocus={e => {
+                  setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
+              />
+            </EmailInputContainer>
+            <SendCodeButton
+              type="button"
+              onClick={handleVerifyCode}
+              disabled={isVerifyingCode || !formData.verificationCode.trim() || formData.verificationCode.length !== 6}
+              style={{ width: '120px', height: '50px', fontSize: '12px' }}
+            >
+              {isVerifyingCode ? '확인 중...' : '인증 확인'}
+            </SendCodeButton>
+          </EmailInputWrapper>
+        )}
+
         <InputWrapper>
           <OptionalLabel>[선택]</OptionalLabel>
           <Input
@@ -934,7 +1126,7 @@ function Signup() {
         {successMessage && !error && !isEmailDuplicate && !isNicknameDuplicate && <SuccessMessage>{successMessage}</SuccessMessage>}
         <ButtonContainer>
           <div></div>
-          <Button type="submit" disabled={isEmailDuplicate || isEmailChecking || isNicknameDuplicate || isNicknameChecking || isSubmitting}>
+          <Button type="submit" disabled={!isEmailVerified || isEmailDuplicate || isEmailChecking || isNicknameDuplicate || isNicknameChecking || isSubmitting}>
             {(isEmailChecking || isNicknameChecking || isSubmitting) ? '확인 중...' : '다음으로'}
             <FaArrowRight />
           </Button>

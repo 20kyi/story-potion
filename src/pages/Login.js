@@ -12,6 +12,7 @@ import {
   signInWithCredential,
   updateProfile,
   sendPasswordResetEmail,
+  sendEmailVerification,
   onAuthStateChanged
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
@@ -69,6 +70,8 @@ function Login() {
   // 새 비밀번호 설정
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
   const mainRef = useRef();
   const inputRef = useRef();
 
@@ -199,7 +202,20 @@ function Login() {
           updatedAt: new Date()
         });
       }
-      navigate('/');
+
+      // 이메일 인증 상태 확인 (이메일/비밀번호 로그인인 경우만)
+      if (user.providerData[0]?.providerId === 'password' && !user.emailVerified) {
+        setEmailVerificationMessage('이메일 인증이 완료되지 않았습니다. 이메일을 확인하여 인증을 완료해주세요.');
+        setEmailVerificationSent(false);
+        // 로그인은 허용하되 안내 메시지 표시 후 홈으로 이동
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
+        setEmailVerificationMessage('');
+        setEmailVerificationSent(false);
+        navigate('/');
+      }
     } catch {
       setError('이메일 또는 비밀번호가 잘못되었습니다.');
     }
@@ -563,6 +579,23 @@ function Login() {
     }
   };
 
+  // 이메일 인증 재발송
+  const handleResendEmailVerification = async () => {
+    if (!auth.currentUser) {
+      setEmailVerificationMessage('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      await sendEmailVerification(auth.currentUser);
+      setEmailVerificationSent(true);
+      setEmailVerificationMessage('이메일 인증 메일을 재발송했습니다. 이메일을 확인해주세요.');
+    } catch (error) {
+      console.error('이메일 인증 재발송 실패:', error);
+      setEmailVerificationMessage('이메일 인증 메일 재발송에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
   // 아이디 찾기 (닉네임 또는 휴대전화번호로)
   const handleFindId = async (e) => {
     e.preventDefault();
@@ -659,6 +692,40 @@ function Login() {
                 </EyeIcon>
               </PasswordContainer>
               {error && <ErrorMessage>{error}</ErrorMessage>}
+              {emailVerificationMessage && (
+                <div style={{
+                  padding: '12px',
+                  marginBottom: '10px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  backgroundColor: emailVerificationSent ? '#d4edda' : '#fff3cd',
+                  color: emailVerificationSent ? '#155724' : '#856404',
+                  border: `1px solid ${emailVerificationSent ? '#c3e6cb' : '#ffeaa7'}`
+                }}>
+                  <div style={{ marginBottom: emailVerificationSent ? '0' : '10px' }}>
+                    {emailVerificationMessage}
+                  </div>
+                  {!emailVerificationSent && auth.currentUser && (
+                    <button
+                      type="button"
+                      onClick={handleResendEmailVerification}
+                      style={{
+                        padding: '8px 16px',
+                        border: 'none',
+                        borderRadius: '6px',
+                        background: '#e46262',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      인증 메일 재발송
+                    </button>
+                  )}
+                </div>
+              )}
               <Button type="submit">로그인 하세요</Button>
 
               {/* 아이디/비밀번호 찾기 버튼 */}

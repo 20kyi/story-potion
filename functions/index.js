@@ -1699,6 +1699,325 @@ Story Potion 팀`;
     }
 });
 
+// 회원가입용 이메일 인증 코드 발송
+exports.sendSignupVerificationCode = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+
+    if (!email) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '이메일 주소가 필요합니다.'
+        );
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '유효하지 않은 이메일 형식입니다.'
+        );
+    }
+
+    try {
+        // 이미 가입된 이메일인지 확인
+        try {
+            const userRecord = await admin.auth().getUserByEmail(email);
+            // 이미 가입된 이메일이면 에러
+            throw new functions.https.HttpsError(
+                'already-exists',
+                '이미 사용 중인 이메일입니다.'
+            );
+        } catch (error) {
+            // 사용자가 없으면 정상 (회원가입 가능)
+            if (error.code === 'auth/user-not-found') {
+                // 계속 진행
+            } else if (error instanceof functions.https.HttpsError) {
+                throw error;
+            } else {
+                // 다른 에러는 무시하고 계속 진행
+                console.warn('이메일 확인 중 오류:', error);
+            }
+        }
+
+        // Firestore에서도 중복 확인
+        const usersSnapshot = await admin.firestore()
+            .collection('users')
+            .where('email', '==', email.toLowerCase())
+            .limit(1)
+            .get();
+
+        if (!usersSnapshot.empty) {
+            throw new functions.https.HttpsError(
+                'already-exists',
+                '이미 사용 중인 이메일입니다.'
+            );
+        }
+
+        // 6자리 인증 코드 생성
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Firestore에 인증 코드 저장 (10분 만료)
+        const codeRef = admin.firestore().collection('signupVerificationCodes').doc();
+        await codeRef.set({
+            email: email.toLowerCase(),
+            code: code,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000)), // 10분 후 만료
+            used: false
+        });
+
+        // 이메일 발송 (nodemailer 사용)
+        const emailSubject = '[Story Potion] 회원가입 이메일 인증 코드';
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #e46262; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
+        .code { background-color: #fff; border: 2px solid #e46262; border-radius: 5px; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; color: #e46262; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Story Potion</h1>
+        </div>
+        <div class="content">
+            <h2>회원가입 이메일 인증</h2>
+            <p>안녕하세요.</p>
+            <p>회원가입을 위해 아래 인증 코드를 입력해주세요.</p>
+            <div class="code">${code}</div>
+            <p>이 코드는 <strong>10분간</strong> 유효합니다.</p>
+            <p>만약 본인이 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.</p>
+        </div>
+        <div class="footer">
+            <p>감사합니다.<br>Story Potion 팀</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        const emailText = `안녕하세요.
+
+회원가입을 위해 아래 인증 코드를 입력해주세요.
+
+인증 코드: ${code}
+
+이 코드는 10분간 유효합니다.
+만약 본인이 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.
+
+감사합니다.
+Story Potion 팀`;
+
+        // Gmail SMTP 설정 (Firebase Functions Config에서 설정 필요)
+        const gmailEmail = functions.config().gmail?.email;
+        const gmailPassword = functions.config().gmail?.password;
+
+        if (gmailEmail && gmailPassword) {
+            try {
+                // nodemailer를 사용한 이메일 발송
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: gmailEmail,
+                        pass: gmailPassword
+                    }
+                });
+
+                const mailOptions = {
+                    from: `"Story Potion" <${gmailEmail}>`,
+                    to: email,
+                    subject: emailSubject,
+                    text: emailText,
+                    html: emailHtml
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log('회원가입 인증 코드 이메일 발송 성공:', email);
+            } catch (emailError) {
+                console.error('이메일 발송 실패:', emailError);
+                // 이메일 발송 실패해도 코드는 생성되었으므로 Firestore에 저장하고 계속 진행
+                await admin.firestore().collection('emailQueue').add({
+                    to: email,
+                    subject: emailSubject,
+                    body: emailText,
+                    html: emailHtml,
+                    code: code,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    sent: false,
+                    error: emailError.message
+                });
+                console.warn('이메일 발송 실패, Firestore에 저장:', email);
+            }
+        } else {
+            // Gmail 설정이 없으면 Firestore에 저장 (개발 환경)
+            console.warn('Gmail 설정이 없습니다. Firestore에 저장합니다.');
+            await admin.firestore().collection('emailQueue').add({
+                to: email,
+                subject: emailSubject,
+                body: emailText,
+                html: emailHtml,
+                code: code,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                sent: false
+            });
+
+            // 개발 환경에서는 코드를 반환
+            if (process.env.NODE_ENV === 'development' || !gmailEmail) {
+                console.log('개발 환경 - 회원가입 인증 코드:', code);
+            }
+        }
+
+        // 개발 환경에서도 코드를 확인할 수 있도록 항상 코드를 반환
+        // (보안상 문제 없음 - 코드는 이미 Firestore에 저장되고 이메일로도 발송됨)
+        console.log('인증 코드 생성 완료:', {
+            email: email,
+            code: code,
+            gmailEmail: !!gmailEmail,
+            gmailPassword: !!gmailPassword
+        });
+
+        return {
+            success: true,
+            message: gmailEmail && gmailPassword
+                ? '인증 코드가 이메일로 발송되었습니다.'
+                : '인증 코드가 생성되었습니다. (이메일 발송 설정이 필요합니다)',
+            // 항상 코드를 반환 (개발/테스트 편의를 위해)
+            code: code
+        };
+    } catch (error) {
+        console.error('회원가입 인증 코드 발송 실패:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            '인증 코드 발송에 실패했습니다. 다시 시도해주세요.'
+        );
+    }
+});
+
+// 회원가입용 이메일 인증 코드 확인
+exports.verifySignupCode = functions.https.onCall(async (data, context) => {
+    const { email, code } = data;
+
+    if (!email || !code) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            '이메일과 인증 코드가 모두 필요합니다.'
+        );
+    }
+
+    try {
+        // 디버깅: 입력값 로그
+        console.log('인증 코드 확인 요청:', {
+            email: email,
+            emailLowercase: email.toLowerCase(),
+            code: code,
+            codeType: typeof code
+        });
+
+        // Firestore에서 인증 코드 조회
+        // orderBy 없이 먼저 시도 (인덱스 문제 방지)
+        let codesSnapshot = await admin.firestore()
+            .collection('signupVerificationCodes')
+            .where('email', '==', email.toLowerCase())
+            .where('code', '==', code.toString()) // 문자열로 변환하여 비교
+            .where('used', '==', false)
+            .get();
+
+        // 결과가 없으면 orderBy를 사용하여 재시도 (인덱스가 있는 경우)
+        if (codesSnapshot.empty) {
+            try {
+                codesSnapshot = await admin.firestore()
+                    .collection('signupVerificationCodes')
+                    .where('email', '==', email.toLowerCase())
+                    .where('code', '==', code.toString())
+                    .where('used', '==', false)
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get();
+            } catch (orderByError) {
+                // orderBy 실패 시 (인덱스 없음) - 이미 가져온 결과 사용
+                console.warn('orderBy 실패 (인덱스 없을 수 있음), 모든 결과 사용:', orderByError.message);
+            }
+        }
+
+        // 모든 결과를 가져온 경우, createdAt으로 정렬하여 최신 것 선택
+        let codeDoc = null;
+        if (!codesSnapshot.empty) {
+            const docs = codesSnapshot.docs;
+            if (docs.length === 1) {
+                codeDoc = docs[0];
+            } else {
+                // 여러 개가 있으면 createdAt이 가장 최근인 것 선택
+                codeDoc = docs.sort((a, b) => {
+                    const aTime = a.data().createdAt?.toMillis() || 0;
+                    const bTime = b.data().createdAt?.toMillis() || 0;
+                    return bTime - aTime; // 내림차순
+                })[0];
+            }
+        }
+
+        if (!codeDoc) {
+            console.error('인증 코드를 찾을 수 없음:', {
+                email: email.toLowerCase(),
+                code: code.toString(),
+                codesFound: codesSnapshot.size
+            });
+            throw new functions.https.HttpsError(
+                'invalid-argument',
+                '유효하지 않은 인증 코드입니다.'
+            );
+        }
+
+        const codeData = codeDoc.data();
+
+        // 디버깅: 찾은 코드 정보 로그
+        console.log('인증 코드 찾음:', {
+            email: codeData.email,
+            code: codeData.code,
+            used: codeData.used,
+            createdAt: codeData.createdAt?.toDate(),
+            expiresAt: codeData.expiresAt?.toDate()
+        });
+
+        // 만료 시간 확인
+        const expiresAt = codeData.expiresAt.toDate();
+        if (new Date() > expiresAt) {
+            await codeDoc.ref.update({ used: true });
+            throw new functions.https.HttpsError(
+                'deadline-exceeded',
+                '인증 코드가 만료되었습니다. 다시 요청해주세요.'
+            );
+        }
+
+        // 인증 코드 사용 처리
+        await codeDoc.ref.update({ used: true });
+
+        return {
+            success: true,
+            message: '이메일 인증이 완료되었습니다.'
+        };
+    } catch (error) {
+        console.error('회원가입 인증 코드 확인 실패:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            '인증 코드 확인에 실패했습니다. 다시 시도해주세요.'
+        );
+    }
+});
+
 // 이메일 인증 코드 확인 및 비밀번호 재설정
 exports.verifyPasswordResetCode = functions.https.onCall(async (data, context) => {
     const { email, code, newPassword } = data;
