@@ -15,7 +15,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 20px;
+  padding: 28px;
   padding-bottom: 100px;
   margin-top: 60px;
   margin-bottom: 80px;
@@ -56,9 +56,7 @@ const Container = styled.div`
 const DiaryTitle = styled.h2`
   font-size: 25px !important;
   font-weight: 700 !important;
-//   margin-bottom: 16px;
-  margin-top: 30px;
-  padding: 0px 16px;
+  margin: 0;
   color: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
 `;
@@ -76,10 +74,9 @@ const ContentContainer = styled.div`
   width: 100%;
   min-height: 200px;
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   background: transparent;
-  padding: 16px;
-  margin-bottom: 20px;
+  margin: 0;
   overflow: visible;
   box-sizing: border-box;
   max-width: 100%;
@@ -95,25 +92,52 @@ const StickerImage = styled.img`
   object-fit: contain;
 `;
 
+const Card = styled.div`
+  background: ${props => {
+        if (props.$isDiaryTheme) return '#fffef9';
+        if (props.$isDark) return '#232323';
+        return '#fff';
+    }};
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: ${props => props.$isDiaryTheme
+        ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
+        : props.$isDark
+            ? '0 2px 8px rgba(0, 0, 0, 0.18)'
+            : '0 2px 4px rgba(0, 0, 0, 0.1)'};
+  border: ${props => props.$isDiaryTheme
+        ? '1px solid rgba(139, 111, 71, 0.15)'
+        : 'none'};
+  display: flex;
+  align-items: center;
+`;
+
 const DiaryDate = styled.div`
   font-size: 18px;
   color: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme ? '#8B6F47' : theme.text};
-//   margin-bottom: 10px;
   font-weight: 500;
-//   margin-top: 40px;
+  margin: 0;
 `;
 
 const DiaryMeta = styled.div`
   display: flex;
   gap: 24px;
   align-items: center;
-  margin: 8px 0;
+  margin: 0;
   min-height: 28px;
   font-size: 17px;
   color: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
+  width: 100%;
+  
+  span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 `;
 
 const ImageViewerModal = styled.div`
@@ -462,9 +486,10 @@ function DiaryView({ user }) {
         },
         imageGrid: {
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '16px',
-            marginTop: '20px'
+            marginTop: '20px',
+            marginBottom: '20px'
         },
         image: {
             width: '100%',
@@ -531,11 +556,27 @@ function DiaryView({ user }) {
                         </div>
                     ) : diary ? (
                         <>
-                            <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
-                            <DiaryMeta $isDiaryTheme={isDiaryTheme}>
-                                <span>{t('today_weather')} {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
-                                <span>{t('today_mood')} {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
-                            </DiaryMeta>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                                <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
+                            </Card>
+
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                                <DiaryMeta $isDiaryTheme={isDiaryTheme}>
+                                    <span>
+                                        {t('today_weather')}
+                                        {diary.weather && weatherImageMap[diary.weather] && (
+                                            <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28 }} />
+                                        )}
+                                    </span>
+                                    <span>
+                                        {t('today_mood')}
+                                        {diary.emotion && emotionImageMap[diary.emotion] && (
+                                            <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 32, height: 32 }} />
+                                        )}
+                                    </span>
+                                </DiaryMeta>
+                            </Card>
+
                             {!isLoading && !noMoreFuture && diary && diary.imageUrls && diary.imageUrls.length > 0 && (
                                 <div style={styles.imageGrid}>
                                     {diary.imageUrls.map((url, idx) => (
@@ -550,30 +591,34 @@ function DiaryView({ user }) {
                                 </div>
                             )}
 
-                            <DiaryTitle $isDiaryTheme={isDiaryTheme}>{diary.title}</DiaryTitle>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                                <DiaryTitle $isDiaryTheme={isDiaryTheme}>{diary.title}</DiaryTitle>
+                            </Card>
 
                             {/* 일기 내용 영역 (스티커 포함) */}
-                            <ContentContainer data-content-container $isDiaryTheme={isDiaryTheme}>
-                                <DiaryContent $isDiaryTheme={isDiaryTheme}>{diary.content}</DiaryContent>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                                <ContentContainer data-content-container $isDiaryTheme={isDiaryTheme}>
+                                    <DiaryContent $isDiaryTheme={isDiaryTheme}>{diary.content}</DiaryContent>
 
-                                {/* 스티커들 */}
-                                {!isLoading && !noMoreFuture && diary && diary.stickers && diary.stickers.length > 0 && (
-                                    diary.stickers.map((sticker) => (
-                                        <StickerElement
-                                            key={sticker.id}
-                                            style={{
-                                                left: sticker.x,
-                                                top: sticker.y,
-                                                width: sticker.width,
-                                                height: sticker.height,
-                                                zIndex: sticker.zIndex
-                                            }}
-                                        >
-                                            <StickerImage src={sticker.src} alt={sticker.type} />
-                                        </StickerElement>
-                                    ))
-                                )}
-                            </ContentContainer>
+                                    {/* 스티커들 */}
+                                    {!isLoading && !noMoreFuture && diary && diary.stickers && diary.stickers.length > 0 && (
+                                        diary.stickers.map((sticker) => (
+                                            <StickerElement
+                                                key={sticker.id}
+                                                style={{
+                                                    left: sticker.x,
+                                                    top: sticker.y,
+                                                    width: sticker.width,
+                                                    height: sticker.height,
+                                                    zIndex: sticker.zIndex
+                                                }}
+                                            >
+                                                <StickerImage src={sticker.src} alt={sticker.type} />
+                                            </StickerElement>
+                                        ))
+                                    )}
+                                </ContentContainer>
+                            </Card>
                         </>
                     ) : (
                         <div style={styles.noDiary}>
