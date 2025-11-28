@@ -147,16 +147,42 @@ const DateButton = styled.button`
 `;
 
 const TodayCircle = styled.div`
-  content: "";
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #e46262;
-  z-index: -1;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  width: 42px;
+  height: 20px;
+  background: rgba(255, 235, 59, 0.6);
+  border-radius: 8px 10px 9px 8px;
+  z-index: 1;
+  box-shadow: 
+    0 1px 3px rgba(255, 193, 7, 0.2),
+    inset 0 0 8px rgba(255, 235, 59, 0.3);
+  
+  /* 손으로 칠한 듯한 불규칙한 느낌 */
+  clip-path: polygon(
+    5% 10%,
+    15% 5%,
+    35% 0%,
+    55% 2%,
+    75% 0%,
+    90% 5%,
+    95% 15%,
+    98% 35%,
+    100% 55%,
+    98% 75%,
+    95% 90%,
+    85% 95%,
+    65% 98%,
+    45% 100%,
+    25% 98%,
+    10% 95%,
+    2% 85%,
+    0% 65%,
+    2% 45%,
+    3% 25%
+  );
 `;
 
 const ImageContainer = styled.div`
@@ -658,7 +684,11 @@ function Diary({ user }) {
                         onTouchEnd={handleDateLongPressEnd}
                         onTouchCancel={handleDateLongPressEnd}
                     >
-                        <span style={{ color: document.body.classList.contains('dark') ? '#fff' : '#000' }}>{day}</span>
+                        <span style={{
+                            color: document.body.classList.contains('dark') ? '#fff' : '#000',
+                            position: 'relative',
+                            zIndex: isToday ? 2 : 1
+                        }}>{day}</span>
                         {isToday && <TodayCircle />}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
                         <ImageContainer>
