@@ -18,7 +18,7 @@ const HeaderContainer = styled.header`
   background: transparent;
   box-shadow: ${({ theme, $isDiaryTheme }) =>
     $isDiaryTheme
-      ? '0 2px 12px rgba(0,0,0,0.06)'
+      ? 'none'
       : `0 2px 12px ${theme.cardShadow}`};
   background-color: ${({ theme, $isDiaryTheme }) =>
     $isDiaryTheme ? '#faf8f3' : theme.card};

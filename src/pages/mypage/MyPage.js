@@ -74,10 +74,28 @@ const MainContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#faf8f3' : theme.background};
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
+  ${props => props.$isDiaryTheme && `
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+  `}
 `;
 /* 프로필 이미지 */
 const ProfileContainer = styled.div`
@@ -138,7 +156,8 @@ const Nickname = styled.div`
   font-weight: 700;
   text-align: center;
   margin-top: 20px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   word-break: keep-all;
   overflow-wrap: break-word;
 `;
@@ -151,7 +170,10 @@ const PremiumStatus = styled.div`
   // margin-bottom: 20px;
   padding: 8px 16px;
   // background: ${({ theme, isPremium }) => isPremium ? 'linear-gradient(135deg, #e46262, #cb6565)' : theme.card};
-  color: ${({ theme, isPremium }) => isPremium ? theme.text : theme.subText || '#666'};
+  color: ${({ theme, isPremium, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return isPremium ? '#8B6F47' : '#5C4B37';
+        return isPremium ? theme.text : (theme.subText || '#666');
+    }};
   border-radius: 20px;
   font-size: 14px;
   font-weight: 400;
@@ -199,7 +221,8 @@ const MenuIcon = styled.div`
 const MenuLabel = styled.span`
   font-size: 14px;
   font-weight: 500;
-  color: ${({ theme }) => theme.menuText};
+  color: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#8B6F47' : theme.menuText};
   margin-top: 2px;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -215,15 +238,39 @@ const Info = styled.div`
 `;
 
 const EditProfileCard = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 18px;
-  box-shadow: ${({ theme }) => theme.cardShadow};
+  background: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#fffef9' : theme.card};
+  border-radius: ${({ $isDiaryTheme }) => 
+        $isDiaryTheme ? '16px 20px 18px 17px' : '18px'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return theme.cardShadow;
+    }};
+  border: ${({ $isDiaryTheme }) => 
+        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
   padding: 20px 16px;
   max-width: 380px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.2deg)' : 'none'};
+  position: relative;
+  
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const EditProfileImage = styled.div`
@@ -413,13 +460,15 @@ const StatItem = styled.div`
 const StatNumber = styled.span`
   font-size: 18px;
   font-weight: 700;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   margin-bottom: 4px;
 `;
 
 const StatLabel = styled.span`
   font-size: 14px;
-  color: #888;
+  color: ${({ $isDiaryTheme }) => 
+        $isDiaryTheme ? '#5C4B37' : '#888'};
   font-weight: 500;
 `;
 
@@ -436,27 +485,45 @@ const FriendRequestBadge = styled.span`
 const PremiumUpgradeCard = styled.div`
   width: 100%;
   margin: 24px 0 32px 0;
-  background: ${({ theme }) => theme.premiumUpgradeCardBg || 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)'};
-  border-radius: 16px;
+  background: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme 
+            ? '#fffef9' 
+            : (theme.premiumUpgradeCardBg || 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)')};
+  border-radius: ${({ $isDiaryTheme }) => 
+        $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
   padding: 18px 24px;
   cursor: pointer;
-  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 216, 155, 0.4)'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 216, 155, 0.4)';
+    }};
+  border: ${({ $isDiaryTheme }) => 
+        $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none'};
   transition: all 0.2s ease;
   text-align: center;
   position: relative;
   overflow: hidden;
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
   
   &::before {
     content: '';
     position: absolute;
-    top: -25%;
-    right: -25%;
-    width: 150%;
-    height: 150%;
-    background: ${({ theme }) => theme.mode === 'dark'
-    ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
-    : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)'};
-    animation: shimmer 4s infinite;
+    top: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-25%'};
+    right: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-25%'};
+    width: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '150%'};
+    height: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '150%'};
+    left: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
+    bottom: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
+    border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'inherit' : '0'};
+    background: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
+        return theme.mode === 'dark'
+            ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
+    }};
+    z-index: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1' : '0'};
+    opacity: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0.3' : '1'};
+    animation: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'none' : 'shimmer 4s infinite'};
   }
   
   @keyframes shimmer {
@@ -465,8 +532,11 @@ const PremiumUpgradeCard = styled.div`
   }
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 216, 155, 0.5)'};
+    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
+    box-shadow: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 216, 155, 0.5)';
+    }};
   }
 `;
 
@@ -499,6 +569,7 @@ function MyPage({ user }) {
   const themeContext = useThemeContext();
   const theme = useTheme();
   const { t } = useTranslation();
+  const isDiaryTheme = themeContext.actualTheme === 'diary';
 
   // 비밀번호 변경 관련 상태
   const [currentPassword, setCurrentPassword] = useState(''); // 현재 비밀번호
@@ -877,7 +948,7 @@ function MyPage({ user }) {
   return (
     <>
       <Header user={user} title={t('mypage')} />
-      <MainContainer className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
+      <MainContainer $isDiaryTheme={isDiaryTheme} className="my-page-container" style={{ paddingBottom: 20 + keyboardHeight }}>
         {false && isEditing ? (
           <EditProfileCard>
             <div style={{ position: 'relative', marginBottom: '16px' }}>
@@ -1157,13 +1228,14 @@ function MyPage({ user }) {
                 <EditIcon width="20" height="20" color="#555555" />
               </EditIconWrapper>
             </ProfileContainer>
-            <Nickname>{displayName}{t('user_nim_suffix')}</Nickname>
+            <Nickname $isDiaryTheme={isDiaryTheme}>{displayName}{t('user_nim_suffix')}</Nickname>
 
             {/* 프리미엄 상태 표시 */}
             {premiumStatus && (
               <PremiumStatus
                 theme={theme}
                 isPremium={premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium}
+                $isDiaryTheme={isDiaryTheme}
               >
                 {premiumStatus.premiumType === 'trial' && (
                   <>
@@ -1199,7 +1271,7 @@ function MyPage({ user }) {
 
             {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
             {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-              <PremiumUpgradeCard onClick={() => navigate('/my/premium')}>
+              <PremiumUpgradeCard $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/premium')}>
                 <PremiumUpgradeContent>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '20px' }}>👑</span>
@@ -1252,61 +1324,61 @@ function MyPage({ user }) {
             {/* 인스타그램 스타일 통계 섹션 */}
             <StatsContainer>
               <StatItem onClick={() => navigate('/my/shop/charge')}>
-                <StatNumber>{point.toLocaleString()}</StatNumber>
-                <StatLabel>{t('points')}</StatLabel>
+                <StatNumber $isDiaryTheme={isDiaryTheme}>{point.toLocaleString()}</StatNumber>
+                <StatLabel $isDiaryTheme={isDiaryTheme}>{t('points')}</StatLabel>
               </StatItem>
               <StatItem onClick={() => navigate('/my/potion-shop')}>
-                <StatNumber>{potionCount}</StatNumber>
-                <StatLabel>{t('potions')}</StatLabel>
+                <StatNumber $isDiaryTheme={isDiaryTheme}>{potionCount}</StatNumber>
+                <StatLabel $isDiaryTheme={isDiaryTheme}>{t('potions')}</StatLabel>
               </StatItem>
               <StatItem onClick={() => navigate('/my/friend')}>
-                <StatNumber>{friendCount}</StatNumber>
-                <StatLabel>{t('friends')}</StatLabel>
+                <StatNumber $isDiaryTheme={isDiaryTheme}>{friendCount}</StatNumber>
+                <StatLabel $isDiaryTheme={isDiaryTheme}>{t('friends')}</StatLabel>
                 {hasFriendRequest && <FriendRequestBadge theme={theme} />}
               </StatItem>
             </StatsContainer>
             <MenuGrid>
               <MenuButton onClick={() => navigate('/my/statistics')}>
                 <MenuIcon as="div">
-                  <RecentActivityIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <RecentActivityIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('stats')}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('stats')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/settings')}>
                 <MenuIcon as="div">
-                  <GearIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <GearIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('personal_settings')}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('personal_settings')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/shop')}>
                 <MenuIcon as="div">
-                  <ShopIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <ShopIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('shop')}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('shop')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/potion-gift')}>
                 <MenuIcon as="div">
-                  <GiftIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <GiftIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('potion_gift') || '포션 선물'}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('potion_gift') || '포션 선물'}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/premium')}>
                 <MenuIcon as="div">
-                  <CrownIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <CrownIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('premium') || '프리미엄'}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('premium') || '프리미엄'}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
-                  <CustomerServiceIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <CustomerServiceIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('support')}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('support')}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/app-info')}>
                 <MenuIcon as="div">
-                  <AppInfoIcon color={theme.mode === 'dark' ? theme.menuText : '#222'} />
+                  <AppInfoIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel>{t('app_info')}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('app_info')}</MenuLabel>
               </MenuButton>
 
             </MenuGrid>
