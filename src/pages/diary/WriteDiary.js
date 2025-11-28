@@ -1401,9 +1401,10 @@ function WriteDiary({ user }) {
             color: '#ffffff',
             border: 'none',
             borderRadius: '14px',
-            padding: '4px 15px',
+            padding: '8px 15px',
             fontSize: '14px',
             fontFamily: 'Source Sans Pro',
+            minHeight: '36px',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'background-color 0.2s ease'
@@ -1700,7 +1701,7 @@ function WriteDiary({ user }) {
                         onClick={handleSubmit}
                         disabled={isSubmitting || isEnhancing}
                     >
-                        {isSubmitting ? t('diary_saving') : (isEditMode ? t('diary_update') : t('diary_save'))}
+                        {isSubmitting ? t('diary_saving') : t('diary_save')}
                     </button>
                 }
             />

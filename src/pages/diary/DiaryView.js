@@ -54,7 +54,7 @@ const Container = styled.div`
 `;
 
 const DiaryTitle = styled.h2`
-  font-size: 25px !important;
+  font-size: 20px !important;
   font-weight: 700 !important;
   margin: 0;
   color: ${({ theme, $isDiaryTheme }) =>
@@ -455,19 +455,20 @@ function DiaryView({ user }) {
             right: '20px'
         },
         actionButton: {
-            backgroundColor: 'rgba(190, 71, 71, 0.62)',
+            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.7)' : 'rgba(190, 71, 71, 0.62)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '14px',
-            padding: '4px 15px',
+            padding: '8px 15px',
             fontSize: '14px',
             fontFamily: 'Source Sans Pro',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease'
+            transition: 'background-color 0.2s ease',
+            minHeight: '36px'
         },
         deleteButton: {
-            backgroundColor: 'rgba(190, 71, 71, 0.4)'
+            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.5)' : 'rgba(190, 71, 71, 0.4)'
         },
         diaryDate: {
             fontSize: '18px',
