@@ -17,8 +17,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
 //   min-height: 100vh;
-  background: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.text};
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#faf8f3' : theme.background};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#5C4B37' : theme.text};
   padding: 20px;
 //   padding-top: 40px;
 //   padding-bottom: 100px;
@@ -33,6 +35,23 @@ const Container = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+  ${props => props.$isDiaryTheme && `
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+  `}
 `;
 
 
@@ -74,7 +93,7 @@ const MonthSelector = styled.div`
 const MonthButton = styled.button`
   background: none;
   border: none;
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
@@ -88,7 +107,7 @@ const MonthButton = styled.button`
 `;
 
 const CurrentMonth = styled.h2`
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: 24px;
   font-family: inherit;
   font-weight: 600;
@@ -253,7 +272,7 @@ const NovelListNovelTitle = styled.div`
 
 const NovelListGenre = styled.div`
   font-size: 14px;
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-weight: 500;
 `;
 
@@ -263,7 +282,7 @@ const WeeklySection = styled.div`
 `;
 
 const WeeklySectionTitle = styled.h2`
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: 24px;
   margin-bottom: 20px;
   display: flex;
@@ -339,9 +358,51 @@ const ViewToggleContainer = styled.div`
 `;
 
 const WeeklyCard = styled.div`
-  background-color: ${({ theme }) => theme.progressCard};
-  border-radius: 15px;
+  background-color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#fffef9' : theme.progressCard};
+  border-radius: ${({ $isDiaryTheme }) =>
+        $isDiaryTheme ? '14px 18px 16px 15px' : '15px'};
+  border: ${({ $isDiaryTheme }) =>
+        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  box-shadow: ${({ $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+            : 'none'};
   padding: ${({ isListMode }) => isListMode ? '16px' : '20px 16px'};
+  transform: ${({ $isDiaryTheme, index }) => {
+        if (!$isDiaryTheme) return 'none';
+        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+        return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+    }};
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
+  
+  &:hover {
+    transform: ${({ $isDiaryTheme, index }) => {
+        if (!$isDiaryTheme) return 'none';
+        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+        return `rotate(${rotations[index % rotations.length] || 0}deg) translateY(-2px)`;
+    }};
+    box-shadow: ${({ $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+            : 'none'};
+  }
   flex: 0 0 240px;
   color: ${({ theme }) => theme.cardText};
   min-width: 70px;
@@ -359,7 +420,7 @@ const WeeklyCard = styled.div`
 
 
 const WeekTitle = styled.h3`
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: ${({ isListMode }) => isListMode ? '16px' : '18px'};
   margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
   display: flex;
@@ -403,7 +464,7 @@ const DayIndicator = styled.div`
   background: ${({ hasDiary, barColor, theme, isCompleted }) => {
         // theme이 없을 때를 대비한 안전한 기본값
         const themeMode = theme?.mode || 'light';
-        
+
         if (!hasDiary) {
             // 일기가 없으면 연한 회색
             if (barColor === 'fill') return themeMode === 'dark' ? '#4A4A4A' : '#E5E5E5';
@@ -645,25 +706,52 @@ const AddButton = styled.button`
 
 // CTA 카드 스타일
 const NovelCTACard = styled.div`
-  background: ${({ theme }) => theme.novelProgressCardBg || '#FFFFFF'};
-  border: 1px solid ${({ theme }) => theme.novelProgressCardBorder || '#E5E5E5'};
-  border-radius: 20px;
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#fffef9' : (theme.novelProgressCardBg || '#FFFFFF')};
+  border: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '2px solid rgba(139, 111, 71, 0.25)'
+            : `1px solid ${theme.novelProgressCardBorder || '#E5E5E5'}`};
+  border-radius: ${({ $isDiaryTheme }) =>
+        $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
   padding: 20px;
   margin-bottom: 24px;
   cursor: pointer;
-  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)';
+    }};
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
+  
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.12)'};
+    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
+    box-shadow: ${({ theme, $isDiaryTheme }) => {
+        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.12)';
+    }};
   }
   
   &:active {
-    transform: translateY(0);
+    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'translateY(0)'};
   }
 `;
 
@@ -675,7 +763,8 @@ const NovelCTAContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#5C4B37' : theme.text};
 `;
 
 const NovelCTAIcon = styled.div`
@@ -709,7 +798,8 @@ const NovelCTATitle = styled.div`
   word-break: keep-all;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   
   @media (max-width: 480px) {
     font-size: 18px;
@@ -723,7 +813,8 @@ const NovelCTADesc = styled.div`
   word-break: keep-all;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#5C4B37' : (theme.subText || '#888')};
   
   @media (max-width: 480px) {
     font-size: 13px;
@@ -736,7 +827,8 @@ const NovelCTAArrow = styled.div`
   flex-shrink: 0;
   opacity: 0.7;
   transition: transform 0.2s;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   
   ${NovelCTACard}:hover & {
     transform: translateX(4px);
@@ -937,7 +1029,7 @@ const SectionHeader = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: 22px;
   font-weight: 700;
   margin: 0;
@@ -949,7 +1041,7 @@ const SectionTitle = styled.h2`
 const MoreLink = styled.button`
   background: none;
   border: none;
-  color: #cb6565;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1025,6 +1117,8 @@ const Novel = ({ user }) => {
     const { t } = useTranslation();
     const toast = useToast();
     const theme = useTheme();
+    const { actualTheme } = useTheme();
+    const isDiaryTheme = actualTheme === 'diary';
     const [currentDate, setCurrentDate] = useState(new Date());
     const [weeks, setWeeks] = useState([]);
     const [weeklyProgress, setWeeklyProgress] = useState({});
@@ -2018,13 +2112,13 @@ const Novel = ({ user }) => {
     };
 
     return (
-        <Container>
+        <Container $isDiaryTheme={isDiaryTheme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('novel_title')} />
             {/* <Title>Novel</Title> */}
 
             {/* 소설 만들기 CTA */}
-            <NovelCTACard onClick={openCurrentWeekDiaryModal}>
-                <NovelCTAContent>
+            <NovelCTACard $isDiaryTheme={isDiaryTheme} onClick={openCurrentWeekDiaryModal}>
+                <NovelCTAContent $isDiaryTheme={isDiaryTheme}>
                     <NovelCTAProgress>
                         <NovelCTAProgressText>
                             <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
@@ -2043,9 +2137,9 @@ const Novel = ({ user }) => {
             {/* 내 소설 섹션 */}
             <LibrarySection>
                 <SectionHeader>
-                    <SectionTitle>📚 {t('home_my_novel') || '내 소설'}</SectionTitle>
+                    <SectionTitle $isDiaryTheme={isDiaryTheme}>📚 {t('home_my_novel') || '내 소설'}</SectionTitle>
                     {myNovels.length > 0 && (
-                        <MoreLink onClick={() => navigate('/my/completed-novels')}>
+                        <MoreLink $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/completed-novels')}>
                             더보기 →
                         </MoreLink>
                     )}
@@ -2076,9 +2170,9 @@ const Novel = ({ user }) => {
             {/* 내 서재 섹션 */}
             <LibrarySection>
                 <SectionHeader>
-                    <SectionTitle>🛍️ {t('home_purchased_novel') || '내 서재'}</SectionTitle>
+                    <SectionTitle $isDiaryTheme={isDiaryTheme}>🛍️ {t('home_purchased_novel') || '내 서재'}</SectionTitle>
                     {purchasedNovels.length > 0 && (
-                        <MoreLink onClick={() => navigate('/purchased-novels')}>
+                        <MoreLink $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/purchased-novels')}>
                             더보기 →
                         </MoreLink>
                     )}
@@ -2113,13 +2207,13 @@ const Novel = ({ user }) => {
 
             <WeeklySection ref={progressSectionRef}>
                 <MonthSelector>
-                    <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
-                    <CurrentMonth onClick={() => setIsPickerOpen(true)}>
+                    <MonthButton $isDiaryTheme={isDiaryTheme} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
+                    <CurrentMonth $isDiaryTheme={isDiaryTheme} onClick={() => setIsPickerOpen(true)}>
                         {language === 'en'
                             ? currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                             : `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}
                     </CurrentMonth>
-                    <MonthButton onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
+                    <MonthButton $isDiaryTheme={isDiaryTheme} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
                 </MonthSelector>
                 <ViewToggleContainer>
                     <ViewToggleButton
@@ -2175,7 +2269,7 @@ const Novel = ({ user }) => {
                 )}
                 {weeklyViewMode === 'card' ? (
                     <WeeklyGrid>
-                        {weeks.map((week) => {
+                        {weeks.map((week, index) => {
                             const progress = weeklyProgress[week.weekNum] || 0;
                             const isCompleted = progress >= 100;
                             const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
@@ -2256,13 +2350,15 @@ const Novel = ({ user }) => {
                             return (
                                 <WeeklyCard
                                     key={week.weekNum}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    index={index}
                                     ref={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
                                 >
-                                    <WeekTitle>
+                                    <WeekTitle $isDiaryTheme={isDiaryTheme}>
                                         <span>{t('week_num', { num: week.weekNum })}</span>
                                         {firstNovel && isCompleted && (
                                             <AddButton
@@ -2352,7 +2448,7 @@ const Novel = ({ user }) => {
                     </WeeklyGrid>
                 ) : (
                     <WeeklyList>
-                        {weeks.map((week) => {
+                        {weeks.map((week, index) => {
                             const progress = weeklyProgress[week.weekNum] || 0;
                             const isCompleted = progress >= 100;
                             const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
@@ -2440,6 +2536,8 @@ const Novel = ({ user }) => {
                                 <WeeklyCard
                                     key={week.weekNum}
                                     isListMode={true}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    index={index}
                                     ref={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
@@ -2447,7 +2545,7 @@ const Novel = ({ user }) => {
                                     }}
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1', minWidth: 0 }}>
-                                        <WeekTitle isListMode={true}>
+                                        <WeekTitle isListMode={true} $isDiaryTheme={isDiaryTheme}>
                                             <span>{t('week_num', { num: week.weekNum })}</span>
                                             {firstNovel && isCompleted && (
                                                 <AddButton
@@ -2618,7 +2716,7 @@ const Novel = ({ user }) => {
                                     />
                                     <NovelListInfo>
                                         <NovelListNovelTitle>{novel.title}</NovelListNovelTitle>
-                                        <NovelListGenre>
+                                        <NovelListGenre $isDiaryTheme={isDiaryTheme}>
                                             {genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}
                                         </NovelListGenre>
                                     </NovelListInfo>
