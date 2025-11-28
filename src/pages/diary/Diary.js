@@ -153,12 +153,12 @@ const TodayCircle = styled.div`
   transform: translate(-50%, -50%) rotate(-2deg);
   width: 42px;
   height: 20px;
-  background: rgba(255, 235, 59, 0.6);
+  background: ${props => props.$color || 'rgba(255, 235, 59, 0.6)'};
   border-radius: 8px 10px 9px 8px;
   z-index: 1;
   box-shadow: 
-    0 1px 3px rgba(255, 193, 7, 0.2),
-    inset 0 0 8px rgba(255, 235, 59, 0.3);
+    0 1px 3px ${props => props.$shadowColor || 'rgba(255, 193, 7, 0.2)'},
+    inset 0 0 8px ${props => props.$color || 'rgba(255, 235, 59, 0.3)'};
   
   /* 손으로 칠한 듯한 불규칙한 느낌 */
   clip-path: polygon(
@@ -183,6 +183,84 @@ const TodayCircle = styled.div`
     2% 45%,
     3% 25%
   );
+`;
+
+const HighlighterColorPicker = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  position: relative;
+`;
+
+const ColorPalette = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(40, 40, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+  padding: 8px 12px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  overflow: hidden;
+  max-width: ${props => props.$isOpen ? '300px' : '0'};
+  opacity: ${props => props.$isOpen ? '1' : '0'};
+  transition: max-width 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
+  padding-left: ${props => props.$isOpen ? '12px' : '0'};
+  padding-right: ${props => props.$isOpen ? '12px' : '0'};
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+  pointer-events: ${props => props.$isOpen ? 'auto' : 'none'};
+`;
+
+const ColorButton = styled.button`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: ${props => props.$color};
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const SelectedColorButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: ${props => props.$color};
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 11;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const ImageContainer = styled.div`
@@ -333,6 +411,15 @@ const PreviewCloseButton = styled.button`
 `;
 
 
+// 형광펜 색상 옵션
+const HIGHLIGHTER_COLORS = [
+    { id: 'yellow', color: 'rgba(255, 235, 59, 0.6)', shadowColor: 'rgba(255, 193, 7, 0.2)' },
+    { id: 'pink', color: 'rgba(255, 128, 171, 0.6)', shadowColor: 'rgba(255, 64, 129, 0.2)' },
+    { id: 'green', color: 'rgba(129, 199, 132, 0.6)', shadowColor: 'rgba(76, 175, 80, 0.2)' },
+    { id: 'blue', color: 'rgba(100, 181, 246, 0.6)', shadowColor: 'rgba(33, 150, 243, 0.2)' },
+    { id: 'orange', color: 'rgba(255, 183, 77, 0.6)', shadowColor: 'rgba(255, 152, 0, 0.2)' }
+];
+
 function Diary({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -354,6 +441,35 @@ function Diary({ user }) {
         totalWritten: 0,
         totalDays: 7
     });
+
+    // 형광펜 색상 상태
+    const [selectedHighlighterColor, setSelectedHighlighterColor] = useState(() => {
+        const saved = localStorage.getItem('highlighterColor');
+        return saved || HIGHLIGHTER_COLORS[0].id;
+    });
+
+    // 팔레트 열림/닫힘 상태
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+    const paletteRef = useRef(null);
+
+    // 팔레트 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (paletteRef.current && !paletteRef.current.contains(event.target)) {
+                setIsPaletteOpen(false);
+            }
+        };
+
+        if (isPaletteOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [isPaletteOpen]);
 
     // location.state가 변경되면 currentDate 업데이트
     useEffect(() => {
@@ -449,6 +565,16 @@ function Diary({ user }) {
 
     const handleToday = () => {
         setCurrentDate(new Date());
+    };
+
+    const handleHighlighterColorChange = (colorId) => {
+        setSelectedHighlighterColor(colorId);
+        localStorage.setItem('highlighterColor', colorId);
+        setIsPaletteOpen(false); // 색상 선택 후 팔레트 닫기
+    };
+
+    const togglePalette = () => {
+        setIsPaletteOpen(!isPaletteOpen);
     };
 
     const getTodayDate = () => {
@@ -689,7 +815,10 @@ function Diary({ user }) {
                             position: 'relative',
                             zIndex: isToday ? 2 : 1
                         }}>{day}</span>
-                        {isToday && <TodayCircle />}
+                        {isToday && (() => {
+                            const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                            return <TodayCircle $color={colorOption.color} $shadowColor={colorOption.shadowColor} />;
+                        })()}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
                         <ImageContainer>
                             {displayImg && <DisplayImage src={displayImg} alt="대표 이미지" $isSticker={isSticker} />}
@@ -739,6 +868,42 @@ function Diary({ user }) {
                         <MonthText>{formatMonth(currentDate)}</MonthText>
                         <MonthButton onClick={handleNextMonth}>&gt;</MonthButton>
                     </MonthSection>
+                    <HighlighterColorPicker ref={paletteRef}>
+                        {(() => {
+                            const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                            const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
+                            return (
+                                <>
+                                    {!isPaletteOpen && (
+                                        <SelectedColorButton
+                                            $color={selectedColor.color}
+                                            onClick={togglePalette}
+                                            title="형광펜 색상 선택"
+                                        />
+                                    )}
+                                    <ColorPalette $isOpen={isPaletteOpen}>
+                                        {unselectedColors.map((colorOption) => (
+                                            <ColorButton
+                                                key={colorOption.id}
+                                                $color={colorOption.color}
+                                                $isSelected={false}
+                                                onClick={() => handleHighlighterColorChange(colorOption.id)}
+                                                title={`형광펜 색상: ${colorOption.id}`}
+                                            />
+                                        ))}
+                                        {isPaletteOpen && (
+                                            <ColorButton
+                                                $color={selectedColor.color}
+                                                $isSelected={true}
+                                                onClick={togglePalette}
+                                                title={`현재 선택된 색상: ${selectedHighlighterColor}`}
+                                            />
+                                        )}
+                                    </ColorPalette>
+                                </>
+                            );
+                        })()}
+                    </HighlighterColorPicker>
                     <TodayButton onClick={handleToday}>{getTodayDate()}</TodayButton>
                 </CalendarHeader>
                 <Calendar>
