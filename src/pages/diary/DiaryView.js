@@ -63,8 +63,12 @@ const DiaryTitle = styled.h2`
 
 const DiaryContent = styled.p`
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
   white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+//   text-align: justify;
   color: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
 `;
@@ -95,7 +99,7 @@ const StickerImage = styled.img`
 const Card = styled.div`
   background: ${props => {
         if (props.$isDiaryTheme) return '#fffef9';
-        if (props.$isDark) return '#232323';
+        if (props.$isDark) return '#2d2d2d';
         return '#fff';
     }};
   border-radius: 12px;
