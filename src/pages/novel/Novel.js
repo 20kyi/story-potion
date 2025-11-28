@@ -399,24 +399,35 @@ const DayIndicator = styled.div`
   flex: 1;
   height: ${({ isListMode }) => isListMode ? '12px' : '16px'};
   border-radius: ${({ isListMode }) => isListMode ? '2px' : '3px'};
+  will-change: background;
   background: ${({ hasDiary, barColor, theme, isCompleted }) => {
+        // theme이 없을 때를 대비한 안전한 기본값
+        const themeMode = theme?.mode || 'light';
+        
         if (!hasDiary) {
             // 일기가 없으면 연한 회색
-            if (barColor === 'fill') return theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5';
-            return theme.mode === 'dark' ? '#3A3A3A' : '#E5E5E5';
+            if (barColor === 'fill') return themeMode === 'dark' ? '#4A4A4A' : '#E5E5E5';
+            return themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5';
         }
         // 모든 일기를 완성한 경우 상단 CTA와 동일한 그라데이션 색상 적용
         if (isCompleted && hasDiary) {
             return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
         }
         // 일기가 있으면 버튼 텍스트 색상과 일치
-        if (barColor === 'fill') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96'; // 일기 채우기 버튼 텍스트 색상
-        if (barColor === 'create') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e'; // 소설 만들기 버튼 텍스트 색상
+        if (barColor === 'fill') return themeMode === 'dark' ? '#BFBFBF' : '#868E96'; // 일기 채우기 버튼 텍스트 색상
+        if (barColor === 'create') return themeMode === 'dark' ? '#FFB3B3' : '#e07e7e'; // AI 소설 쓰기 버튼 텍스트 색상
         if (barColor === 'free') return '#e4a30d'; // 무료 버튼 텍스트 색상
-        if (barColor === 'view') return theme.primary; // 소설 보기 버튼 배경 색상
-        return '#cb6565'; // 기본값
+        if (barColor === 'view') {
+            // 소설 보기 버튼 배경 색상 - theme이 없어도 일관된 색상 사용
+            const primaryColor = theme?.primary;
+            if (primaryColor) return primaryColor;
+            // theme이 없을 때는 기본 분홍색 사용
+            return '#cb6565';
+        }
+        // barColor가 없을 때는 일기가 있는 경우에만 기본 색상 사용
+        return hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#e07e7e') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
     }};
-  transition: background 0.3s ease;
+  transition: none;
 `;
 
 const CreateButton = styled.button`
@@ -434,8 +445,8 @@ const CreateButton = styled.button`
         const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
         if (childrenStr.includes('PREMIUM')) return theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'; // 홈화면 프리미엄 배너 색상 팔레트
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
-        if (children === '다른 장르 생성') return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'; // 일기 진행도 그래프 색상
-        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
+        if (childrenStr.includes('다른 장르')) return 'transparent'; // 배경색 없음
+        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
         if (children === '소설 보기') return theme.primary; // 분홍
         return theme.primary;
     }};
@@ -446,8 +457,8 @@ const CreateButton = styled.button`
         const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
         if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        if (children === '다른 장르 생성') return '#fff'; // 일기 진행도 그래프 색상 배경에 맞춰 흰색
-        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        if (childrenStr.includes('다른 장르')) return '#C99A9A'; // 테두리와 동일한 색상
+        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         if (children === '소설 보기') return '#fff';
         return '#fff';
     }};
@@ -458,8 +469,8 @@ const CreateButton = styled.button`
         const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
         if (childrenStr.includes('PREMIUM')) return 'none'; // 프리미엄 버튼 테두리 없음
         if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-        if (children === '다른 장르 생성') return 'none'; // 그라데이션 배경이므로 border 없음
-        if (children === '소설 만들기' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
+        if (childrenStr.includes('다른 장르')) return '2px solid #C99A9A'; // 테두리 색상
+        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
         if (children === '소설 보기') return 'none';
         return 'none';
     }};
@@ -468,7 +479,12 @@ const CreateButton = styled.button`
   font-size: ${({ isFree }) => isFree ? '12px' : '12px'};
   cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   opacity: ${({ disabled }) => disabled ? 0.6 : 1};
-  transition: all 0.2s ease;
+  transition: ${({ children }) => {
+        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+        // "다른 장르" 버튼은 background transition 제외
+        if (childrenStr.includes('다른 장르')) return 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease';
+        return 'all 0.2s ease';
+    }};
   font-weight: 700;
   font-family: inherit;
   white-space: nowrap;
@@ -489,8 +505,8 @@ const CreateButton = styled.button`
             return 'linear-gradient(135deg, #ffe8af 0%, #ffcc81 100%)'; // 라이트모드 hover (약간 더 밝게)
         }
         if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
-        if (children === '다른 장르 생성') return 'linear-gradient(90deg, #B88A8A 0%, #C39595 100%)'; // hover 시 약간 어둡게
-        if (children === '소설 만들기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
+        if (childrenStr.includes('다른 장르')) return 'transparent'; // hover 시에도 배경색 없음
+        if (children === 'AI 소설 쓰기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
         if (children === '소설 보기') return theme.secondary;
         return theme.secondary;
     }};
@@ -500,7 +516,8 @@ const CreateButton = styled.button`
         // children을 문자열로 변환하여 PREMIUM 체크
         const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
         if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상 (hover 시에도 동일)
-        if (children === '일기 채우기' || children === '소설 만들기' || children === '다른 장르 생성') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
+        if (children === '일기 채우기' || children === 'AI 소설 쓰기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
+        if (childrenStr.includes('다른 장르')) return '#C99A9A'; // hover 시에도 텍스트 색상 유지
         return '#fff';
     }};
     opacity: ${({ disabled }) => disabled ? 0.6 : 0.96};
@@ -2310,7 +2327,7 @@ const Novel = ({ user }) => {
                                             onClick={handleAddNovel}
                                             disabled={allGenresCreated}
                                         >
-                                            {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "다른 장르 생성")}
+                                            {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
                                         </CreateButton>
                                     ) : (
                                         <CreateButton
@@ -2500,7 +2517,7 @@ const Novel = ({ user }) => {
                                                 onClick={handleAddNovel}
                                                 disabled={allGenresCreated}
                                             >
-                                                {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "다른 장르 생성")}
+                                                {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
                                             </CreateButton>
                                         ) : (
                                             <CreateButton

@@ -31,7 +31,7 @@ try {
 }
 
 async function generateIcons(sharp) {
-  const sourceImage = path.join(__dirname, '../public/app_logo/logo3.png');
+  const sourceImage = path.join(__dirname, '../public/app_logo/logo3_1.png');
   const resDir = path.join(__dirname, '../android/app/src/main/res');
 
   // 소스 이미지 확인
