@@ -69,14 +69,14 @@ const MonthSection = styled.div`
 
 const MonthText = styled.span`
   font-size: 20px;
-  color: #e46262;
+  color: ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
   font-weight: 500;
 `;
 
 const MonthButton = styled.button`
   background: none;
   border: none;
-  color: #df9696;
+  color: ${props => props.$isDiaryTheme ? '#A0826D' : '#df9696'};
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
@@ -88,14 +88,14 @@ const MonthButton = styled.button`
   justify-content: center;
   transition: all 0.2s ease;
   &:hover {
-    background-color: rgba(223, 150, 150, 0.1);
+    background-color: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.15)' : 'rgba(223, 150, 150, 0.1)'};
   }
 `;
 
 const TodayButton = styled.button`
-  background: transparent;
-  border: 1.5px solid #e46262;
-  color: #e46262;
+  background: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : 'transparent'};
+  border: 1.5px solid ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
+  color: ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -106,7 +106,7 @@ const TodayButton = styled.button`
   min-width: 36px;
   margin: 0 8px;
   &:hover {
-    background: rgba(228, 98, 98, 0.1);
+    background: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.2)' : 'rgba(228, 98, 98, 0.1)'};
     transform: scale(1.05);
   }
   &:active {
@@ -942,9 +942,9 @@ function Diary({ user }) {
             <Content>
                 <CalendarHeader>
                     <MonthSection>
-                        <MonthButton onClick={handlePrevMonth}>&lt;</MonthButton>
-                        <MonthText>{formatMonth(currentDate)}</MonthText>
-                        <MonthButton onClick={handleNextMonth}>&gt;</MonthButton>
+                        <MonthButton onClick={handlePrevMonth} $isDiaryTheme={isDiaryTheme}>&lt;</MonthButton>
+                        <MonthText $isDiaryTheme={isDiaryTheme}>{formatMonth(currentDate)}</MonthText>
+                        <MonthButton onClick={handleNextMonth} $isDiaryTheme={isDiaryTheme}>&gt;</MonthButton>
                     </MonthSection>
                     <HighlighterColorPicker ref={paletteRef}>
                         {(() => {
@@ -982,7 +982,7 @@ function Diary({ user }) {
                             );
                         })()}
                     </HighlighterColorPicker>
-                    <TodayButton onClick={handleToday}>{getTodayDate()}</TodayButton>
+                    <TodayButton onClick={handleToday} $isDiaryTheme={isDiaryTheme}>{getTodayDate()}</TodayButton>
                 </CalendarHeader>
                 <Calendar $isDiaryTheme={isDiaryTheme}>
                     <thead>
