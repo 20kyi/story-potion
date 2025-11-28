@@ -24,33 +24,60 @@ const Container = styled.div`
   max-width: 600px;
   width: 100%;
   box-sizing: border-box;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '#fefcf7'
+            : theme.background};
+  ${props => props.$isDiaryTheme && `
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+  `}
   overflow-y: auto;
   overflow-x: hidden;
 `;
 
 const DiaryTitle = styled.h2`
-  font-size: 25px;
-  font-weight: 500;
-  margin-bottom: 16px;
+  font-size: 25px !important;
+  font-weight: 700 !important;
+//   margin-bottom: 16px;
   margin-top: 30px;
-  color: ${({ theme }) => theme.diaryText};
+  padding: 0px 16px;
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
 `;
 
 const DiaryContent = styled.p`
   font-size: 16px;
   line-height: 1.6;
   white-space: pre-wrap;
-  color: ${({ theme }) => theme.diaryContent};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
 `;
 
 const ContentContainer = styled.div`
   position: relative;
   width: 100%;
   min-height: 200px;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
+  border: none;
   border-radius: 12px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
+  background: transparent;
   padding: 16px;
   margin-bottom: 20px;
   overflow: visible;
@@ -70,7 +97,8 @@ const StickerImage = styled.img`
 
 const DiaryDate = styled.div`
   font-size: 18px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
 //   margin-bottom: 10px;
   font-weight: 500;
 //   margin-top: 40px;
@@ -80,10 +108,11 @@ const DiaryMeta = styled.div`
   display: flex;
   gap: 24px;
   align-items: center;
-  margin: 12px 0 8px 0;
+  margin: 8px 0;
   min-height: 28px;
   font-size: 17px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
 `;
 
@@ -168,14 +197,15 @@ const ImageViewerNav = styled.button`
   }
 `;
 
+/* 이미지 뷰어 버튼 */
 const ImageViewerPrev = styled(ImageViewerNav)`
   left: 20px;
 `;
-
+/* 이미지 뷰어 버튼 */
 const ImageViewerNext = styled(ImageViewerNav)`
   right: 20px;
 `;
-
+/* 이미지 뷰어 버튼 */
 function DiaryView({ user }) {
     const navigate = useNavigate();
     const { date } = useParams();
@@ -185,8 +215,9 @@ function DiaryView({ user }) {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(null);
     const toast = useToast();
-    const theme = useTheme();
-    const isDark = theme.mode === 'dark';
+    const { actualTheme } = useTheme();
+    const isDark = actualTheme === 'dark';
+    const isDiaryTheme = actualTheme === 'diary';
     const { language } = useLanguage();
     const { t } = useTranslation();
 
@@ -418,10 +449,10 @@ function DiaryView({ user }) {
             marginTop: '40px'
         },
         diaryTitle: {
-            fontSize: '20px',
+            // fontSize: '50px',
             color: theme => theme.mode === 'dark' ? theme.diaryText : '#e46262',
-            marginBottom: '16px',
-            fontWeight: '600'
+            // marginBottom: '16px',
+            // fontWeight: '600'
         },
         diaryContent: {
             fontSize: '16px',
@@ -440,7 +471,7 @@ function DiaryView({ user }) {
             height: '150px',
             objectFit: 'cover',
             borderRadius: '8px',
-            border: `1px solid ${isDark ? '#4a4a4a' : '#fdd2d2'}`
+            border: `1px solid ${isDiaryTheme ? 'rgba(139, 111, 71, 0.2)' : isDark ? '#4a4a4a' : '#fdd2d2'}`
         },
         noDiary: {
             textAlign: 'center',
@@ -477,7 +508,7 @@ function DiaryView({ user }) {
     };
 
     return (
-        <Container {...handlers}>
+        <Container {...handlers} $isDiaryTheme={isDiaryTheme}>
             <Header
                 user={user}
                 rightActions={
@@ -500,8 +531,8 @@ function DiaryView({ user }) {
                         </div>
                     ) : diary ? (
                         <>
-                            <DiaryDate>{formatDate(diary.date)}</DiaryDate>
-                            <DiaryMeta>
+                            <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
+                            <DiaryMeta $isDiaryTheme={isDiaryTheme}>
                                 <span>{t('today_weather')} {diary.weather && weatherImageMap[diary.weather] ? <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, verticalAlign: 'middle' }} /> : ''}</span>
                                 <span>{t('today_mood')} {diary.emotion && emotionImageMap[diary.emotion] ? <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 32, height: 32, verticalAlign: 'middle' }} /> : ''}</span>
                             </DiaryMeta>
@@ -519,11 +550,11 @@ function DiaryView({ user }) {
                                 </div>
                             )}
 
-                            <DiaryTitle>{diary.title}</DiaryTitle>
+                            <DiaryTitle $isDiaryTheme={isDiaryTheme}>{diary.title}</DiaryTitle>
 
                             {/* 일기 내용 영역 (스티커 포함) */}
-                            <ContentContainer data-content-container>
-                                <DiaryContent>{diary.content}</DiaryContent>
+                            <ContentContainer data-content-container $isDiaryTheme={isDiaryTheme}>
+                                <DiaryContent $isDiaryTheme={isDiaryTheme}>{diary.content}</DiaryContent>
 
                                 {/* 스티커들 */}
                                 {!isLoading && !noMoreFuture && diary && diary.stickers && diary.stickers.length > 0 && (
