@@ -70,6 +70,66 @@ const TopRow = styled.div`
 // 다크모드 감지 함수
 const isDarkMode = () => typeof document !== 'undefined' && document.body.classList.contains('dark');
 
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: ${() => window.innerWidth <= 768 ? '120vh' : '100vh'};
+  position: relative;
+  max-width: 600px;
+  width: 100%;
+  margin: ${() => window.innerWidth <= 768 ? '60px auto' : '60px auto'};
+  padding: ${() => window.innerWidth <= 768 ? '20px' : '20px'};
+  padding-top: ${() => window.innerWidth <= 768 ? '20px' : '20px'};
+  margin-bottom: ${() => window.innerWidth <= 768 ? '100px' : '100px'};
+  padding-bottom: ${() => window.innerWidth <= 768 ? '200px' : '180px'};
+  overflow-x: hidden;
+  box-sizing: border-box;
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '#fefcf7'
+            : theme.background};
+  ${props => props.$isDiaryTheme && `
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+  `}
+`;
+
+const Card = styled.div`
+  background: ${props => {
+        if (props.$isDiaryTheme) return '#fffef9';
+        if (props.$isDark) return '#2d2d2d';
+        return '#fff';
+    }};
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: ${props => props.$isDiaryTheme
+        ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
+        : props.$isDark
+            ? '0 2px 8px rgba(0, 0, 0, 0.18)'
+            : '0 2px 4px rgba(0, 0, 0, 0.1)'};
+  border: ${props => props.$isDiaryTheme
+        ? '1px solid rgba(139, 111, 71, 0.15)'
+        : 'none'};
+`;
+
 const DiaryDate = styled.div`
   font-size: 18px;
   font-weight: 500;
@@ -79,8 +139,11 @@ const DiaryDate = styled.div`
   align-items: center;
   gap: 4px;
   font-family: inherit;
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   .date-number, .date-unit {
-    color: ${({ theme }) => theme.text};
+    color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
     font-family: inherit;
     font-size: 18px;
     font-weight: 500;
@@ -89,15 +152,29 @@ const DiaryDate = styled.div`
 /* 오늘의 날씨, 내 기분 */
 const DiaryMeta = styled.div`
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 24px;
+  align-items: center;
+  margin: 0;
+  min-height: 28px;
+  font-size: 17px;
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
+  font-weight: 500;
+  width: 100%;
+  
+  span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 `;
 /* 오늘의 날씨, 내 기분 라벨 */
 const MetaLabel = styled.span`
   display: flex;
   align-items: center;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
   min-width: 140px;
   min-height: 44px;
@@ -118,12 +195,14 @@ const ImagePreviewBox = styled.div`
   height: 100px;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid ${({ theme, isDragging, isDragOver }) => {
-        if (isDragging) return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
-        if (isDragOver) return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
+  border: 2px solid ${({ theme, isDragging, isDragOver, $isDiaryTheme }) => {
+        if (isDragging) return $isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : (theme.mode === 'dark' ? '#cb6565' : '#cb6565');
+        if (isDragOver) return $isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : (theme.mode === 'dark' ? '#cb6565' : '#cb6565');
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
         return theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2';
     }};
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#fafafa' : (theme.mode === 'dark' ? '#2a2a2a' : '#fafafa')};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +210,10 @@ const ImagePreviewBox = styled.div`
   transition: all 0.2s ease;
   opacity: ${props => props.isDragging ? 0.5 : 1};
   transform: ${props => props.isDragOver ? 'scale(1.05)' : 'scale(1)'};
-  box-shadow: ${props => props.isDragOver ? '0 4px 12px rgba(203, 101, 101, 0.3)' : 'none'};
+  box-shadow: ${props => {
+        if (!props.isDragOver) return 'none';
+        return props.$isDiaryTheme ? '0 4px 12px rgba(139, 111, 71, 0.3)' : '0 4px 12px rgba(203, 101, 101, 0.3)';
+    }};
 `;
 const PreviewImg = styled.img`
   width: 100%;
@@ -567,11 +649,11 @@ const UploadLabel = styled.label`
 
 // DiaryView와 동일한 스타일의 제목, 본문 인풋 스타일 적용
 const TitleInput = styled.input`
-  font-size: 25px;
-  font-weight: 500;
-  margin-bottom: 16px;
-  margin-top: 16px;
-  color: ${({ theme }) => theme.diaryText};
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  margin: 0;
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
   border: none;
   background: transparent;
   width: 100%;
@@ -580,8 +662,10 @@ const TitleInput = styled.input`
 `;
 const ContentTextarea = styled.textarea`
   font-size: 16px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.diaryContent};
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  color: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
   border: none;
   background: transparent;
   width: 100%;
@@ -589,8 +673,12 @@ const ContentTextarea = styled.textarea`
   resize: none;
   font-family: inherit;
   white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
   position: relative;
   min-height: 300px;
+  padding: 0;
+  margin: 0;
   overflow-y: auto; /* 자동 스크롤 추가 */
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a #2a2a2a' : '#fdd2d2 #fafafa'}; /* Firefox */
@@ -620,11 +708,17 @@ const ContentContainer = styled.div`
   width: 100%;
   max-width: 100%;
   min-height: 300px;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
-  border-radius: 12px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
-  padding: 16px;
-  margin-bottom: 20px;
+  border: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? 'none'
+            : `1px solid ${theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'}`};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0' : '12px'};
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? 'transparent'
+            : theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
+  padding: 0;
+  margin: 0;
   overflow: ${() => window.innerWidth <= 768 ? 'hidden' : 'visible'};
   box-sizing: border-box;
 `;
@@ -666,6 +760,7 @@ function WriteDiary({ user }) {
     const textareaRef = useRef();
     const theme = useTheme();
     const isDark = theme.actualTheme === 'dark';
+    const isDiaryTheme = theme.actualTheme === 'diary';
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
@@ -1397,7 +1492,7 @@ function WriteDiary({ user }) {
         },
         // 저장 버튼
         actionButton: {
-            backgroundColor: 'rgba(190, 71, 71, 0.62)',
+            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.7)' : 'rgba(190, 71, 71, 0.62)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '14px',
@@ -1692,7 +1787,7 @@ function WriteDiary({ user }) {
     };
 
     return (
-        <div ref={containerRef} style={styles.container}>
+        <Container ref={containerRef} $isDiaryTheme={isDiaryTheme}>
             <Header
                 user={user}
                 rightActions={
@@ -1706,84 +1801,86 @@ function WriteDiary({ user }) {
                 }
             />
             <main style={{ ...styles.mainContent, paddingBottom: keyboardHeight }}>
-                {/* <TopRow> */}
-                <DiaryDate>{formatDate(diary.date)}</DiaryDate>
-                {/* </TopRow> */}
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                    <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
+                </Card>
 
-                <DiaryMeta>
-                    <MetaLabel>
-                        {!diary.weather ? (
-                            <Button
-                                onClick={(e) => {
-                                    setIsWeatherSheetOpen(true);
-                                    setIsEmotionSheetOpen(false);
-                                }}
-                                style={{
-                                    width: '100%',
-                                    height: 44,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    fontSize: 16,
-                                    color: isDark ? '#ffffff' : '#222',
-                                    fontWeight: 600,
-                                    padding: '0 0'
-                                }}
-                            >
-                                {t('today_weather')}
-                            </Button>
-                        ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
-                                {t('today_weather')}
-                                <img
-                                    src={weatherImageMap[diary.weather]}
-                                    alt={diary.weather}
-                                    style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                    <DiaryMeta $isDiaryTheme={isDiaryTheme}>
+                        <MetaLabel>
+                            {!diary.weather ? (
+                                <Button
                                     onClick={(e) => {
                                         setIsWeatherSheetOpen(true);
                                         setIsEmotionSheetOpen(false);
                                     }}
-                                />
-                            </span>
-                        )}
-                    </MetaLabel>
-                    <MetaLabel>
-                        {!diary.emotion ? (
-                            <Button
-                                onClick={(e) => {
-                                    setIsEmotionSheetOpen(true);
-                                    setIsWeatherSheetOpen(false);
-                                }}
-                                style={{
-                                    width: '100%',
-                                    height: 44,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    fontSize: 16,
-                                    color: isDark ? '#ffffff' : '#222',
-                                    fontWeight: 600,
-                                    padding: '0 0'
-                                }}
-                            >
-                                {t('today_mood')}
-                            </Button>
-                        ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
-                                {t('today_mood')}
-                                <img
-                                    src={emotionImageMap[diary.emotion]}
-                                    alt={diary.emotion}
-                                    style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                    style={{
+                                        width: '100%',
+                                        height: 44,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-start',
+                                        fontSize: 16,
+                                        color: isDark ? '#ffffff' : '#222',
+                                        fontWeight: 600,
+                                        padding: '0 0'
+                                    }}
+                                >
+                                    {t('today_weather')}
+                                </Button>
+                            ) : (
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
+                                    {t('today_weather')}
+                                    <img
+                                        src={weatherImageMap[diary.weather]}
+                                        alt={diary.weather}
+                                        style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                        onClick={(e) => {
+                                            setIsWeatherSheetOpen(true);
+                                            setIsEmotionSheetOpen(false);
+                                        }}
+                                    />
+                                </span>
+                            )}
+                        </MetaLabel>
+                        <MetaLabel>
+                            {!diary.emotion ? (
+                                <Button
                                     onClick={(e) => {
                                         setIsEmotionSheetOpen(true);
                                         setIsWeatherSheetOpen(false);
                                     }}
-                                />
-                            </span>
-                        )}
-                    </MetaLabel>
-                </DiaryMeta>
+                                    style={{
+                                        width: '100%',
+                                        height: 44,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-start',
+                                        fontSize: 16,
+                                        color: isDark ? '#ffffff' : '#222',
+                                        fontWeight: 600,
+                                        padding: '0 0'
+                                    }}
+                                >
+                                    {t('today_mood')}
+                                </Button>
+                            ) : (
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
+                                    {t('today_mood')}
+                                    <img
+                                        src={emotionImageMap[diary.emotion]}
+                                        alt={diary.emotion}
+                                        style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                        onClick={(e) => {
+                                            setIsEmotionSheetOpen(true);
+                                            setIsWeatherSheetOpen(false);
+                                        }}
+                                    />
+                                </span>
+                            )}
+                        </MetaLabel>
+                    </DiaryMeta>
+                </Card>
 
                 {/* 바텀시트 오버레이 */}
                 {(isWeatherSheetOpen || isEmotionSheetOpen) && (
@@ -1928,6 +2025,7 @@ function WriteDiary({ user }) {
                                 draggable={true}
                                 isDragging={draggedImageIndex === index}
                                 isDragOver={dragOverImageIndex === index}
+                                $isDiaryTheme={isDiaryTheme}
                                 onDragStart={(e) => handleImageDragStart(e, index)}
                                 onDragOver={(e) => handleImageDragOver(e, index)}
                                 onDragLeave={handleImageDragLeave}
@@ -2035,7 +2133,7 @@ function WriteDiary({ user }) {
                     }}>
                         <span style={{
                             fontSize: 14,
-                            color: '#cb6565',
+                            color: isDiaryTheme ? '#8B6F47' : '#cb6565',
                             fontWeight: 500,
                             letterSpacing: '-0.3px',
                         }}>
@@ -2062,113 +2160,118 @@ function WriteDiary({ user }) {
                     )}
                 </div>
 
-
-
-                <TitleInput
-                    type="text"
-                    name="title"
-                    placeholder={t('diary_title_placeholder')}
-                    value={diary.title}
-                    onChange={handleChange}
-                    required
-                />
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                    <TitleInput
+                        type="text"
+                        name="title"
+                        placeholder={t('diary_title_placeholder')}
+                        value={diary.title}
+                        onChange={handleChange}
+                        required
+                        $isDiaryTheme={isDiaryTheme}
+                    />
+                </Card>
 
                 {/* 일기 내용 작성 영역 (스티커 포함) */}
-                <ContentContainer
-                    data-content-container
-                    style={{ height: contentHeight }}
-                    onClick={(e) => {
-                        if (!draggedSticker) {
-                            setSelectedSticker(null);
-                        }
-                    }}
-                >
-                    <ContentTextarea
-                        ref={textareaRef}
-                        name="content"
-                        placeholder={t('diary_content_placeholder')}
-                        value={diary.content}
-                        onChange={handleChange}
-                        onFocus={e => {
-                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                    <ContentContainer
+                        data-content-container
+                        $isDiaryTheme={isDiaryTheme}
+                        style={{ height: contentHeight }}
+                        onClick={(e) => {
+                            if (!draggedSticker) {
+                                setSelectedSticker(null);
+                            }
                         }}
-                        required
-                    />
-
-                    {/* 스티커들 */}
-                    {stickers.map((sticker) => (
-                        <StickerElement
-                            key={sticker.id}
-                            data-sticker-id={sticker.id}
-                            isSelected={selectedSticker === sticker.id}
-                            style={{
-                                left: sticker.x,
-                                top: sticker.y,
-                                width: sticker.width,
-                                height: sticker.height,
-                                zIndex: sticker.zIndex
+                    >
+                        <ContentTextarea
+                            ref={textareaRef}
+                            name="content"
+                            placeholder={t('diary_content_placeholder')}
+                            value={diary.content}
+                            onChange={handleChange}
+                            onFocus={e => {
+                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }}
-                        >
-                            <StickerImage
-                                src={sticker.src}
-                                alt={sticker.type}
-                                onMouseDown={(e) => handleDragStart(e, sticker.id, 'move')}
-                                onTouchStart={(e) => handleDragStart(e, sticker.id, 'move')}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    selectSticker(sticker.id);
-                                }}
-                                style={{
-                                    cursor: draggedSticker?.id === sticker.id ? 'grabbing' : 'grab',
-                                    userSelect: 'none',
-                                    pointerEvents: 'auto',
-                                    touchAction: 'none'
-                                }}
-                                draggable={false}
-                            />
+                            required
+                            $isDiaryTheme={isDiaryTheme}
+                        />
 
-                            {/* 삭제 버튼 - 항상 표시 */}
-                            <StickerDeleteButton
-                                onClick={() => removeSticker(sticker.id)}
-                                title="삭제"
+                        {/* 스티커들 */}
+                        {stickers.map((sticker) => (
+                            <StickerElement
+                                key={sticker.id}
+                                data-sticker-id={sticker.id}
+                                isSelected={selectedSticker === sticker.id}
                                 style={{
-                                    opacity: selectedSticker === sticker.id ? 1 : 0.7
+                                    left: sticker.x,
+                                    top: sticker.y,
+                                    width: sticker.width,
+                                    height: sticker.height,
+                                    zIndex: sticker.zIndex
                                 }}
                             >
-                                ✕
-                            </StickerDeleteButton>
+                                <StickerImage
+                                    src={sticker.src}
+                                    alt={sticker.type}
+                                    onMouseDown={(e) => handleDragStart(e, sticker.id, 'move')}
+                                    onTouchStart={(e) => handleDragStart(e, sticker.id, 'move')}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        selectSticker(sticker.id);
+                                    }}
+                                    style={{
+                                        cursor: draggedSticker?.id === sticker.id ? 'grabbing' : 'grab',
+                                        userSelect: 'none',
+                                        pointerEvents: 'auto',
+                                        touchAction: 'none'
+                                    }}
+                                    draggable={false}
+                                />
 
-                            {selectedSticker === sticker.id && (
-                                <>
-                                    {/* 크기 조절 핸들 (우하단) */}
-                                    <StickerHandle
-                                        style={{
-                                            bottom: '-8px',
-                                            right: '-8px',
-                                            cursor: 'nw-resize',
-                                            background: draggedSticker?.id === sticker.id && draggedSticker?.action === 'resize' ? '#a54a4a' : '#cb6565',
-                                            width: '16px',
-                                            height: '16px',
-                                            border: '2px solid white',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDragStart(e, sticker.id, 'resize');
-                                        }}
-                                        onTouchStart={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDragStart(e, sticker.id, 'resize');
-                                        }}
-                                        title="크기 조절"
-                                    />
-                                </>
-                            )}
-                        </StickerElement>
-                    ))}
-                </ContentContainer>
+                                {/* 삭제 버튼 - 항상 표시 */}
+                                <StickerDeleteButton
+                                    onClick={() => removeSticker(sticker.id)}
+                                    title="삭제"
+                                    style={{
+                                        opacity: selectedSticker === sticker.id ? 1 : 0.7
+                                    }}
+                                >
+                                    ✕
+                                </StickerDeleteButton>
+
+                                {selectedSticker === sticker.id && (
+                                    <>
+                                        {/* 크기 조절 핸들 (우하단) */}
+                                        <StickerHandle
+                                            style={{
+                                                bottom: '-8px',
+                                                right: '-8px',
+                                                cursor: 'nw-resize',
+                                                background: draggedSticker?.id === sticker.id && draggedSticker?.action === 'resize' ? '#a54a4a' : '#cb6565',
+                                                width: '16px',
+                                                height: '16px',
+                                                border: '2px solid white',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                            }}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleDragStart(e, sticker.id, 'resize');
+                                            }}
+                                            onTouchStart={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleDragStart(e, sticker.id, 'resize');
+                                            }}
+                                            title="크기 조절"
+                                        />
+                                    </>
+                                )}
+                            </StickerElement>
+                        ))}
+                    </ContentContainer>
+                </Card>
 
                 {/* AI 일기 생성 버튼 */}
                 <div style={{
@@ -2402,8 +2505,8 @@ function WriteDiary({ user }) {
                                 </EnhanceCancelButton>
                                 <EnhanceApplyButton
                                     onClick={() => {
-                                        setDiary(prev => ({ 
-                                            ...prev, 
+                                        setDiary(prev => ({
+                                            ...prev,
                                             content: enhancedContent,
                                             title: enhancedTitle || prev.title
                                         }));
@@ -2420,7 +2523,7 @@ function WriteDiary({ user }) {
 
                 <Navigation />
             </div>
-        </div>
+        </Container>
     );
 }
 
