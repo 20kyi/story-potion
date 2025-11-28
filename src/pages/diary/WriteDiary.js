@@ -679,28 +679,7 @@ const ContentTextarea = styled.textarea`
   min-height: 300px;
   padding: 0;
   margin: 0;
-  overflow-y: auto; /* 자동 스크롤 추가 */
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a #2a2a2a' : '#fdd2d2 #fafafa'}; /* Firefox */
-  
-  /* Webkit 스크롤바 스타일링 */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'};
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: ${({ theme }) => theme.mode === 'dark' ? '#5a5a5a' : '#ecc2c2'};
-  }
+  overflow: hidden;
 `;
 
 const ContentContainer = styled.div`
@@ -1361,18 +1340,13 @@ function WriteDiary({ user }) {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
             const scrollHeight = textareaRef.current.scrollHeight;
-            const maxHeight = window.innerWidth <= 768 ? 800 : 600;
-            textAreaHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+            // 최대 높이 제한 제거 - 텍스트에 맞게 자동으로 늘어나도록
+            textAreaHeight = Math.max(minHeight, scrollHeight);
             textareaRef.current.style.height = textAreaHeight + 'px';
         }
 
-        // 텍스트 2줄 높이 계산 (font-size: 16px, line-height: 1.6)
-        const fontSize = 16;
-        const lineHeight = 1.6;
-        const twoLinesHeight = fontSize * lineHeight * 2; // 약 51.2px
-
-        // 컨테이너 크기 계산 (텍스트 높이 + 2줄 여백 고려)
-        const containerHeight = Math.max(minHeight, textAreaHeight + padding * 2 + twoLinesHeight);
+        // 컨테이너 크기는 textarea 높이에 맞게 자동 조정
+        const containerHeight = textAreaHeight;
 
         console.log('Container size update:', { textAreaHeight, containerHeight, isMobile, fixedWidth, containerWidth });
 
