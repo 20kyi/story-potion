@@ -1355,6 +1355,32 @@ const GlobalStyle = createGlobalStyle`
 
 function ThemeConsumerWrapper({ children }) {
     const { actualTheme, fontFamily, fontSize } = useTheme();
+    // 다이어리 테마일 때 body 배경색 직접 설정
+    useEffect(() => {
+        if (actualTheme === 'diary') {
+            document.body.style.background = '#faf8f3';
+            document.body.style.backgroundImage = `
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.02) 2px,
+                    rgba(0, 0, 0, 0.02) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.02) 2px,
+                    rgba(0, 0, 0, 0.02) 4px
+                )
+            `;
+        } else {
+            document.body.style.background = '';
+            document.body.style.backgroundImage = '';
+        }
+    }, [actualTheme]);
+    
     return (
         <StyledThemeProvider theme={actualTheme === 'dark' ? darkTheme : lightTheme}>
             <GlobalStyle fontFamily={fontFamily} fontSize={fontSize} />

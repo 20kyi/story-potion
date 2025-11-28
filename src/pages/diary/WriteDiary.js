@@ -86,7 +86,7 @@ const Container = styled.div`
   box-sizing: border-box;
   background: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme
-            ? '#fefcf7'
+            ? '#faf8f3'
             : theme.background};
   ${props => props.$isDiaryTheme && `
     background-image: 
@@ -104,16 +104,12 @@ const Container = styled.div`
         rgba(0, 0, 0, 0.02) 2px,
         rgba(0, 0, 0, 0.02) 4px
       );
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.08),
-      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
   `}
 `;
 
 const Card = styled.div`
   background: ${props => {
-        if (props.$isDiaryTheme) return '#fffef9';
+        if (props.$isDiaryTheme) return '#faf8f3';
         if (props.$isDark) return '#2d2d2d';
         return '#fff';
     }};

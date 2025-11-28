@@ -7,10 +7,14 @@ const NavBar = styled.nav`
   position: fixed;
   left: 0; right: 0; bottom: 0;
   width: 100%;
-  background: ${({ theme }) => theme.navCard};
+  background: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme ? '#faf8f3' : theme.navCard};
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  box-shadow: ${({ theme }) => theme.cardShadow};
+  box-shadow: ${({ theme, $isDiaryTheme }) => 
+        $isDiaryTheme 
+            ? '0 -2px 8px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)' 
+            : theme.cardShadow};
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
   display: flex;
   justify-content: space-around;
@@ -31,7 +35,12 @@ const NavButton = styled.button`
 
 const NavText = styled.span`
   font-size: 12px !important;
-  color: ${({ active, theme }) => active ? theme.primary : '#bdbdbd'};
+  color: ${({ active, theme, $isDiaryTheme }) => {
+        if (active) {
+            return $isDiaryTheme ? '#8B6F47' : theme.primary;
+        }
+        return $isDiaryTheme ? '#b8a082' : '#bdbdbd';
+    }};
   font-weight: ${({ active }) => active ? 700 : 400};
 `;
 
@@ -54,6 +63,7 @@ function Navigation() {
   const location = useLocation();
   const { actualTheme } = useTheme();
   const { t } = useTranslation();
+  const isDiaryTheme = actualTheme === 'diary';
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' || location.pathname === '/home';
@@ -67,7 +77,7 @@ function Navigation() {
   };
 
   return (
-    <NavBar>
+    <NavBar $isDiaryTheme={isDiaryTheme}>
       <NavButton onClick={() => navigate('/')}>
         <IconContainer>
           <IconImage
@@ -76,7 +86,7 @@ function Navigation() {
             style={{ filter: isActive('/') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/') ? 'true' : undefined}>{t('nav_home')}</NavText>
+        <NavText active={isActive('/') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_home')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/diaries')}>
         <IconContainer>
@@ -86,7 +96,7 @@ function Navigation() {
             style={{ filter: isActive('/diaries') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/diaries') ? 'true' : undefined}>{t('nav_diary')}</NavText>
+        <NavText active={isActive('/diaries') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_diary')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/novel')}>
         <IconContainer>
@@ -96,7 +106,7 @@ function Navigation() {
             style={{ filter: isActive('/novel') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/novel') ? 'true' : undefined}>{t('nav_novel')}</NavText>
+        <NavText active={isActive('/novel') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_novel')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/my')}>
         <IconContainer>
@@ -106,7 +116,7 @@ function Navigation() {
             style={{ filter: isActive('/my') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/my') ? 'true' : undefined}>{t('nav_mypage')}</NavText>
+        <NavText active={isActive('/my') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_mypage')}</NavText>
       </NavButton>
     </NavBar>
   );

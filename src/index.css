@@ -37,6 +37,26 @@ body.dark {
     color: #f1f1f1;
 }
 
+body.diary {
+    background: #faf8f3;
+    color: #5C4B37;
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+}
+
 /* 친구 검색 입력창 다크모드 스타일 */
 body.dark .friend-search-input {
     background-color: #202020 !important;

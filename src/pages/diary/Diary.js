@@ -22,7 +22,7 @@ const Container = styled.div`
   max-width: 600px;
   background: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme
-            ? '#fefcf7'
+            ? '#faf8f3'
             : theme.background};
   ${props => props.$isDiaryTheme && `
     background-image: 
@@ -40,10 +40,6 @@ const Container = styled.div`
         rgba(0, 0, 0, 0.02) 2px,
         rgba(0, 0, 0, 0.02) 4px
       );
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.08),
-      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
   `}
 `;
 
@@ -145,7 +141,7 @@ const DateCell = styled.td`
   padding: 0;
   text-align: center;
   position: relative;
-  height: 90px;
+  height: 80px;
   width: 45px;
   ${props => props.$isDiaryTheme && `
     &::after {
@@ -223,12 +219,13 @@ const DateButton = styled.button`
   }
 `;
 
+/* 형광펜 */
 const TodayCircle = styled.div`
   position: absolute;
-  top: 38%; // 형광펜 높이
+  top: 35%; // 형광펜 높이
   left: 50%;
   transform: translate(-50%, -50%) rotate(-2deg);
-  width: 50px;
+  width: 40px;
   height: 20px;
   background: ${props => props.$color || 'rgba(255, 235, 59, 0.6)'};
   border-radius: 8px 10px 9px 8px;
@@ -343,7 +340,7 @@ const SelectedColorButton = styled.button`
 const ImageContainer = styled.div`
   margin-top: 8px;
   line-height: 1;
-  min-height: 38px;
+  min-height: 36px;
   min-width: 20px;
   display: flex;
   flex-direction: column;
@@ -351,9 +348,10 @@ const ImageContainer = styled.div`
   gap: 2px;
 `;
 
+/* 스티커 */
 const DisplayImage = styled.img`
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   margin-bottom: 2px;
   border-radius: ${props => props.$isSticker ? '0' : '50%'};
   object-fit: cover;

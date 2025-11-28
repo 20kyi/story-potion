@@ -16,8 +16,12 @@ const HeaderContainer = styled.header`
   right: 0;
   z-index: 200;
   background: transparent;
-  box-shadow: 0 2px 12px ${({ theme }) => theme.cardShadow};
-  background-color: ${({ theme }) => theme.card};
+  box-shadow: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme
+      ? '0 2px 12px rgba(0,0,0,0.06)'
+      : `0 2px 12px ${theme.cardShadow}`};
+  background-color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#faf8f3' : theme.card};
   padding: 16px 20px 16px 20px;
   padding-top: calc(env(safe-area-inset-top, 24px) + 18px); /* 모바일 상단 safe area 대응 */
   min-height: 56px;
@@ -35,7 +39,8 @@ const LeftSection = styled.div`
 `;
 
 const BackButton = styled.div`
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -54,7 +59,8 @@ const ProfileImage = styled.img`
 
 const Nickname = styled.span`
   font-size: 18px !important;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
 `;
 
@@ -74,12 +80,14 @@ const NotificationButton = styled.button`
   align-items: center;
   justify-content: center;
   position: relative;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : (theme.text || '#333')};
   border-radius: 50%;
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || 'rgba(0, 0, 0, 0.05)'};
+    background: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || 'rgba(0, 0, 0, 0.05)')};
   }
 `;
 
@@ -91,14 +99,18 @@ const NotificationBadge = styled.div`
   height: 8px;
   background-color: #ff4444;
   border-radius: 50%;
-  border: 2px solid ${({ theme }) => theme.card || '#fff'};
+  border: 2px solid ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#faf8f3' : (theme.card || '#fff')};
 `;
 
 const LogoText = styled.span`
   font-size: 28px !important;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: ${({ theme }) => theme.mode === 'dark' ? '#fff' : '#111'};
+  color: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.mode === 'dark' ? '#fff' : '#111';
+  }};
   user-select: none;
 `;
 
@@ -121,6 +133,7 @@ const TitleText = styled.span`
   display: flex;
   align-items: center;
   height: 100%;
+  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : 'inherit'};
 `;
 
 const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotifications }) => {
@@ -128,9 +141,12 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   const location = useLocation();
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const { theme: themeMode, actualTheme, setThemeMode, toggleTheme } = useTheme();
-  const theme = actualTheme === 'dark'
-    ? { text: '#fff', card: '#2a2a2a', cardHover: '#333' }
-    : { text: '#222', card: '#fff', cardHover: '#f5f5f5' };
+  const isDiaryTheme = actualTheme === 'diary';
+  const theme = isDiaryTheme
+    ? { text: '#8B6F47', card: '#faf8f3', cardHover: 'rgba(139, 111, 71, 0.1)' }
+    : actualTheme === 'dark'
+      ? { text: '#fff', card: '#2a2a2a', cardHover: '#333' }
+      : { text: '#222', card: '#fff', cardHover: '#f5f5f5' };
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
   const photoURL = user?.photoURL || '/profile-placeholder.jpg';
@@ -190,27 +206,27 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   };
 
   return (
-    <HeaderContainer>
+    <HeaderContainer $isDiaryTheme={isDiaryTheme}>
       <LeftSection>
         {!isHome && (
-          <BackButton onClick={handleBack}>
+          <BackButton onClick={handleBack} $isDiaryTheme={isDiaryTheme}>
             <BackIcon size={20} color={theme.text} />
           </BackButton>
         )}
         {isHome && (
-          <LogoText data-logo="true">STORYPOTION</LogoText>
+          <LogoText data-logo="true" $isDiaryTheme={isDiaryTheme}>STORYPOTION</LogoText>
         )}
       </LeftSection>
       {!isHome && title && (
         <CenterSection>
-          <TitleText>{title}</TitleText>
+          <TitleText $isDiaryTheme={isDiaryTheme}>{title}</TitleText>
         </CenterSection>
       )}
       <RightSection>
         {isHome && onNotificationClick && (
-          <NotificationButton theme={theme} onClick={onNotificationClick}>
+          <NotificationButton theme={theme} $isDiaryTheme={isDiaryTheme} onClick={onNotificationClick}>
             <NotificationIcon size={24} color={theme.text} />
-            {hasUnreadNotifications && <NotificationBadge theme={theme} />}
+            {hasUnreadNotifications && <NotificationBadge theme={theme} $isDiaryTheme={isDiaryTheme} />}
           </NotificationButton>
         )}
         {rightActions && rightActions}
