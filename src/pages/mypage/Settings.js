@@ -74,56 +74,29 @@ function Settings() {
                     </li>
 
                     {/* 테마 */}
-                    <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', paddingBottom: 18 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <span>{t('theme')}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="light"
-                                    checked={theme === 'light'}
-                                    onChange={e => setThemeMode(e.target.value)}
-                                    style={{ marginRight: '8px' }}
-                                />
-                                <span>{t('theme_light') || '라이트 모드'}</span>
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="dark"
-                                    checked={theme === 'dark'}
-                                    onChange={e => setThemeMode(e.target.value)}
-                                    style={{ marginRight: '8px' }}
-                                />
-                                <span>{t('theme_dark') || '다크 모드'}</span>
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="diary"
-                                    checked={theme === 'diary'}
-                                    onChange={e => setThemeMode(e.target.value)}
-                                    style={{ marginRight: '8px' }}
-                                />
-                                <span>다이어리 테마</span>
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                <input
-                                    type="radio"
-                                    name="theme"
-                                    value="system"
-                                    checked={theme === 'system'}
-                                    onChange={e => setThemeMode(e.target.value)}
-                                    style={{ marginRight: '8px' }}
-                                />
-                                <span>{t('theme_system') || '시스템 설정'}</span>
-                            </label>
-                        </div>
+                    <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
+                        <span>{t('theme')}</span>
+                        <select
+                            className="settings-select"
+                            value={theme}
+                            onChange={e => setThemeMode(e.target.value)}
+                            style={{
+                                marginLeft: 'auto',
+                                width: 160,
+                                padding: '8px 12px',
+                                borderRadius: '6px',
+                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#ddd'}`,
+                                fontSize: '14px',
+                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
+                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="light" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_light') || '라이트 모드'}</option>
+                            <option value="dark" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_dark') || '다크 모드'}</option>
+                            <option value="diary" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>다이어리 테마</option>
+                            <option value="system" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_system') || '시스템 설정'}</option>
+                        </select>
                     </li>
                     {/* 언어 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
