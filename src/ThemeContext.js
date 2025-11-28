@@ -47,6 +47,8 @@ export function ThemeProvider({ children }) {
     useEffect(() => {
         if (theme === 'system') {
             setActualTheme(getSystemTheme());
+        } else if (theme === 'diary') {
+            setActualTheme('diary');
         } else {
             setActualTheme(theme);
         }

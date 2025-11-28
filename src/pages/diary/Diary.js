@@ -20,7 +20,31 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme, $isDiaryTheme }) =>
+        $isDiaryTheme
+            ? '#fefcf7'
+            : theme.background};
+  ${props => props.$isDiaryTheme && `
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+  `}
 `;
 
 const Content = styled.div`
@@ -102,6 +126,19 @@ const DayHeader = styled.th`
   color: #888;
   font-size: 16px;
   font-weight: 500;
+  position: relative;
+  ${props => props.$isDiaryTheme && `
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0.5px;
+      background: rgba(0, 0, 0, 0.1);
+      filter: blur(0.3px);
+    }
+  `}
 `;
 
 const DateCell = styled.td`
@@ -110,6 +147,46 @@ const DateCell = styled.td`
   position: relative;
   height: 90px;
   width: 45px;
+  ${props => props.$isDiaryTheme && `
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0.5px;
+      background: rgba(0, 0, 0, 0.1);
+      filter: blur(0.3px);
+    }
+    
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 0.5px;
+      background: rgba(0, 0, 0, 0.08);
+      filter: blur(0.3px);
+    }
+    
+    /* 손으로 그은 듯한 불규칙한 느낌을 위한 약간의 변형 */
+    &:nth-child(1)::after { transform: translateX(0.2px); }
+    &:nth-child(2)::after { transform: translateX(-0.3px); }
+    &:nth-child(3)::after { transform: translateX(0.1px); }
+    &:nth-child(4)::after { transform: translateX(-0.2px); }
+    &:nth-child(5)::after { transform: translateX(0.3px); }
+    &:nth-child(6)::after { transform: translateX(-0.1px); }
+    &:nth-child(7)::after { transform: translateX(0.2px); }
+    
+    &:nth-child(1)::before { transform: translateY(0.2px); }
+    &:nth-child(2)::before { transform: translateY(-0.3px); }
+    &:nth-child(3)::before { transform: translateY(0.1px); }
+    &:nth-child(4)::before { transform: translateY(-0.2px); }
+    &:nth-child(5)::before { transform: translateY(0.3px); }
+    &:nth-child(6)::before { transform: translateY(-0.1px); }
+    &:nth-child(7)::before { transform: translateY(0.2px); }
+  `}
 `;
 
 const DateButton = styled.button`
@@ -148,10 +225,10 @@ const DateButton = styled.button`
 
 const TodayCircle = styled.div`
   position: absolute;
-  top: 40%;
+  top: 38%; // 형광펜 높이
   left: 50%;
   transform: translate(-50%, -50%) rotate(-2deg);
-  width: 42px;
+  width: 50px;
   height: 20px;
   background: ${props => props.$color || 'rgba(255, 235, 59, 0.6)'};
   border-radius: 8px 10px 9px 8px;
@@ -264,9 +341,9 @@ const SelectedColorButton = styled.button`
 `;
 
 const ImageContainer = styled.div`
-  margin-top: 2px;
+  margin-top: 8px;
   line-height: 1;
-  min-height: 32px;
+  min-height: 38px;
   min-width: 20px;
   display: flex;
   flex-direction: column;
@@ -275,8 +352,8 @@ const ImageContainer = styled.div`
 `;
 
 const DisplayImage = styled.img`
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   margin-bottom: 2px;
   border-radius: ${props => props.$isSticker ? '0' : '50%'};
   object-fit: cover;
@@ -423,9 +500,10 @@ const HIGHLIGHTER_COLORS = [
 function Diary({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const theme = useTheme();
+    const { actualTheme } = useTheme();
     const { language } = useLanguage();
     const { t } = useTranslation();
+    const isDiaryTheme = actualTheme === 'diary';
     // location.state에서 달 정보를 받아오거나, 없으면 현재 달 사용
     const initialDate = location.state?.targetDate ? new Date(location.state.targetDate) : new Date();
     const [currentDate, setCurrentDate] = useState(initialDate);
@@ -759,7 +837,7 @@ function Diary({ user }) {
             const date = new Date(year, month - 1, prevMonthDay);
 
             days.push(
-                <DateCell key={`prev-${prevMonthDay}`}>
+                <DateCell key={`prev-${prevMonthDay}`} $isDiaryTheme={isDiaryTheme}>
                     <DateButton
                         className="prev-month"
                         onClick={() => handleDateClick(date)}
@@ -801,7 +879,7 @@ function Diary({ user }) {
             }
 
             days.push(
-                <DateCell key={`current-${day}`}>
+                <DateCell key={`current-${day}`} $isDiaryTheme={isDiaryTheme}>
                     <DateButton
                         className={`${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
@@ -838,7 +916,7 @@ function Diary({ user }) {
             const date = new Date(year, month + 1, nextMonthDay);
 
             days.push(
-                <DateCell key={`next-${nextMonthDay}`}>
+                <DateCell key={`next-${nextMonthDay}`} $isDiaryTheme={isDiaryTheme}>
                     <DateButton
                         className="prev-month"
                         onClick={() => handleDateClick(date)}
@@ -859,7 +937,7 @@ function Diary({ user }) {
     };
 
     return (
-        <Container>
+        <Container $isDiaryTheme={isDiaryTheme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
             <Content>
                 <CalendarHeader>
@@ -906,14 +984,14 @@ function Diary({ user }) {
                     </HighlighterColorPicker>
                     <TodayButton onClick={handleToday}>{getTodayDate()}</TodayButton>
                 </CalendarHeader>
-                <Calendar>
+                <Calendar $isDiaryTheme={isDiaryTheme}>
                     <thead>
                         <tr>
                             {(language === 'en'
                                 ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                                 : ['일', '월', '화', '수', '목', '금', '토']
                             ).map(day => (
-                                <DayHeader key={day}>{day}</DayHeader>
+                                <DayHeader key={day} $isDiaryTheme={isDiaryTheme}>{day}</DayHeader>
                             ))}
                         </tr>
                     </thead>
