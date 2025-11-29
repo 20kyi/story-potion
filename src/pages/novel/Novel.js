@@ -11,91 +11,14 @@ import { useTheme } from '../../ThemeContext';
 import GridIcon from '../../components/icons/GridIcon';
 import ListIcon from '../../components/icons/ListIcon';
 import { inAppPurchaseService } from '../../utils/inAppPurchase';
+import NovelCTACard from './components/NovelCTACard';
+import LibrarySection from './components/LibrarySection';
+import WeeklyCard from './components/WeeklyCard';
+import DatePickerModal from './components/modals/DatePickerModal';
+import NovelListModal from './components/modals/NovelListModal';
+import CreateOptionModal from './components/modals/CreateOptionModal';
+import CurrentWeekDiaryModal from './components/modals/CurrentWeekDiaryModal';
 import './Novel.css';
-
-// Helper functions for dynamic styles
-const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted) => {
-    const themeMode = theme?.mode || 'light';
-    if (!hasDiary) {
-        if (barColor === 'fill') return themeMode === 'dark' ? '#4A4A4A' : '#E5E5E5';
-        return themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5';
-    }
-    if (isCompleted && hasDiary) {
-        return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
-    }
-    if (barColor === 'fill') return themeMode === 'dark' ? '#BFBFBF' : '#868E96';
-    if (barColor === 'create') return themeMode === 'dark' ? '#FFB3B3' : '#e07e7e';
-    if (barColor === 'free') return '#e4a30d';
-    if (barColor === 'view') {
-        const primaryColor = theme?.primary;
-        if (primaryColor) return primaryColor;
-        return '#cb6565';
-    }
-    return hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#e07e7e') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
-};
-
-const getCreateButtonStyle = (children, completed, theme, isFree, disabled, isListMode) => {
-    const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-    const style = {
-        width: isListMode ? '130px' : '100%',
-        minWidth: isListMode ? '130px' : 'auto',
-        margin: 0,
-        marginTop: isListMode ? '0' : '2px',
-        padding: isListMode ? '6px 12px' : '8px',
-        fontSize: isListMode ? '11px' : '12px',
-        whiteSpace: 'nowrap',
-        borderRadius: '10px',
-        fontWeight: 700,
-        fontFamily: 'inherit',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.6 : 1,
-        transition: childrenStr.includes('다른 장르') ? 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease' : 'all 0.2s ease',
-        overflow: 'visible',
-        boxShadow: children === '소설 보기' ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'
-    };
-
-    if (disabled) {
-        style.background = theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
-        style.color = theme.mode === 'dark' ? '#666666' : '#999999';
-        style.border = theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
-    } else if (isFree) {
-        style.background = 'transparent';
-        style.color = '#e4a30d';
-        style.border = '2px solid #e4a30d';
-    } else if (childrenStr.includes('PREMIUM')) {
-        style.background = theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)';
-        style.color = theme.premiumBannerText || '#8B4513';
-        style.border = 'none';
-    } else if (children === '일기 채우기') {
-        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA';
-        style.color = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        style.border = theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-    } else if (childrenStr.includes('다른 장르')) {
-        style.background = 'transparent';
-        style.color = '#C99A9A';
-        style.border = '2px solid #C99A9A';
-    } else if (children === 'AI 소설 쓰기' || children === '완성 ✨') {
-        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5';
-        style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-        style.border = theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
-    } else if (children === '소설 보기') {
-        style.background = theme.primary;
-        style.color = '#fff';
-        style.border = 'none';
-    } else {
-        style.background = theme.primary;
-        style.color = '#fff';
-        style.border = 'none';
-    }
-
-    return style;
-};
-
-const getWeeklyCardTransform = (isDiaryTheme, index) => {
-    if (!isDiaryTheme) return 'none';
-    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
-};
 
 const Novel = ({ user }) => {
     const navigate = useNavigate();
@@ -1110,119 +1033,31 @@ const Novel = ({ user }) => {
             {/* <Title>Novel</Title> */}
 
             {/* 소설 만들기 CTA */}
-            <div
-                className={`novel-cta-card ${isDiaryTheme ? 'diary-theme' : ''}`}
+            <NovelCTACard
+                isDiaryTheme={isDiaryTheme}
+                currentWeekDiariesForProgress={currentWeekDiariesForProgress}
                 onClick={openCurrentWeekDiaryModal}
-                style={{
-                    background: isDiaryTheme ? '#fffef9' : (theme.novelProgressCardBg || '#FFFFFF'),
-                    border: isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.25)' : `1px solid ${theme.novelProgressCardBorder || '#E5E5E5'}`,
-                    transform: isDiaryTheme ? 'rotate(-0.3deg)' : 'none'
-                }}
-            >
-                <div
-                    className={`novel-cta-content ${isDiaryTheme ? 'diary-theme' : ''}`}
-                    style={{
-                        color: isDiaryTheme ? '#5C4B37' : theme.text
-                    }}
-                >
-                    <div className="novel-cta-progress">
-                        <div className="novel-cta-progress-text" style={{ color: theme.subText || '#888' }}>
-                            <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
-                            <span>{(() => {
-                                const { count, total } = getCurrentWeekProgress();
-                                return `${count}/${total}`;
-                            })()}</span>
-                        </div>
-                        <div className="novel-cta-progress-bar" style={{ background: theme.novelProgressBarBg || '#E5E5E5' }}>
-                            <div
-                                className="novel-cta-progress-fill"
-                                style={{
-                                    width: `${getCurrentWeekProgress().progress}%`,
-                                    background: theme.novelProgressBarFill || 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'
-                                }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+            />
 
             {/* 내 소설 섹션 */}
-            <div className="novel-library-section">
-                <div className="novel-section-header">
-                    <h2 className={`novel-section-title ${isDiaryTheme ? 'diary-theme' : ''}`}>📚 {t('home_my_novel') || '내 소설'}</h2>
-                    {myNovels.length > 0 && (
-                        <button
-                            className={`novel-more-link ${isDiaryTheme ? 'diary-theme' : ''}`}
-                            onClick={() => navigate('/my/completed-novels')}
-                        >
-                            더보기 →
-                        </button>
-                    )}
-                </div>
-                {myNovels.length > 0 ? (
-                    <div className="novel-row">
-                        {myNovels.map(novel => (
-                            <div
-                                key={novel.id}
-                                className="novel-box"
-                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`)}
-                            >
-                                <img
-                                    className="novel-cover-image"
-                                    src={novel.imageUrl || '/novel_banner/default.png'}
-                                    alt={novel.title}
-                                />
-                                <div className="novel-title" style={{ color: theme.text }}>{novel.title}</div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="novel-empty-state" style={{ color: theme.subText || '#888' }}>
-                        아직 작성한 소설이 없습니다.<br />
-                        일기를 작성하고 소설을 만들어보세요!
-                    </div>
-                )}
-            </div>
+            <LibrarySection
+                title={t('home_my_novel') || '내 소설'}
+                icon="📚"
+                novels={myNovels}
+                isDiaryTheme={isDiaryTheme}
+                moreLinkPath="/my/completed-novels"
+                emptyMessage="아직 작성한 소설이 없습니다.<br />일기를 작성하고 소설을 만들어보세요!"
+            />
 
             {/* 내 서재 섹션 */}
-            <div className="novel-library-section">
-                <div className="novel-section-header">
-                    <h2 className={`novel-section-title ${isDiaryTheme ? 'diary-theme' : ''}`}>🛍️ {t('home_purchased_novel') || '내 서재'}</h2>
-                    {purchasedNovels.length > 0 && (
-                        <button
-                            className={`novel-more-link ${isDiaryTheme ? 'diary-theme' : ''}`}
-                            onClick={() => navigate('/purchased-novels')}
-                        >
-                            더보기 →
-                        </button>
-                    )}
-                </div>
-                {purchasedNovels.length > 0 ? (
-                    <div className="novel-row">
-                        {purchasedNovels.map(novel => (
-                            <div
-                                key={novel.id}
-                                className="novel-box"
-                                onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
-                                    state: { returnPath: '/novel' }
-                                })}
-                            >
-                                <img
-                                    className="novel-cover-image"
-                                    src={novel.imageUrl || '/novel_banner/default.png'}
-                                    alt={novel.title}
-                                />
-                                <div className="novel-title" style={{ color: theme.text }}>{novel.title}</div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="novel-empty-state" style={{ color: theme.subText || '#888' }}>
-                        아직 구매한 소설이 없습니다.<br />
-                        다른 사람의 소설을 구매해보세요!
-                    </div>
-                )}
-            </div>
+            <LibrarySection
+                title={t('home_purchased_novel') || '내 서재'}
+                icon="🛍️"
+                novels={purchasedNovels}
+                isDiaryTheme={isDiaryTheme}
+                moreLinkPath="/purchased-novels"
+                emptyMessage="아직 구매한 소설이 없습니다.<br />다른 사람의 소설을 구매해보세요!"
+            />
 
             <div className="novel-divider" />
 
@@ -1274,40 +1109,13 @@ const Novel = ({ user }) => {
                         <ListIcon width={20} height={20} />
                     </button>
                 </div>
-                {isPickerOpen && (
-                    <div className="novel-date-picker-modal" onClick={() => setIsPickerOpen(false)}>
-                        <div className="novel-date-picker-content" onClick={(e) => e.stopPropagation()}>
-                            <div className="novel-date-picker-header">
-                                <h3 className="novel-date-picker-title">{t('novel_month_label')}</h3>
-                                <button className="novel-date-picker-close" onClick={() => setIsPickerOpen(false)}>×</button>
-                            </div>
-                            <h3 className="novel-date-picker-title">{t('year')}</h3>
-                            <div className="novel-date-picker-grid">
-                                {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map((year) => (
-                                    <button
-                                        key={year}
-                                        className={`novel-date-picker-button ${year === currentDate.getFullYear() ? 'selected' : ''}`}
-                                        onClick={() => handleYearChange(year)}
-                                    >
-                                        {year}
-                                    </button>
-                                ))}
-                            </div>
-                            <h3 className="novel-date-picker-title">{t('month')}</h3>
-                            <div className="novel-date-picker-grid">
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                                    <button
-                                        key={month}
-                                        className={`novel-date-picker-button ${month === currentDate.getMonth() + 1 ? 'selected' : ''}`}
-                                        onClick={() => handleMonthChange(month)}
-                                    >
-                                        {language === 'en' ? month : `${month}월`}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <DatePickerModal
+                    isOpen={isPickerOpen}
+                    currentDate={currentDate}
+                    onClose={() => setIsPickerOpen(false)}
+                    onYearChange={handleYearChange}
+                    onMonthChange={handleMonthChange}
+                />
                 {weeklyViewMode === 'card' ? (
                     <div className="novel-weekly-grid">
                         {weeks.map((week, index) => {
@@ -1315,190 +1123,32 @@ const Novel = ({ user }) => {
                             const isCompleted = progress >= 100;
                             const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
                             const novelsForWeek = novelsMap[weekKey] || [];
-                            const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
-                            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
-
-                            // 모든 장르 목록
-                            const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
-                            // 모든 장르의 소설이 생성되었는지 확인
-                            const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
-
-                            const handleAddNovel = () => {
-                                // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
-                                if (allGenresCreated) {
-                                    return;
-                                }
-
-                                const weekProgress = weeklyProgress[week.weekNum] || 0;
-                                if (weekProgress < 100) {
-                                    alert(t('novel_all_diaries_needed'));
-                                    return;
-                                }
-
-                                // 포션 보유 여부 확인
-                                const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-
-                                // 바로 소설 생성 페이지로 이동
-                                const year = currentDate.getFullYear();
-                                const month = currentDate.getMonth() + 1;
-                                const novelTitle = language === 'en'
-                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
-
-                                const weekStartDate = new Date(week.start);
-                                const weekEndDate = new Date(week.end);
-
-                                const firstDiaryWithImage = diaries.find(diary => {
-                                    const diaryDate = new Date(diary.date);
-                                    return diaryDate >= weekStartDate &&
-                                        diaryDate <= weekEndDate &&
-                                        diary.imageUrls && diary.imageUrls.length > 0;
-                                });
-                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
-
-                                navigate('/novel/create', {
-                                    state: {
-                                        year: year,
-                                        month: month,
-                                        weekNum: week.weekNum,
-                                        week: `${year}년 ${month}월 ${week.weekNum}주차`,
-                                        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
-                                        imageUrl: imageUrl,
-                                        title: novelTitle,
-                                        existingGenres: novelsForWeek.map(n => n.genre).filter(Boolean),
-                                        returnPath: location.pathname || '/novel'
-                                    }
-                                });
-                            };
-
-                            const handleViewNovel = () => {
-                                // 소설이 2개 이상이면 목록 모달 표시
-                                if (novelsForWeek.length > 1) {
-                                    setSelectedWeekNovels(novelsForWeek);
-                                } else {
-                                    // 소설이 1개면 바로 이동
-                                    const novelKey = createNovelUrl(
-                                        currentDate.getFullYear(),
-                                        currentDate.getMonth() + 1,
-                                        week.weekNum,
-                                        firstNovel.genre,
-                                        firstNovel.id
-                                    );
-                                    navigate(`/novel/${novelKey}`);
-                                }
-                            };
-
-                            const barColor = firstNovel ? 'view' : isCompleted ? 'create' : 'fill';
 
                             return (
-                                <div
+                                <WeeklyCard
                                     key={week.weekNum}
-                                    className={`novel-weekly-card ${isDiaryTheme ? 'diary-theme' : ''}`}
-                                    ref={(el) => {
+                                    week={week}
+                                    index={index}
+                                    progress={progress}
+                                    isCompleted={isCompleted}
+                                    novelsForWeek={novelsForWeek}
+                                    diaries={diaries}
+                                    isDiaryTheme={isDiaryTheme}
+                                    isPremium={isPremium}
+                                    ownedPotions={ownedPotions}
+                                    currentDate={currentDate}
+                                    isListMode={false}
+                                    onViewNovels={(novels) => setSelectedWeekNovels(novels)}
+                                    onCreateNovel={handleCreateNovelClick}
+                                    onWriteDiary={handleWriteDiary}
+                                    isFutureWeek={isFutureWeek(week)}
+                                    hasTodayDiary={hasTodayDiary(week)}
+                                    weekRef={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
-                                    style={{
-                                        background: isDiaryTheme ? '#fffef9' : theme.progressCard,
-                                        borderRadius: isDiaryTheme ? '14px 18px 16px 15px' : '15px',
-                                        border: isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none',
-                                        boxShadow: isDiaryTheme ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' : 'none',
-                                        transform: getWeeklyCardTransform(isDiaryTheme, index),
-                                        color: theme.cardText
-                                    }}
-                                >
-                                    <h3 className={`novel-week-title ${isDiaryTheme ? 'diary-theme' : ''}`}>
-                                        <span>{t('week_num', { num: week.weekNum })}</span>
-                                        {firstNovel && isCompleted && (
-                                            <button
-                                                className="novel-add-button"
-                                                onClick={handleViewNovel}
-                                                title="소설 보기"
-                                                style={{
-                                                    color: theme.primary
-                                                }}
-                                            >
-                                                ☰
-                                            </button>
-                                        )}
-                                    </h3>
-                                    <p className="novel-date-range">{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</p>
-                                    <div className="novel-progress-bar">
-                                        {(() => {
-                                            // 주의 시작일부터 7일간의 날짜 생성
-                                            const weekStart = new Date(week.start);
-                                            const weekDays = [];
-                                            for (let i = 0; i < 7; i++) {
-                                                const date = new Date(weekStart);
-                                                date.setDate(weekStart.getDate() + i);
-                                                weekDays.push(date);
-                                            }
-
-                                            // 해당 주의 일기 날짜 목록
-                                            const weekStartStr = formatDate(week.start);
-                                            const weekEndStr = formatDate(week.end);
-                                            const weekDiaries = diaries.filter(diary => {
-                                                return diary.date >= weekStartStr && diary.date <= weekEndStr;
-                                            });
-                                            const writtenDates = new Set(weekDiaries.map(diary => diary.date));
-
-                                            return weekDays.map((day, idx) => {
-                                                const dayStr = formatDate(day);
-                                                const hasDiary = writtenDates.has(dayStr);
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className="novel-day-indicator"
-                                                        style={{
-                                                            background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted)
-                                                        }}
-                                                    />
-                                                );
-                                            });
-                                        })()}
-                                    </div>
-                                    {firstNovel ? (
-                                        <button
-                                            className="novel-create-button"
-                                            onClick={handleAddNovel}
-                                            disabled={allGenresCreated}
-                                            style={getCreateButtonStyle(
-                                                allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑"),
-                                                true,
-                                                theme,
-                                                false,
-                                                allGenresCreated,
-                                                false
-                                            )}
-                                        >
-                                            {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="novel-create-button"
-                                            disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
-                                            onClick={() => {
-                                                if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
-                                                    return;
-                                                }
-                                                isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
-                                            }}
-                                            style={getCreateButtonStyle(
-                                                isCompleted ? t('novel_create') : t('novel_fill_diary'),
-                                                false,
-                                                theme,
-                                                false,
-                                                !isCompleted && (isFutureWeek(week) || hasTodayDiary(week)),
-                                                false
-                                            )}
-                                        >
-                                            {isCompleted
-                                                ? t('novel_create')
-                                                : t('novel_fill_diary')}
-                                        </button>
-                                    )}
-                                </div>
+                                />
                             );
                         })}
                     </div>
@@ -1509,200 +1159,32 @@ const Novel = ({ user }) => {
                             const isCompleted = progress >= 100;
                             const weekKey = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월 ${week.weekNum}주차`;
                             const novelsForWeek = novelsMap[weekKey] || [];
-                            const firstNovel = novelsForWeek.length > 0 ? novelsForWeek[0] : null;
-                            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
-
-                            // 모든 장르 목록
-                            const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
-                            // 모든 장르의 소설이 생성되었는지 확인
-                            const allGenresCreated = allGenres.every(genre => existingGenres.includes(genre));
-
-                            const handleAddNovel = () => {
-                                // 일반 회원이고 이미 소설이 있는 경우 프리미엄 페이지로 이동
-                                if (!isPremium && novelsForWeek.length > 0) {
-                                    navigate('/my/premium');
-                                    return;
-                                }
-
-                                // 모든 장르의 소설이 이미 생성된 경우 처리하지 않음
-                                if (allGenresCreated) {
-                                    return;
-                                }
-
-                                const weekProgress = weeklyProgress[week.weekNum] || 0;
-                                if (weekProgress < 100) {
-                                    alert(t('novel_all_diaries_needed'));
-                                    return;
-                                }
-
-                                // 포션 보유 여부 확인
-                                const hasPotions = Object.values(ownedPotions).some(count => count > 0);
-
-                                // 바로 소설 생성 페이지로 이동
-                                const year = currentDate.getFullYear();
-                                const month = currentDate.getMonth() + 1;
-                                const novelTitle = language === 'en'
-                                    ? t('novel_list_by_genre_title', { genre: t('novel_title') })
-                                    : `${year}년 ${month}월 ${week.weekNum}주차 소설`;
-
-                                const weekStartDate = new Date(week.start);
-                                const weekEndDate = new Date(week.end);
-
-                                const firstDiaryWithImage = diaries.find(diary => {
-                                    const diaryDate = new Date(diary.date);
-                                    return diaryDate >= weekStartDate &&
-                                        diaryDate <= weekEndDate &&
-                                        diary.imageUrls && diary.imageUrls.length > 0;
-                                });
-                                const imageUrl = firstDiaryWithImage ? firstDiaryWithImage.imageUrls[0] : '/novel_banner/romance.png';
-
-                                navigate('/novel/create', {
-                                    state: {
-                                        year: year,
-                                        month: month,
-                                        weekNum: week.weekNum,
-                                        week: `${year}년 ${month}월 ${week.weekNum}주차`,
-                                        dateRange: `${formatDate(week.start)} ~ ${formatDate(week.end)}`,
-                                        imageUrl: imageUrl,
-                                        title: novelTitle,
-                                        existingGenres: novelsForWeek.map(n => n.genre).filter(Boolean),
-                                        returnPath: location.pathname || '/novel'
-                                    }
-                                });
-                            };
-
-                            const handleViewNovel = () => {
-                                // 소설이 2개 이상이면 목록 모달 표시
-                                if (novelsForWeek.length > 1) {
-                                    setSelectedWeekNovels(novelsForWeek);
-                                } else {
-                                    // 소설이 1개면 바로 이동
-                                    const novelKey = createNovelUrl(
-                                        currentDate.getFullYear(),
-                                        currentDate.getMonth() + 1,
-                                        week.weekNum,
-                                        firstNovel.genre,
-                                        firstNovel.id
-                                    );
-                                    navigate(`/novel/${novelKey}`);
-                                }
-                            };
-
-                            const barColor = firstNovel ? 'view' : isCompleted ? 'create' : 'fill';
 
                             return (
-                                <div
+                                <WeeklyCard
                                     key={week.weekNum}
-                                    className={`novel-weekly-card list-mode ${isDiaryTheme ? 'diary-theme' : ''}`}
-                                    ref={(el) => {
+                                    week={week}
+                                    index={index}
+                                    progress={progress}
+                                    isCompleted={isCompleted}
+                                    novelsForWeek={novelsForWeek}
+                                    diaries={diaries}
+                                    isDiaryTheme={isDiaryTheme}
+                                    isPremium={isPremium}
+                                    ownedPotions={ownedPotions}
+                                    currentDate={currentDate}
+                                    isListMode={true}
+                                    onViewNovels={(novels) => setSelectedWeekNovels(novels)}
+                                    onCreateNovel={handleCreateNovelClick}
+                                    onWriteDiary={handleWriteDiary}
+                                    isFutureWeek={isFutureWeek(week)}
+                                    hasTodayDiary={hasTodayDiary(week)}
+                                    weekRef={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
-                                    style={{
-                                        background: isDiaryTheme ? '#fffef9' : theme.progressCard,
-                                        borderRadius: isDiaryTheme ? '14px 18px 16px 15px' : '15px',
-                                        border: isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none',
-                                        boxShadow: isDiaryTheme ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' : 'none',
-                                        transform: getWeeklyCardTransform(isDiaryTheme, index),
-                                        color: theme.cardText
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1', minWidth: 0 }}>
-                                        <h3 className={`novel-week-title list-mode ${isDiaryTheme ? 'diary-theme' : ''}`}>
-                                            <span>{t('week_num', { num: week.weekNum })}</span>
-                                            {firstNovel && isCompleted && (
-                                                <button
-                                                    className="novel-add-button"
-                                                    onClick={handleViewNovel}
-                                                    title="소설 보기"
-                                                    style={{
-                                                        color: theme.primary
-                                                    }}
-                                                >
-                                                    ☰
-                                                </button>
-                                            )}
-                                        </h3>
-                                        <p className="novel-date-range list-mode">{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</p>
-                                        <div className="novel-progress-bar list-mode">
-                                            {(() => {
-                                                // 주의 시작일부터 7일간의 날짜 생성
-                                                const weekStart = new Date(week.start);
-                                                const weekDays = [];
-                                                for (let i = 0; i < 7; i++) {
-                                                    const date = new Date(weekStart);
-                                                    date.setDate(weekStart.getDate() + i);
-                                                    weekDays.push(date);
-                                                }
-
-                                                // 해당 주의 일기 날짜 목록
-                                                const weekStartStr = formatDate(week.start);
-                                                const weekEndStr = formatDate(week.end);
-                                                const weekDiaries = diaries.filter(diary => {
-                                                    return diary.date >= weekStartStr && diary.date <= weekEndStr;
-                                                });
-                                                const writtenDates = new Set(weekDiaries.map(diary => diary.date));
-
-                                                return weekDays.map((day, idx) => {
-                                                    const dayStr = formatDate(day);
-                                                    const hasDiary = writtenDates.has(dayStr);
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className="novel-day-indicator list-mode"
-                                                            style={{
-                                                                background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted)
-                                                            }}
-                                                        />
-                                                    );
-                                                });
-                                            })()}
-                                        </div>
-                                    </div>
-                                    <div style={{ flexShrink: 0 }}>
-                                        {firstNovel ? (
-                                            <button
-                                                className="novel-create-button list-mode"
-                                                onClick={handleAddNovel}
-                                                disabled={allGenresCreated}
-                                                style={getCreateButtonStyle(
-                                                    allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑"),
-                                                    true,
-                                                    theme,
-                                                    false,
-                                                    allGenresCreated,
-                                                    true
-                                                )}
-                                            >
-                                                {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
-                                            </button>
-                                        ) : (
-                                            <button
-                                                className="novel-create-button list-mode"
-                                                disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
-                                                onClick={() => {
-                                                    if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
-                                                        return;
-                                                    }
-                                                    isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
-                                                }}
-                                                style={getCreateButtonStyle(
-                                                    isCompleted ? t('novel_create') : t('novel_fill_diary'),
-                                                    false,
-                                                    theme,
-                                                    false,
-                                                    !isCompleted && (isFutureWeek(week) || hasTodayDiary(week)),
-                                                    true
-                                                )}
-                                            >
-                                                {isCompleted
-                                                    ? t('novel_create')
-                                                    : t('novel_fill_diary')}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                                />
                             );
                         })}
                     </div>
@@ -1710,146 +1192,32 @@ const Novel = ({ user }) => {
             </div>
 
             {/* 소설 생성 옵션 모달 */}
-            {showCreateOptionModal && selectedWeekForCreate && (
-                <div className="novel-create-option-modal" onClick={() => setShowCreateOptionModal(false)}>
-                    <div className="novel-create-option-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="novel-close-button" onClick={() => setShowCreateOptionModal(false)} style={{ color: theme.text }}>×</button>
-                        <h3 className="novel-create-option-title" style={{ color: theme.text }}>소설 생성 방법 선택</h3>
-                        <button
-                            className="novel-create-option-button free"
-                            onClick={() => {
-                                handleCreateNovel(selectedWeekForCreate, true);
-                                setShowCreateOptionModal(false);
-                            }}
-                        >
-                            🪄 프리미엄 무료권 사용
-                        </button>
-                        <div className="novel-create-option-desc" style={{ color: theme.subText || '#666', marginBottom: '12px' }}>
-                            무료로 소설을 생성합니다 (매월 자동 충전)
-                        </div>
-                        <button
-                            className="novel-create-option-button"
-                            onClick={() => {
-                                handleCreateNovel(selectedWeekForCreate, false);
-                                setShowCreateOptionModal(false);
-                            }}
-                        >
-                            🔮 포션 사용
-                        </button>
-                        <div className="novel-create-option-desc" style={{ color: theme.subText || '#666' }}>
-                            보유한 포션 1개를 사용합니다
-                        </div>
-                    </div>
-                </div>
-            )}
+            <CreateOptionModal
+                isOpen={showCreateOptionModal && !!selectedWeekForCreate}
+                onClose={() => setShowCreateOptionModal(false)}
+                onSelectFree={() => {
+                    handleCreateNovel(selectedWeekForCreate, true);
+                    setShowCreateOptionModal(false);
+                }}
+                onSelectPotion={() => {
+                    handleCreateNovel(selectedWeekForCreate, false);
+                    setShowCreateOptionModal(false);
+                }}
+            />
 
             {/* 소설 목록 모달 */}
-            {selectedWeekNovels && (
-                <div className="novel-list-modal" onClick={() => setSelectedWeekNovels(null)}>
-                    <div className="novel-list-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="novel-list-header">
-                            <h3 className="novel-list-title">소설 선택</h3>
-                            <button className="novel-list-close" onClick={() => setSelectedWeekNovels(null)}>×</button>
-                        </div>
-                        {selectedWeekNovels.map((novel) => {
-                            const genreKey = novel.genre === '로맨스' ? 'romance' :
-                                novel.genre === '역사' ? 'historical' :
-                                    novel.genre === '추리' ? 'mystery' :
-                                        novel.genre === '공포' ? 'horror' :
-                                            novel.genre === '동화' ? 'fairytale' :
-                                                novel.genre === '판타지' ? 'fantasy' : null;
-
-                            return (
-                                <div
-                                    key={novel.id}
-                                    className="novel-list-item"
-                                    onClick={() => {
-                                        const novelKey = createNovelUrl(
-                                            novel.year,
-                                            novel.month,
-                                            novel.weekNum,
-                                            novel.genre,
-                                            novel.id
-                                        );
-                                        navigate(`/novel/${novelKey}`);
-                                        setSelectedWeekNovels(null);
-                                    }}
-                                >
-                                    <img
-                                        className="novel-list-cover"
-                                        src={novel.imageUrl || '/novel_banner/default.png'}
-                                        alt={novel.title}
-                                    />
-                                    <div className="novel-list-info">
-                                        <div className="novel-list-novel-title" style={{ color: theme.text }}>{novel.title}</div>
-                                        <div className={`novel-list-genre ${isDiaryTheme ? 'diary-theme' : ''}`}>
-                                            {genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+            <NovelListModal
+                novels={selectedWeekNovels}
+                isDiaryTheme={isDiaryTheme}
+                onClose={() => setSelectedWeekNovels(null)}
+            />
 
             {/* 이번주 일기 목록 모달 */}
-            {showCurrentWeekDiaryModal && (
-                <div className="novel-current-week-diary-modal" onClick={() => setShowCurrentWeekDiaryModal(false)}>
-                    <div className="novel-current-week-diary-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="novel-current-week-diary-header">
-                            <h3 className="novel-current-week-diary-title" style={{ color: theme.text }}>
-                                {t('novel_this_week_diaries') || '이번주 일기 목록'}
-                            </h3>
-                            <button className="novel-current-week-diary-close" onClick={() => setShowCurrentWeekDiaryModal(false)} style={{ color: theme.text }}>
-                                ×
-                            </button>
-                        </div>
-                        <div className="novel-current-week-diary-list">
-                            {currentWeekDiaries.length === 0 ? (
-                                <div className="novel-current-week-diary-empty" style={{ color: theme.subText || '#888' }}>
-                                    {t('novel_no_this_week_diaries') || '이번주에 작성한 일기가 없습니다.'}
-                                </div>
-                            ) : (
-                                currentWeekDiaries.map((diary, index) => {
-                                    const diaryDate = new Date(diary.date);
-                                    const dateStr = `${diaryDate.getFullYear()}년 ${diaryDate.getMonth() + 1}월 ${diaryDate.getDate()}일`;
-
-                                    // 이미지가 있으면 첫 번째 이미지 사용, 없으면 이모티콘 표시
-                                    const hasImage = diary.imageUrls && diary.imageUrls.length > 0;
-                                    const imageUrl = hasImage ? diary.imageUrls[0] : null;
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            className="novel-current-week-diary-item"
-                                        >
-                                            {imageUrl ? (
-                                                <img className="novel-current-week-diary-image" src={imageUrl} alt="일기 이미지" />
-                                            ) : (
-                                                <div className="novel-current-week-diary-image-placeholder">
-                                                    📝
-                                                </div>
-                                            )}
-                                            <div className="novel-current-week-diary-info">
-                                                <div className="novel-current-week-diary-date" style={{ color: theme.subText || '#888' }}>{dateStr}</div>
-                                                <div className="novel-current-week-diary-title-text" style={{ color: theme.text }}>
-                                                    {diary.title || t('diary_no_title') || '제목 없음'}
-                                                </div>
-                                                {diary.content && (
-                                                    <div className="novel-current-week-diary-preview" style={{ color: theme.subText || '#888' }}>
-                                                        {diary.content}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <CurrentWeekDiaryModal
+                isOpen={showCurrentWeekDiaryModal}
+                diaries={currentWeekDiaries}
+                onClose={() => setShowCurrentWeekDiaryModal(false)}
+            />
 
             <Navigation />
         </div>
