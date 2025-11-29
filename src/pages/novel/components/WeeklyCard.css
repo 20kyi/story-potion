@@ -6,6 +6,22 @@
     min-width: 70px;
     box-sizing: border-box;
     padding: 20px 16px;
+    border-radius: 15px;
+    background-color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.dark .novel-weekly-card:not(.diary-theme) {
+    background-color: #2A2A2A;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.novel-weekly-card:not(.diary-theme):hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+body.dark .novel-weekly-card:not(.diary-theme):hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .novel-weekly-card.diary-theme {
@@ -61,6 +77,10 @@
     color: #cb6565;
 }
 
+body.dark .novel-week-title:not(.diary-theme) {
+    color: #FFB3B3;
+}
+
 .novel-week-title.list-mode {
     font-size: 16px;
     margin: 0;
@@ -81,6 +101,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex-shrink: 0;
+}
+
+body.dark .novel-date-range {
+    color: #999;
 }
 
 .novel-date-range.list-mode {
@@ -163,6 +187,10 @@
     border-radius: 4px;
     font-size: 18px;
     line-height: 1;
+}
+
+body.dark .novel-add-button {
+    color: #FFB3B3 !important;
 }
 
 .novel-add-button:disabled {

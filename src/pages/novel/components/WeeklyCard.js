@@ -153,10 +153,15 @@ const WeeklyCard = ({
             className={`novel-weekly-card ${isListMode ? 'list-mode' : ''} ${isDiaryTheme ? 'diary-theme' : ''}`}
             ref={weekRef}
             style={{
-                background: isDiaryTheme ? '#fffef9' : theme.progressCard,
-                borderRadius: isDiaryTheme ? '14px 18px 16px 15px' : '15px',
-                border: isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none',
-                boxShadow: isDiaryTheme ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' : 'none',
+                ...(isDiaryTheme ? {
+                    background: '#fffef9',
+                    borderRadius: '14px 18px 16px 15px',
+                    border: '1px solid rgba(139, 111, 71, 0.2)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+                } : {
+                    // 일반 모드는 CSS에서 처리 (다크모드 지원)
+                    borderRadius: '15px'
+                }),
                 transform: getWeeklyCardTransform(isDiaryTheme, index),
                 color: theme.cardText,
                 ...(isListMode ? { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px' } : {})

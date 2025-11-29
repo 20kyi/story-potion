@@ -21,9 +21,14 @@ const NovelCTACard = ({ isDiaryTheme, currentWeekDiariesForProgress, onClick }) 
             className={`novel-cta-card ${isDiaryTheme ? 'diary-theme' : ''}`}
             onClick={onClick}
             style={{
-                background: isDiaryTheme ? '#fffef9' : (theme.novelProgressCardBg || '#FFFFFF'),
-                border: isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.25)' : `1px solid ${theme.novelProgressCardBorder || '#E5E5E5'}`,
-                transform: isDiaryTheme ? 'rotate(-0.3deg)' : 'none'
+                ...(isDiaryTheme ? {
+                    background: '#fffef9',
+                    border: '2px solid rgba(139, 111, 71, 0.25)',
+                    transform: 'rotate(-0.3deg)'
+                } : {
+                    // 일반 모드는 CSS에서 처리 (다크모드 지원)
+                    transform: 'none'
+                })
             }}
         >
             <div
@@ -33,16 +38,15 @@ const NovelCTACard = ({ isDiaryTheme, currentWeekDiariesForProgress, onClick }) 
                 }}
             >
                 <div className="novel-cta-progress">
-                    <div className="novel-cta-progress-text" style={{ color: theme.subText || '#888' }}>
+                    <div className="novel-cta-progress-text">
                         <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
                         <span>{count}/{total}</span>
                     </div>
-                    <div className="novel-cta-progress-bar" style={{ background: theme.novelProgressBarBg || '#E5E5E5' }}>
+                    <div className="novel-cta-progress-bar">
                         <div
                             className="novel-cta-progress-fill"
                             style={{
-                                width: `${progress}%`,
-                                background: theme.novelProgressBarFill || 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'
+                                width: `${progress}%`
                             }}
                         />
                     </div>

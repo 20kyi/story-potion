@@ -9,6 +9,14 @@
     overflow: hidden;
     user-select: none;
     border-radius: 20px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E5E5;
+}
+
+body.dark .novel-cta-card:not(.diary-theme) {
+    background: linear-gradient(135deg, #2A2A2A 0%, #1F1F1F 100%);
+    border: 1px solid #3A3A3A;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .novel-cta-card.diary-theme {
@@ -17,10 +25,6 @@
     border-radius: 18px 22px 20px 19px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transform: rotate(-0.3deg);
-}
-
-body.dark .novel-cta-card:not(.diary-theme) {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .novel-cta-card.diary-theme::before {
@@ -161,6 +165,11 @@ body.dark .novel-cta-card:not(.diary-theme):hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+    color: #888;
+}
+
+body.dark .novel-cta-progress-text {
+    color: #999;
 }
 
 .novel-cta-progress-bar {
@@ -172,9 +181,17 @@ body.dark .novel-cta-card:not(.diary-theme):hover {
     background: #E5E5E5;
 }
 
+body.dark .novel-cta-progress-bar {
+    background: #3A3A3A;
+}
+
 .novel-cta-progress-fill {
     height: 100%;
     border-radius: 8px;
     transition: width 0.3s ease;
     background: linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%);
+}
+
+body.dark .novel-cta-progress-fill {
+    background: linear-gradient(90deg, #A67A7A 0%, #B88585 100%);
 }
