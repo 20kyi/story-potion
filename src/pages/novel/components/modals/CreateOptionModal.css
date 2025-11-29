@@ -1,2 +1,101 @@
-/* CreateOptionModal styles are in Novel.css */
+/* Create Option Modal */
+.novel-create-option-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
 
+.novel-create-option-content {
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    opacity: 1;
+}
+
+body.dark .novel-create-option-content {
+    background: #2A2A2A;
+}
+
+body:not(.dark) .novel-create-option-content {
+    background: #FFFFFF;
+}
+
+.novel-create-option-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    text-align: center;
+}
+
+.novel-create-option-button {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 4px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+.novel-create-option-button.free {
+    background: linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%);
+    color: #e4a30d;
+    border: 2px solid #e4a30d;
+}
+
+.novel-create-option-button:not(.free) {
+    background: linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%);
+    color: #e46262;
+    border: 2px solid #e46262;
+}
+
+.novel-create-option-button:hover {
+    transform: translateY(-2px);
+}
+
+.novel-create-option-button.free:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.novel-create-option-button:not(.free):hover {
+    box-shadow: 0 4px 12px rgba(228, 98, 98, 0.2);
+}
+
+.novel-create-option-button:last-child {
+    margin-bottom: 0;
+}
+
+.novel-create-option-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.novel-create-option-desc {
+    font-size: 12px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.novel-close-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+}

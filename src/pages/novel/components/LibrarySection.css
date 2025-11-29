@@ -1,2 +1,102 @@
-/* Library Section styles are in Novel.css */
+/* Library Section */
+.novel-library-section {
+    margin-bottom: 30px;
+}
 
+.novel-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.novel-section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.novel-section-title.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-section-title:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-more-link {
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.novel-more-link.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-more-link:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-more-link:hover {
+    opacity: 1;
+}
+
+.novel-row {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 8px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.novel-row::-webkit-scrollbar {
+    display: none;
+}
+
+.novel-box {
+    width: calc((100% - 24px) / 3);
+    min-width: calc((100% - 24px) / 3);
+    max-width: calc((100% - 24px) / 3);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.novel-box:hover {
+    transform: translateY(-4px);
+}
+
+.novel-cover-image {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 8px;
+}
+
+.novel-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.novel-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 14px;
+}

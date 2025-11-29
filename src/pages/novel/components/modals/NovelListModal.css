@@ -1,2 +1,120 @@
-/* NovelListModal styles are in Novel.css */
+/* Novel List Modal */
+.novel-list-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
+.novel-list-content {
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+body.dark .novel-list-content {
+    background-color: #2A2A2A;
+}
+
+body:not(.dark) .novel-list-content {
+    background-color: white;
+}
+
+.novel-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.novel-list-title {
+    color: #cb6565;
+    margin: 0;
+    font-size: 20px;
+}
+
+.novel-list-close {
+    background: none;
+    border: none;
+    color: #cb6565;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.novel-list-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+}
+
+body.dark .novel-list-item {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body:not(.dark) .novel-list-item {
+    background-color: #f9f9f9;
+}
+
+.novel-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+body:not(.dark) .novel-list-item:hover {
+    background-color: #f0f0f0;
+}
+
+.novel-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.novel-list-cover {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.novel-list-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.novel-list-novel-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.novel-list-genre {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.novel-list-genre.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-list-genre:not(.diary-theme) {
+    color: #cb6565;
+}
