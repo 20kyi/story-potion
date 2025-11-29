@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
-import styled from 'styled-components';
 import Header from '../../components/Header';
 import { useTheme } from '../../ThemeContext';
 import { useLanguage, useTranslation } from '../../LanguageContext';
@@ -11,488 +10,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 import { getWeeklyDiaryStatus } from '../../utils/weeklyBonus';
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  margin-top: 60px;
-  margin-bottom: 80px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 600px;
-  background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? '#faf8f3'
-            : theme.background};
-  ${props => props.$isDiaryTheme && `
-    background-image: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      );
-  `}
-`;
-
-const Content = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
-const CalendarHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 12px;
-`;
-
-const MonthSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const MonthText = styled.span`
-  font-size: 20px;
-  color: ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
-  font-weight: 500;
-`;
-
-const MonthButton = styled.button`
-  background: none;
-  border: none;
-  color: ${props => props.$isDiaryTheme ? '#A0826D' : '#df9696'};
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  &:hover {
-    background-color: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.15)' : 'rgba(223, 150, 150, 0.1)'};
-  }
-`;
-
-const TodayButton = styled.button`
-  background: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : 'transparent'};
-  border: 1.5px solid ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
-  color: ${props => props.$isDiaryTheme ? '#8B6F47' : '#e46262'};
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 90px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  min-width: 36px;
-  margin: 0 8px;
-  &:hover {
-    background: ${props => props.$isDiaryTheme ? 'rgba(139, 111, 71, 0.2)' : 'rgba(228, 98, 98, 0.1)'};
-    transform: scale(1.05);
-  }
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const Calendar = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const DayHeader = styled.th`
-  padding: 10px;
-  padding-bottom: 20px;
-  text-align: center;
-  color: ${props => props.$isSunday ? '#e46262' : '#888'};
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  position: relative;
-  
-  &, & * {
-    font-size: 12px !important;
-  }
-  ${props => props.$isDiaryTheme && `
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 0.5px;
-      background: rgba(0, 0, 0, 0.1);
-      filter: blur(0.3px);
-    }
-  `}
-`;
-
-const DateCell = styled.td`
-  padding: 0;
-  text-align: center;
-  position: relative;
-  height: 80px;
-  width: 45px;
-  ${props => props.$isDiaryTheme && `
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 0.5px;
-      background: rgba(0, 0, 0, 0.1);
-      filter: blur(0.3px);
-    }
-    
-    &:not(:last-child)::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      width: 0.5px;
-      background: rgba(0, 0, 0, 0.08);
-      filter: blur(0.3px);
-    }
-    
-    /* 손으로 그은 듯한 불규칙한 느낌을 위한 약간의 변형 */
-    &:nth-child(1)::after { transform: translateX(0.2px); }
-    &:nth-child(2)::after { transform: translateX(-0.3px); }
-    &:nth-child(3)::after { transform: translateX(0.1px); }
-    &:nth-child(4)::after { transform: translateX(-0.2px); }
-    &:nth-child(5)::after { transform: translateX(0.3px); }
-    &:nth-child(6)::after { transform: translateX(-0.1px); }
-    &:nth-child(7)::after { transform: translateX(0.2px); }
-    
-    &:nth-child(1)::before { transform: translateY(0.2px); }
-    &:nth-child(2)::before { transform: translateY(-0.3px); }
-    &:nth-child(3)::before { transform: translateY(0.1px); }
-    &:nth-child(4)::before { transform: translateY(-0.2px); }
-    &:nth-child(5)::before { transform: translateY(0.3px); }
-    &:nth-child(6)::before { transform: translateY(-0.1px); }
-    &:nth-child(7)::before { transform: translateY(0.2px); }
-  `}
-`;
-
-const DateButton = styled.button`
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: none;
-  cursor: pointer;
-  position: relative;
-  color: #000;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 12px !important;
-  
-  & > span {
-    font-size: 12px !important;
-    font-weight: normal !important;
-  }
-  
-  &.today {
-    color: #fff;
-    position: relative;
-    z-index: 1;
-  }
-  
-  &.future {
-    color: #ccc;
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-  
-  &.prev-month {
-    color: #ccc;
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-`;
-
-/* 형광펜 */
-const TodayCircle = styled.div`
-  position: absolute;
-  top: 22%; // 형광펜 높이
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-2deg);
-  width: 40px;
-  height: 18px;
-  background: ${props => props.$color || 'rgba(255, 235, 59, 0.6)'};
-  border-radius: 8px 10px 9px 8px;
-  z-index: 1;
-  box-shadow: 
-    0 1px 3px ${props => props.$shadowColor || 'rgba(255, 193, 7, 0.2)'},
-    inset 0 0 8px ${props => props.$color || 'rgba(255, 235, 59, 0.3)'};
-  
-  /* 손으로 칠한 듯한 불규칙한 느낌 */
-  clip-path: polygon(
-    5% 10%,
-    15% 5%,
-    35% 0%,
-    55% 2%,
-    75% 0%,
-    90% 5%,
-    95% 15%,
-    98% 35%,
-    100% 55%,
-    98% 75%,
-    95% 90%,
-    85% 95%,
-    65% 98%,
-    45% 100%,
-    25% 98%,
-    10% 95%,
-    2% 85%,
-    0% 65%,
-    2% 45%,
-    3% 25%
-  );
-`;
-
-const HighlighterColorPicker = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-left: auto;
-  position: relative;
-`;
-
-const ColorPalette = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(40, 40, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-  padding: 8px 12px;
-  border-radius: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  overflow: hidden;
-  max-width: ${props => props.$isOpen ? '300px' : '0'};
-  opacity: ${props => props.$isOpen ? '1' : '0'};
-  transition: max-width 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
-  padding-left: ${props => props.$isOpen ? '12px' : '0'};
-  padding-right: ${props => props.$isOpen ? '12px' : '0'};
-  backdrop-filter: blur(10px);
-  white-space: nowrap;
-  pointer-events: ${props => props.$isOpen ? 'auto' : 'none'};
-`;
-
-const ColorButton = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: ${props => props.$color};
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const SelectedColorButton = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: ${props => props.$color};
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 11;
-  
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const ImageContainer = styled.div`
-  margin-top: 8px;
-  line-height: 1;
-  min-height: 36px;
-  min-width: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-`;
-
-/* 스티커 */
-const DisplayImage = styled.img`
-  width: 36px;
-  height: 36px;
-  margin-bottom: 2px;
-  border-radius: ${props => props.$isSticker ? '0' : '50%'};
-  object-fit: cover;
-`;
-
-const EmotionStatsContainer = styled.div`
-  margin: 32px 0 20px 0;
-  width: 100%;
-  max-width: 540px;
-  min-height: 40px;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-`;
-
-const TopMessage = styled.div`
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 18px;
-  color: #7c6f6f;
-  letter-spacing: -1px;
-  font-family: inherit;
-`;
-
-const EmotionBar = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: 38px;
-  border-radius: 22px;
-  overflow: hidden;
-  background: #f6f6f6;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-`;
-
-const EmotionSegment = styled.div`
-  flex: ${props => props.value} 0 0;
-  background: ${props => props.color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-top-left-radius: ${props => props.isFirst ? '22px' : '0'};
-  border-bottom-left-radius: ${props => props.isFirst ? '22px' : '0'};
-  border-top-right-radius: ${props => props.isLast ? '22px' : '0'};
-  border-bottom-right-radius: ${props => props.isLast ? '22px' : '0'};
-`;
-
-const EmotionIcon = styled.img`
-  width: 28px;
-  height: 28px;
-  opacity: 0.85;
-`;
-
-const PercentContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  margin-top: 8px;
-`;
-
-const PercentItem = styled.div`
-  flex: ${props => props.value} 0 0;
-  text-align: center;
-  color: ${props => props.color};
-  font-weight: 600;
-  font-size: 17px;
-  opacity: 0.6;
-`;
-
-const PreviewPopup = styled.div`
-  position: fixed;
-  left: ${props => props.left}px;
-  top: ${props => props.top}px;
-  z-index: 2000;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  padding: 16px;
-  min-width: 180px;
-  max-width: 260px;
-  font-size: 13px;
-  width: ${props => props.width}px;
-  max-height: ${props => props.height}px;
-  overflow: auto;
-  transform: none;
-`;
-
-const PreviewHeader = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-`;
-
-const PreviewImage = styled.img`
-  width: 28px;
-  height: 28px;
-`;
-
-const PreviewDiaryImage = styled.img`
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 8px;
-`;
-
-const PreviewTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: 4px;
-  font-size: 15px;
-`;
-
-const PreviewDate = styled.div`
-  font-weight: 500;
-  color: #888;
-  font-size: 12px;
-  margin-bottom: 4px;
-`;
-
-const PreviewCloseButton = styled.button`
-  margin-top: 6px;
-  font-size: 13px;
-  color: #e46262;
-  background: none;
-  border: none;
-  cursor: pointer;
-`;
+import './Diary.css';
 
 
 // 형광펜 색상 옵션
@@ -845,15 +363,15 @@ function Diary({ user }) {
             const isSunday = date.getDay() === 0;
 
             days.push(
-                <DateCell key={`prev-${prevMonthDay}`} $isDiaryTheme={isDiaryTheme}>
-                    <DateButton
-                        className="prev-month"
+                <td key={`prev-${prevMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                    <button
+                        className="diary-date-button prev-month"
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
                         <span style={{ color: isSunday ? '#e46262' : '#ccc', fontSize: '12px', fontWeight: 'normal' }}>{prevMonthDay}</span>
-                    </DateButton>
-                </DateCell>
+                    </button>
+                </td>
             );
         }
 
@@ -888,9 +406,9 @@ function Diary({ user }) {
             }
 
             days.push(
-                <DateCell key={`current-${day}`} $isDiaryTheme={isDiaryTheme}>
-                    <DateButton
-                        className={`${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
+                <td key={`current-${day}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                    <button
+                        className={`diary-date-button ${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
                         disabled={future}
                         onTouchStart={e => handleDateLongPressStart(date, e)}
@@ -910,14 +428,20 @@ function Diary({ user }) {
                         }}>{day}</span>
                         {isToday && (() => {
                             const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
-                            return <TodayCircle $color={colorOption.color} $shadowColor={colorOption.shadowColor} />;
+                            return <div
+                                className="diary-today-circle"
+                                style={{
+                                    background: colorOption.color,
+                                    boxShadow: `0 1px 3px ${colorOption.shadowColor}, inset 0 0 8px ${colorOption.color.replace('0.6', '0.3')}`
+                                }}
+                            />;
                         })()}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
-                        <ImageContainer>
-                            {displayImg && <DisplayImage src={displayImg} alt="대표 이미지" $isSticker={isSticker} />}
-                        </ImageContainer>
-                    </DateButton>
-                </DateCell>
+                        <div className="diary-image-container">
+                            {displayImg && <img src={displayImg} alt="대표 이미지" className={`diary-display-image ${isSticker ? 'sticker' : ''}`} />}
+                        </div>
+                    </button>
+                </td>
             );
 
             if (days.length === 7) {
@@ -932,15 +456,15 @@ function Diary({ user }) {
             const isSunday = date.getDay() === 0;
 
             days.push(
-                <DateCell key={`next-${nextMonthDay}`} $isDiaryTheme={isDiaryTheme}>
-                    <DateButton
-                        className="prev-month"
+                <td key={`next-${nextMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                    <button
+                        className="diary-date-button prev-month"
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
                         <span style={{ color: isSunday ? '#e46262' : '#ccc', fontSize: '12px', fontWeight: 'normal' }}>{nextMonthDay}</span>
-                    </DateButton>
-                </DateCell>
+                    </button>
+                </td>
             );
             nextMonthDay++;
         }
@@ -952,78 +476,84 @@ function Diary({ user }) {
         return weeks;
     };
 
+    const { theme } = useTheme();
+    const containerStyle = {
+        background: isDiaryTheme ? '#faf8f3' : (theme?.background || '#fff')
+    };
+
     return (
-        <Container $isDiaryTheme={isDiaryTheme}>
+        <div className={`diary-container ${isDiaryTheme ? 'diary-theme' : ''}`} style={containerStyle}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
-            <Content>
-                <CalendarHeader>
-                    <MonthSection>
-                        <MonthButton onClick={handlePrevMonth} $isDiaryTheme={isDiaryTheme}>&lt;</MonthButton>
-                        <MonthText $isDiaryTheme={isDiaryTheme}>{formatMonth(currentDate)}</MonthText>
-                        <MonthButton onClick={handleNextMonth} $isDiaryTheme={isDiaryTheme}>&gt;</MonthButton>
-                    </MonthSection>
-                    <HighlighterColorPicker ref={paletteRef}>
+            <div className="diary-content">
+                <div className="diary-calendar-header">
+                    <div className="diary-month-section">
+                        <button onClick={handlePrevMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
+                        <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>{formatMonth(currentDate)}</span>
+                        <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                    </div>
+                    <div className="diary-highlighter-color-picker" ref={paletteRef}>
                         {(() => {
                             const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
                             const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
                             return (
                                 <>
                                     {!isPaletteOpen && (
-                                        <SelectedColorButton
-                                            $color={selectedColor.color}
+                                        <button
+                                            className="diary-selected-color-button"
+                                            style={{ background: selectedColor.color }}
                                             onClick={togglePalette}
                                             title="형광펜 색상 선택"
                                         />
                                     )}
-                                    <ColorPalette $isOpen={isPaletteOpen}>
+                                    <div className={`diary-color-palette ${isPaletteOpen ? 'open' : 'closed'}`}>
                                         {unselectedColors.map((colorOption) => (
-                                            <ColorButton
+                                            <button
                                                 key={colorOption.id}
-                                                $color={colorOption.color}
-                                                $isSelected={false}
+                                                className="diary-color-button"
+                                                style={{ background: colorOption.color }}
                                                 onClick={() => handleHighlighterColorChange(colorOption.id)}
                                                 title={`형광펜 색상: ${colorOption.id}`}
                                             />
                                         ))}
                                         {isPaletteOpen && (
-                                            <ColorButton
-                                                $color={selectedColor.color}
-                                                $isSelected={true}
+                                            <button
+                                                className="diary-color-button"
+                                                style={{ background: selectedColor.color }}
                                                 onClick={togglePalette}
                                                 title={`현재 선택된 색상: ${selectedHighlighterColor}`}
                                             />
                                         )}
-                                    </ColorPalette>
+                                    </div>
                                 </>
                             );
                         })()}
-                    </HighlighterColorPicker>
-                    <TodayButton onClick={handleToday} $isDiaryTheme={isDiaryTheme}>{getTodayDate()}</TodayButton>
-                </CalendarHeader>
-                <Calendar $isDiaryTheme={isDiaryTheme}>
+                    </div>
+                    <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
+                </div>
+                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''}`}>
                     <thead>
                         <tr>
                             {(language === 'en'
                                 ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                                 : ['일', '월', '화', '수', '목', '금', '토']
                             ).map((day, index) => (
-                                <DayHeader key={day} $isDiaryTheme={isDiaryTheme} $isSunday={index === 0}>{day}</DayHeader>
+                                <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {renderCalendar()}
                     </tbody>
-                </Calendar>
+                </table>
 
                 {/* 감정 비율 막대(커스텀) */}
-                <EmotionStatsContainer>
+                <div className="diary-emotion-stats-container">
                     {/* 상단 문구 */}
-                    <TopMessage>
+                    <div className="diary-top-message">
                         {getTopMessage()}
-                    </TopMessage>
+                    </div>
                     {/* 막대 */}
-                    <EmotionBar>
+                    <div className="diary-emotion-bar">
                         {Object.entries(emotionBarData.percent).map(([emotion, value], idx, arr) => {
                             if (isNaN(value) || value === 0) return null; // 0%는 렌더링하지 않음
                             const emotionKeys = Object.keys(emotionBarData.percent).filter(
@@ -1032,36 +562,44 @@ function Diary({ user }) {
                             const isFirst = emotion === emotionKeys[0];
                             const isLast = emotion === emotionKeys[emotionKeys.length - 1];
                             return (
-                                <EmotionSegment
+                                <div
                                     key={emotion}
-                                    value={value}
-                                    color={emotionBarColors[emotion]}
-                                    isFirst={isFirst}
-                                    isLast={isLast}
+                                    className="diary-emotion-segment"
+                                    style={{
+                                        flex: `${value} 0 0`,
+                                        background: emotionBarColors[emotion],
+                                        borderTopLeftRadius: isFirst ? '22px' : '0',
+                                        borderBottomLeftRadius: isFirst ? '22px' : '0',
+                                        borderTopRightRadius: isLast ? '22px' : '0',
+                                        borderBottomRightRadius: isLast ? '22px' : '0'
+                                    }}
                                 >
                                     {emotion !== 'empty' && value >= 10 && (
-                                        <EmotionIcon src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} />
+                                        <img src={emotionBarIcons[emotion]} alt={emotionBarLabels[emotion]} className="diary-emotion-icon" />
                                     )}
-                                </EmotionSegment>
+                                </div>
                             );
                         })}
-                    </EmotionBar>
+                    </div>
                     {/* 퍼센트/개수 */}
-                    <PercentContainer>
+                    <div className="diary-percent-container">
                         {Object.entries(emotionBarData.percent).map(([emotion, value]) => {
                             if (isNaN(value) || value === 0) return null;
                             return (
-                                <PercentItem
+                                <div
                                     key={emotion}
-                                    value={value}
-                                    color={emotionBarColors[emotion]}
+                                    className="diary-percent-item"
+                                    style={{
+                                        flex: `${value} 0 0`,
+                                        color: emotionBarColors[emotion]
+                                    }}
                                 >
                                     {value}%
-                                </PercentItem>
+                                </div>
                             );
                         })}
-                    </PercentContainer>
-                </EmotionStatsContainer>
+                    </div>
+                </div>
                 {/* 미리보기 팝업은 달력 아래에 그대로 유지 */}
                 {previewDiary && (() => {
                     const popupWidth = 260, popupHeight = 220;
@@ -1071,34 +609,32 @@ function Diary({ user }) {
                     if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - 8;
                     if (top < 8) top = 8;
                     return (
-                        <PreviewPopup
-                            left={left}
-                            top={top}
-                            width={popupWidth}
-                            height={popupHeight}
+                        <div
+                            className="diary-preview-popup"
+                            style={{ left: `${left}px`, top: `${top}px`, width: `${popupWidth}px`, maxHeight: `${popupHeight}px` }}
                             onClick={e => e.stopPropagation()}
                         >
                             {/* 감정/날씨 이모티콘 */}
-                            <PreviewHeader>
+                            <div className="diary-preview-header">
                                 {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
-                                    <PreviewImage src={emotionImageMap[previewDiary.emotion]} alt="감정" />
+                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" className="diary-preview-image" />
                                 )}
                                 {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
-                                    <PreviewImage src={weatherImageMap[previewDiary.weather]} alt="날씨" />
+                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" className="diary-preview-image" />
                                 )}
-                            </PreviewHeader>
+                            </div>
                             {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                <PreviewDiaryImage src={previewDiary.imageUrls[0]} alt="diary" />
+                                <img src={previewDiary.imageUrls[0]} alt="diary" className="diary-preview-diary-image" />
                             )}
-                            <PreviewTitle>{previewDiary.title}</PreviewTitle>
-                            <PreviewDate>{previewDiary.date}</PreviewDate>
-                            <PreviewCloseButton onClick={() => setPreviewDiary(null)}>{t('close')}</PreviewCloseButton>
-                        </PreviewPopup>
+                            <div className="diary-preview-title">{previewDiary.title}</div>
+                            <div className="diary-preview-date">{previewDiary.date}</div>
+                            <button className="diary-preview-close-button" onClick={() => setPreviewDiary(null)}>{t('close')}</button>
+                        </div>
                     );
                 })()}
-            </Content>
+            </div>
             <Navigation />
-        </Container>
+        </div>
     );
 }
 
