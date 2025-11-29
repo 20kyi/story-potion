@@ -782,10 +782,17 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
     width: calc(100% / 4);
 }
 
+.diary-weekly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
 .diary-weekly-day-name {
     font-size: 11px;
     font-weight: 500;
-    margin-bottom: 4px;
     color: #888;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -795,6 +802,16 @@ body.dark .diary-weekly-day-name {
     color: #999;
 }
 
+.diary-weekly-date {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+}
+
+body.dark .diary-weekly-date {
+    color: #ccc;
+}
+
 .diary-date-cell.weekly-cell .diary-date-button {
     flex-direction: column;
     padding: 8px 4px;
@@ -802,6 +819,13 @@ body.dark .diary-weekly-day-name {
     justify-content: flex-start;
     align-items: flex-start;
     text-align: left;
+}
+
+.diary-date-cell.weekly-cell .diary-today-circle {
+    width: 75px;
+    height: 18px;
+    border-radius: 6px 8px 7px 6px;
+    top: 10%;
 }
 
 .diary-weekly-image-container {
@@ -826,6 +850,13 @@ body.dark .diary-weekly-image-container {
     width: 100%;
 }
 
+.diary-weekly-image-container.sticker {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
 .diary-weekly-image {
     width: 100%;
     height: 100%;
@@ -839,19 +870,24 @@ body.dark .diary-weekly-image-container {
     object-fit: contain;
 }
 
+.diary-weekly-image.sticker {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .diary-weekly-preview {
-    font-size: 11px;
-    line-height: 1.4;
+    line-height: 1.3;
     color: #666;
     margin-top: 4px;
     width: 100%;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-word;
-    max-height: 4.2em;
+    max-height: 6.5em;
 }
 
 body.dark .diary-weekly-preview {
@@ -860,4 +896,12 @@ body.dark .diary-weekly-preview {
 
 .diary-date-cell.weekly-cell.diary-theme .diary-weekly-preview {
     color: #5C4B37;
+}
+
+.diary-date-cell.weekly-cell .diary-weekly-preview {
+    font-size: 12px !important;
+}
+
+.diary-date-cell.weekly-cell .diary-date-button .diary-weekly-preview {
+    font-size: 12px !important;
 }

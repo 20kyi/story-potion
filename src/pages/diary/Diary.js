@@ -46,6 +46,16 @@ function Diary({ user }) {
     });
     // 뷰 모드 상태 (월간/주간)
     const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
+    // 주간 뷰에서 현재 표시할 주의 시작일 (월요일)
+    const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+        const today = new Date();
+        const day = today.getDay();
+        const daysToMonday = day === 0 ? -6 : 1 - day;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + daysToMonday);
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+    });
 
     // 형광펜 색상 상태
     const [selectedHighlighterColor, setSelectedHighlighterColor] = useState(() => {
@@ -155,19 +165,38 @@ function Diary({ user }) {
         return `${year}-${month}-${day}`;
     };
 
-    // 이번 주의 시작일(월요일)과 종료일(일요일) 계산
+    // 현재 표시할 주의 시작일(월요일)과 종료일(일요일) 계산
     const getCurrentWeek = () => {
-        const today = new Date();
-        const day = today.getDay(); // 0(일요일) ~ 6(토요일)
-        const weekStart = new Date(today);
-        // 월요일로 이동: 일요일(0)이면 -6, 그 외에는 -(day-1)
-        const daysToMonday = day === 0 ? -6 : 1 - day;
-        weekStart.setDate(today.getDate() + daysToMonday);
-        weekStart.setHours(0, 0, 0, 0);
+        const weekStart = new Date(currentWeekStart);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6); // 일요일
         weekEnd.setHours(23, 59, 59, 999);
         return { weekStart, weekEnd };
+    };
+
+    // 주간 뷰에서 이전 주로 이동
+    const handlePrevWeek = () => {
+        const prevWeek = new Date(currentWeekStart);
+        prevWeek.setDate(currentWeekStart.getDate() - 7);
+        setCurrentWeekStart(prevWeek);
+    };
+
+    // 주간 뷰에서 다음 주로 이동
+    const handleNextWeek = () => {
+        const nextWeek = new Date(currentWeekStart);
+        nextWeek.setDate(currentWeekStart.getDate() + 7);
+        setCurrentWeekStart(nextWeek);
+    };
+
+    // 주간 뷰에서 오늘 주로 이동
+    const handleTodayWeek = () => {
+        const today = new Date();
+        const day = today.getDay();
+        const daysToMonday = day === 0 ? -6 : 1 - day;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + daysToMonday);
+        monday.setHours(0, 0, 0, 0);
+        setCurrentWeekStart(monday);
     };
 
     const hasDiaryOnDate = (date) => {
@@ -546,18 +575,18 @@ function Diary({ user }) {
                         onTouchEnd={handleDateLongPressEnd}
                         onTouchCancel={handleDateLongPressEnd}
                     >
-                        <div className="diary-weekly-day-name">{dayName}</div>
-                        <span style={{
-                            color: isToday
-                                ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#000' : '#fff')
-                                : (isSunday
-                                    ? '#e46262'
-                                    : (document.body.classList.contains('dark') ? '#fff' : '#000')),
-                            position: 'relative',
-                            zIndex: isToday ? 2 : 1,
-                            fontSize: '14px',
-                            fontWeight: '600'
-                        }}>{date.getDate()}</span>
+                        <div className="diary-weekly-header">
+                            <div className="diary-weekly-day-name">{dayName}</div>
+                            <span className="diary-weekly-date" style={{
+                                color: isToday
+                                    ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#333' : '#fff')
+                                    : (isSunday
+                                        ? '#e46262'
+                                        : (document.body.classList.contains('dark') ? '#ccc' : '#666')),
+                                position: 'relative',
+                                zIndex: isToday ? 2 : 1
+                            }}>{date.getDate()}</span>
+                        </div>
                         {isToday && (() => {
                             const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
                             return <div
@@ -569,8 +598,8 @@ function Diary({ user }) {
                             />;
                         })()}
                         {displayImg && (
-                            <div className={`diary-weekly-image-container ${isEmoji ? 'emoji' : ''}`}>
-                                <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''}`} />
+                            <div className={`diary-weekly-image-container ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`}>
+                                <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`} />
                             </div>
                         )}
                         {diaryPreview && (
@@ -643,15 +672,19 @@ function Diary({ user }) {
                                 <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
                             </>
                         ) : (
-                            <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>
-                                {(() => {
-                                    const { weekStart, weekEnd } = getCurrentWeek();
-                                    if (language === 'en') {
-                                        return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-                                    }
-                                    return `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
-                                })()}
-                            </span>
+                            <>
+                                <button onClick={handlePrevWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
+                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                                    {(() => {
+                                        const { weekStart, weekEnd } = getCurrentWeek();
+                                        if (language === 'en') {
+                                            return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                                        }
+                                        return `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+                                    })()}
+                                </span>
+                                <button onClick={handleNextWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                            </>
                         )}
                     </div>
                     <div className="diary-highlighter-color-picker" ref={paletteRef}>
@@ -737,26 +770,13 @@ function Diary({ user }) {
                     {/* 상단 문구 */}
                     <div className="diary-top-message">
                         {viewMode === 'week' ? (() => {
-                            const { weekStart } = getCurrentWeek();
-                            const weekLabel = language === 'en'
-                                ? `Week of ${weekStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
-                                : `${weekStart.getMonth() + 1}월 ${weekStart.getDate()}일 주`;
                             const weeklyEmotionData = getWeeklyEmotionBarData();
                             const emotionEntries = Object.entries(weeklyEmotionData.percent)
                                 .filter(([k]) => k !== 'empty')
                                 .sort((a, b) => b[1] - a[1]);
                             const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : 'empty';
-                            const keyMap = {
-                                love: 'diary_emotion_top_love',
-                                good: 'diary_emotion_top_good',
-                                normal: 'diary_emotion_top_normal',
-                                surprised: 'diary_emotion_top_surprised',
-                                angry: 'diary_emotion_top_angry',
-                                cry: 'diary_emotion_top_cry',
-                                empty: 'diary_emotion_top_empty'
-                            };
-                            const key = keyMap[mainEmotion] || keyMap.empty;
-                            return t(key, { month: weekLabel });
+                            const emotionLabel = emotionBarLabels[mainEmotion] || emotionBarLabels.empty;
+                            return language === 'en' ? `This week was ${emotionLabel.toLowerCase()}` : `이번주는 ${emotionLabel}`;
                         })() : getTopMessage()}
                     </div>
                     {/* 막대 */}
