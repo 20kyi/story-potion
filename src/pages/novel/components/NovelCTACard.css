@@ -9,12 +9,12 @@
     overflow: hidden;
     user-select: none;
     border-radius: 20px;
-    background-color: #FFFFFF;
+    background-color: #F5F6FA;
     border: 1px solid #E5E5E5;
 }
 
 body.dark .novel-cta-card:not(.diary-theme) {
-    background: linear-gradient(135deg, #2A2A2A 0%, #1F1F1F 100%);
+    background: linear-gradient(135deg, #323232 0%, #2A2A2A 100%);
     border: 1px solid #3A3A3A;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
