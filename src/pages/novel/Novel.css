@@ -1041,16 +1041,19 @@ body:not(.dark) .novel-current-week-diary-image-placeholder {
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.4;
 }
 
+/* 일기 최근 미리보기 */
 .novel-current-week-diary-preview {
     font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.4;
 }
