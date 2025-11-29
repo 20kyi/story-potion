@@ -628,3 +628,124 @@ body.dark .diary-preview-date {
 body.dark .diary-preview-close-button {
     color: #FFB3B3;
 }
+
+/* 뷰 모드 전환 토글 버튼 */
+.diary-view-mode-toggle {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 12px;
+}
+
+.diary-view-mode-toggle-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 24px;
+    border: 1.5px solid;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    min-width: 100px;
+    height: 32px;
+    overflow: hidden;
+}
+
+.diary-view-mode-toggle-button.diary-theme {
+    border-color: #8B6F47;
+}
+
+.diary-view-mode-toggle-button:not(.diary-theme) {
+    border-color: #e46262;
+}
+
+body.dark .diary-view-mode-toggle-button:not(.diary-theme) {
+    border-color: #FFB3B3;
+}
+
+.diary-toggle-option {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+
+.diary-toggle-option.active {
+    color: #fff;
+}
+
+.diary-toggle-option:not(.active) {
+    color: #888;
+}
+
+.diary-view-mode-toggle-button.diary-theme .diary-toggle-option:not(.active) {
+    color: #8B6F47;
+}
+
+.diary-view-mode-toggle-button:not(.diary-theme) .diary-toggle-option:not(.active) {
+    color: #e46262;
+}
+
+body.dark .diary-view-mode-toggle-button:not(.diary-theme) .diary-toggle-option:not(.active) {
+    color: #FFB3B3;
+}
+
+.diary-toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.diary-toggle-slider.month {
+    transform: translateX(0);
+}
+
+.diary-toggle-slider.week {
+    transform: translateX(100%);
+}
+
+.diary-toggle-slider.diary-theme {
+    background: rgba(139, 111, 71, 0.25);
+}
+
+.diary-toggle-slider:not(.diary-theme) {
+    background: rgba(228, 98, 98, 0.25);
+}
+
+body.dark .diary-toggle-slider:not(.diary-theme) {
+    background: rgba(255, 179, 179, 0.25);
+}
+
+.diary-view-mode-toggle-button:hover .diary-toggle-slider.diary-theme {
+    background: rgba(139, 111, 71, 0.35);
+}
+
+.diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme) {
+    background: rgba(228, 98, 98, 0.35);
+}
+
+body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme) {
+    background: rgba(255, 179, 179, 0.35);
+}
+
+/* 주간 뷰 스타일 */
+.diary-calendar.weekly-view .diary-date-cell {
+    width: calc(100% / 7);
+}
+
+.diary-calendar.weekly-view {
+    margin-bottom: 20px;
+}

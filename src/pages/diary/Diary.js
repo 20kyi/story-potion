@@ -44,6 +44,8 @@ function Diary({ user }) {
         totalWritten: 0,
         totalDays: 7
     });
+    // 뷰 모드 상태 (월간/주간)
+    const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
 
     // 형광펜 색상 상태
     const [selectedHighlighterColor, setSelectedHighlighterColor] = useState(() => {
@@ -151,6 +153,19 @@ function Diary({ user }) {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    };
+
+    // 이번 주의 시작일(일요일)과 종료일(토요일) 계산
+    const getCurrentWeek = () => {
+        const today = new Date();
+        const day = today.getDay(); // 0(일요일) ~ 6(토요일)
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - day); // 일요일로 이동
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        return { weekStart, weekEnd };
     };
 
     const hasDiaryOnDate = (date) => {
@@ -476,6 +491,108 @@ function Diary({ user }) {
         return weeks;
     };
 
+    // 주간 달력 렌더링
+    const renderWeeklyCalendar = () => {
+        const { weekStart, weekEnd } = getCurrentWeek();
+        const today = new Date();
+        const weekDays = [];
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + i);
+            const isToday = today.getDate() === date.getDate() &&
+                today.getMonth() === date.getMonth() &&
+                today.getFullYear() === date.getFullYear();
+            const future = isFutureDate(date);
+            const isSunday = date.getDay() === 0;
+
+            const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
+
+            // 우선순위: 사진 > 스티커 > 감정 이모티콘 > 날씨 이모티콘
+            let displayImg = null;
+            let isSticker = false;
+            if (diary) {
+                if (diary.imageUrls && diary.imageUrls.length > 0) {
+                    displayImg = diary.imageUrls[0];
+                } else if (diary.stickers && diary.stickers.length > 0) {
+                    displayImg = diary.stickers[0].src;
+                    isSticker = true;
+                } else if (diary.emotion) {
+                    displayImg = emotionImageMap[diary.emotion];
+                } else if (diary.weather) {
+                    displayImg = weatherImageMap[diary.weather];
+                }
+            }
+
+            weekDays.push(
+                <td key={`week-${i}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                    <button
+                        className={`diary-date-button ${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
+                        onClick={() => !future && handleDateClick(date)}
+                        disabled={future}
+                        onTouchStart={e => handleDateLongPressStart(date, e)}
+                        onTouchEnd={handleDateLongPressEnd}
+                        onTouchCancel={handleDateLongPressEnd}
+                    >
+                        <span style={{
+                            color: isToday
+                                ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#000' : '#fff')
+                                : (isSunday
+                                    ? '#e46262'
+                                    : (document.body.classList.contains('dark') ? '#fff' : '#000')),
+                            position: 'relative',
+                            zIndex: isToday ? 2 : 1,
+                            fontSize: '12px',
+                            fontWeight: 'normal'
+                        }}>{date.getDate()}</span>
+                        {isToday && (() => {
+                            const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                            return <div
+                                className="diary-today-circle"
+                                style={{
+                                    background: colorOption.color,
+                                    boxShadow: `0 1px 3px ${colorOption.shadowColor}, inset 0 0 8px ${colorOption.color.replace('0.6', '0.3')}`
+                                }}
+                            />;
+                        })()}
+                        <div className="diary-image-container">
+                            {displayImg && <img src={displayImg} alt="대표 이미지" className={`diary-display-image ${isSticker ? 'sticker' : ''}`} />}
+                        </div>
+                    </button>
+                </td>
+            );
+        }
+
+        return <tr>{weekDays}</tr>;
+    };
+
+    // 주간 뷰용 감정 데이터 계산
+    const getWeeklyEmotionBarData = () => {
+        const { weekStart, weekEnd } = getCurrentWeek();
+        const counts = { love: 0, good: 0, normal: 0, surprised: 0, angry: 0, cry: 0, empty: 0 };
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + i);
+            const dateString = formatDateToString(date);
+            const diary = diaries.find(d => d.date.startsWith(dateString));
+            if (diary && diary.emotion) {
+                counts[diary.emotion]++;
+            } else {
+                counts.empty++;
+            }
+        }
+        
+        const total = 7;
+        const percent = Object.fromEntries(
+            Object.entries(counts).map(([k, v]) => [
+                k,
+                total > 0 ? Math.round((v / total) * 100) : 0
+            ])
+        );
+        return { counts, percent, total };
+    };
+
     const { theme } = useTheme();
 
     return (
@@ -484,9 +601,40 @@ function Diary({ user }) {
             <div className="diary-content">
                 <div className="diary-calendar-header">
                     <div className="diary-month-section">
-                        <button onClick={handlePrevMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
-                        <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>{formatMonth(currentDate)}</span>
-                        <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                        {viewMode === 'month' ? (
+                            <>
+                                <button onClick={handlePrevMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
+                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>{formatMonth(currentDate)}</span>
+                                <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                            </>
+                        ) : (
+                            <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                                {(() => {
+                                    const { weekStart, weekEnd } = getCurrentWeek();
+                                    if (language === 'en') {
+                                        return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                                    }
+                                    return `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+                                })()}
+                            </span>
+                        )}
+                    </div>
+                    <div className="diary-view-mode-toggle">
+                        <button
+                            className={`diary-view-mode-toggle-button ${isDiaryTheme ? 'diary-theme' : ''}`}
+                            onClick={() => setViewMode(viewMode === 'month' ? 'week' : 'month')}
+                            aria-label={viewMode === 'month' ? (language === 'en' ? 'Switch to week view' : '주간 보기로 전환') : (language === 'en' ? 'Switch to month view' : '월간 보기로 전환')}
+                        >
+                            <span className={`diary-toggle-option ${viewMode === 'month' ? 'active' : ''}`}>
+                                {language === 'en' ? 'Month' : '월간'}
+                            </span>
+                            <span className={`diary-toggle-option ${viewMode === 'week' ? 'active' : ''}`}>
+                                {language === 'en' ? 'Week' : '주간'}
+                            </span>
+                            <span 
+                                className={`diary-toggle-slider ${viewMode === 'week' ? 'week' : 'month'} ${isDiaryTheme ? 'diary-theme' : ''}`}
+                            />
+                        </button>
                     </div>
                     <div className="diary-highlighter-color-picker" ref={paletteRef}>
                         {(() => {
@@ -527,7 +675,7 @@ function Diary({ user }) {
                     </div>
                     <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
-                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
                     <thead>
                         <tr>
                             {(language === 'en'
@@ -539,7 +687,7 @@ function Diary({ user }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {renderCalendar()}
+                        {viewMode === 'week' ? renderWeeklyCalendar() : renderCalendar()}
                     </tbody>
                 </table>
 
@@ -547,11 +695,32 @@ function Diary({ user }) {
                 <div className="diary-emotion-stats-container">
                     {/* 상단 문구 */}
                     <div className="diary-top-message">
-                        {getTopMessage()}
+                        {viewMode === 'week' ? (() => {
+                            const { weekStart } = getCurrentWeek();
+                            const weekLabel = language === 'en'
+                                ? `Week of ${weekStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
+                                : `${weekStart.getMonth() + 1}월 ${weekStart.getDate()}일 주`;
+                            const weeklyEmotionData = getWeeklyEmotionBarData();
+                            const emotionEntries = Object.entries(weeklyEmotionData.percent)
+                                .filter(([k]) => k !== 'empty')
+                                .sort((a, b) => b[1] - a[1]);
+                            const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : 'empty';
+                            const keyMap = {
+                                love: 'diary_emotion_top_love',
+                                good: 'diary_emotion_top_good',
+                                normal: 'diary_emotion_top_normal',
+                                surprised: 'diary_emotion_top_surprised',
+                                angry: 'diary_emotion_top_angry',
+                                cry: 'diary_emotion_top_cry',
+                                empty: 'diary_emotion_top_empty'
+                            };
+                            const key = keyMap[mainEmotion] || keyMap.empty;
+                            return t(key, { month: weekLabel });
+                        })() : getTopMessage()}
                     </div>
                     {/* 막대 */}
                     <div className="diary-emotion-bar">
-                        {Object.entries(emotionBarData.percent).map(([emotion, value], idx, arr) => {
+                        {Object.entries(viewMode === 'week' ? getWeeklyEmotionBarData().percent : emotionBarData.percent).map(([emotion, value], idx, arr) => {
                             if (isNaN(value) || value === 0) return null; // 0%는 렌더링하지 않음
                             const emotionKeys = Object.keys(emotionBarData.percent).filter(
                                 key => !isNaN(emotionBarData.percent[key]) && emotionBarData.percent[key] > 0
@@ -580,7 +749,7 @@ function Diary({ user }) {
                     </div>
                     {/* 퍼센트/개수 */}
                     <div className="diary-percent-container">
-                        {Object.entries(emotionBarData.percent).map(([emotion, value]) => {
+                        {Object.entries(viewMode === 'week' ? getWeeklyEmotionBarData().percent : emotionBarData.percent).map(([emotion, value]) => {
                             if (isNaN(value) || value === 0) return null;
                             return (
                                 <div
