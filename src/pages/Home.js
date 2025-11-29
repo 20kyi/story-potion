@@ -1510,7 +1510,7 @@ function Home({ user }) {
                 <DiaryPreviewTextContainer>
                   <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
                   <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent lineClamp={3}>{recentDiaries[0].content}</DiaryPreviewContent>
+                  <DiaryPreviewContent lineClamp={4}>{recentDiaries[0].content}</DiaryPreviewContent>
                 </DiaryPreviewTextContainer>
               </DiaryPreviewContainer>
             ) : (
