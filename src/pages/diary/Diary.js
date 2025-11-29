@@ -155,15 +155,17 @@ function Diary({ user }) {
         return `${year}-${month}-${day}`;
     };
 
-    // 이번 주의 시작일(일요일)과 종료일(토요일) 계산
+    // 이번 주의 시작일(월요일)과 종료일(일요일) 계산
     const getCurrentWeek = () => {
         const today = new Date();
         const day = today.getDay(); // 0(일요일) ~ 6(토요일)
         const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - day); // 일요일로 이동
+        // 월요일로 이동: 일요일(0)이면 -6, 그 외에는 -(day-1)
+        const daysToMonday = day === 0 ? -6 : 1 - day;
+        weekStart.setDate(today.getDate() + daysToMonday);
         weekStart.setHours(0, 0, 0, 0);
         const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setDate(weekStart.getDate() + 6); // 일요일
         weekEnd.setHours(23, 59, 59, 999);
         return { weekStart, weekEnd };
     };
@@ -491,26 +493,31 @@ function Diary({ user }) {
         return weeks;
     };
 
-    // 주간 달력 렌더링
+    // 주간 달력 렌더링 (2줄로: 빈칸, 월, 화, 수 / 목, 금, 토, 일)
     const renderWeeklyCalendar = () => {
-        const { weekStart, weekEnd } = getCurrentWeek();
+        const { weekStart, weekEnd } = getCurrentWeek(); // weekStart는 월요일
         const today = new Date();
-        const weekDays = [];
+        const firstRowDays = []; // 빈칸, 월, 화, 수
+        const secondRowDays = []; // 목, 금, 토, 일
         
-        for (let i = 0; i < 7; i++) {
+        const renderDayCell = (i) => {
             const date = new Date(weekStart);
-            date.setDate(weekStart.getDate() + i);
+            date.setDate(weekStart.getDate() + i); // i=0: 월요일, i=1: 화요일, ..., i=6: 일요일
             const isToday = today.getDate() === date.getDate() &&
                 today.getMonth() === date.getMonth() &&
                 today.getFullYear() === date.getFullYear();
             const future = isFutureDate(date);
             const isSunday = date.getDay() === 0;
+            const dayName = language === 'en' 
+                ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+                : ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
 
             // 우선순위: 사진 > 스티커 > 감정 이모티콘 > 날씨 이모티콘
             let displayImg = null;
             let isSticker = false;
+            let isEmoji = false; // 이모지(감정/날씨) 여부
             if (diary) {
                 if (diary.imageUrls && diary.imageUrls.length > 0) {
                     displayImg = diary.imageUrls[0];
@@ -519,13 +526,18 @@ function Diary({ user }) {
                     isSticker = true;
                 } else if (diary.emotion) {
                     displayImg = emotionImageMap[diary.emotion];
+                    isEmoji = true;
                 } else if (diary.weather) {
                     displayImg = weatherImageMap[diary.weather];
+                    isEmoji = true;
                 }
             }
 
-            weekDays.push(
-                <td key={`week-${i}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+            // 일기 내용 미리보기 (최대 3줄)
+            const diaryPreview = diary && diary.content ? diary.content.replace(/\n/g, ' ').substring(0, 50) + (diary.content.length > 50 ? '...' : '') : '';
+
+            return (
+                <td key={`week-${i}`} className={`diary-date-cell weekly-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
                     <button
                         className={`diary-date-button ${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
@@ -534,6 +546,7 @@ function Diary({ user }) {
                         onTouchEnd={handleDateLongPressEnd}
                         onTouchCancel={handleDateLongPressEnd}
                     >
+                        <div className="diary-weekly-day-name">{dayName}</div>
                         <span style={{
                             color: isToday
                                 ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#000' : '#fff')
@@ -542,8 +555,8 @@ function Diary({ user }) {
                                     : (document.body.classList.contains('dark') ? '#fff' : '#000')),
                             position: 'relative',
                             zIndex: isToday ? 2 : 1,
-                            fontSize: '12px',
-                            fontWeight: 'normal'
+                            fontSize: '14px',
+                            fontWeight: '600'
                         }}>{date.getDate()}</span>
                         {isToday && (() => {
                             const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
@@ -555,15 +568,37 @@ function Diary({ user }) {
                                 }}
                             />;
                         })()}
-                        <div className="diary-image-container">
-                            {displayImg && <img src={displayImg} alt="대표 이미지" className={`diary-display-image ${isSticker ? 'sticker' : ''}`} />}
-                        </div>
+                        {displayImg && (
+                            <div className={`diary-weekly-image-container ${isEmoji ? 'emoji' : ''}`}>
+                                <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''}`} />
+                            </div>
+                        )}
+                        {diaryPreview && (
+                            <div className="diary-weekly-preview">{diaryPreview}</div>
+                        )}
                     </button>
                 </td>
             );
+        };
+
+        // 첫 번째 줄: 빈칸, 월, 화, 수
+        // weekStart는 월요일이므로, i=0: 월, i=1: 화, i=2: 수
+        firstRowDays.push(<td key="empty" className={`diary-date-cell weekly-cell empty-cell ${isDiaryTheme ? 'diary-theme' : ''}`}></td>);
+        for (let i = 0; i < 3; i++) { // 월(0), 화(1), 수(2)
+            firstRowDays.push(renderDayCell(i));
         }
 
-        return <tr>{weekDays}</tr>;
+        // 두 번째 줄: 목, 금, 토, 일
+        for (let i = 3; i < 7; i++) { // 목(3), 금(4), 토(5), 일(6)
+            secondRowDays.push(renderDayCell(i));
+        }
+
+        return (
+            <>
+                <tr>{firstRowDays}</tr>
+                <tr>{secondRowDays}</tr>
+            </>
+        );
     };
 
     // 주간 뷰용 감정 데이터 계산
@@ -619,6 +654,65 @@ function Diary({ user }) {
                             </span>
                         )}
                     </div>
+                    <div className="diary-highlighter-color-picker" ref={paletteRef}>
+                            {(() => {
+                                const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                                const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
+                                return (
+                                    <>
+                                        {!isPaletteOpen && (
+                                            <button
+                                                className="diary-selected-color-button"
+                                                style={{ background: selectedColor.color }}
+                                                onClick={togglePalette}
+                                                title="형광펜 색상 선택"
+                                            />
+                                        )}
+                                        <div className={`diary-color-palette ${isPaletteOpen ? 'open' : 'closed'}`}>
+                                            {unselectedColors.map((colorOption) => (
+                                                <button
+                                                    key={colorOption.id}
+                                                    className="diary-color-button"
+                                                    style={{ background: colorOption.color }}
+                                                    onClick={() => handleHighlighterColorChange(colorOption.id)}
+                                                    title={`형광펜 색상: ${colorOption.id}`}
+                                                />
+                                            ))}
+                                            {isPaletteOpen && (
+                                                <button
+                                                    className="diary-color-button"
+                                                    style={{ background: selectedColor.color }}
+                                                    onClick={togglePalette}
+                                                    title={`현재 선택된 색상: ${selectedHighlighterColor}`}
+                                                />
+                                            )}
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
+                </div>
+                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
+                    {viewMode === 'month' && (
+                        <thead>
+                            <tr>
+                                {(language === 'en'
+                                    ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                    : ['일', '월', '화', '수', '목', '금', '토']
+                                ).map((day, index) => (
+                                    <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                    )}
+                    <tbody>
+                        {viewMode === 'week' ? renderWeeklyCalendar() : renderCalendar()}
+                    </tbody>
+                </table>
+
+                {/* 월간/주간 토글 버튼 */}
+                <div className="diary-view-mode-toggle-container">
                     <div className="diary-view-mode-toggle">
                         <button
                             className={`diary-view-mode-toggle-button ${isDiaryTheme ? 'diary-theme' : ''}`}
@@ -636,60 +730,7 @@ function Diary({ user }) {
                             />
                         </button>
                     </div>
-                    <div className="diary-highlighter-color-picker" ref={paletteRef}>
-                        {(() => {
-                            const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
-                            const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
-                            return (
-                                <>
-                                    {!isPaletteOpen && (
-                                        <button
-                                            className="diary-selected-color-button"
-                                            style={{ background: selectedColor.color }}
-                                            onClick={togglePalette}
-                                            title="형광펜 색상 선택"
-                                        />
-                                    )}
-                                    <div className={`diary-color-palette ${isPaletteOpen ? 'open' : 'closed'}`}>
-                                        {unselectedColors.map((colorOption) => (
-                                            <button
-                                                key={colorOption.id}
-                                                className="diary-color-button"
-                                                style={{ background: colorOption.color }}
-                                                onClick={() => handleHighlighterColorChange(colorOption.id)}
-                                                title={`형광펜 색상: ${colorOption.id}`}
-                                            />
-                                        ))}
-                                        {isPaletteOpen && (
-                                            <button
-                                                className="diary-color-button"
-                                                style={{ background: selectedColor.color }}
-                                                onClick={togglePalette}
-                                                title={`현재 선택된 색상: ${selectedHighlighterColor}`}
-                                            />
-                                        )}
-                                    </div>
-                                </>
-                            );
-                        })()}
-                    </div>
-                    <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
-                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
-                    <thead>
-                        <tr>
-                            {(language === 'en'
-                                ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                                : ['일', '월', '화', '수', '목', '금', '토']
-                            ).map((day, index) => (
-                                <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {viewMode === 'week' ? renderWeeklyCalendar() : renderCalendar()}
-                    </tbody>
-                </table>
 
                 {/* 감정 비율 막대(커스텀) */}
                 <div className="diary-emotion-stats-container">
