@@ -120,9 +120,13 @@ const DayHeader = styled.th`
   padding-bottom: 20px;
   text-align: center;
   color: ${props => props.$isSunday ? '#e46262' : '#888'};
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   position: relative;
+  
+  &, & * {
+    font-size: 12px !important;
+  }
   ${props => props.$isDiaryTheme && `
     &::after {
       content: '';
@@ -198,7 +202,12 @@ const DateButton = styled.button`
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 12px !important;
+  
+  & > span {
+    font-size: 12px !important;
+    font-weight: normal !important;
+  }
   
   &.today {
     color: #fff;
@@ -222,11 +231,11 @@ const DateButton = styled.button`
 /* 형광펜 */
 const TodayCircle = styled.div`
   position: absolute;
-  top: 35%; // 형광펜 높이
+  top: 22%; // 형광펜 높이
   left: 50%;
   transform: translate(-50%, -50%) rotate(-2deg);
   width: 40px;
-  height: 20px;
+  height: 18px;
   background: ${props => props.$color || 'rgba(255, 235, 59, 0.6)'};
   border-radius: 8px 10px 9px 8px;
   z-index: 1;
@@ -842,7 +851,7 @@ function Diary({ user }) {
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
-                        <span style={{ color: isSunday ? '#e46262' : '#ccc' }}>{prevMonthDay}</span>
+                        <span style={{ color: isSunday ? '#e46262' : '#ccc', fontSize: '12px', fontWeight: 'normal' }}>{prevMonthDay}</span>
                     </DateButton>
                 </DateCell>
             );
@@ -889,13 +898,15 @@ function Diary({ user }) {
                         onTouchCancel={handleDateLongPressEnd}
                     >
                         <span style={{
-                            color: isToday 
-                                ? '#fff' 
-                                : (isSunday 
-                                    ? '#e46262' 
+                            color: isToday
+                                ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#000' : '#fff')
+                                : (isSunday
+                                    ? '#e46262'
                                     : (document.body.classList.contains('dark') ? '#fff' : '#000')),
                             position: 'relative',
-                            zIndex: isToday ? 2 : 1
+                            zIndex: isToday ? 2 : 1,
+                            fontSize: '12px',
+                            fontWeight: 'normal'
                         }}>{day}</span>
                         {isToday && (() => {
                             const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
@@ -927,7 +938,7 @@ function Diary({ user }) {
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
-                        <span style={{ color: isSunday ? '#e46262' : '#ccc' }}>{nextMonthDay}</span>
+                        <span style={{ color: isSunday ? '#e46262' : '#ccc', fontSize: '12px', fontWeight: 'normal' }}>{nextMonthDay}</span>
                     </DateButton>
                 </DateCell>
             );
