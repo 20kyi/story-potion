@@ -477,12 +477,9 @@ function Diary({ user }) {
     };
 
     const { theme } = useTheme();
-    const containerStyle = {
-        background: isDiaryTheme ? '#faf8f3' : (theme?.background || '#fff')
-    };
 
     return (
-        <div className={`diary-container ${isDiaryTheme ? 'diary-theme' : ''}`} style={containerStyle}>
+        <div className={`diary-container ${isDiaryTheme ? 'diary-theme' : ''}`}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
             <div className="diary-content">
                 <div className="diary-calendar-header">
