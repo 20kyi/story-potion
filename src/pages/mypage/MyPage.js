@@ -1271,7 +1271,7 @@ function MyPage({ user }) {
 
             {/* 프리미엄 가입 버튼 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
             {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
-              <PremiumUpgradeCard $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/premium')}>
+              <PremiumUpgradeCard $isDiaryTheme={false} onClick={() => navigate('/my/premium')}>
                 <PremiumUpgradeContent>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '20px' }}>👑</span>

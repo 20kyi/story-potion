@@ -1540,10 +1540,10 @@ function Home({ user }) {
         {/* 프리미엄 배너 - 프리미엄이 아닌 사용자에게만 표시 (데이터 로드 완료 후) */}
         {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
           <PremiumBanner
-            $isDiaryTheme={isDiaryTheme}
+            $isDiaryTheme={false}
             onClick={() => navigate('/my/premium')}
-            whileHover={{ scale: isDiaryTheme ? 1 : 1.02 }}
-            whileTap={{ scale: isDiaryTheme ? 1 : 0.98 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             <PremiumBannerContent>
               <PremiumBannerLeft>
