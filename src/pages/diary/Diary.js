@@ -119,7 +119,7 @@ const DayHeader = styled.th`
   padding: 10px;
   padding-bottom: 20px;
   text-align: center;
-  color: #888;
+  color: ${props => props.$isSunday ? '#e46262' : '#888'};
   font-size: 16px;
   font-weight: 500;
   position: relative;
@@ -833,6 +833,7 @@ function Diary({ user }) {
         for (let i = 0; i < firstDay; i++) {
             const prevMonthDay = lastDayPrevMonth - firstDay + i + 1;
             const date = new Date(year, month - 1, prevMonthDay);
+            const isSunday = date.getDay() === 0;
 
             days.push(
                 <DateCell key={`prev-${prevMonthDay}`} $isDiaryTheme={isDiaryTheme}>
@@ -841,7 +842,7 @@ function Diary({ user }) {
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
-                        <span style={{ color: '#ccc' }}>{prevMonthDay}</span>
+                        <span style={{ color: isSunday ? '#e46262' : '#ccc' }}>{prevMonthDay}</span>
                     </DateButton>
                 </DateCell>
             );
@@ -853,6 +854,7 @@ function Diary({ user }) {
                 today.getMonth() === month &&
                 today.getFullYear() === year;
             const future = isFutureDate(date);
+            const isSunday = date.getDay() === 0;
 
             const diary = hasDiaryOnDate(date) ? diaries.find(d => d.date.startsWith(formatDateToString(date))) : null;
 
@@ -887,7 +889,11 @@ function Diary({ user }) {
                         onTouchCancel={handleDateLongPressEnd}
                     >
                         <span style={{
-                            color: document.body.classList.contains('dark') ? '#fff' : '#000',
+                            color: isToday 
+                                ? '#fff' 
+                                : (isSunday 
+                                    ? '#e46262' 
+                                    : (document.body.classList.contains('dark') ? '#fff' : '#000')),
                             position: 'relative',
                             zIndex: isToday ? 2 : 1
                         }}>{day}</span>
@@ -912,6 +918,7 @@ function Diary({ user }) {
         let nextMonthDay = 1;
         while (days.length < 7) {
             const date = new Date(year, month + 1, nextMonthDay);
+            const isSunday = date.getDay() === 0;
 
             days.push(
                 <DateCell key={`next-${nextMonthDay}`} $isDiaryTheme={isDiaryTheme}>
@@ -920,7 +927,7 @@ function Diary({ user }) {
                         onClick={() => handleDateClick(date)}
                         disabled
                     >
-                        <span style={{ color: '#ccc' }}>{nextMonthDay}</span>
+                        <span style={{ color: isSunday ? '#e46262' : '#ccc' }}>{nextMonthDay}</span>
                     </DateButton>
                 </DateCell>
             );
@@ -988,8 +995,8 @@ function Diary({ user }) {
                             {(language === 'en'
                                 ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                                 : ['일', '월', '화', '수', '목', '금', '토']
-                            ).map(day => (
-                                <DayHeader key={day} $isDiaryTheme={isDiaryTheme}>{day}</DayHeader>
+                            ).map((day, index) => (
+                                <DayHeader key={day} $isDiaryTheme={isDiaryTheme} $isSunday={index === 0}>{day}</DayHeader>
                             ))}
                         </tr>
                     </thead>
