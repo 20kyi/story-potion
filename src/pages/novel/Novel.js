@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createNovelUrl } from '../../utils/novelUtils';
-import styled from 'styled-components';
 import Navigation from '../../components/Navigation';
 import Header from '../../components/Header';
 import { db } from '../../firebase';
@@ -12,1103 +11,91 @@ import { useTheme } from '../../ThemeContext';
 import GridIcon from '../../components/icons/GridIcon';
 import ListIcon from '../../components/icons/ListIcon';
 import { inAppPurchaseService } from '../../utils/inAppPurchase';
+import './Novel.css';
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-//   min-height: 100vh;
-  background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#faf8f3' : theme.background};
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#5C4B37' : theme.text};
-  padding: 20px;
-//   padding-top: 40px;
-//   padding-bottom: 100px;
-  margin-top: 60px;
-  margin-bottom: 80px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 600px;
-  overflow-y: auto;
-  position: relative;
-  -webkit-overflow-scrolling: touch;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  ${props => props.$isDiaryTheme && `
-    background-image: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      );
-  `}
-`;
-
-
-const GenreGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  margin-bottom: 20px;
-  gap: 0;
-  max-width: 450px;
-  margin-left: auto;
-  margin-right: auto;
-`;
-
-const GenreCard = styled.div`
-  width: 100%;
-  aspect-ratio: 1;
-  cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-  }
-`;
-
-const MonthSelector = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-`;
-
-const MonthButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  &:hover {
-    transform: scale(1.1);
-  }
-`;
-
-const CurrentMonth = styled.h2`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: 24px;
-  font-family: inherit;
-  font-weight: 600;
-  margin: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const DatePickerModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const DatePickerContent = styled.div`
-  background-color: white;
-  padding: 20px;
-  border-radius: 15px;
-  width: 300px;
-  max-width: 90%;
-`;
-
-const DatePickerHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const DatePickerTitle = styled.h3`
-  color: #cb6565;
-  margin: 0;
-  font-size: 20px;
-`;
-
-const DatePickerClose = styled.button`
-  background: none;
-  border: none;
-  color: #cb6565;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 8px;
-`;
-
-const DatePickerGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-
-const DatePickerButton = styled.button`
-  background-color: ${props => props.selected ? '#cb6565' : '#fff2f2'};
-  color: ${props => props.selected ? 'white' : '#cb6565'};
-  border: 1px solid #fdd2d2;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  &:hover {
-    background-color: ${props => props.selected ? '#cb6565' : '#fdd2d2'};
-  }
-`;
-
-const NovelListModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const NovelListContent = styled.div`
-  background-color: ${({ theme }) => theme.card || 'white'};
-  padding: 20px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 400px;
-  max-height: 70vh;
-  overflow-y: auto;
-`;
-
-const NovelListHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const NovelListTitle = styled.h3`
-  color: #cb6565;
-  margin: 0;
-  font-size: 20px;
-`;
-
-const NovelListClose = styled.button`
-  background: none;
-  border: none;
-  color: #cb6565;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 8px;
-`;
-
-const NovelListItem = styled.div`
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 10px;
-  background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9'};
-  &:hover {
-    background-color: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f0f0f0'};
-  }
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const NovelListCover = styled.img`
-  width: 60px;
-  height: 90px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-`;
-
-const NovelListInfo = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
-`;
-
-const NovelListNovelTitle = styled.div`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const NovelListGenre = styled.div`
-  font-size: 14px;
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-weight: 500;
-`;
-
-const WeeklySection = styled.div`
-  margin-top: 20px;
-  overflow: hidden;
-`;
-
-const WeeklySectionTitle = styled.h2`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: 24px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  span {
-    font-size: 20px;
-    opacity: 0.8;
-  }
-`;
-
-const WeeklyGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  padding: 10px 0;
-  width: 100%;
-`;
-
-const WeeklyList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 10px 0;
-  width: 100%;
-`;
-
-const ViewToggleButton = styled.button`
-  background: ${({ active, theme }) => active
-        ? (theme.primary || '#cb6565')
-        : 'transparent'};
-  border: 1px solid ${({ active, theme }) => active
-        ? (theme.primary || '#cb6565')
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')};
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  
-  &:hover {
-    background: ${({ active, theme }) => active
-        ? (theme.primary || '#cb6565')
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f5f5')};
-    border-color: ${({ active, theme }) => active
-        ? (theme.primary || '#cb6565')
-        : (theme.primary || '#cb6565')};
-  }
-  
-  svg {
-    stroke: ${({ active, theme }) => active
-        ? '#fff'
-        : (theme.mode === 'dark' ? 'rgba(255,255,255,0.7)' : '#888')};
-    transition: stroke 0.2s;
-  }
-  
-  &:hover svg {
-    stroke: ${({ active, theme }) => active
-        ? '#fff'
-        : (theme.primary || '#cb6565')};
-  }
-`;
-
-const ViewToggleContainer = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  justify-content: flex-end;
-`;
-
-const WeeklyCard = styled.div`
-  background-color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#fffef9' : theme.progressCard};
-  border-radius: ${({ $isDiaryTheme }) =>
-        $isDiaryTheme ? '14px 18px 16px 15px' : '15px'};
-  border: ${({ $isDiaryTheme }) =>
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
-  box-shadow: ${({ $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-            : 'none'};
-  padding: ${({ isListMode }) => isListMode ? '16px' : '20px 16px'};
-  transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'none';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg)`;
-    }};
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-  
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
-    &::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: -1px;
-      right: -1px;
-      bottom: -1px;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
-      z-index: -1;
-      opacity: 0.3;
+// Helper functions for dynamic styles
+const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted) => {
+    const themeMode = theme?.mode || 'light';
+    if (!hasDiary) {
+        if (barColor === 'fill') return themeMode === 'dark' ? '#4A4A4A' : '#E5E5E5';
+        return themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5';
     }
-  `}
-  
-  &:hover {
-    transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'none';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg) translateY(-2px)`;
-    }};
-    box-shadow: ${({ $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-            : 'none'};
-  }
-  flex: 0 0 240px;
-  color: ${({ theme }) => theme.cardText};
-  min-width: 70px;
-  box-sizing: border-box;
-  ${({ isListMode }) => isListMode ? `
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-  ` : ''}
-`;
-
-
-const WeekTitle = styled.h3`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: ${({ isListMode }) => isListMode ? '16px' : '18px'};
-  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  min-height: ${({ isListMode }) => isListMode ? '24px' : '32px'};
-  line-height: 1.2;
-  flex-shrink: 0;
-  span {
-    display: flex;
-    align-items: flex-start;
-    line-height: 1.2;
-  }
-`;
-// 일기 진행도 UI 컴포넌트
-const DateRange = styled.p`
-  color: #666;
-  font-size: ${({ isListMode }) => isListMode ? '10px' : '11px'};
-  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  display: flex;
-  gap: 4px;
-  margin: ${({ isListMode }) => isListMode ? '0' : '0 0 10px 0'};
-  justify-content: space-between;
-  flex-shrink: ${({ isListMode }) => isListMode ? '0' : '1'};
-  min-width: ${({ isListMode }) => isListMode ? '140px' : 'auto'};
-`;
-
-const DayIndicator = styled.div`
-  flex: 1;
-  height: ${({ isListMode }) => isListMode ? '12px' : '16px'};
-  border-radius: ${({ isListMode }) => isListMode ? '2px' : '3px'};
-  will-change: background;
-  background: ${({ hasDiary, barColor, theme, isCompleted }) => {
-        // theme이 없을 때를 대비한 안전한 기본값
-        const themeMode = theme?.mode || 'light';
-
-        if (!hasDiary) {
-            // 일기가 없으면 연한 회색
-            if (barColor === 'fill') return themeMode === 'dark' ? '#4A4A4A' : '#E5E5E5';
-            return themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5';
-        }
-        // 모든 일기를 완성한 경우 상단 CTA와 동일한 그라데이션 색상 적용
-        if (isCompleted && hasDiary) {
-            return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
-        }
-        // 일기가 있으면 버튼 텍스트 색상과 일치
-        if (barColor === 'fill') return themeMode === 'dark' ? '#BFBFBF' : '#868E96'; // 일기 채우기 버튼 텍스트 색상
-        if (barColor === 'create') return themeMode === 'dark' ? '#FFB3B3' : '#e07e7e'; // AI 소설 쓰기 버튼 텍스트 색상
-        if (barColor === 'free') return '#e4a30d'; // 무료 버튼 텍스트 색상
-        if (barColor === 'view') {
-            // 소설 보기 버튼 배경 색상 - theme이 없어도 일관된 색상 사용
-            const primaryColor = theme?.primary;
-            if (primaryColor) return primaryColor;
-            // theme이 없을 때는 기본 분홍색 사용
-            return '#cb6565';
-        }
-        // barColor가 없을 때는 일기가 있는 경우에만 기본 색상 사용
-        return hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#e07e7e') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
-    }};
-  transition: none;
-`;
-
-const CreateButton = styled.button`
-  width: ${({ isListMode }) => isListMode ? '130px' : '100%'};
-  min-width: ${({ isListMode }) => isListMode ? '130px' : 'auto'};
-  margin: 0;
-  margin-top: ${({ isListMode }) => isListMode ? '0' : '2px'};
-  padding: ${({ isListMode }) => isListMode ? '6px 12px' : '8px'};
-  font-size: ${({ isListMode }) => isListMode ? '11px' : '12px'};
-  white-space: ${({ isListMode }) => isListMode ? 'nowrap' : 'nowrap'};
-  background: ${({ children, completed, theme, isFree, disabled }) => {
-        if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
-        if (isFree) return 'transparent';
-        // children을 문자열로 변환하여 PREMIUM 체크
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)'; // 홈화면 프리미엄 배너 색상 팔레트
-        if (children === '일기 채우기') return theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA'; // 다크모드에서는 어두운 회색
-        if (childrenStr.includes('다른 장르')) return 'transparent'; // 배경색 없음
-        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5'; // 다크모드에서는 어두운 회색
-        if (children === '소설 보기') return theme.primary; // 분홍
-        return theme.primary;
-    }};
-  color: ${({ children, completed, theme, isFree, disabled }) => {
-        if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
-        if (isFree) return '#e4a30d';
-        // children을 문자열로 변환하여 PREMIUM 체크
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상
-        if (children === '일기 채우기') return theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        if (childrenStr.includes('다른 장르')) return '#C99A9A'; // 테두리와 동일한 색상
-        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-        if (children === '소설 보기') return '#fff';
-        return '#fff';
-    }};
-  border: ${({ children, theme, isFree, disabled }) => {
-        if (disabled) return theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
-        if (isFree) return '2px solid #e4a30d';
-        // children을 문자열로 변환하여 PREMIUM 체크
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        if (childrenStr.includes('PREMIUM')) return 'none'; // 프리미엄 버튼 테두리 없음
-        if (children === '일기 채우기') return theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-        if (childrenStr.includes('다른 장르')) return '2px solid #C99A9A'; // 테두리 색상
-        if (children === 'AI 소설 쓰기' || children === '완성 ✨') return theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
-        if (children === '소설 보기') return 'none';
-        return 'none';
-    }};
-  border-radius: 10px;
-  padding: 8px;
-  font-size: ${({ isFree }) => isFree ? '12px' : '12px'};
-  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
-  opacity: ${({ disabled }) => disabled ? 0.6 : 1};
-  transition: ${({ children }) => {
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        // "다른 장르" 버튼은 background transition 제외
-        if (childrenStr.includes('다른 장르')) return 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease';
-        return 'all 0.2s ease';
-    }};
-  font-weight: 700;
-  font-family: inherit;
-  white-space: nowrap;
-  overflow: visible;
-  box-shadow: ${({ children }) =>
-        (children === '소설 보기') ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'};
-  &:hover {
-    background: ${({ children, theme, isFree, disabled }) => {
-        if (disabled) return theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
-        if (isFree) return 'rgba(228, 163, 13, 0.1)';
-        // children을 문자열로 변환하여 PREMIUM 체크
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        if (childrenStr.includes('PREMIUM')) {
-            // hover 시 약간 더 밝은 그라데이션
-            if (theme.mode === 'dark') {
-                return 'linear-gradient(135deg, #5A4A3A 0%, #4A3A2F 100%)'; // 다크모드 hover
-            }
-            return 'linear-gradient(135deg, #ffe8af 0%, #ffcc81 100%)'; // 라이트모드 hover (약간 더 밝게)
-        }
-        if (children === '일기 채우기') return theme.mode === 'dark' ? '#4A4A4A' : '#E9ECEF';
-        if (childrenStr.includes('다른 장르')) return 'transparent'; // hover 시에도 배경색 없음
-        if (children === 'AI 소설 쓰기') return theme.mode === 'dark' ? '#4A4A4A' : '#C3CAD6'; // hover 저채도 블루
-        if (children === '소설 보기') return theme.secondary;
-        return theme.secondary;
-    }};
-    color: ${({ children, theme, isFree, disabled }) => {
-        if (disabled) return theme.mode === 'dark' ? '#666666' : '#999999';
-        if (isFree) return '#e4a30d';
-        // children을 문자열로 변환하여 PREMIUM 체크
-        const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
-        if (childrenStr.includes('PREMIUM')) return theme.premiumBannerText || '#8B4513'; // 홈화면 프리미엄 배너 텍스트 색상 (hover 시에도 동일)
-        if (children === '일기 채우기' || children === 'AI 소설 쓰기') return theme.mode === 'dark' ? '#FFB3B3' : '#fff';
-        if (childrenStr.includes('다른 장르')) return '#C99A9A'; // hover 시에도 텍스트 색상 유지
-        return '#fff';
-    }};
-    opacity: ${({ disabled }) => disabled ? 0.6 : 0.96};
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 8px;
-  width: 100%;
-`;
-
-
-const CreateOptionModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-`;
-
-const CreateOptionContent = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
-  border-radius: 20px;
-  padding: 24px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  opacity: 1;
-`;
-
-const CreateOptionTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
-  margin: 0 0 16px 0;
-  text-align: center;
-`;
-
-const CreateOptionButton = styled.button`
-  width: 100%;
-  padding: 16px;
-  margin-bottom: 4px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: ${({ isFree, theme }) =>
-        isFree
-            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%)'
-            : 'linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%)'};
-  color: ${({ isFree }) => isFree ? '#e4a30d' : '#e46262'};
-  border: ${({ isFree }) => isFree ? '2px solid #e4a30d' : '2px solid #e46262'};
-  box-shadow: none;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ isFree }) =>
-        isFree
-            ? '0 4px 12px rgba(0,0,0,0.15)'
-            : '0 4px 12px rgba(228, 98, 98, 0.2)'};
-  }
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const CreateOptionDesc = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#666'};
-  margin-bottom: 8px;
-  text-align: center;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: ${({ theme }) => theme.text};
-  cursor: pointer;
-  padding: 4px 8px;
-`;
-
-const AddButton = styled.button`
-  background-color: transparent;
-  color: ${({ theme, disabled }) => disabled ? theme.mode === 'dark' ? '#666666' : '#999999' : theme.primary};
-  border: none;
-  padding: 0;
-  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  opacity: ${({ disabled }) => disabled ? 0.5 : 1};
-  &:hover {
-    color: ${({ theme, disabled }) => disabled ? theme.mode === 'dark' ? '#666666' : '#999999' : theme.secondary};
-    opacity: ${({ disabled }) => disabled ? 0.5 : 0.96};
-    background-color: ${({ theme, disabled }) => disabled ? 'transparent' : theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
-  }
-  &:active {
-    transform: ${({ disabled }) => disabled ? 'none' : 'scale(0.95)'};
-  }
-  
-  font-size: 18px;
-  line-height: 1;
-`;
-
-// CTA 카드 스타일
-const NovelCTACard = styled.div`
-  background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#fffef9' : (theme.novelProgressCardBg || '#FFFFFF')};
-  border: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? '2px solid rgba(139, 111, 71, 0.25)'
-            : `1px solid ${theme.novelProgressCardBorder || '#E5E5E5'}`};
-  border-radius: ${({ $isDiaryTheme }) =>
-        $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
-  padding: 20px;
-  margin-bottom: 24px;
-  cursor: pointer;
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)';
-    }};
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
-  
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
-    &::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: -1px;
-      right: -1px;
-      bottom: -1px;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%);
-      z-index: -1;
-      opacity: 0.3;
+    if (isCompleted && hasDiary) {
+        return 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
     }
-  `}
-  
-  &:hover {
-    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
-    box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.12)';
-    }};
-  }
-  
-  &:active {
-    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'translateY(0)'};
-  }
-`;
+    if (barColor === 'fill') return themeMode === 'dark' ? '#BFBFBF' : '#868E96';
+    if (barColor === 'create') return themeMode === 'dark' ? '#FFB3B3' : '#e07e7e';
+    if (barColor === 'free') return '#e4a30d';
+    if (barColor === 'view') {
+        const primaryColor = theme?.primary;
+        if (primaryColor) return primaryColor;
+        return '#cb6565';
+    }
+    return hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#e07e7e') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
+};
 
+const getCreateButtonStyle = (children, completed, theme, isFree, disabled, isListMode) => {
+    const childrenStr = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : String(children || ''));
+    const style = {
+        width: isListMode ? '130px' : '100%',
+        minWidth: isListMode ? '130px' : 'auto',
+        margin: 0,
+        marginTop: isListMode ? '0' : '2px',
+        padding: isListMode ? '6px 12px' : '8px',
+        fontSize: isListMode ? '11px' : '12px',
+        whiteSpace: 'nowrap',
+        borderRadius: '10px',
+        fontWeight: 700,
+        fontFamily: 'inherit',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.6 : 1,
+        transition: childrenStr.includes('다른 장르') ? 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease' : 'all 0.2s ease',
+        overflow: 'visible',
+        boxShadow: children === '소설 보기' ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'
+    };
 
+    if (disabled) {
+        style.background = theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
+        style.color = theme.mode === 'dark' ? '#666666' : '#999999';
+        style.border = theme.mode === 'dark' ? '2px solid #3A3A3A' : '2px solid #CCCCCC';
+    } else if (isFree) {
+        style.background = 'transparent';
+        style.color = '#e4a30d';
+        style.border = '2px solid #e4a30d';
+    } else if (childrenStr.includes('PREMIUM')) {
+        style.background = theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)';
+        style.color = theme.premiumBannerText || '#8B4513';
+        style.border = 'none';
+    } else if (children === '일기 채우기') {
+        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA';
+        style.color = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
+        style.border = theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
+    } else if (childrenStr.includes('다른 장르')) {
+        style.background = 'transparent';
+        style.color = '#C99A9A';
+        style.border = '2px solid #C99A9A';
+    } else if (children === 'AI 소설 쓰기' || children === '완성 ✨') {
+        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5';
+        style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        style.border = theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
+    } else if (children === '소설 보기') {
+        style.background = theme.primary;
+        style.color = '#fff';
+        style.border = 'none';
+    } else {
+        style.background = theme.primary;
+        style.color = '#fff';
+        style.border = 'none';
+    }
 
-const NovelCTAContent = styled.div`
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#5C4B37' : theme.text};
-`;
+    return style;
+};
 
-const NovelCTAIcon = styled.div`
-  font-size: 40px;
-  flex-shrink: 0;
-`;
-
-const NovelCTATop = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const NovelCTAIconWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-`;
-
-const NovelCTAText = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-const NovelCTATitle = styled.div`
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  line-height: 1.3;
-  word-break: keep-all;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
-  
-  @media (max-width: 480px) {
-    font-size: 18px;
-  }
-`;
-
-const NovelCTADesc = styled.div`
-  font-size: 14px;
-  opacity: 0.8;
-  line-height: 1.4;
-  word-break: keep-all;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#5C4B37' : (theme.subText || '#888')};
-  
-  @media (max-width: 480px) {
-    font-size: 13px;
-  }
-`;
-
-const NovelCTAArrow = styled.div`
-  font-size: 24px;
-  font-weight: 700;
-  flex-shrink: 0;
-  opacity: 0.7;
-  transition: transform 0.2s;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
-  
-  ${NovelCTACard}:hover & {
-    transform: translateX(4px);
-    opacity: 1;
-  }
-`;
-
-const NovelCTAProgress = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const NovelCTAProgressText = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-`;
-
-const NovelCTAProgressBar = styled.div`
-  width: 100%;
-  height: 16px;
-  background: ${({ theme }) => theme.novelProgressBarBg || '#E5E5E5'};
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-`;
-
-const NovelCTAProgressFill = styled.div`
-  height: 100%;
-  background: ${({ theme }) => theme.novelProgressBarFill || 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'};
-  border-radius: 8px;
-  transition: width 0.3s ease;
-  width: ${({ progress }) => progress}%;
-`;
-
-// 이번주 일기 목록 모달 스타일
-const CurrentWeekDiaryModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-`;
-
-const CurrentWeekDiaryContent = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
-  border-radius: 20px;
-  padding: 24px;
-  max-width: 500px;
-  width: 100%;
-  max-height: 80vh;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  display: flex;
-  flex-direction: column;
-`;
-
-const CurrentWeekDiaryHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const CurrentWeekDiaryTitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
-  margin: 0;
-`;
-
-const CurrentWeekDiaryClose = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.text};
-  font-size: 28px;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const CurrentWeekDiaryList = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const CurrentWeekDiaryItem = styled.div`
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#3A3A3A' : '#F5F5F5'};
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.mode === 'dark' ? '#4A4A4A' : '#EEEEEE'};
-    transform: translateY(-2px);
-  }
-`;
-
-const CurrentWeekDiaryImage = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-`;
-
-const CurrentWeekDiaryImagePlaceholder = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#4A4A4A' : '#E5E5E5'};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  flex-shrink: 0;
-`;
-
-const CurrentWeekDiaryInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const CurrentWeekDiaryDate = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  font-weight: 500;
-`;
-
-const CurrentWeekDiaryTitleText = styled.div`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.4;
-`;
-
-const CurrentWeekDiaryPreview = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.4;
-`;
-
-const CurrentWeekDiaryEmpty = styled.div`
-  text-align: center;
-  padding: 40px 20px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  font-size: 14px;
-`;
-
-// 내 소설/서재 섹션 스타일
-const LibrarySection = styled.div`
-  margin-bottom: 30px;
-`;
-
-const SectionHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-`;
-
-const SectionTitle = styled.h2`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const MoreLink = styled.button`
-  background: none;
-  border: none;
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#cb6565'};
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 4px 8px;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const NovelRow = styled.div`
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 8px 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const NovelBox = styled.div`
-  width: calc((100% - 24px) / 3);
-  min-width: calc((100% - 24px) / 3);
-  max-width: calc((100% - 24px) / 3);
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: transform 0.2s;
-  &:hover {
-    transform: translateY(-4px);
-  }
-`;
-
-const NovelCoverImage = styled.img`
-  width: 100%;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  margin-bottom: 8px;
-`;
-
-const NovelTitle = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.3;
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 40px 20px;
-  color: ${({ theme }) => theme.subText || '#888'};
-  font-size: 14px;
-`;
-
-const Divider = styled.div`
-  height: 1px;
-  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
-  margin: 30px 0;
-`;
+const getWeeklyCardTransform = (isDiaryTheme, index) => {
+    if (!isDiaryTheme) return 'none';
+    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+};
 
 const Novel = ({ user }) => {
     const navigate = useNavigate();
@@ -2112,163 +1099,217 @@ const Novel = ({ user }) => {
     };
 
     return (
-        <Container $isDiaryTheme={isDiaryTheme}>
+        <div
+            className={`novel-container ${isDiaryTheme ? 'diary-theme' : ''}`}
+            style={{
+                background: isDiaryTheme ? '#faf8f3' : theme.background,
+                color: isDiaryTheme ? '#5C4B37' : theme.text
+            }}
+        >
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('novel_title')} />
             {/* <Title>Novel</Title> */}
 
             {/* 소설 만들기 CTA */}
-            <NovelCTACard $isDiaryTheme={isDiaryTheme} onClick={openCurrentWeekDiaryModal}>
-                <NovelCTAContent $isDiaryTheme={isDiaryTheme}>
-                    <NovelCTAProgress>
-                        <NovelCTAProgressText>
+            <div
+                className={`novel-cta-card ${isDiaryTheme ? 'diary-theme' : ''}`}
+                onClick={openCurrentWeekDiaryModal}
+                style={{
+                    background: isDiaryTheme ? '#fffef9' : (theme.novelProgressCardBg || '#FFFFFF'),
+                    border: isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.25)' : `1px solid ${theme.novelProgressCardBorder || '#E5E5E5'}`,
+                    transform: isDiaryTheme ? 'rotate(-0.3deg)' : 'none'
+                }}
+            >
+                <div
+                    className={`novel-cta-content ${isDiaryTheme ? 'diary-theme' : ''}`}
+                    style={{
+                        color: isDiaryTheme ? '#5C4B37' : theme.text
+                    }}
+                >
+                    <div className="novel-cta-progress">
+                        <div className="novel-cta-progress-text" style={{ color: theme.subText || '#888' }}>
                             <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
                             <span>{(() => {
                                 const { count, total } = getCurrentWeekProgress();
                                 return `${count}/${total}`;
                             })()}</span>
-                        </NovelCTAProgressText>
-                        <NovelCTAProgressBar>
-                            <NovelCTAProgressFill progress={getCurrentWeekProgress().progress} />
-                        </NovelCTAProgressBar>
-                    </NovelCTAProgress>
-                </NovelCTAContent>
-            </NovelCTACard>
+                        </div>
+                        <div className="novel-cta-progress-bar" style={{ background: theme.novelProgressBarBg || '#E5E5E5' }}>
+                            <div
+                                className="novel-cta-progress-fill"
+                                style={{
+                                    width: `${getCurrentWeekProgress().progress}%`,
+                                    background: theme.novelProgressBarFill || 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)'
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* 내 소설 섹션 */}
-            <LibrarySection>
-                <SectionHeader>
-                    <SectionTitle $isDiaryTheme={isDiaryTheme}>📚 {t('home_my_novel') || '내 소설'}</SectionTitle>
+            <div className="novel-library-section">
+                <div className="novel-section-header">
+                    <h2 className={`novel-section-title ${isDiaryTheme ? 'diary-theme' : ''}`}>📚 {t('home_my_novel') || '내 소설'}</h2>
                     {myNovels.length > 0 && (
-                        <MoreLink $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/completed-novels')}>
+                        <button
+                            className={`novel-more-link ${isDiaryTheme ? 'diary-theme' : ''}`}
+                            onClick={() => navigate('/my/completed-novels')}
+                        >
                             더보기 →
-                        </MoreLink>
+                        </button>
                     )}
-                </SectionHeader>
+                </div>
                 {myNovels.length > 0 ? (
-                    <NovelRow>
+                    <div className="novel-row">
                         {myNovels.map(novel => (
-                            <NovelBox
+                            <div
                                 key={novel.id}
+                                className="novel-box"
                                 onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`)}
                             >
-                                <NovelCoverImage
+                                <img
+                                    className="novel-cover-image"
                                     src={novel.imageUrl || '/novel_banner/default.png'}
                                     alt={novel.title}
                                 />
-                                <NovelTitle>{novel.title}</NovelTitle>
-                            </NovelBox>
+                                <div className="novel-title" style={{ color: theme.text }}>{novel.title}</div>
+                            </div>
                         ))}
-                    </NovelRow>
+                    </div>
                 ) : (
-                    <EmptyState>
+                    <div className="novel-empty-state" style={{ color: theme.subText || '#888' }}>
                         아직 작성한 소설이 없습니다.<br />
                         일기를 작성하고 소설을 만들어보세요!
-                    </EmptyState>
+                    </div>
                 )}
-            </LibrarySection>
+            </div>
 
             {/* 내 서재 섹션 */}
-            <LibrarySection>
-                <SectionHeader>
-                    <SectionTitle $isDiaryTheme={isDiaryTheme}>🛍️ {t('home_purchased_novel') || '내 서재'}</SectionTitle>
+            <div className="novel-library-section">
+                <div className="novel-section-header">
+                    <h2 className={`novel-section-title ${isDiaryTheme ? 'diary-theme' : ''}`}>🛍️ {t('home_purchased_novel') || '내 서재'}</h2>
                     {purchasedNovels.length > 0 && (
-                        <MoreLink $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/purchased-novels')}>
+                        <button
+                            className={`novel-more-link ${isDiaryTheme ? 'diary-theme' : ''}`}
+                            onClick={() => navigate('/purchased-novels')}
+                        >
                             더보기 →
-                        </MoreLink>
+                        </button>
                     )}
-                </SectionHeader>
+                </div>
                 {purchasedNovels.length > 0 ? (
-                    <NovelRow>
+                    <div className="novel-row">
                         {purchasedNovels.map(novel => (
-                            <NovelBox
+                            <div
                                 key={novel.id}
+                                className="novel-box"
                                 onClick={() => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
                                     state: { returnPath: '/novel' }
                                 })}
                             >
-                                <NovelCoverImage
+                                <img
+                                    className="novel-cover-image"
                                     src={novel.imageUrl || '/novel_banner/default.png'}
                                     alt={novel.title}
                                 />
-                                <NovelTitle>{novel.title}</NovelTitle>
-                            </NovelBox>
+                                <div className="novel-title" style={{ color: theme.text }}>{novel.title}</div>
+                            </div>
                         ))}
-                    </NovelRow>
+                    </div>
                 ) : (
-                    <EmptyState>
+                    <div className="novel-empty-state" style={{ color: theme.subText || '#888' }}>
                         아직 구매한 소설이 없습니다.<br />
                         다른 사람의 소설을 구매해보세요!
-                    </EmptyState>
+                    </div>
                 )}
-            </LibrarySection>
+            </div>
 
-            <Divider />
+            <div className="novel-divider" />
 
 
-            <WeeklySection ref={progressSectionRef}>
-                <MonthSelector>
-                    <MonthButton $isDiaryTheme={isDiaryTheme} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>‹</MonthButton>
-                    <CurrentMonth $isDiaryTheme={isDiaryTheme} onClick={() => setIsPickerOpen(true)}>
+            <div className="novel-weekly-section" ref={progressSectionRef}>
+                <div className="novel-month-selector">
+                    <button
+                        className={`novel-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}
+                        onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                    >
+                        ‹
+                    </button>
+                    <h2
+                        className={`novel-current-month ${isDiaryTheme ? 'diary-theme' : ''}`}
+                        onClick={() => setIsPickerOpen(true)}
+                    >
                         {language === 'en'
                             ? currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                             : `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}
-                    </CurrentMonth>
-                    <MonthButton $isDiaryTheme={isDiaryTheme} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>›</MonthButton>
-                </MonthSelector>
-                <ViewToggleContainer>
-                    <ViewToggleButton
-                        active={weeklyViewMode === 'card'}
+                    </h2>
+                    <button
+                        className={`novel-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}
+                        onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                    >
+                        ›
+                    </button>
+                </div>
+                <div className="novel-view-toggle-container">
+                    <button
+                        className={`novel-view-toggle-button ${weeklyViewMode === 'card' ? 'active' : ''}`}
                         onClick={() => setWeeklyViewMode('card')}
-                        theme={theme}
                         title="카드형"
+                        style={{
+                            background: weeklyViewMode === 'card' ? (theme.primary || '#cb6565') : 'transparent',
+                            borderColor: weeklyViewMode === 'card' ? (theme.primary || '#cb6565') : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')
+                        }}
                     >
                         <GridIcon width={20} height={20} />
-                    </ViewToggleButton>
-                    <ViewToggleButton
-                        active={weeklyViewMode === 'list'}
+                    </button>
+                    <button
+                        className={`novel-view-toggle-button ${weeklyViewMode === 'list' ? 'active' : ''}`}
                         onClick={() => setWeeklyViewMode('list')}
-                        theme={theme}
                         title="목록형"
+                        style={{
+                            background: weeklyViewMode === 'list' ? (theme.primary || '#cb6565') : 'transparent',
+                            borderColor: weeklyViewMode === 'list' ? (theme.primary || '#cb6565') : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')
+                        }}
                     >
                         <ListIcon width={20} height={20} />
-                    </ViewToggleButton>
-                </ViewToggleContainer>
+                    </button>
+                </div>
                 {isPickerOpen && (
-                    <DatePickerModal onClick={() => setIsPickerOpen(false)}>
-                        <DatePickerContent onClick={(e) => e.stopPropagation()}>
-                            <DatePickerHeader>
-                                <DatePickerTitle>{t('novel_month_label')}</DatePickerTitle>
-                                <DatePickerClose onClick={() => setIsPickerOpen(false)}>×</DatePickerClose>
-                            </DatePickerHeader>
-                            <DatePickerTitle>{t('year')}</DatePickerTitle>
-                            <DatePickerGrid>
+                    <div className="novel-date-picker-modal" onClick={() => setIsPickerOpen(false)}>
+                        <div className="novel-date-picker-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="novel-date-picker-header">
+                                <h3 className="novel-date-picker-title">{t('novel_month_label')}</h3>
+                                <button className="novel-date-picker-close" onClick={() => setIsPickerOpen(false)}>×</button>
+                            </div>
+                            <h3 className="novel-date-picker-title">{t('year')}</h3>
+                            <div className="novel-date-picker-grid">
                                 {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map((year) => (
-                                    <DatePickerButton
+                                    <button
                                         key={year}
-                                        selected={year === currentDate.getFullYear()}
+                                        className={`novel-date-picker-button ${year === currentDate.getFullYear() ? 'selected' : ''}`}
                                         onClick={() => handleYearChange(year)}
                                     >
                                         {year}
-                                    </DatePickerButton>
+                                    </button>
                                 ))}
-                            </DatePickerGrid>
-                            <DatePickerTitle>{t('month')}</DatePickerTitle>
-                            <DatePickerGrid>
+                            </div>
+                            <h3 className="novel-date-picker-title">{t('month')}</h3>
+                            <div className="novel-date-picker-grid">
                                 {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                                    <DatePickerButton
+                                    <button
                                         key={month}
-                                        selected={month === currentDate.getMonth() + 1}
+                                        className={`novel-date-picker-button ${month === currentDate.getMonth() + 1 ? 'selected' : ''}`}
                                         onClick={() => handleMonthChange(month)}
                                     >
                                         {language === 'en' ? month : `${month}월`}
-                                    </DatePickerButton>
+                                    </button>
                                 ))}
-                            </DatePickerGrid>
-                        </DatePickerContent>
-                    </DatePickerModal>
+                            </div>
+                        </div>
+                    </div>
                 )}
                 {weeklyViewMode === 'card' ? (
-                    <WeeklyGrid>
+                    <div className="novel-weekly-grid">
                         {weeks.map((week, index) => {
                             const progress = weeklyProgress[week.weekNum] || 0;
                             const isCompleted = progress >= 100;
@@ -2347,38 +1388,43 @@ const Novel = ({ user }) => {
                                 }
                             };
 
+                            const barColor = firstNovel ? 'view' : isCompleted ? 'create' : 'fill';
+
                             return (
-                                <WeeklyCard
+                                <div
                                     key={week.weekNum}
-                                    $isDiaryTheme={isDiaryTheme}
-                                    index={index}
+                                    className={`novel-weekly-card ${isDiaryTheme ? 'diary-theme' : ''}`}
                                     ref={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
+                                    style={{
+                                        background: isDiaryTheme ? '#fffef9' : theme.progressCard,
+                                        borderRadius: isDiaryTheme ? '14px 18px 16px 15px' : '15px',
+                                        border: isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none',
+                                        boxShadow: isDiaryTheme ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' : 'none',
+                                        transform: getWeeklyCardTransform(isDiaryTheme, index),
+                                        color: theme.cardText
+                                    }}
                                 >
-                                    <WeekTitle $isDiaryTheme={isDiaryTheme}>
+                                    <h3 className={`novel-week-title ${isDiaryTheme ? 'diary-theme' : ''}`}>
                                         <span>{t('week_num', { num: week.weekNum })}</span>
                                         {firstNovel && isCompleted && (
-                                            <AddButton
+                                            <button
+                                                className="novel-add-button"
                                                 onClick={handleViewNovel}
                                                 title="소설 보기"
+                                                style={{
+                                                    color: theme.primary
+                                                }}
                                             >
                                                 ☰
-                                            </AddButton>
+                                            </button>
                                         )}
-                                    </WeekTitle>
-                                    <DateRange>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                    <ProgressBar
-                                        barColor={
-                                            firstNovel
-                                                ? 'view'
-                                                : isCompleted
-                                                    ? 'create'
-                                                    : 'fill'
-                                        }
-                                    >
+                                    </h3>
+                                    <p className="novel-date-range">{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</p>
+                                    <div className="novel-progress-bar">
                                         {(() => {
                                             // 주의 시작일부터 7일간의 날짜 생성
                                             const weekStart = new Date(week.start);
@@ -2401,34 +1447,36 @@ const Novel = ({ user }) => {
                                                 const dayStr = formatDate(day);
                                                 const hasDiary = writtenDates.has(dayStr);
                                                 return (
-                                                    <DayIndicator
+                                                    <div
                                                         key={idx}
-                                                        hasDiary={hasDiary}
-                                                        isCompleted={isCompleted}
-                                                        barColor={
-                                                            firstNovel
-                                                                ? 'view'
-                                                                : isCompleted
-                                                                    ? 'create'
-                                                                    : 'fill'
-                                                        }
+                                                        className="novel-day-indicator"
+                                                        style={{
+                                                            background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted)
+                                                        }}
                                                     />
                                                 );
                                             });
                                         })()}
-                                    </ProgressBar>
+                                    </div>
                                     {firstNovel ? (
-                                        <CreateButton
-                                            completed={true}
+                                        <button
+                                            className="novel-create-button"
                                             onClick={handleAddNovel}
                                             disabled={allGenresCreated}
+                                            style={getCreateButtonStyle(
+                                                allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑"),
+                                                true,
+                                                theme,
+                                                false,
+                                                allGenresCreated,
+                                                false
+                                            )}
                                         >
                                             {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
-                                        </CreateButton>
+                                        </button>
                                     ) : (
-                                        <CreateButton
-                                            completed={false}
-                                            isFree={false}
+                                        <button
+                                            className="novel-create-button"
                                             disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
                                             onClick={() => {
                                                 if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
@@ -2436,18 +1484,26 @@ const Novel = ({ user }) => {
                                                 }
                                                 isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
                                             }}
+                                            style={getCreateButtonStyle(
+                                                isCompleted ? t('novel_create') : t('novel_fill_diary'),
+                                                false,
+                                                theme,
+                                                false,
+                                                !isCompleted && (isFutureWeek(week) || hasTodayDiary(week)),
+                                                false
+                                            )}
                                         >
                                             {isCompleted
                                                 ? t('novel_create')
                                                 : t('novel_fill_diary')}
-                                        </CreateButton>
+                                        </button>
                                     )}
-                                </WeeklyCard>
+                                </div>
                             );
                         })}
-                    </WeeklyGrid>
+                    </div>
                 ) : (
-                    <WeeklyList>
+                    <div className="novel-weekly-list">
                         {weeks.map((week, index) => {
                             const progress = weeklyProgress[week.weekNum] || 0;
                             const isCompleted = progress >= 100;
@@ -2532,41 +1588,44 @@ const Novel = ({ user }) => {
                                 }
                             };
 
+                            const barColor = firstNovel ? 'view' : isCompleted ? 'create' : 'fill';
+
                             return (
-                                <WeeklyCard
+                                <div
                                     key={week.weekNum}
-                                    isListMode={true}
-                                    $isDiaryTheme={isDiaryTheme}
-                                    index={index}
+                                    className={`novel-weekly-card list-mode ${isDiaryTheme ? 'diary-theme' : ''}`}
                                     ref={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
                                         }
                                     }}
+                                    style={{
+                                        background: isDiaryTheme ? '#fffef9' : theme.progressCard,
+                                        borderRadius: isDiaryTheme ? '14px 18px 16px 15px' : '15px',
+                                        border: isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none',
+                                        boxShadow: isDiaryTheme ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' : 'none',
+                                        transform: getWeeklyCardTransform(isDiaryTheme, index),
+                                        color: theme.cardText
+                                    }}
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1', minWidth: 0 }}>
-                                        <WeekTitle isListMode={true} $isDiaryTheme={isDiaryTheme}>
+                                        <h3 className={`novel-week-title list-mode ${isDiaryTheme ? 'diary-theme' : ''}`}>
                                             <span>{t('week_num', { num: week.weekNum })}</span>
                                             {firstNovel && isCompleted && (
-                                                <AddButton
+                                                <button
+                                                    className="novel-add-button"
                                                     onClick={handleViewNovel}
                                                     title="소설 보기"
+                                                    style={{
+                                                        color: theme.primary
+                                                    }}
                                                 >
                                                     ☰
-                                                </AddButton>
+                                                </button>
                                             )}
-                                        </WeekTitle>
-                                        <DateRange isListMode={true}>{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</DateRange>
-                                        <ProgressBar
-                                            isListMode={true}
-                                            barColor={
-                                                firstNovel
-                                                    ? 'view'
-                                                    : isCompleted
-                                                        ? 'create'
-                                                        : 'fill'
-                                            }
-                                        >
+                                        </h3>
+                                        <p className="novel-date-range list-mode">{formatDisplayDate(week.start)} - {formatDisplayDate(week.end)}</p>
+                                        <div className="novel-progress-bar list-mode">
                                             {(() => {
                                                 // 주의 시작일부터 7일간의 날짜 생성
                                                 const weekStart = new Date(week.start);
@@ -2589,39 +1648,38 @@ const Novel = ({ user }) => {
                                                     const dayStr = formatDate(day);
                                                     const hasDiary = writtenDates.has(dayStr);
                                                     return (
-                                                        <DayIndicator
+                                                        <div
                                                             key={idx}
-                                                            isListMode={true}
-                                                            hasDiary={hasDiary}
-                                                            isCompleted={isCompleted}
-                                                            barColor={
-                                                                firstNovel
-                                                                    ? 'view'
-                                                                    : isCompleted
-                                                                        ? 'create'
-                                                                        : 'fill'
-                                                            }
+                                                            className="novel-day-indicator list-mode"
+                                                            style={{
+                                                                background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted)
+                                                            }}
                                                         />
                                                     );
                                                 });
                                             })()}
-                                        </ProgressBar>
+                                        </div>
                                     </div>
                                     <div style={{ flexShrink: 0 }}>
                                         {firstNovel ? (
-                                            <CreateButton
-                                                isListMode={true}
-                                                completed={true}
+                                            <button
+                                                className="novel-create-button list-mode"
                                                 onClick={handleAddNovel}
                                                 disabled={allGenresCreated}
+                                                style={getCreateButtonStyle(
+                                                    allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑"),
+                                                    true,
+                                                    theme,
+                                                    false,
+                                                    allGenresCreated,
+                                                    true
+                                                )}
                                             >
                                                 {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
-                                            </CreateButton>
+                                            </button>
                                         ) : (
-                                            <CreateButton
-                                                isListMode={true}
-                                                completed={false}
-                                                isFree={false}
+                                            <button
+                                                className="novel-create-button list-mode"
                                                 disabled={!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))}
                                                 onClick={() => {
                                                     if (!isCompleted && (isFutureWeek(week) || hasTodayDiary(week))) {
@@ -2629,64 +1687,70 @@ const Novel = ({ user }) => {
                                                     }
                                                     isCompleted ? handleCreateNovelClick(week) : handleWriteDiary(week);
                                                 }}
+                                                style={getCreateButtonStyle(
+                                                    isCompleted ? t('novel_create') : t('novel_fill_diary'),
+                                                    false,
+                                                    theme,
+                                                    false,
+                                                    !isCompleted && (isFutureWeek(week) || hasTodayDiary(week)),
+                                                    true
+                                                )}
                                             >
                                                 {isCompleted
                                                     ? t('novel_create')
                                                     : t('novel_fill_diary')}
-                                            </CreateButton>
+                                            </button>
                                         )}
                                     </div>
-                                </WeeklyCard>
+                                </div>
                             );
                         })}
-                    </WeeklyList>
+                    </div>
                 )}
-            </WeeklySection>
+            </div>
 
             {/* 소설 생성 옵션 모달 */}
             {showCreateOptionModal && selectedWeekForCreate && (
-                <CreateOptionModal onClick={() => setShowCreateOptionModal(false)}>
-                    <CreateOptionContent onClick={(e) => e.stopPropagation()} theme={theme}>
-                        <CloseButton onClick={() => setShowCreateOptionModal(false)} theme={theme}>×</CloseButton>
-                        <CreateOptionTitle theme={theme}>소설 생성 방법 선택</CreateOptionTitle>
-                        <CreateOptionButton
-                            isFree={true}
+                <div className="novel-create-option-modal" onClick={() => setShowCreateOptionModal(false)}>
+                    <div className="novel-create-option-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="novel-close-button" onClick={() => setShowCreateOptionModal(false)} style={{ color: theme.text }}>×</button>
+                        <h3 className="novel-create-option-title" style={{ color: theme.text }}>소설 생성 방법 선택</h3>
+                        <button
+                            className="novel-create-option-button free"
                             onClick={() => {
                                 handleCreateNovel(selectedWeekForCreate, true);
                                 setShowCreateOptionModal(false);
                             }}
-                            theme={theme}
                         >
                             🪄 프리미엄 무료권 사용
-                        </CreateOptionButton>
-                        <CreateOptionDesc theme={theme} style={{ marginBottom: '12px' }}>
+                        </button>
+                        <div className="novel-create-option-desc" style={{ color: theme.subText || '#666', marginBottom: '12px' }}>
                             무료로 소설을 생성합니다 (매월 자동 충전)
-                        </CreateOptionDesc>
-                        <CreateOptionButton
-                            isFree={false}
+                        </div>
+                        <button
+                            className="novel-create-option-button"
                             onClick={() => {
                                 handleCreateNovel(selectedWeekForCreate, false);
                                 setShowCreateOptionModal(false);
                             }}
-                            theme={theme}
                         >
                             🔮 포션 사용
-                        </CreateOptionButton>
-                        <CreateOptionDesc theme={theme}>
+                        </button>
+                        <div className="novel-create-option-desc" style={{ color: theme.subText || '#666' }}>
                             보유한 포션 1개를 사용합니다
-                        </CreateOptionDesc>
-                    </CreateOptionContent>
-                </CreateOptionModal>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* 소설 목록 모달 */}
             {selectedWeekNovels && (
-                <NovelListModal onClick={() => setSelectedWeekNovels(null)}>
-                    <NovelListContent onClick={(e) => e.stopPropagation()}>
-                        <NovelListHeader>
-                            <NovelListTitle>소설 선택</NovelListTitle>
-                            <NovelListClose onClick={() => setSelectedWeekNovels(null)}>×</NovelListClose>
-                        </NovelListHeader>
+                <div className="novel-list-modal" onClick={() => setSelectedWeekNovels(null)}>
+                    <div className="novel-list-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="novel-list-header">
+                            <h3 className="novel-list-title">소설 선택</h3>
+                            <button className="novel-list-close" onClick={() => setSelectedWeekNovels(null)}>×</button>
+                        </div>
                         {selectedWeekNovels.map((novel) => {
                             const genreKey = novel.genre === '로맨스' ? 'romance' :
                                 novel.genre === '역사' ? 'historical' :
@@ -2696,8 +1760,9 @@ const Novel = ({ user }) => {
                                                 novel.genre === '판타지' ? 'fantasy' : null;
 
                             return (
-                                <NovelListItem
+                                <div
                                     key={novel.id}
+                                    className="novel-list-item"
                                     onClick={() => {
                                         const novelKey = createNovelUrl(
                                             novel.year,
@@ -2710,40 +1775,41 @@ const Novel = ({ user }) => {
                                         setSelectedWeekNovels(null);
                                     }}
                                 >
-                                    <NovelListCover
+                                    <img
+                                        className="novel-list-cover"
                                         src={novel.imageUrl || '/novel_banner/default.png'}
                                         alt={novel.title}
                                     />
-                                    <NovelListInfo>
-                                        <NovelListNovelTitle>{novel.title}</NovelListNovelTitle>
-                                        <NovelListGenre $isDiaryTheme={isDiaryTheme}>
+                                    <div className="novel-list-info">
+                                        <div className="novel-list-novel-title" style={{ color: theme.text }}>{novel.title}</div>
+                                        <div className={`novel-list-genre ${isDiaryTheme ? 'diary-theme' : ''}`}>
                                             {genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}
-                                        </NovelListGenre>
-                                    </NovelListInfo>
-                                </NovelListItem>
+                                        </div>
+                                    </div>
+                                </div>
                             );
                         })}
-                    </NovelListContent>
-                </NovelListModal>
+                    </div>
+                </div>
             )}
 
             {/* 이번주 일기 목록 모달 */}
             {showCurrentWeekDiaryModal && (
-                <CurrentWeekDiaryModal onClick={() => setShowCurrentWeekDiaryModal(false)}>
-                    <CurrentWeekDiaryContent theme={theme} onClick={(e) => e.stopPropagation()}>
-                        <CurrentWeekDiaryHeader>
-                            <CurrentWeekDiaryTitle theme={theme}>
+                <div className="novel-current-week-diary-modal" onClick={() => setShowCurrentWeekDiaryModal(false)}>
+                    <div className="novel-current-week-diary-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="novel-current-week-diary-header">
+                            <h3 className="novel-current-week-diary-title" style={{ color: theme.text }}>
                                 {t('novel_this_week_diaries') || '이번주 일기 목록'}
-                            </CurrentWeekDiaryTitle>
-                            <CurrentWeekDiaryClose theme={theme} onClick={() => setShowCurrentWeekDiaryModal(false)}>
+                            </h3>
+                            <button className="novel-current-week-diary-close" onClick={() => setShowCurrentWeekDiaryModal(false)} style={{ color: theme.text }}>
                                 ×
-                            </CurrentWeekDiaryClose>
-                        </CurrentWeekDiaryHeader>
-                        <CurrentWeekDiaryList>
+                            </button>
+                        </div>
+                        <div className="novel-current-week-diary-list">
                             {currentWeekDiaries.length === 0 ? (
-                                <CurrentWeekDiaryEmpty theme={theme}>
+                                <div className="novel-current-week-diary-empty" style={{ color: theme.subText || '#888' }}>
                                     {t('novel_no_this_week_diaries') || '이번주에 작성한 일기가 없습니다.'}
-                                </CurrentWeekDiaryEmpty>
+                                </div>
                             ) : (
                                 currentWeekDiaries.map((diary, index) => {
                                     const diaryDate = new Date(diary.date);
@@ -2754,39 +1820,39 @@ const Novel = ({ user }) => {
                                     const imageUrl = hasImage ? diary.imageUrls[0] : null;
 
                                     return (
-                                        <CurrentWeekDiaryItem
+                                        <div
                                             key={index}
-                                            theme={theme}
+                                            className="novel-current-week-diary-item"
                                         >
                                             {imageUrl ? (
-                                                <CurrentWeekDiaryImage src={imageUrl} alt="일기 이미지" />
+                                                <img className="novel-current-week-diary-image" src={imageUrl} alt="일기 이미지" />
                                             ) : (
-                                                <CurrentWeekDiaryImagePlaceholder theme={theme}>
+                                                <div className="novel-current-week-diary-image-placeholder">
                                                     📝
-                                                </CurrentWeekDiaryImagePlaceholder>
+                                                </div>
                                             )}
-                                            <CurrentWeekDiaryInfo>
-                                                <CurrentWeekDiaryDate theme={theme}>{dateStr}</CurrentWeekDiaryDate>
-                                                <CurrentWeekDiaryTitleText theme={theme}>
+                                            <div className="novel-current-week-diary-info">
+                                                <div className="novel-current-week-diary-date" style={{ color: theme.subText || '#888' }}>{dateStr}</div>
+                                                <div className="novel-current-week-diary-title-text" style={{ color: theme.text }}>
                                                     {diary.title || t('diary_no_title') || '제목 없음'}
-                                                </CurrentWeekDiaryTitleText>
+                                                </div>
                                                 {diary.content && (
-                                                    <CurrentWeekDiaryPreview theme={theme}>
+                                                    <div className="novel-current-week-diary-preview" style={{ color: theme.subText || '#888' }}>
                                                         {diary.content}
-                                                    </CurrentWeekDiaryPreview>
+                                                    </div>
                                                 )}
-                                            </CurrentWeekDiaryInfo>
-                                        </CurrentWeekDiaryItem>
+                                            </div>
+                                        </div>
                                     );
                                 })
                             )}
-                        </CurrentWeekDiaryList>
-                    </CurrentWeekDiaryContent>
-                </CurrentWeekDiaryModal>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <Navigation />
-        </Container>
+        </div>
     );
 };
 

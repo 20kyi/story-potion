@@ -1,0 +1,1178 @@
+/* Container */
+.novel-container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    margin-top: 60px;
+    margin-bottom: 80px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+
+.novel-container::-webkit-scrollbar {
+    display: none;
+}
+
+.novel-container.diary-theme {
+    background: #faf8f3;
+    color: #5C4B37;
+    background-image:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.02) 2px,
+            rgba(0, 0, 0, 0.02) 4px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.02) 2px,
+            rgba(0, 0, 0, 0.02) 4px);
+}
+
+/* Genre Grid */
+.novel-genre-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    margin-bottom: 20px;
+    gap: 0;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.novel-genre-card {
+    width: 100%;
+    aspect-ratio: 1;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.novel-genre-card img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+/* Month Selector */
+.novel-month-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.novel-month-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.novel-month-button.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-month-button:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-month-button:hover {
+    transform: scale(1.1);
+}
+
+.novel-current-month {
+    font-size: 24px;
+    font-family: inherit;
+    font-weight: 600;
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.novel-current-month.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-current-month:not(.diary-theme) {
+    color: #cb6565;
+}
+
+/* Date Picker Modal */
+.novel-date-picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.novel-date-picker-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 300px;
+    max-width: 90%;
+}
+
+.novel-date-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.novel-date-picker-title {
+    color: #cb6565;
+    margin: 0;
+    font-size: 20px;
+}
+
+.novel-date-picker-close {
+    background: none;
+    border: none;
+    color: #cb6565;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.novel-date-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.novel-date-picker-button {
+    border: 1px solid #fdd2d2;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #fff2f2;
+    color: #cb6565;
+}
+
+.novel-date-picker-button.selected {
+    background-color: #cb6565;
+    color: white;
+}
+
+.novel-date-picker-button:hover {
+    background-color: #fdd2d2;
+}
+
+.novel-date-picker-button.selected:hover {
+    background-color: #cb6565;
+}
+
+/* Novel List Modal */
+.novel-list-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.novel-list-content {
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+body.dark .novel-list-content {
+    background-color: #2A2A2A;
+}
+
+body:not(.dark) .novel-list-content {
+    background-color: white;
+}
+
+.novel-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.novel-list-title {
+    color: #cb6565;
+    margin: 0;
+    font-size: 20px;
+}
+
+.novel-list-close {
+    background: none;
+    border: none;
+    color: #cb6565;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.novel-list-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+}
+
+body.dark .novel-list-item {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body:not(.dark) .novel-list-item {
+    background-color: #f9f9f9;
+}
+
+.novel-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+body:not(.dark) .novel-list-item:hover {
+    background-color: #f0f0f0;
+}
+
+.novel-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.novel-list-cover {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.novel-list-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.novel-list-novel-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.novel-list-genre {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.novel-list-genre.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-list-genre:not(.diary-theme) {
+    color: #cb6565;
+}
+
+/* Weekly Section */
+.novel-weekly-section {
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.novel-weekly-section-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.novel-weekly-section-title.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-weekly-section-title:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-weekly-section-title span {
+    font-size: 20px;
+    opacity: 0.8;
+}
+
+.novel-weekly-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 10px 0;
+    width: 100%;
+}
+
+.novel-weekly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 0;
+    width: 100%;
+}
+
+.novel-view-toggle-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: flex-end;
+}
+
+.novel-view-toggle-button {
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    background: transparent;
+}
+
+.novel-view-toggle-button.active {
+    border-color: #cb6565;
+    background: #cb6565;
+}
+
+body.dark .novel-view-toggle-button {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark .novel-view-toggle-button.active {
+    border-color: #cb6565;
+    background: #cb6565;
+}
+
+.novel-view-toggle-button:hover {
+    background: #f5f5f5;
+    border-color: #cb6565;
+}
+
+body.dark .novel-view-toggle-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #cb6565;
+}
+
+.novel-view-toggle-button.active:hover {
+    background: #cb6565;
+    border-color: #cb6565;
+}
+
+.novel-view-toggle-button svg {
+    transition: stroke 0.2s;
+    stroke: #888;
+}
+
+body.dark .novel-view-toggle-button svg {
+    stroke: rgba(255, 255, 255, 0.7);
+}
+
+.novel-view-toggle-button.active svg {
+    stroke: #fff;
+}
+
+.novel-view-toggle-button:hover svg {
+    stroke: #cb6565;
+}
+
+.novel-view-toggle-button.active:hover svg {
+    stroke: #fff;
+}
+
+/* Weekly Card */
+.novel-weekly-card {
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex: 0 0 240px;
+    min-width: 70px;
+    box-sizing: border-box;
+    padding: 20px 16px;
+}
+
+.novel-weekly-card.diary-theme {
+    background-color: #fffef9;
+    border-radius: 14px 18px 16px 15px;
+    border: 1px solid rgba(139, 111, 71, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.novel-weekly-card.diary-theme::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.novel-weekly-card.diary-theme:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.novel-weekly-card.list-mode {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+}
+
+.novel-week-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    line-height: 1.2;
+    flex-shrink: 0;
+    font-size: 18px;
+    margin: 0 0 10px 0;
+    min-height: 32px;
+}
+
+.novel-week-title.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-week-title:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-week-title.list-mode {
+    font-size: 16px;
+    margin: 0;
+    min-height: 24px;
+}
+
+.novel-week-title span {
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+.novel-date-range {
+    color: #666;
+    font-size: 11px;
+    margin: 0 0 10px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.novel-date-range.list-mode {
+    font-size: 10px;
+    margin: 0;
+}
+
+.novel-progress-bar {
+    width: 100%;
+    display: flex;
+    gap: 4px;
+    margin: 0 0 10px 0;
+    justify-content: space-between;
+    flex-shrink: 1;
+    min-width: auto;
+}
+
+.novel-progress-bar.list-mode {
+    margin: 0;
+    flex-shrink: 0;
+    min-width: 140px;
+}
+
+.novel-day-indicator {
+    flex: 1;
+    height: 16px;
+    border-radius: 3px;
+    will-change: background;
+    transition: none;
+}
+
+.novel-day-indicator.list-mode {
+    height: 12px;
+    border-radius: 2px;
+}
+
+.novel-create-button {
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: inherit;
+    white-space: nowrap;
+    overflow: visible;
+    margin: 0;
+    margin-top: 2px;
+    width: 100%;
+    min-width: auto;
+}
+
+.novel-create-button.list-mode {
+    width: 130px;
+    min-width: 130px;
+    margin-top: 0;
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+.novel-create-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.novel-button-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Create Option Modal */
+.novel-create-option-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.novel-create-option-content {
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    opacity: 1;
+}
+
+body.dark .novel-create-option-content {
+    background: #2A2A2A;
+}
+
+body:not(.dark) .novel-create-option-content {
+    background: #FFFFFF;
+}
+
+.novel-create-option-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    text-align: center;
+}
+
+.novel-create-option-button {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 4px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+.novel-create-option-button.free {
+    background: linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%);
+    color: #e4a30d;
+    border: 2px solid #e4a30d;
+}
+
+.novel-create-option-button:not(.free) {
+    background: linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%);
+    color: #e46262;
+    border: 2px solid #e46262;
+}
+
+.novel-create-option-button:hover {
+    transform: translateY(-2px);
+}
+
+.novel-create-option-button.free:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.novel-create-option-button:not(.free):hover {
+    box-shadow: 0 4px 12px rgba(228, 98, 98, 0.2);
+}
+
+.novel-create-option-button:last-child {
+    margin-bottom: 0;
+}
+
+.novel-create-option-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.novel-create-option-desc {
+    font-size: 12px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.novel-close-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.novel-add-button {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.novel-add-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.novel-add-button:hover:not(:disabled) {
+    opacity: 0.96;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+body.dark .novel-add-button:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.novel-add-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+/* Novel CTA Card */
+.novel-cta-card {
+    padding: 20px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    border-radius: 20px;
+}
+
+.novel-cta-card.diary-theme {
+    background: #fffef9;
+    border: 2px solid rgba(139, 111, 71, 0.25);
+    border-radius: 18px 22px 20px 19px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: rotate(-0.3deg);
+}
+
+body.dark .novel-cta-card:not(.diary-theme) {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.novel-cta-card.diary-theme::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.novel-cta-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.novel-cta-card.diary-theme:hover {
+    transform: rotate(-0.5deg) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.dark .novel-cta-card:not(.diary-theme):hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.novel-cta-card:active {
+    transform: translateY(0);
+}
+
+.novel-cta-card.diary-theme:active {
+    transform: rotate(-0.3deg);
+}
+
+.novel-cta-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.novel-cta-content.diary-theme {
+    color: #5C4B37;
+}
+
+.novel-cta-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+}
+
+.novel-cta-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.novel-cta-icon-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.novel-cta-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.novel-cta-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    word-break: keep-all;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.novel-cta-title.diary-theme {
+    color: #8B6F47;
+}
+
+@media (max-width: 480px) {
+    .novel-cta-title {
+        font-size: 18px;
+    }
+}
+
+.novel-cta-desc {
+    font-size: 14px;
+    opacity: 0.8;
+    line-height: 1.4;
+    word-break: keep-all;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.novel-cta-desc.diary-theme {
+    color: #5C4B37;
+}
+
+@media (max-width: 480px) {
+    .novel-cta-desc {
+        font-size: 13px;
+    }
+}
+
+.novel-cta-arrow {
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: transform 0.2s;
+}
+
+.novel-cta-arrow.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-cta-card:hover .novel-cta-arrow {
+    transform: translateX(4px);
+    opacity: 1;
+}
+
+.novel-cta-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.novel-cta-progress-text {
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.novel-cta-progress-bar {
+    width: 100%;
+    height: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: #E5E5E5;
+}
+
+.novel-cta-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%);
+}
+
+/* Current Week Diary Modal */
+.novel-current-week-diary-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.novel-current-week-diary-content {
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark .novel-current-week-diary-content {
+    background: #2A2A2A;
+}
+
+body:not(.dark) .novel-current-week-diary-content {
+    background: #FFFFFF;
+}
+
+.novel-current-week-diary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.novel-current-week-diary-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.novel-current-week-diary-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.novel-current-week-diary-close:hover {
+    opacity: 1;
+}
+
+.novel-current-week-diary-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.novel-current-week-diary-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+body.dark .novel-current-week-diary-item {
+    background: #3A3A3A;
+}
+
+body:not(.dark) .novel-current-week-diary-item {
+    background: #F5F5F5;
+}
+
+.novel-current-week-diary-item:hover {
+    transform: translateY(-2px);
+}
+
+body.dark .novel-current-week-diary-item:hover {
+    background: #4A4A4A;
+}
+
+body:not(.dark) .novel-current-week-diary-item:hover {
+    background: #EEEEEE;
+}
+
+.novel-current-week-diary-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.novel-current-week-diary-image-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+body.dark .novel-current-week-diary-image-placeholder {
+    background: #4A4A4A;
+}
+
+body:not(.dark) .novel-current-week-diary-image-placeholder {
+    background: #E5E5E5;
+}
+
+.novel-current-week-diary-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.novel-current-week-diary-date {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.novel-current-week-diary-title-text {
+    font-size: 16px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+}
+
+.novel-current-week-diary-preview {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+}
+
+.novel-current-week-diary-empty {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+/* Library Section */
+.novel-library-section {
+    margin-bottom: 30px;
+}
+
+.novel-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.novel-section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.novel-section-title.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-section-title:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-more-link {
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.novel-more-link.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-more-link:not(.diary-theme) {
+    color: #cb6565;
+}
+
+.novel-more-link:hover {
+    opacity: 1;
+}
+
+.novel-row {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 8px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.novel-row::-webkit-scrollbar {
+    display: none;
+}
+
+.novel-box {
+    width: calc((100% - 24px) / 3);
+    min-width: calc((100% - 24px) / 3);
+    max-width: calc((100% - 24px) / 3);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.novel-box:hover {
+    transform: translateY(-4px);
+}
+
+.novel-cover-image {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 8px;
+}
+
+.novel-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.novel-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+.novel-divider {
+    height: 1px;
+    margin: 30px 0;
+}
+
+body.dark .novel-divider {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body:not(.dark) .novel-divider {
+    background: rgba(0, 0, 0, 0.1);
+}
