@@ -528,7 +528,7 @@ function Diary({ user }) {
         const today = new Date();
         const firstRowDays = []; // 빈칸, 월, 화, 수
         const secondRowDays = []; // 목, 금, 토, 일
-        
+
         const renderDayCell = (i) => {
             const date = new Date(weekStart);
             date.setDate(weekStart.getDate() + i); // i=0: 월요일, i=1: 화요일, ..., i=6: 일요일
@@ -537,7 +537,7 @@ function Diary({ user }) {
                 today.getFullYear() === date.getFullYear();
             const future = isFutureDate(date);
             const isSunday = date.getDay() === 0;
-            const dayName = language === 'en' 
+            const dayName = language === 'en'
                 ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
                 : ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
 
@@ -634,7 +634,7 @@ function Diary({ user }) {
     const getWeeklyEmotionBarData = () => {
         const { weekStart, weekEnd } = getCurrentWeek();
         const counts = { love: 0, good: 0, normal: 0, surprised: 0, angry: 0, cry: 0, empty: 0 };
-        
+
         for (let i = 0; i < 7; i++) {
             const date = new Date(weekStart);
             date.setDate(weekStart.getDate() + i);
@@ -646,7 +646,7 @@ function Diary({ user }) {
                 counts.empty++;
             }
         }
-        
+
         const total = 7;
         const percent = Object.fromEntries(
             Object.entries(counts).map(([k, v]) => [
@@ -688,42 +688,42 @@ function Diary({ user }) {
                         )}
                     </div>
                     <div className="diary-highlighter-color-picker" ref={paletteRef}>
-                            {(() => {
-                                const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
-                                const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
-                                return (
-                                    <>
-                                        {!isPaletteOpen && (
+                        {(() => {
+                            const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                            const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
+                            return (
+                                <>
+                                    {!isPaletteOpen && (
+                                        <button
+                                            className="diary-selected-color-button"
+                                            style={{ background: selectedColor.color }}
+                                            onClick={togglePalette}
+                                            title="형광펜 색상 선택"
+                                        />
+                                    )}
+                                    <div className={`diary-color-palette ${isPaletteOpen ? 'open' : 'closed'}`}>
+                                        {unselectedColors.map((colorOption) => (
                                             <button
-                                                className="diary-selected-color-button"
+                                                key={colorOption.id}
+                                                className="diary-color-button"
+                                                style={{ background: colorOption.color }}
+                                                onClick={() => handleHighlighterColorChange(colorOption.id)}
+                                                title={`형광펜 색상: ${colorOption.id}`}
+                                            />
+                                        ))}
+                                        {isPaletteOpen && (
+                                            <button
+                                                className="diary-color-button"
                                                 style={{ background: selectedColor.color }}
                                                 onClick={togglePalette}
-                                                title="형광펜 색상 선택"
+                                                title={`현재 선택된 색상: ${selectedHighlighterColor}`}
                                             />
                                         )}
-                                        <div className={`diary-color-palette ${isPaletteOpen ? 'open' : 'closed'}`}>
-                                            {unselectedColors.map((colorOption) => (
-                                                <button
-                                                    key={colorOption.id}
-                                                    className="diary-color-button"
-                                                    style={{ background: colorOption.color }}
-                                                    onClick={() => handleHighlighterColorChange(colorOption.id)}
-                                                    title={`형광펜 색상: ${colorOption.id}`}
-                                                />
-                                            ))}
-                                            {isPaletteOpen && (
-                                                <button
-                                                    className="diary-color-button"
-                                                    style={{ background: selectedColor.color }}
-                                                    onClick={togglePalette}
-                                                    title={`현재 선택된 색상: ${selectedHighlighterColor}`}
-                                                />
-                                            )}
-                                        </div>
-                                    </>
-                                );
-                            })()}
-                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
                     <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
                 <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
@@ -758,7 +758,7 @@ function Diary({ user }) {
                             <span className={`diary-toggle-option ${viewMode === 'week' ? 'active' : ''}`}>
                                 {language === 'en' ? 'Week' : '주간'}
                             </span>
-                            <span 
+                            <span
                                 className={`diary-toggle-slider ${viewMode === 'week' ? 'week' : 'month'} ${isDiaryTheme ? 'diary-theme' : ''}`}
                             />
                         </button>
@@ -775,6 +775,14 @@ function Diary({ user }) {
                                 .filter(([k]) => k !== 'empty')
                                 .sort((a, b) => b[1] - a[1]);
                             const mainEmotion = emotionEntries.length > 0 ? emotionEntries[0][0] : 'empty';
+
+                            // 감정이 비어있을 때 감성적인 문구 표시
+                            if (mainEmotion === 'empty' || weeklyEmotionData.counts.empty === 7) {
+                                return language === 'en'
+                                    ? "This week is waiting for your story..."
+                                    : "이번주 이야기를 채워주세요";
+                            }
+
                             const emotionLabel = emotionBarLabels[mainEmotion] || emotionBarLabels.empty;
                             return language === 'en' ? `This week was ${emotionLabel.toLowerCase()}` : `이번주는 ${emotionLabel}`;
                         })() : getTopMessage()}
