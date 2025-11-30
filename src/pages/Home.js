@@ -80,14 +80,20 @@ const MainButtonRow = styled.div`
 const RecentDiaryCard = styled.div`
   flex: 1;
   min-width: 0;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
-    ? '#fffef9'
-    : (theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)')};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '18px 22px 20px 19px' : '28px'};
-  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 4px 16px rgba(0,0,0,0.07)'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return '0 4px 16px rgba(0,0,0,0.07)';
+  }};
   height: 256px;
   display: flex;
   flex-direction: column;
@@ -95,11 +101,17 @@ const RecentDiaryCard = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return 'none';
+  }};
   &:hover { 
-    box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 6px 20px rgba(0,0,0,0.13)'};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return '0 6px 20px rgba(0,0,0,0.13)';
+  }};
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'none'};
   }
   padding: 16px;
@@ -129,14 +141,20 @@ const WriteDiaryButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
-    ? '#fffef9'
-    : (theme.writeCardGradient || 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)')};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.writeCardGradient || 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '20px 24px 22px 21px' : '28px'};
-  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 4px 16px rgba(201, 154, 154, 0.3)'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return '0 4px 16px rgba(201, 154, 154, 0.3)';
+  }};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -144,12 +162,18 @@ const WriteDiaryButton = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.4deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.25)';
+    return 'none';
+  }};
   gap: 10px;
   &:hover { 
-    box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 6px 20px rgba(201, 154, 154, 0.4)'};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return '0 6px 20px rgba(201, 154, 154, 0.4)';
+  }};
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.6deg) translateY(-2px)' : 'none'};
   }
 `;
@@ -240,7 +264,10 @@ const DiaryPreviewTextContainer = styled.div`
 const DiaryPreviewDate = styled.div`
   font-size: 11px;
   opacity: 0.8;
-  color: ${({ theme }) => theme.cardSubText || theme.text};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.cardSubText || theme.text;
+  }};
   margin-bottom: 4px;
   flex-shrink: 0;
   // @media (min-width: 768px) {
@@ -251,7 +278,10 @@ const DiaryPreviewDate = styled.div`
 const DiaryPreviewTitle = styled.div`
   font-size: 15px;
   font-weight: 600;
-  color: ${({ theme }) => theme.cardText || theme.text};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.cardText || theme.text;
+  }};
   margin-bottom: 4px;
   white-space: ${props => props.$isEmpty ? 'normal' : 'nowrap'};
   overflow: ${props => props.$isEmpty ? 'visible' : 'hidden'};
@@ -268,7 +298,10 @@ const DiaryPreviewTitle = styled.div`
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
   font-size: 13px;
-  color: ${({ theme }) => theme.cardSubText || theme.diaryContent || theme.text};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.cardSubText || theme.diaryContent || theme.text;
+  }};
   opacity: 0.9;
   overflow: ${props => props.$isEmpty ? 'visible' : 'hidden'};
   text-overflow: ${props => props.$isEmpty ? 'clip' : 'ellipsis'};
@@ -322,8 +355,11 @@ const ContentGrid = styled.div`
 const SectionLabel = styled.div`
   font-size: 20px;
   font-weight: 600;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   margin-bottom: 10px;
   margin-top: 10px;
   padding-left: 10px;
@@ -360,12 +396,12 @@ const PotionCard = styled.div`
   height: 110px;
   background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return 'rgba(255, 255, 255, 0.2)';
+      return 'rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '#fffef9' : theme.card;
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '14px 18px 16px 15px' : '16px'};
   padding: 12px 8px;
@@ -375,7 +411,7 @@ const PotionCard = styled.div`
   justify-content: space-between;
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
     }
     return $isDiaryTheme
       ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -383,7 +419,7 @@ const PotionCard = styled.div`
   }};
   border: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '1px solid rgba(255, 255, 255, 0.3)';
+      return '2px solid rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none';
   }};
@@ -420,7 +456,7 @@ const PotionCard = styled.div`
   }};
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
     }
     return $isDiaryTheme
       ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -453,24 +489,35 @@ const PotionImage = styled.img`
 const PotionCount = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   text-align: center;
 `;
 
 const PotionName = styled.div`
   font-size: 13px;
   font-weight: 500;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   text-align: center;
 `;
 
 const EmptyPotionCard = styled.div`
   width: 100%;
   height: 110px;
-  background: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#fffef9' : theme.card};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.card;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
   padding: 12px 8px;
@@ -478,12 +525,16 @@ const EmptyPotionCard = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: ${({ $isDiaryTheme }) =>
-    $isDiaryTheme
-      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-      : '0 2px 8px rgba(0,0,0,0.06)'};
-  border: ${({ $isDiaryTheme }) =>
-    $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return '0 2px 8px rgba(0,0,0,0.06)';
+  }};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return 'none';
+  }};
   opacity: 0.5;
   grid-column: 1 / -1;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.2deg)' : 'none'};
@@ -645,7 +696,10 @@ const TutorialCover = styled.img`
 const TutorialTitle = styled.div`
   font-size: 13px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.text;
+  }};
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -702,24 +756,24 @@ const TopicSection = styled.div`
 const TopicCard = styled.div`
   background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return 'rgba(255, 255, 255, 0.2)';
+      return 'rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '#fffef9' : theme.progressCard;
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '16px 20px 18px 17px' : '20px'};
   padding: 16px;
   border: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '1px solid rgba(255, 255, 255, 0.3)';
+      return '2px solid rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : '1px solid #f0f0f0';
   }};
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
     }
     return $isDiaryTheme
       ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -751,7 +805,7 @@ const TopicCard = styled.div`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.4deg) translateY(-1px)' : 'none'};
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
     }
     return $isDiaryTheme
       ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -766,19 +820,19 @@ const PotionShopButton = styled.div`
   flex-shrink: 0;
   background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return 'rgba(224, 231, 255, 0.3)';
+      return 'rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme
       ? '#fffef9'
       : (theme.potionShopButtonBg || 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%)');
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '22px 19px 21px 23px' : '28px'};
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 8px 32px rgba(165, 180, 252, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(165, 180, 252, 0.3)';
@@ -792,7 +846,7 @@ const PotionShopButton = styled.div`
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.2deg)' : 'none'};
   border: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '1px solid rgba(255, 255, 255, 0.4)';
+      return '2px solid rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none';
   }};
@@ -800,7 +854,7 @@ const PotionShopButton = styled.div`
   &:hover { 
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 40px rgba(165, 180, 252, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(165, 180, 252, 0.4)';
@@ -841,13 +895,19 @@ const PotionShopText = styled.div`
 const TopicTitle = styled.p`
   font-size: 14px;
   font-weight: 600;
-  color: ${({ theme }) => theme.cardText};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.cardText;
+  }};
   margin-bottom: 8px;
 `;
 /* 일기 최근 미리보기 영역 */
 const RecommendationIntro = styled.p`
   font-size: 12px;
-  color: ${({ theme }) => theme.cardSubText};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.cardSubText;
+  }};
   line-height: 1.4;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -856,8 +916,11 @@ const RecommendationIntro = styled.p`
 const RecommendationTopic = styled.p`
   font-size: 11px;
   font-weight: 500;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#5C4B37' : theme.cardSubText};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.cardSubText;
+  }};
   line-height: 1.4;
   margin-top: 4px;
   word-break: keep-all;
@@ -897,25 +960,28 @@ const CarouselContainer = styled.div`
 const PremiumBanner = styled(motion.div)`
   background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return 'rgba(255, 226, 159, 0.3)';
+      return 'rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme
       ? '#fffef9'
       : (theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)');
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
   padding: 20px;
   margin-top: 12px;
   margin-bottom: 20px;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : (theme.premiumBannerText || '#8B4513')};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.premiumBannerText || '#8B4513';
+  }};
   cursor: pointer;
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 8px 32px rgba(255, 226, 159, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 226, 159, 0.4)';
@@ -925,7 +991,7 @@ const PremiumBanner = styled(motion.div)`
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.3deg)' : 'none'};
   border: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '2px solid rgba(255, 255, 255, 0.4)';
+      return '2px solid rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none';
   }};
@@ -962,7 +1028,7 @@ const PremiumBanner = styled(motion.div)`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.5deg) translateY(-2px)' : 'scale(1.02)'};
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 40px rgba(255, 226, 159, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 226, 159, 0.5)';
@@ -1003,6 +1069,10 @@ const PremiumBannerTitle = styled.div`
   gap: 8px;
   word-break: keep-all;
   overflow-wrap: break-word;
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.premiumBannerText || '#8B4513';
+  }};
   
   @media (max-width: 480px) {
     font-size: 16px;
@@ -1015,7 +1085,10 @@ const PremiumBannerDesc = styled.div`
   font-size: 14px;
   opacity: 0.9;
   line-height: 1.4;
-  color: ${({ theme }) => theme.premiumBannerText || '#8B4513'};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.premiumBannerText || '#8B4513';
+  }};
   word-break: keep-all;
   overflow-wrap: break-word;
   text-align: center;
@@ -1027,14 +1100,26 @@ const PremiumBannerDesc = styled.div`
 `;
 
 const PremiumBannerButton = styled.div`
-  background: ${({ theme }) => theme.premiumBannerButtonBg || 'white'};
-  color: ${({ theme }) => theme.premiumBannerText || '#8B4513'};
+  background: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    return theme.premiumBannerButtonBg || 'white';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.premiumBannerText || '#8B4513';
+  }};
   padding: 12px 40px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 15px;
   white-space: nowrap;
-  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.15)'};
+  box-shadow: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    return theme.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.15)';
+  }};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.3)' : 'none'};
   transition: transform 0.2s;
   align-self: center;
   text-align: center;
@@ -1064,17 +1149,17 @@ const CarouselSlide = styled.div`
 const AICreateCard = styled(motion.div)`
   background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return 'rgba(255, 245, 243, 0.3)';
+      return 'rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme
       ? '#fffef9'
       : (theme.aiCreateCardBg || 'linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%)');
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(5px)' : 'none'};
   border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '2px solid rgba(255, 255, 255, 0.4)';
+      return '2px solid rgba(255, 255, 255, 0.3)';
     }
     return $isDiaryTheme
       ? '2px solid rgba(139, 111, 71, 0.25)'
@@ -1087,7 +1172,7 @@ const AICreateCard = styled(motion.div)`
   cursor: pointer;
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 8px 32px rgba(255, 180, 170, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 180, 170, 0.2)';
@@ -1128,7 +1213,7 @@ const AICreateCard = styled(motion.div)`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 40px rgba(255, 180, 170, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 180, 170, 0.3)';
@@ -1153,15 +1238,21 @@ const AICreateContent = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.aiCreateCardText || '#8B3E2E';
+  }};
 `;
 
 const AICreateIcon = styled.div`
   font-size: 40px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 4px rgba(139, 62, 46, 0.2));
-  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
+  filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'none' : 'drop-shadow(0 2px 4px rgba(139, 62, 46, 0.2))'};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.aiCreateCardText || '#8B3E2E';
+  }};
 `;
 
 const AICreateText = styled.div`
@@ -1173,8 +1264,11 @@ const AICreateTitle = styled.div`
   font-size: 32px !important;
   font-weight: 700;
   margin-bottom: 6px;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.aiCreateCardText || '#8B3E2E';
+  }};
   line-height: 1.3;
   word-break: keep-all;
   word-wrap: break-word;
@@ -1192,8 +1286,11 @@ const AICreateTitle = styled.div`
 
 const AICreateDesc = styled.div`
   font-size: 14px;
-  color: ${({ theme, $isDiaryTheme }) =>
-    $isDiaryTheme ? '#5C4B37' : (theme.aiCreateCardDesc || '#A05245')};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.aiCreateCardDesc || '#A05245';
+  }};
   line-height: 1.4;
   word-break: keep-all;
   word-wrap: break-word;
@@ -1209,7 +1306,10 @@ const AICreateArrow = styled.div`
   font-size: 24px;
   font-weight: 700;
   flex-shrink: 0;
-  color: ${({ theme }) => theme.aiCreateCardText || '#8B3E2E'};
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return theme.aiCreateCardText || '#8B3E2E';
+  }};
   opacity: 0.8;
   transition: all 0.2s;
   
@@ -1266,6 +1366,7 @@ function Home({ user }) {
   const { t } = useTranslation();
   const { actualTheme } = useTheme();
   const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
@@ -1551,7 +1652,7 @@ function Home({ user }) {
                         src={appTutorial.imageUrl || '/bookcover.png'}
                         alt={appTutorial.title}
                       />
-                      <TutorialTitle>{appTutorial.title}</TutorialTitle>
+                      <TutorialTitle $isGlassTheme={isGlassTheme}>{appTutorial.title}</TutorialTitle>
                     </TutorialBox>
                     <TutorialBox
                       onClick={() => navigate(`/novel/${createNovelUrl(novelTutorial.year, novelTutorial.month, novelTutorial.weekNum, novelTutorial.genre, novelTutorial.id)}?userId=${novelTutorial.userId}`, {
@@ -1562,7 +1663,7 @@ function Home({ user }) {
                         src={novelTutorial.imageUrl || '/bookcover2.png'}
                         alt={novelTutorial.title}
                       />
-                      <TutorialTitle>{novelTutorial.title}</TutorialTitle>
+                      <TutorialTitle $isGlassTheme={isGlassTheme}>{novelTutorial.title}</TutorialTitle>
                     </TutorialBox>
                   </>
                 );
@@ -1572,32 +1673,32 @@ function Home({ user }) {
         )}
 
         {/* AI 소설 만들기 CTA */}
-        <AICreateCard $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>
-          <AICreateContent $isDiaryTheme={isDiaryTheme}>
+        <AICreateCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>
+          <AICreateContent $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
             {/* <AICreateIcon>✨</AICreateIcon> */}
             <AICreateText>
-              <AICreateTitle $isDiaryTheme={isDiaryTheme}>
+              <AICreateTitle $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                 <span>{t('home_ai_create_title')}</span>
                 <span style={{ fontSize: '32px', fontWeight: '700' }}>→</span>
               </AICreateTitle>
-              <AICreateDesc $isDiaryTheme={isDiaryTheme}>{t('home_ai_create_desc')}</AICreateDesc>
+              <AICreateDesc $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_ai_create_desc')}</AICreateDesc>
             </AICreateText>
           </AICreateContent>
         </AICreateCard>
 
         {/* 오늘의 주제 섹션 */}
         <TopicSection>
-          <SectionLabel $isDiaryTheme={isDiaryTheme} style={{ marginTop: '0', marginBottom: '12px' }}>💡 {t('home_topic_title')}</SectionLabel>
-          <TopicCard $isDiaryTheme={isDiaryTheme}>
+          <SectionLabel $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} style={{ marginTop: '0', marginBottom: '12px' }}>💡 {t('home_topic_title')}</SectionLabel>
+          <TopicCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
             {/* <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro> */}
-            <RecommendationTopic $isDiaryTheme={isDiaryTheme}>"{todayTopic}"</RecommendationTopic>
+            <RecommendationTopic $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>"{todayTopic}"</RecommendationTopic>
           </TopicCard>
         </TopicSection>
 
         {/* 일기 섹션 - 하단으로 이동 */}
-        <SectionLabel $isDiaryTheme={isDiaryTheme} style={{ marginTop: '10px' }}>📝 {t('home_recent_diary')}</SectionLabel>
+        <SectionLabel $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} style={{ marginTop: '10px' }}>📝 {t('home_recent_diary')}</SectionLabel>
         <MainButtonRow>
-          <RecentDiaryCard $isDiaryTheme={isDiaryTheme} onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
+          <RecentDiaryCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
             {recentDiaries.length > 0 && recentDiaries[0] ? (
               <DiaryPreviewContainer>
                 {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
@@ -1609,30 +1710,30 @@ function Home({ user }) {
                   </DiaryPreviewImagePlaceholder>
                 )}
                 <DiaryPreviewTextContainer>
-                  <DiaryPreviewDate>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
-                  <DiaryPreviewTitle>{recentDiaries[0].title}</DiaryPreviewTitle>
-                  <DiaryPreviewContent lineClamp={4}>{recentDiaries[0].content}</DiaryPreviewContent>
+                  <DiaryPreviewDate $isGlassTheme={isGlassTheme}>{formatDate(recentDiaries[0].date)}</DiaryPreviewDate>
+                  <DiaryPreviewTitle $isGlassTheme={isGlassTheme}>{recentDiaries[0].title}</DiaryPreviewTitle>
+                  <DiaryPreviewContent $isGlassTheme={isGlassTheme} lineClamp={4}>{recentDiaries[0].content}</DiaryPreviewContent>
                 </DiaryPreviewTextContainer>
               </DiaryPreviewContainer>
             ) : (
               <DiaryPreviewContainer $isEmpty={true}>
-                <DiaryPreviewTitle $isEmpty={true}>{t('home_no_diary_yet')}</DiaryPreviewTitle>
-                <DiaryPreviewContent $isEmpty={true}>{t('home_write_first_diary')}</DiaryPreviewContent>
+                <DiaryPreviewTitle $isEmpty={true} $isGlassTheme={isGlassTheme}>{t('home_no_diary_yet')}</DiaryPreviewTitle>
+                <DiaryPreviewContent $isEmpty={true} $isGlassTheme={isGlassTheme}>{t('home_write_first_diary')}</DiaryPreviewContent>
               </DiaryPreviewContainer>
             )}
           </RecentDiaryCard>
 
           <RightColumn>
-            <WriteDiaryButton $isDiaryTheme={isDiaryTheme} onClick={handleWriteDiaryClick}>
+            <WriteDiaryButton $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={handleWriteDiaryClick}>
               <WriteButtonContent>
-                <PencilIcon width="32" height="32" color={isDiaryTheme ? '#8B6F47' : 'white'} />
-                <MainButtonText $isDiaryTheme={isDiaryTheme}>{t('home_write_diary')}</MainButtonText>
+                <PencilIcon width="32" height="32" color={isDiaryTheme ? '#8B6F47' : (isGlassTheme ? '#000000' : 'white')} />
+                <MainButtonText $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_write_diary')}</MainButtonText>
               </WriteButtonContent>
             </WriteDiaryButton>
-            <PotionShopButton $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/potion-shop')}>
+            <PotionShopButton $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => navigate('/my/potion-shop')}>
               <PotionShopContent>
                 <PotionShopIcon>🧪</PotionShopIcon>
-                <PotionShopText $isDiaryTheme={isDiaryTheme}>{t('home_potion_buy')}</PotionShopText>
+                <PotionShopText $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_potion_buy')}</PotionShopText>
               </PotionShopContent>
             </PotionShopButton>
           </RightColumn>
@@ -1642,20 +1743,21 @@ function Home({ user }) {
         {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
           <PremiumBanner
             $isDiaryTheme={false}
+            $isGlassTheme={isGlassTheme}
             onClick={() => navigate('/my/premium')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <PremiumBannerContent>
               <PremiumBannerLeft>
-                <PremiumBannerTitle>
+                <PremiumBannerTitle $isGlassTheme={isGlassTheme}>
                   👑 {t('premium_benefits')} 👑
                 </PremiumBannerTitle>
-                <PremiumBannerDesc>
+                <PremiumBannerDesc $isGlassTheme={isGlassTheme}>
                   {t('premium_benefits_desc')}
                 </PremiumBannerDesc>
               </PremiumBannerLeft>
-              <PremiumBannerButton>
+              <PremiumBannerButton $isGlassTheme={isGlassTheme}>
                 {t('premium_monthly_subscribe_button')}
               </PremiumBannerButton>
             </PremiumBannerContent>
