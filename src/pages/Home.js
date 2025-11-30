@@ -20,13 +20,14 @@ import { motion } from 'framer-motion';
 import { getAppTutorialNovel, getNovelCreationTutorialNovel } from '../utils/tutorialNovel';
 import { inAppPurchaseService } from '../utils/inAppPurchase';
 import { useTheme } from '../ThemeContext';
+import './Home.css';
 
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
+  background-color: transparent;
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   padding: 20px;
   // padding-top: 30px;
@@ -42,23 +43,6 @@ const Container = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  ${props => props.$isDiaryTheme && `
-    background-image: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.02) 2px,
-        rgba(0, 0, 0, 0.02) 4px
-      );
-  `}
 `;
 
 /* 일기 최근 미리보기 영역 */
@@ -90,7 +74,7 @@ const RecentDiaryCard = styled.div`
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '18px 22px 20px 19px' : '28px'};
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return '0 4px 16px rgba(0,0,0,0.07)';
   }};
@@ -108,7 +92,7 @@ const RecentDiaryCard = styled.div`
   }};
   &:hover { 
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+    if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return '0 6px 20px rgba(0,0,0,0.13)';
   }};
@@ -151,7 +135,7 @@ const WriteDiaryButton = styled.div`
   border-radius: ${({ $isDiaryTheme }) =>
     $isDiaryTheme ? '20px 24px 22px 21px' : '28px'};
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return '0 4px 16px rgba(201, 154, 154, 0.3)';
   }};
@@ -170,7 +154,7 @@ const WriteDiaryButton = styled.div`
   gap: 10px;
   &:hover { 
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+    if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return '0 6px 20px rgba(201, 154, 154, 0.4)';
   }};
@@ -411,7 +395,7 @@ const PotionCard = styled.div`
   justify-content: space-between;
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+      return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     }
     return $isDiaryTheme
       ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -456,7 +440,7 @@ const PotionCard = styled.div`
   }};
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+      return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     }
     return $isDiaryTheme
       ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -526,7 +510,7 @@ const EmptyPotionCard = styled.div`
   align-items: center;
   justify-content: center;
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return '0 2px 8px rgba(0,0,0,0.06)';
   }};
@@ -773,7 +757,7 @@ const TopicCard = styled.div`
   }};
   box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+      return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     }
     return $isDiaryTheme
       ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -805,7 +789,7 @@ const TopicCard = styled.div`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.4deg) translateY(-1px)' : 'none'};
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+      return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     }
     return $isDiaryTheme
       ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
@@ -832,7 +816,7 @@ const PotionShopButton = styled.div`
     $isDiaryTheme ? '22px 19px 21px 23px' : '28px'};
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+      return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(165, 180, 252, 0.3)';
@@ -854,7 +838,7 @@ const PotionShopButton = styled.div`
   &:hover { 
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+      return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(165, 180, 252, 0.4)';
@@ -981,7 +965,7 @@ const PremiumBanner = styled(motion.div)`
   cursor: pointer;
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+      return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 226, 159, 0.4)';
@@ -1028,7 +1012,7 @@ const PremiumBanner = styled(motion.div)`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.5deg) translateY(-2px)' : 'scale(1.02)'};
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+      return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 226, 159, 0.5)';
@@ -1116,7 +1100,7 @@ const PremiumBannerButton = styled.div`
   font-size: 15px;
   white-space: nowrap;
   box-shadow: ${({ theme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+    if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     return theme.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.15)';
   }};
   border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.3)' : 'none'};
@@ -1172,7 +1156,7 @@ const AICreateCard = styled(motion.div)`
   cursor: pointer;
   box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 12px 50px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.1)';
+      return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     }
     if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 180, 170, 0.2)';
@@ -1213,7 +1197,7 @@ const AICreateCard = styled(motion.div)`
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return '0 16px 60px rgba(0, 0, 0, 0.2), 0 6px 24px rgba(0, 0, 0, 0.12)';
+      return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
     }
     if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 180, 170, 0.3)';
@@ -1597,7 +1581,10 @@ function Home({ user }) {
   };
 
   return (
-    <Container $isDiaryTheme={isDiaryTheme}>
+    <Container
+      className={`home-container ${isDiaryTheme ? 'diary-theme' : ''}`}
+      $isDiaryTheme={isDiaryTheme}
+    >
       <Header
         user={user}
         onNotificationClick={() => setNotificationModalOpen(true)}
@@ -1627,6 +1614,8 @@ function Home({ user }) {
                     borderRadius: '12px',
                     display: 'block',
                     margin: '0 auto',
+                    border: isGlassTheme ? '2px solid rgb(255, 255, 255)' : 'none',
+                    boxShadow: isGlassTheme ? '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
                   }}
                 />
               </CarouselSlide>
