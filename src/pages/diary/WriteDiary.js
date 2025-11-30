@@ -1763,6 +1763,9 @@ function WriteDiary({ user }) {
                 createdAt: new Date(),
             };
             let diaryRef;
+            let earnedPointValue = 0; // 포인트 지급 여부 추적
+            let shouldShowAnimation = false; // 애니메이션 표시 여부
+
             if (isEditMode && existingDiaryId) {
                 diaryRef = doc(db, 'diaries', existingDiaryId);
                 // 기존 일기의 imageLimitExtended는 유지하되, 현재 프리미엄 회원이거나 기존에 imageLimitExtended가 true였으면 유지
@@ -1797,10 +1800,16 @@ function WriteDiary({ user }) {
                         // 포인트 적립 알림 생성
                         await createPointEarnNotification(user.uid, earnPoint, t('today_diary'));
 
-                        // 포인트 지급 애니메이션 표시
+                        // 포인트 지급 정보 저장
+                        earnedPointValue = earnPoint;
+                        shouldShowAnimation = true;
+
+                        // 포인트 지급 애니메이션 표시 (즉시 표시)
                         setEarnedPoints(earnPoint);
                         setShowPointAnimation(true);
                         setShouldDelayNavigation(true);
+
+                        console.log('포인트 애니메이션 표시:', earnPoint);
 
                         // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
                         await checkWeeklyBonus(user.uid, today);
@@ -1809,71 +1818,100 @@ function WriteDiary({ user }) {
                         toast.showToast(t('diary_point_not_today'), 'info');
                     }
                 } catch (pointError) {
+                    console.error('포인트 지급 오류:', pointError);
                     toast.showToast(t('diary_point_earn_failed'), 'error');
                 }
             }
+
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
-            // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
-            const existingUrlCount = (diary.imageUrls || []).length;
-            const existingUrls = diary.imageUrls || [];
+            // 포인트 애니메이션이 표시 중이면 이미지 업로드를 기다리지 않고 먼저 애니메이션 표시
+            if (shouldShowAnimation) {
+                // 애니메이션이 충분히 보이도록 1.5초 대기 후 이미지 업로드 및 페이지 이동
+                setTimeout(async () => {
+                    // 이미지 업로드 진행
+                    const existingUrlCount = (diary.imageUrls || []).length;
+                    const existingUrls = diary.imageUrls || [];
 
-            // 새 파일 업로드
-            let uploadedUrls = [];
-            if (imageFiles.length > 0) {
-                const uploadPromises = imageFiles.map((file, fileIndex) => {
-                    const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
-                    return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-                });
-                uploadedUrls = await Promise.all(uploadPromises);
-            }
-
-            // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
-            // imagePreview의 각 항목이 기존 URL(https://)인지 새 파일(blob:)인지 확인
-            // 드래그 앤 드롭으로 순서가 변경되었을 수 있으므로, imagePreview 순서를 그대로 따름
-            const finalImageUrlsResult = [];
-            let newFileUploadIndex = 0;
-
-            for (let i = 0; i < imagePreview.length; i++) {
-                const preview = imagePreview[i];
-                if (preview.startsWith('blob:')) {
-                    // blob URL인 경우 (새 파일)
-                    // imagePreview에서 blob URL의 원래 순서를 찾기 위해
-                    // 현재 imagePreview에서 blob URL이 몇 번째인지 계산
-                    const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
-                    const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
-
-                    // 원래 imageFiles 순서와 매핑
-                    // 드래그 앤 드롭으로 순서가 변경되었을 수 있으므로,
-                    // imagePreview에서 blob URL의 현재 위치를 기준으로 imageFiles에서 찾기
-                    // 하지만 더 정확한 방법은 imagePreview와 imageFiles를 함께 추적하는 것
-                    // 간단하게는 imagePreview에서 blob URL의 순서대로 uploadedUrls 사용
-                    if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
-                        finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                    // 새 파일 업로드
+                    let uploadedUrls = [];
+                    if (imageFiles.length > 0) {
+                        const uploadPromises = imageFiles.map((file, fileIndex) => {
+                            const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
+                            return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                        });
+                        uploadedUrls = await Promise.all(uploadPromises);
                     }
-                } else {
-                    // 기존 URL인 경우 (https:// 또는 http://)
-                    finalImageUrlsResult.push(preview);
-                }
-            }
-            // 3. 기존 이미지 + 새 이미지 모두 update (항상 실행)
-            const imageUpdateData = {
-                imageUrls: finalImageUrlsResult,
-                updatedAt: new Date(),
-            };
-            // 사진이 4개까지 업로드된 일기는 imageLimitExtended를 true로 설정
-            if (finalImageUrlsResult.length >= 4) {
-                imageUpdateData.imageLimitExtended = true;
-            }
-            await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
 
-            // 포인트 애니메이션이 표시 중이면 애니메이션이 끝난 후에 페이지 이동
-            if (shouldDelayNavigation) {
-                setTimeout(() => {
+                    // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+                    const finalImageUrlsResult = [];
+                    for (let i = 0; i < imagePreview.length; i++) {
+                        const preview = imagePreview[i];
+                        if (preview.startsWith('blob:')) {
+                            const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                            const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+                            if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                                finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                            }
+                        } else {
+                            finalImageUrlsResult.push(preview);
+                        }
+                    }
+
+                    // 이미지 URL 업데이트
+                    const imageUpdateData = {
+                        imageUrls: finalImageUrlsResult,
+                        updatedAt: new Date(),
+                    };
+                    if (finalImageUrlsResult.length >= 4) {
+                        imageUpdateData.imageLimitExtended = true;
+                    }
+                    await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
+
+                    // 애니메이션 종료 및 페이지 이동
                     setShowPointAnimation(false);
                     setShouldDelayNavigation(false);
                     navigate(`/diary/date/${formatDateToString(selectedDate)}`);
-                }, 2000);
+                }, 1500);
             } else {
+                // 애니메이션이 없으면 기존대로 이미지 업로드 후 페이지 이동
+                const existingUrlCount = (diary.imageUrls || []).length;
+                const existingUrls = diary.imageUrls || [];
+
+                // 새 파일 업로드
+                let uploadedUrls = [];
+                if (imageFiles.length > 0) {
+                    const uploadPromises = imageFiles.map((file, fileIndex) => {
+                        const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
+                        return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                    });
+                    uploadedUrls = await Promise.all(uploadPromises);
+                }
+
+                // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+                const finalImageUrlsResult = [];
+                for (let i = 0; i < imagePreview.length; i++) {
+                    const preview = imagePreview[i];
+                    if (preview.startsWith('blob:')) {
+                        const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                        const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+                        if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                            finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                        }
+                    } else {
+                        finalImageUrlsResult.push(preview);
+                    }
+                }
+
+                // 이미지 URL 업데이트
+                const imageUpdateData = {
+                    imageUrls: finalImageUrlsResult,
+                    updatedAt: new Date(),
+                };
+                if (finalImageUrlsResult.length >= 4) {
+                    imageUpdateData.imageLimitExtended = true;
+                }
+                await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
+
                 navigate(`/diary/date/${formatDateToString(selectedDate)}`);
             }
         } catch (error) {
