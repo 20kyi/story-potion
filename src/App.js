@@ -46,7 +46,7 @@ import NoticeDetail from './pages/mypage/NoticeDetail';
 import ThemeSettings from './pages/mypage/ThemeSettings';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { ThemeProvider as StyledThemeProvider, createGlobalStyle } from 'styled-components';
-import { lightTheme, darkTheme } from './theme';
+import { lightTheme, darkTheme, glassTheme } from './theme';
 import { useNotification } from './hooks/useNotification';
 import NotificationToast from './components/NotificationToast';
 import PointHistory from './pages/mypage/PointHistory';
@@ -1385,14 +1385,25 @@ function ThemeConsumerWrapper({ children }) {
                     rgba(0, 0, 0, 0.02) 4px
                 )
             `;
+        } else if (actualTheme === 'glass') {
+            // 글래스모피즘 테마는 index.css에서 처리
+            document.body.style.background = '';
+            document.body.style.backgroundImage = '';
         } else {
             document.body.style.background = '';
             document.body.style.backgroundImage = '';
         }
     }, [actualTheme]);
-    
+
+    // 테마 선택 로직
+    const getTheme = () => {
+        if (actualTheme === 'dark') return darkTheme;
+        if (actualTheme === 'glass') return glassTheme;
+        return lightTheme;
+    };
+
     return (
-        <StyledThemeProvider theme={actualTheme === 'dark' ? darkTheme : lightTheme}>
+        <StyledThemeProvider theme={getTheme()}>
             <GlobalStyle fontFamily={fontFamily} fontSize={fontSize} />
             {children}
         </StyledThemeProvider>

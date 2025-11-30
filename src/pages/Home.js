@@ -26,10 +26,18 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#faf8f3' : theme.background};
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#5C4B37' : theme.text};
+  background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'transparent';
+    }
+    return $isDiaryTheme ? '#faf8f3' : theme.background;
+  }};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return theme.text;
+    }
+    return $isDiaryTheme ? '#5C4B37' : theme.text;
+  }};
   padding: 20px;
   // padding-top: 30px;
   padding-bottom: 30px;
@@ -82,16 +90,26 @@ const MainButtonRow = styled.div`
 const RecentDiaryCard = styled.div`
   flex: 1;
   min-width: 0;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)')};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '18px 22px 20px 19px' : '28px'};
-  box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 4px 16px rgba(0,0,0,0.07)'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 255, 255, 0.25)';
+    }
+    return $isDiaryTheme
+      ? '#fffef9'
+      : (theme.cardGradient || 'linear-gradient(135deg, #B8D9F5 0%, #A8D0F0 50%, #9AC8EB 100%)');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '18px 22px 20px 19px' : '28px'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme
+      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 4px 16px rgba(0,0,0,0.07)';
+  }};
   height: 256px;
   display: flex;
   flex-direction: column;
@@ -99,13 +117,21 @@ const RecentDiaryCard = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '1px solid rgba(255, 255, 255, 0.3)';
+    }
+    return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none';
+  }};
   &:hover { 
-    box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 6px 20px rgba(0,0,0,0.13)'};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    return $isDiaryTheme
+      ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 6px 20px rgba(0,0,0,0.13)';
+  }};
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'none'};
   }
   padding: 16px;
@@ -135,16 +161,26 @@ const WriteDiaryButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.writeCardGradient || 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)')};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '20px 24px 22px 21px' : '28px'};
-  box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 4px 16px rgba(201, 154, 154, 0.3)'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(232, 213, 211, 0.3)';
+    }
+    return $isDiaryTheme
+      ? '#fffef9'
+      : (theme.writeCardGradient || 'linear-gradient(135deg, #E8D5D3 0%, #D4A5A5 50%, #C99A9A 100%)');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '20px 24px 22px 21px' : '28px'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(201, 154, 154, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme
+      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 4px 16px rgba(201, 154, 154, 0.3)';
+  }};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -152,24 +188,41 @@ const WriteDiaryButton = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.4deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '1px solid rgba(255, 255, 255, 0.4)';
+    }
+    return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none';
+  }};
   gap: 10px;
   &:hover { 
-    box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 6px 20px rgba(201, 154, 154, 0.4)'};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(201, 154, 154, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    return $isDiaryTheme
+      ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 6px 20px rgba(201, 154, 154, 0.4)';
+  }};
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.6deg) translateY(-2px)' : 'none'};
   }
 `;
 /* 일기 쓰기 버튼 텍스트 */
 const MainButtonText = styled.div`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#fff'};
+  color: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '#2C3E50';
+    }
+    return $isDiaryTheme ? '#8B6F47' : '#fff';
+  }};
   font-size: 16px;
   font-weight: 600;
-  text-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? 'none' : '0 1px 6px rgba(0,0,0,0.08)'};
+  text-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 1px 3px rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme ? 'none' : '0 1px 6px rgba(0,0,0,0.08)';
+  }};
   // @media (min-width: 768px) {
   //   font-size: 20px;
   // }
@@ -323,8 +376,8 @@ const ContentGrid = styled.div`
 const SectionLabel = styled.div`
   font-size: 20px;
   font-weight: 600;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   margin-bottom: 10px;
   margin-top: 10px;
   padding-left: 10px;
@@ -359,30 +412,44 @@ const PotionRow = styled.div`
 const PotionCard = styled.div`
   width: 100%;
   height: 110px;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#fffef9' : theme.card};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '14px 18px 16px 15px' : '16px'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 255, 255, 0.2)';
+    }
+    return $isDiaryTheme ? '#fffef9' : theme.card;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '14px 18px 16px 15px' : '16px'};
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 2px 8px rgba(0,0,0,0.06)'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme
+      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 2px 8px rgba(0,0,0,0.06)';
+  }};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '1px solid rgba(255, 255, 255, 0.3)';
+    }
+    return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none';
+  }};
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'none';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg)`;
-    }};
+    if (!$isDiaryTheme) return 'none';
+    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+  }};
 
   ${({ $isDiaryTheme }) => $isDiaryTheme && `
     &::before {
@@ -401,24 +468,32 @@ const PotionCard = styled.div`
 
   &:hover {
     transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'scale(0.98)';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
-    }};
-    box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 2px 8px rgba(0,0,0,0.06)'};
+    if (!$isDiaryTheme) return 'scale(0.98)';
+    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+  }};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    return $isDiaryTheme
+      ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 2px 8px rgba(0,0,0,0.06)';
+  }};
   }
 
   &:active {
     transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'scale(0.95)';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
-    }};
-    background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || '#f8f9fa')};
+    if (!$isDiaryTheme) return 'scale(0.95)';
+    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
+  }};
+    background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 255, 255, 0.25)';
+    }
+    return $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || '#f8f9fa');
+  }};
   }
 `;
 
@@ -432,37 +507,37 @@ const PotionImage = styled.img`
 const PotionCount = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   text-align: center;
 `;
 
 const PotionName = styled.div`
   font-size: 13px;
   font-weight: 500;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   text-align: center;
 `;
 
 const EmptyPotionCard = styled.div`
   width: 100%;
   height: 110px;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#fffef9' : theme.card};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
+  background: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#fffef9' : theme.card};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 2px 8px rgba(0,0,0,0.06)'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  box-shadow: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme
+      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 2px 8px rgba(0,0,0,0.06)'};
+  border: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
   opacity: 0.5;
   grid-column: 1 / -1;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.2deg)' : 'none'};
@@ -510,8 +585,8 @@ const EmptyStateIcon = styled.div`
 const EmptyStateTitle = styled.div`
   font-size: 15px;
   font-weight: 600;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   text-align: center;
   margin-bottom: 2px;
 `;
@@ -679,17 +754,31 @@ const TopicSection = styled.div`
 `;
 
 const TopicCard = styled.div`
-  background-color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#fffef9' : theme.progressCard};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '16px 20px 18px 17px' : '20px'};
+  background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 255, 255, 0.2)';
+    }
+    return $isDiaryTheme ? '#fffef9' : theme.progressCard;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '16px 20px 18px 17px' : '20px'};
   padding: 16px;
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : '1px solid #f0f0f0'};
-  box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 2px 8px rgba(0,0,0,0.04)'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '1px solid rgba(255, 255, 255, 0.3)';
+    }
+    return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : '1px solid #f0f0f0';
+  }};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme
+      ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 2px 8px rgba(0,0,0,0.04)';
+  }};
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -714,10 +803,14 @@ const TopicCard = styled.div`
   
   &:hover {
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.4deg) translateY(-1px)' : 'none'};
-    box-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
-            : '0 2px 8px rgba(0,0,0,0.04)'};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    return $isDiaryTheme
+      ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+      : '0 2px 8px rgba(0,0,0,0.04)';
+  }};
   }
 `;
 
@@ -725,16 +818,25 @@ const PotionShopButton = styled.div`
   width: 120px;
   height: 120px;
   flex-shrink: 0;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.potionShopButtonBg || 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%)')};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '22px 19px 21px 23px' : '28px'};
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(165, 180, 252, 0.3)';
-    }};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(224, 231, 255, 0.3)';
+    }
+    return $isDiaryTheme
+      ? '#fffef9'
+      : (theme.potionShopButtonBg || 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 50%, #A5B4FC 100%)');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '22px 19px 21px 23px' : '28px'};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(165, 180, 252, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(165, 180, 252, 0.3)';
+  }};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -742,14 +844,21 @@ const PotionShopButton = styled.div`
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.2deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '1px solid rgba(255, 255, 255, 0.4)';
+    }
+    return $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.25)' : 'none';
+  }};
   gap: 10px;
   &:hover { 
-    box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(165, 180, 252, 0.4)';
-    }};
+    box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(165, 180, 252, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(165, 180, 252, 0.4)';
+  }};
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.4deg) translateY(-2px)' : 'none'};
   }
 `;
@@ -767,11 +876,20 @@ const PotionShopIcon = styled.div`
 `;
 
 const PotionShopText = styled.div`
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : '#fff'};
+  color: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '#2C3E50';
+    }
+    return $isDiaryTheme ? '#8B6F47' : '#fff';
+  }};
   font-size: 16px;
   font-weight: 600;
-  text-shadow: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? 'none' : '0 1px 6px rgba(0,0,0,0.08)'};
+  text-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 1px 3px rgba(255, 255, 255, 0.5)';
+    }
+    return $isDiaryTheme ? 'none' : '0 1px 6px rgba(0,0,0,0.08)';
+  }};
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicTitle = styled.p`
@@ -792,8 +910,8 @@ const RecommendationIntro = styled.p`
 const RecommendationTopic = styled.p`
   font-size: 11px;
   font-weight: 500;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#5C4B37' : theme.cardSubText};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#5C4B37' : theme.cardSubText};
   line-height: 1.4;
   margin-top: 4px;
   word-break: keep-all;
@@ -831,48 +949,62 @@ const CarouselContainer = styled.div`
 `;
 
 const PremiumBanner = styled(motion.div)`
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)')};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 226, 159, 0.3)';
+    }
+    return $isDiaryTheme
+      ? '#fffef9'
+      : (theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
   padding: 20px;
   margin-top: 12px;
   margin-bottom: 20px;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : (theme.premiumBannerText || '#8B4513')};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : (theme.premiumBannerText || '#8B4513')};
   cursor: pointer;
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 226, 159, 0.4)';
-    }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(255, 226, 159, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 226, 159, 0.4)';
+  }};
   position: relative;
   overflow: hidden;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.3deg)' : 'none'};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '2px solid rgba(255, 255, 255, 0.4)';
+    }
+    return $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none';
+  }};
   transition: transform 0.2s, box-shadow 0.2s;
   
   &::before {
     content: '';
     position: absolute;
-    top: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-25%'};
-    right: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-25%'};
-    width: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '150%'};
-    height: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '150%'};
-    left: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
-    bottom: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
-    border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'inherit' : '0'};
-    background: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
-        return theme.mode === 'dark'
-            ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
-    }};
-    z-index: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1' : '0'};
-    opacity: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0.3' : '1'};
-    animation: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'none' : 'shimmer 4s infinite'};
+    top: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : '-25%'};
+    right: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : '-25%'};
+    width: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'auto' : '150%'};
+    height: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'auto' : '150%'};
+    left: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : 'auto'};
+    bottom: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : 'auto'};
+    border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'inherit' : '0'};
+    background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%)';
+    if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
+    return theme.mode === 'dark'
+      ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+      : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
+  }};
+    z-index: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1' : '0'};
+    opacity: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '0.3' : '1'};
+    animation: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'none' : 'shimmer 4s infinite'};
   }
   
   @keyframes shimmer {
@@ -882,10 +1014,13 @@ const PremiumBanner = styled(motion.div)`
   
   &:hover {
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.5deg) translateY(-2px)' : 'scale(1.02)'};
-    box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 226, 159, 0.5)';
-    }};
+    box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(255, 226, 159, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 226, 159, 0.5)';
+  }};
   }
 `;
 
@@ -981,23 +1116,36 @@ const CarouselSlide = styled.div`
 `;
 
 const AICreateCard = styled(motion.div)`
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.aiCreateCardBg || 'linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%)')};
-  border: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '2px solid rgba(139, 111, 71, 0.25)' 
-            : `2px solid ${theme.aiCreateCardBorder || '#FFD4CC'}`};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 245, 243, 0.3)';
+    }
+    return $isDiaryTheme
+      ? '#fffef9'
+      : (theme.aiCreateCardBg || 'linear-gradient(135deg, #FFF5F3 0%, #FFEBE8 50%, #FFE0DB 100%)');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '2px solid rgba(255, 255, 255, 0.4)';
+    }
+    return $isDiaryTheme
+      ? '2px solid rgba(139, 111, 71, 0.25)'
+      : `2px solid ${theme.aiCreateCardBorder || '#FFD4CC'}`;
+  }};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '18px 22px 20px 19px' : '20px'};
   padding: 20px;
   margin-bottom: 10px;
   cursor: pointer;
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 180, 170, 0.2)';
-    }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 8px 32px rgba(255, 180, 170, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 180, 170, 0.2)';
+  }};
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -1006,22 +1154,23 @@ const AICreateCard = styled(motion.div)`
   &::before {
     content: '';
     position: absolute;
-    top: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-50%'};
-    right: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : '-50%'};
-    width: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '200%'};
-    height: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'auto' : '200%'};
-    left: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
-    bottom: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
+    top: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : '-50%'};
+    right: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : '-50%'};
+    width: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'auto' : '200%'};
+    height: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'auto' : '200%'};
+    left: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : 'auto'};
+    bottom: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1px' : 'auto'};
     border-radius: inherit;
-    background: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
-        return theme.mode === 'dark'
-            ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
-    }};
-    z-index: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1' : '0'};
-    opacity: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0.3' : '1'};
-    animation: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'none' : 'shimmer 4s infinite'};
+    background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%)';
+    if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
+    return theme.mode === 'dark'
+      ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+      : 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
+  }};
+    z-index: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '-1' : '0'};
+    opacity: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? '0.3' : '1'};
+    animation: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme || $isGlassTheme) ? 'none' : 'shimmer 4s infinite'};
   }
   
   @keyframes shimmer {
@@ -1031,14 +1180,20 @@ const AICreateCard = styled(motion.div)`
   
   &:hover {
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
-    box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 180, 170, 0.3)';
-    }};
-    border-color: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.35)';
-        return theme.mode === 'dark' ? '#5A4545' : '#FFC4B8';
-    }};
+    box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return '0 12px 40px rgba(255, 180, 170, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+    }
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 180, 170, 0.3)';
+  }};
+    border-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) {
+      return 'rgba(255, 255, 255, 0.5)';
+    }
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.35)';
+    return theme.mode === 'dark' ? '#5A4545' : '#FFC4B8';
+  }};
   }
   
   &:active {
@@ -1052,8 +1207,8 @@ const AICreateContent = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
 `;
 
 const AICreateIcon = styled.div`
@@ -1072,8 +1227,8 @@ const AICreateTitle = styled.div`
   font-size: 32px !important;
   font-weight: 700;
   margin-bottom: 6px;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : (theme.aiCreateCardText || '#8B3E2E')};
   line-height: 1.3;
   word-break: keep-all;
   word-wrap: break-word;
@@ -1091,8 +1246,8 @@ const AICreateTitle = styled.div`
 
 const AICreateDesc = styled.div`
   font-size: 14px;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#5C4B37' : (theme.aiCreateCardDesc || '#A05245')};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#5C4B37' : (theme.aiCreateCardDesc || '#A05245')};
   line-height: 1.4;
   word-break: keep-all;
   word-wrap: break-word;
@@ -1165,6 +1320,7 @@ function Home({ user }) {
   const { t } = useTranslation();
   const { actualTheme } = useTheme();
   const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
   const [recentDiaries, setRecentDiaries] = useState([]);
   const [recentNovels, setRecentNovels] = useState([]);
   const [purchasedNovels, setPurchasedNovels] = useState([]); // 추가
@@ -1395,7 +1551,7 @@ function Home({ user }) {
   };
 
   return (
-    <Container $isDiaryTheme={isDiaryTheme}>
+    <Container $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
       <Header
         user={user}
         onNotificationClick={() => setNotificationModalOpen(true)}
@@ -1471,7 +1627,7 @@ function Home({ user }) {
         )}
 
         {/* AI 소설 만들기 CTA */}
-        <AICreateCard $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>
+        <AICreateCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => navigate('/novel', { state: { scrollToProgress: true } })}>
           <AICreateContent $isDiaryTheme={isDiaryTheme}>
             {/* <AICreateIcon>✨</AICreateIcon> */}
             <AICreateText>
@@ -1487,7 +1643,7 @@ function Home({ user }) {
         {/* 오늘의 주제 섹션 */}
         <TopicSection>
           <SectionLabel $isDiaryTheme={isDiaryTheme} style={{ marginTop: '0', marginBottom: '12px' }}>💡 {t('home_topic_title')}</SectionLabel>
-          <TopicCard $isDiaryTheme={isDiaryTheme}>
+          <TopicCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
             {/* <RecommendationIntro>{t('home_topic_intro')}</RecommendationIntro> */}
             <RecommendationTopic $isDiaryTheme={isDiaryTheme}>"{todayTopic}"</RecommendationTopic>
           </TopicCard>
@@ -1496,7 +1652,7 @@ function Home({ user }) {
         {/* 일기 섹션 - 하단으로 이동 */}
         <SectionLabel $isDiaryTheme={isDiaryTheme} style={{ marginTop: '10px' }}>📝 {t('home_recent_diary')}</SectionLabel>
         <MainButtonRow>
-          <RecentDiaryCard $isDiaryTheme={isDiaryTheme} onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
+          <RecentDiaryCard $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => recentDiaries.length > 0 && recentDiaries[0] && navigate(`/diary/date/${recentDiaries[0].date}`)}>
             {recentDiaries.length > 0 && recentDiaries[0] ? (
               <DiaryPreviewContainer>
                 {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
@@ -1522,16 +1678,16 @@ function Home({ user }) {
           </RecentDiaryCard>
 
           <RightColumn>
-            <WriteDiaryButton $isDiaryTheme={isDiaryTheme} onClick={handleWriteDiaryClick}>
+            <WriteDiaryButton $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={handleWriteDiaryClick}>
               <WriteButtonContent>
-                <PencilIcon width="32" height="32" color={isDiaryTheme ? '#8B6F47' : 'white'} />
-                <MainButtonText $isDiaryTheme={isDiaryTheme}>{t('home_write_diary')}</MainButtonText>
+                <PencilIcon width="32" height="32" color={isGlassTheme ? '#2C3E50' : (isDiaryTheme ? '#8B6F47' : 'white')} />
+                <MainButtonText $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_write_diary')}</MainButtonText>
               </WriteButtonContent>
             </WriteDiaryButton>
-            <PotionShopButton $isDiaryTheme={isDiaryTheme} onClick={() => navigate('/my/potion-shop')}>
+            <PotionShopButton $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={() => navigate('/my/potion-shop')}>
               <PotionShopContent>
                 <PotionShopIcon>🧪</PotionShopIcon>
-                <PotionShopText $isDiaryTheme={isDiaryTheme}>{t('home_potion_buy')}</PotionShopText>
+                <PotionShopText $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_potion_buy')}</PotionShopText>
               </PotionShopContent>
             </PotionShopButton>
           </RightColumn>
@@ -1541,6 +1697,7 @@ function Home({ user }) {
         {premiumStatus && !premiumStatus.isMonthlyPremium && !premiumStatus.isYearlyPremium && (
           <PremiumBanner
             $isDiaryTheme={false}
+            $isGlassTheme={isGlassTheme}
             onClick={() => navigate('/my/premium')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

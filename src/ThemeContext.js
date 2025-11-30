@@ -32,7 +32,7 @@ export function ThemeProvider({ children }) {
     // 시스템 테마 변경 감지
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
+
         const handleChange = () => {
             if (theme === 'system') {
                 setActualTheme(getSystemTheme());
@@ -49,6 +49,8 @@ export function ThemeProvider({ children }) {
             setActualTheme(getSystemTheme());
         } else if (theme === 'diary') {
             setActualTheme('diary');
+        } else if (theme === 'glass') {
+            setActualTheme('glass');
         } else {
             setActualTheme(theme);
         }
@@ -75,9 +77,9 @@ export function ThemeProvider({ children }) {
     };
 
     return (
-        <ThemeContext.Provider value={{ 
-            theme, 
-            actualTheme, 
+        <ThemeContext.Provider value={{
+            theme,
+            actualTheme,
             setThemeMode,
             toggleTheme: () => setThemeMode(theme === 'light' ? 'dark' : 'light'),
             fontFamily,

@@ -46,6 +46,28 @@ function ThemeSettings() {
                             className="theme-radio"
                         />
                     </label>
+                    <label className="theme-option">
+                        <span>다이어리 테마</span>
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="diary"
+                            checked={theme === 'diary'}
+                            onChange={e => setThemeMode(e.target.value)}
+                            className="theme-radio"
+                        />
+                    </label>
+                    <label className="theme-option">
+                        <span>글래스모피즘 테마</span>
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="glass"
+                            checked={theme === 'glass'}
+                            onChange={e => setThemeMode(e.target.value)}
+                            className="theme-radio"
+                        />
+                    </label>
                 </div>
             </div>
         </>

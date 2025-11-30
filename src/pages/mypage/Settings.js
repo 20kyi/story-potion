@@ -95,6 +95,7 @@ function Settings() {
                             <option value="light" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_light') || '라이트 모드'}</option>
                             <option value="dark" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_dark') || '다크 모드'}</option>
                             <option value="diary" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>다이어리 테마</option>
+                            <option value="glass" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>글래스모피즘 테마</option>
                             <option value="system" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_system') || '시스템 설정'}</option>
                         </select>
                     </li>
