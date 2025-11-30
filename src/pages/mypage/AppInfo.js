@@ -30,7 +30,7 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   min-height: calc(100vh - 120px);
 `;
 

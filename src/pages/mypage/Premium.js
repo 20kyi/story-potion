@@ -22,7 +22,7 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   color: ${({ theme }) => theme.text};
   position: relative;
 `;
@@ -297,7 +297,7 @@ function Premium({ user }) {
                       const nextFreeNovelChargeDate = new Date(now);
                       nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
                       nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-                      
+
                       await updateDoc(doc(db, 'users', user.uid), {
                         premiumFreeNovelCount: 6,
                         premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
@@ -411,7 +411,7 @@ function Premium({ user }) {
                       const nextFreeNovelChargeDate = new Date(now);
                       nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
                       nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-                      
+
                       await updateDoc(doc(db, 'users', user.uid), {
                         premiumFreeNovelCount: 6,
                         premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),

@@ -65,6 +65,12 @@ body.diary {
             rgba(0, 0, 0, 0.02) 4px);
 }
 
+body.glass {
+    background: linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%);
+    background-attachment: fixed;
+    color: #2C3E50;
+}
+
 
 /* 친구 검색 입력창 다크모드 스타일 */
 body.dark .friend-search-input {

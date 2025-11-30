@@ -18,7 +18,7 @@ const SettingsContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   padding: 20px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   min-height: 500px;
 `;
 

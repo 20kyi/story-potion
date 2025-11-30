@@ -74,8 +74,7 @@ const MainContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#faf8f3' : theme.background};
+  background: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
@@ -156,8 +155,8 @@ const Nickname = styled.div`
   font-weight: 700;
   text-align: center;
   margin-top: 20px;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   word-break: keep-all;
   overflow-wrap: break-word;
 `;
@@ -171,9 +170,9 @@ const PremiumStatus = styled.div`
   padding: 8px 16px;
   // background: ${({ theme, isPremium }) => isPremium ? 'linear-gradient(135deg, #e46262, #cb6565)' : theme.card};
   color: ${({ theme, isPremium, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return isPremium ? '#8B6F47' : '#5C4B37';
-        return isPremium ? theme.text : (theme.subText || '#666');
-    }};
+    if ($isDiaryTheme) return isPremium ? '#8B6F47' : '#5C4B37';
+    return isPremium ? theme.text : (theme.subText || '#666');
+  }};
   border-radius: 20px;
   font-size: 14px;
   font-weight: 400;
@@ -221,8 +220,8 @@ const MenuIcon = styled.div`
 const MenuLabel = styled.span`
   font-size: 14px;
   font-weight: 500;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.menuText};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.menuText};
   margin-top: 2px;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -238,16 +237,16 @@ const Info = styled.div`
 `;
 
 const EditProfileCard = styled.div`
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#fffef9' : theme.card};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '16px 20px 18px 17px' : '18px'};
+  background: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#fffef9' : theme.card};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '16px 20px 18px 17px' : '18px'};
   box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.cardShadow;
-    }};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.cardShadow;
+  }};
+  border: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
   padding: 20px 16px;
   max-width: 380px;
   margin: 0 auto;
@@ -460,15 +459,15 @@ const StatItem = styled.div`
 const StatNumber = styled.span`
   font-size: 18px;
   font-weight: 700;
-  color: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme ? '#8B6F47' : theme.text};
   margin-bottom: 4px;
 `;
 
 const StatLabel = styled.span`
   font-size: 14px;
-  color: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '#5C4B37' : '#888'};
+  color: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '#5C4B37' : '#888'};
   font-weight: 500;
 `;
 
@@ -485,20 +484,20 @@ const FriendRequestBadge = styled.span`
 const PremiumUpgradeCard = styled.div`
   width: 100%;
   margin: 24px 0 32px 0;
-  background: ${({ theme, $isDiaryTheme }) => 
-        $isDiaryTheme 
-            ? '#fffef9' 
-            : (theme.premiumUpgradeCardBg || 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)')};
-  border-radius: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
+  background: ${({ theme, $isDiaryTheme }) =>
+    $isDiaryTheme
+      ? '#fffef9'
+      : (theme.premiumUpgradeCardBg || 'linear-gradient(135deg, #F5E6D3 0%, #FFE5B4 50%, #FFD89B 100%)')};
+  border-radius: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
   padding: 18px 24px;
   cursor: pointer;
   box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 216, 155, 0.4)';
-    }};
-  border: ${({ $isDiaryTheme }) => 
-        $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none'};
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(255, 216, 155, 0.4)';
+  }};
+  border: ${({ $isDiaryTheme }) =>
+    $isDiaryTheme ? '2px solid rgba(139, 111, 71, 0.3)' : 'none'};
   transition: all 0.2s ease;
   text-align: center;
   position: relative;
@@ -516,11 +515,11 @@ const PremiumUpgradeCard = styled.div`
     bottom: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1px' : 'auto'};
     border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'inherit' : '0'};
     background: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
-        return theme.mode === 'dark'
-            ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
-    }};
+    if ($isDiaryTheme) return 'linear-gradient(135deg, rgba(139, 111, 71, 0.1) 0%, transparent 50%)';
+    return theme.mode === 'dark'
+      ? 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)'
+      : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)';
+  }};
     z-index: ${({ $isDiaryTheme }) => $isDiaryTheme ? '-1' : '0'};
     opacity: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0.3' : '1'};
     animation: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'none' : 'shimmer 4s infinite'};
@@ -534,9 +533,9 @@ const PremiumUpgradeCard = styled.div`
   &:hover {
     transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.5deg) translateY(-2px)' : 'translateY(-2px)'};
     box-shadow: ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 216, 155, 0.5)';
-    }};
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    return theme.mode === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(255, 216, 155, 0.5)';
+  }};
   }
 `;
 

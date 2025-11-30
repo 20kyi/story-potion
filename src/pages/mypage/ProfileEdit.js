@@ -34,7 +34,7 @@ const MainContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   overflow-y: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;

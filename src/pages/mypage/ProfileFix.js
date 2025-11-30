@@ -4,10 +4,10 @@ import { useTheme } from '../../ThemeContext';
 import { useToast } from '../../components/ui/ToastProvider';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
-import { 
-    checkGoogleUserProfiles, 
-    forceUpdateGoogleUserProfiles, 
-    updateGoogleProfilesByEmail 
+import {
+    checkGoogleUserProfiles,
+    forceUpdateGoogleUserProfiles,
+    updateGoogleProfilesByEmail
 } from '../../utils/fixGoogleProfiles';
 
 const Container = styled.div`
@@ -20,7 +20,7 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   color: ${({ theme }) => theme.text};
 `;
 
@@ -100,7 +100,7 @@ function ProfileFix({ user }) {
     const handleCheckGoogleProfiles = async () => {
         setIsLoading(true);
         setStatus('구글 사용자 프로필 상태를 확인하는 중...');
-        
+
         try {
             const result = await checkGoogleUserProfiles();
             if (result.success) {
@@ -121,7 +121,7 @@ function ProfileFix({ user }) {
     const handleForceUpdateProfiles = async () => {
         setIsLoading(true);
         setStatus('구글 사용자 프로필을 강제로 업데이트하는 중...');
-        
+
         try {
             const result = await forceUpdateGoogleUserProfiles();
             if (result.success) {
@@ -142,7 +142,7 @@ function ProfileFix({ user }) {
     const handleUpdateByEmail = async () => {
         setIsLoading(true);
         setStatus('이메일 기반으로 구글 사용자 프로필을 업데이트하는 중...');
-        
+
         try {
             const result = await updateGoogleProfilesByEmail();
             if (result.success) {
@@ -163,39 +163,39 @@ function ProfileFix({ user }) {
     return (
         <Container theme={theme}>
             <Header user={user} title="프로필 복구" />
-            
+
             <Section theme={theme}>
                 <SectionTitle theme={theme}>🔧 구글 사용자 프로필 복구</SectionTitle>
                 <InfoText theme={theme}>
                     구글 연동 회원들의 프로필 이미지가 기본 이미지로 표시되는 문제를 해결할 수 있습니다.
                     아래 버튼들을 순서대로 실행해보세요.
                 </InfoText>
-                
-                <Button 
+
+                <Button
                     onClick={handleCheckGoogleProfiles}
                     disabled={isLoading}
                 >
                     1. 구글 사용자 프로필 상태 확인
                 </Button>
-                
-                <Button 
+
+                <Button
                     onClick={handleForceUpdateProfiles}
                     disabled={isLoading}
                 >
                     2. 구글 사용자 프로필 강제 업데이트
                 </Button>
-                
-                <Button 
+
+                <Button
                     onClick={handleUpdateByEmail}
                     disabled={isLoading}
                 >
                     3. 이메일 기반 프로필 업데이트
                 </Button>
-                
+
                 {isLoading && (
                     <LoadingText>처리 중...</LoadingText>
                 )}
-                
+
                 {status && (
                     <StatusText theme={theme}>
                         <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>

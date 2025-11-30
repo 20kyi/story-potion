@@ -1387,9 +1387,14 @@ function ThemeConsumerWrapper({ children }) {
                     rgba(0, 0, 0, 0.02) 4px
                 )
             `;
+        } else if (actualTheme === 'glass') {
+            // 글래스 모피즘 테마: 하늘색에서 연보라색으로 그라데이션
+            document.body.style.background = 'linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%)';
+            document.body.style.backgroundAttachment = 'fixed';
         } else {
             document.body.style.background = '';
             document.body.style.backgroundImage = '';
+            document.body.style.backgroundAttachment = '';
         }
     }, [actualTheme]);
 

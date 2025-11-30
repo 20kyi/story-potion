@@ -24,7 +24,7 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
+  background: transparent;
   color: ${({ theme }) => theme.text};
   position: relative;
 `;

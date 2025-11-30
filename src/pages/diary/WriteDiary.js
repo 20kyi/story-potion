@@ -93,7 +93,7 @@ const Container = styled.div`
   background: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme
             ? '#faf8f3'
-            : theme.mode === 'dark' ? theme.background : '#fdfdfd'};
+            : 'transparent'};
   ${props => props.$isDiaryTheme && `
     background-image: 
       repeating-linear-gradient(

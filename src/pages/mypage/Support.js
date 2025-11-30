@@ -16,7 +16,7 @@ const SettingsContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   padding: 20px;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.background};
+  background: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   min-height: 500px;
   position: relative;

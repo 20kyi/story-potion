@@ -21,7 +21,7 @@ const Container = styled.div`
   margin-right: auto;
   // padding-bottom: 100px;
   max-width: 600px;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.background};
+  background: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   position: relative;
 `;

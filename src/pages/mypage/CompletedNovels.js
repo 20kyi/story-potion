@@ -16,7 +16,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.background};
+  background-color: transparent;
   color: ${({ theme }) => theme.text};
   padding: 20px;
   margin-top: 60px;
