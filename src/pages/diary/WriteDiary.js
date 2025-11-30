@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../components/Header';
@@ -469,6 +469,100 @@ const EnhanceCancelButton = styled(EnhanceButton)`
   }
 `;
 
+// 임시저장 모달 스타일
+const TempSaveModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+`;
+
+const TempSaveModalContent = styled.div`
+  background-color: ${props => props.isDark ? '#2a2a2a' : '#fff'};
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+`;
+
+const TempSaveModalHeader = styled.div`
+  padding: 20px;
+  border-bottom: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const TempSaveModalTitle = styled.h2`
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: ${props => props.isDark ? '#fff' : '#222'};
+`;
+
+const TempSaveModalBody = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const TempSaveModalMessage = styled.p`
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: ${props => props.isDark ? '#ccc' : '#666'};
+  text-align: center;
+`;
+
+const TempSaveModalFooter = styled.div`
+  padding: 20px;
+  border-top: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+`;
+
+const TempSaveModalButton = styled.button`
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 150px;
+`;
+
+const TempSaveLoadButton = styled(TempSaveModalButton)`
+  background-color: #cb6565;
+  color: white;
+  
+  &:hover {
+    background-color: #b85555;
+  }
+`;
+
+const TempSaveNewButton = styled(TempSaveModalButton)`
+  background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
+  color: ${props => props.isDark ? '#fff' : '#222'};
+  
+  &:hover {
+    background-color: ${props => props.isDark ? '#555' : '#e0e0e0'};
+  }
+`;
+
 // 스티커 관련 스타일 컴포넌트들
 
 const StickerImage = styled.img`
@@ -883,6 +977,69 @@ function WriteDiary({ user }) {
     const [earnedPoints, setEarnedPoints] = useState(0);
     const [shouldDelayNavigation, setShouldDelayNavigation] = useState(false);
 
+    // 임시저장 관련 state
+    const [isTempSaveModalOpen, setIsTempSaveModalOpen] = useState(false);
+    const [hasTempSave, setHasTempSave] = useState(false);
+    const isInitialLoad = useRef(true);
+
+    // 임시저장 키 생성 함수
+    const getTempSaveKey = useCallback((date) => {
+        const dateStr = formatDateToString(date);
+        return `diary_temp_${user?.uid}_${dateStr}`;
+    }, [user?.uid]);
+
+    // 임시저장 함수
+    const saveTempDiary = useCallback((date) => {
+        if (!user?.uid) return;
+        const tempData = {
+            title: diary.title,
+            content: diary.content,
+            mood: diary.mood,
+            weather: diary.weather,
+            emotion: diary.emotion,
+            stickers: stickers,
+            imagePreview: imagePreview.filter(url => !url.startsWith('blob:')), // blob URL은 저장하지 않음
+            savedAt: new Date().toISOString()
+        };
+        // 내용이 있을 때만 저장
+        if (tempData.content.trim().length > 0 || tempData.title.trim().length > 0) {
+            try {
+                const key = getTempSaveKey(date);
+                localStorage.setItem(key, JSON.stringify(tempData));
+                setHasTempSave(true);
+            } catch (error) {
+                console.error('임시저장 실패:', error);
+            }
+        }
+    }, [diary, stickers, imagePreview, user?.uid, getTempSaveKey]);
+
+    // 임시저장 불러오기 함수
+    const loadTempDiary = useCallback((date) => {
+        if (!user?.uid) return null;
+        try {
+            const key = getTempSaveKey(date);
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (error) {
+            console.error('임시저장 불러오기 실패:', error);
+        }
+        return null;
+    }, [user?.uid, getTempSaveKey]);
+
+    // 임시저장 삭제 함수
+    const clearTempDiary = useCallback((date) => {
+        if (!user?.uid) return;
+        try {
+            const key = getTempSaveKey(date);
+            localStorage.removeItem(key);
+            setHasTempSave(false);
+        } catch (error) {
+            console.error('임시저장 삭제 실패:', error);
+        }
+    }, [user?.uid, getTempSaveKey]);
+
     // 이미지 뷰어 키보드 이벤트
     useEffect(() => {
         if (selectedImageIndex === null) return;
@@ -994,6 +1151,70 @@ function WriteDiary({ user }) {
         }
     }, [location, user]);
 
+    // 페이지 진입 시 임시저장 확인 (fetchDiaryForDate 완료 후)
+    useEffect(() => {
+        if (!user?.uid || !selectedDate || !isInitialLoad.current) return;
+
+        // fetchDiaryForDate가 완료된 후 임시저장 확인
+        const checkTempSave = async () => {
+            // 약간의 지연을 두어 fetchDiaryForDate가 완료되도록 함
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const dateStr = formatDateToString(selectedDate);
+            const diariesRef = collection(db, 'diaries');
+            const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', dateStr));
+            const querySnapshot = await getDocs(q);
+
+            // 기존 일기가 없고, 임시저장이 있으면 모달 표시
+            if (querySnapshot.empty) {
+                const tempData = loadTempDiary(selectedDate);
+                if (tempData && isInitialLoad.current) {
+                    setHasTempSave(true);
+                    setIsTempSaveModalOpen(true);
+                }
+            }
+            isInitialLoad.current = false;
+        };
+
+        checkTempSave();
+    }, [selectedDate, user, loadTempDiary]);
+
+    // diary 상태 변경 시 자동 임시저장 (디바운싱)
+    useEffect(() => {
+        if (!user?.uid || !selectedDate || isInitialLoad.current) return;
+
+        const timeoutId = setTimeout(() => {
+            saveTempDiary(selectedDate);
+        }, 1000); // 1초 후 저장
+
+        return () => clearTimeout(timeoutId);
+    }, [diary.title, diary.content, diary.mood, diary.weather, diary.emotion, stickers, selectedDate, saveTempDiary]);
+
+    // 페이지 이탈 시 임시저장
+    useEffect(() => {
+        if (!user?.uid || !selectedDate) return;
+
+        const handleBeforeUnload = (e) => {
+            saveTempDiary(selectedDate);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                saveTempDiary(selectedDate);
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // 컴포넌트 언마운트 시에도 저장
+            saveTempDiary(selectedDate);
+        };
+    }, [selectedDate, saveTempDiary]);
+
     useEffect(() => {
         if (textareaRef.current) {
             // 텍스트 변경 시 컨테이너 크기 업데이트 (텍스트 높이만 고려)
@@ -1101,6 +1322,8 @@ function WriteDiary({ user }) {
             setExistingDiaryId(diaryId);
             // 프리미엄 회원이었을 때 작성한 일기인지 확인
             setImageLimitExtended(existingDiary.imageLimitExtended || false);
+            // 기존 일기가 있으면 임시저장 삭제
+            clearTempDiary(date);
         } else {
             // Reset form if no diary exists for the new date
             setDiary({
@@ -1916,11 +2139,43 @@ function WriteDiary({ user }) {
 
                 navigate(`/diary/date/${formatDateToString(selectedDate)}`);
             }
+            // 제출 성공 시 임시저장 삭제
+            clearTempDiary(selectedDate);
         } catch (error) {
             toast.showToast(t('diary_save_failed'), 'error');
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    // 임시저장 불러오기 핸들러
+    const handleLoadTempSave = () => {
+        const tempData = loadTempDiary(selectedDate);
+        if (tempData) {
+            setDiary(prev => ({
+                ...prev,
+                title: tempData.title || '',
+                content: tempData.content || '',
+                mood: tempData.mood || '',
+                weather: tempData.weather || '',
+                emotion: tempData.emotion || ''
+            }));
+            if (tempData.stickers) {
+                setStickers(tempData.stickers);
+                setStickerCounter(tempData.stickers.length);
+            }
+            if (tempData.imagePreview && tempData.imagePreview.length > 0) {
+                setImagePreview(tempData.imagePreview);
+            }
+            setIsTempSaveModalOpen(false);
+            toast.showToast('임시저장된 내용을 불러왔습니다.', 'success');
+        }
+    };
+
+    // 새로 작성하기 핸들러
+    const handleStartNew = () => {
+        clearTempDiary(selectedDate);
+        setIsTempSaveModalOpen(false);
     };
 
     return (
@@ -2656,6 +2911,31 @@ function WriteDiary({ user }) {
                             </EnhanceModalFooter>
                         </EnhanceModalContent>
                     </EnhanceModal>
+                )}
+
+                {/* 임시저장 모달 */}
+                {isTempSaveModalOpen && (
+                    <TempSaveModal onClick={() => setIsTempSaveModalOpen(false)}>
+                        <TempSaveModalContent isDark={isDark} onClick={(e) => e.stopPropagation()}>
+                            <TempSaveModalHeader isDark={isDark}>
+                                <TempSaveModalTitle isDark={isDark}>임시저장된 내용이 있습니다</TempSaveModalTitle>
+                            </TempSaveModalHeader>
+                            <TempSaveModalBody>
+                                <TempSaveModalMessage isDark={isDark}>
+                                    이전에 작성하던 일기가 임시저장되어 있습니다.<br />
+                                    불러오시겠습니까?
+                                </TempSaveModalMessage>
+                            </TempSaveModalBody>
+                            <TempSaveModalFooter isDark={isDark}>
+                                <TempSaveNewButton isDark={isDark} onClick={handleStartNew}>
+                                    새로 작성
+                                </TempSaveNewButton>
+                                <TempSaveLoadButton onClick={handleLoadTempSave}>
+                                    불러오기
+                                </TempSaveLoadButton>
+                            </TempSaveModalFooter>
+                        </TempSaveModalContent>
+                    </TempSaveModal>
                 )}
 
                 <Navigation />
