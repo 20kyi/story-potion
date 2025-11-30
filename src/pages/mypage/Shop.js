@@ -29,15 +29,27 @@ const Container = styled.div`
 const PointDisplay = styled.div`
   text-align: center;
   margin-bottom: 30px;
-  padding: 20px;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
-  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '15px'};
-  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 2px 8px rgba(0,0,0,0.1)'};
-  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  padding: 24px 20px;
+  background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
   position: relative;
   transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.2deg)' : 'none'};
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
   
   ${({ $isDiaryTheme }) => $isDiaryTheme && `
     &::before {
@@ -74,7 +86,7 @@ const PointLabel = styled.div`
 const MenuGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 30px;
 `;
 
@@ -83,10 +95,16 @@ const MenuButton = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
-  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  border: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
   border-radius: ${({ $isDiaryTheme, index }) => {
-    if (!$isDiaryTheme) return '15px';
+    if (!$isDiaryTheme) return '16px';
     const borderRadiuses = [
       '14px 18px 16px 15px',
       '16px 14px 18px 15px',
@@ -95,12 +113,17 @@ const MenuButton = styled.button`
     ];
     return borderRadiuses[index % borderRadiuses.length];
   }};
-  padding: 16px 16px;
+  padding: 20px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 2px 8px rgba(0,0,0,0.1)'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
   text-align: center;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -126,23 +149,39 @@ const MenuButton = styled.button`
   `}
 
   &:hover {
-    transform: ${({ $isDiaryTheme, index }) => {
-    if (!$isDiaryTheme) return 'translateY(-2px)';
-    const rotations = [0.2, -0.3, 0.1, -0.2];
-    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+    transform: ${({ theme, $isDiaryTheme, index }) => {
+    if ($isDiaryTheme) {
+      const rotations = [0.2, -0.3, 0.1, -0.2];
+      return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+    }
+    return theme.mode === 'dark' ? 'translateY(-2px)' : 'translateY(-3px)';
   }};
-    box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 4px 12px rgba(0,0,0,0.15)'};
+    box-shadow: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) {
+      return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 4px 12px rgba(0,0,0,0.25)'
+      : '0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
+  }};
+    border-color: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.3)';
+    return theme.mode === 'dark' ? 'none' : '#e0e0e0';
+  }};
   }
 
   &:active {
-    transform: ${({ $isDiaryTheme, index }) => {
-    if (!$isDiaryTheme) return 'scale(0.95)';
-    const rotations = [0.2, -0.3, 0.1, -0.2];
-    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
+    transform: ${({ theme, $isDiaryTheme, index }) => {
+    if ($isDiaryTheme) {
+      const rotations = [0.2, -0.3, 0.1, -0.2];
+      return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
+    }
+    return 'scale(0.97)';
   }};
-    background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || '#f8f9fa')};
+    background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+    return theme.mode === 'dark' ? '#2a2a2a' : '#f8f9fa';
+  }};
   }
 `;
 
