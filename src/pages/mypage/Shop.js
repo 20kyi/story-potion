@@ -83,6 +83,84 @@ const PointLabel = styled.div`
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
 `;
 
+const PotionDisplay = styled.div`
+  margin-bottom: 30px;
+  padding: 20px;
+  background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
+  box-shadow: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  position: relative;
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.1deg)' : 'none'};
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
+`;
+
+const PotionLabel = styled.div`
+  font-size: 14px;
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 500;
+`;
+
+const PotionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+`;
+
+const PotionItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: ${({ $hasPotion }) => $hasPotion ? 1 : 0.4};
+`;
+
+const PotionImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 6px;
+`;
+
+const PotionCount = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme, $isDiaryTheme, $hasPotion }) => {
+    if (!$hasPotion) return theme.subText || '#999';
+    return $isDiaryTheme ? '#8B6F47' : theme.text;
+  }};
+  text-align: center;
+`;
+
 const MenuGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -218,6 +296,16 @@ const MenuDescription = styled.div`
   overflow-wrap: break-word;
 `;
 
+// 포션 데이터
+const potionData = [
+  { id: 'romance', key: 'novel_genre_romance', image: '/potion/romance.png' },
+  { id: 'historical', key: 'novel_genre_historical', image: '/potion/historical.png' },
+  { id: 'mystery', key: 'novel_genre_mystery', image: '/potion/mystery.png' },
+  { id: 'horror', key: 'novel_genre_horror', image: '/potion/horror.png' },
+  { id: 'fairytale', key: 'novel_genre_fairytale', image: '/potion/fairytale.png' },
+  { id: 'fantasy', key: 'novel_genre_fantasy', image: '/potion/fantasy.png' },
+];
+
 function Shop({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -225,8 +313,9 @@ function Shop({ user }) {
   const isDiaryTheme = actualTheme === 'diary';
   const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
+  const [ownedPotions, setOwnedPotions] = useState({});
 
-  // 현재 포인트 조회
+  // 현재 포인트 및 포션 조회
   useEffect(() => {
     if (user?.uid) {
       const fetchUser = async () => {
@@ -235,9 +324,10 @@ function Shop({ user }) {
           if (userDoc.exists()) {
             const data = userDoc.data();
             setCurrentPoints(data.point || 0);
+            setOwnedPotions(data.potions || {});
           }
         } catch (error) {
-          console.error('포인트 조회 실패:', error);
+          console.error('사용자 데이터 조회 실패:', error);
         }
       };
       fetchUser();
@@ -255,6 +345,27 @@ function Shop({ user }) {
         </PointAmount>
         <PointLabel theme={theme} $isDiaryTheme={isDiaryTheme}>{t('current_points')}</PointLabel>
       </PointDisplay>
+
+      {/* 보유 포션 표시 */}
+      <PotionDisplay theme={theme} $isDiaryTheme={isDiaryTheme}>
+        <PotionLabel theme={theme} $isDiaryTheme={isDiaryTheme}>
+          {t('current_potions') || '보유 포션'}
+        </PotionLabel>
+        <PotionGrid>
+          {potionData.map((potion) => {
+            const count = ownedPotions[potion.id] || 0;
+            const hasPotion = count > 0;
+            return (
+              <PotionItem key={potion.id} $hasPotion={hasPotion}>
+                <PotionImage src={potion.image} alt={t(potion.key) || potion.id} />
+                <PotionCount theme={theme} $isDiaryTheme={isDiaryTheme} $hasPotion={hasPotion}>
+                  {count}
+                </PotionCount>
+              </PotionItem>
+            );
+          })}
+        </PotionGrid>
+      </PotionDisplay>
 
       {/* 메뉴 그리드 */}
       <MenuGrid>
