@@ -7,27 +7,12 @@ const NavBar = styled.nav`
   position: fixed;
   left: 0; right: 0; bottom: 0;
   width: 100%;
-  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) {
-      return 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%)';
-    }
-    return $isDiaryTheme ? '#faf8f3' : theme.navCard;
-  }};
-  background-size: ${({ $isGlassTheme }) => $isGlassTheme ? '400% 400%' : 'auto'};
-  animation: ${({ $isGlassTheme }) => $isGlassTheme ? 'gradientShift 15s ease infinite' : 'none'};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px) saturate(180%)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px) saturate(180%)' : 'none'};
-  border-top: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.navCard};
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) {
-      return '0 -8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
-    }
-    return $isDiaryTheme
-      ? '0 -2px 8px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)'
-      : theme.cardShadow;
-  }};
+  box-shadow: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
+    ? '0 -2px 8px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)'
+    : theme.cardShadow};
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
   display: flex;
   justify-content: space-around;
@@ -80,7 +65,6 @@ function Navigation() {
   const { actualTheme } = useTheme();
   const { t } = useTranslation();
   const isDiaryTheme = actualTheme === 'diary';
-  const isGlassTheme = actualTheme === 'glass';
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' || location.pathname === '/home';
@@ -94,7 +78,7 @@ function Navigation() {
   };
 
   return (
-    <NavBar $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+    <NavBar $isDiaryTheme={isDiaryTheme}>
       <NavButton onClick={() => navigate('/')}>
         <IconContainer>
           <IconImage
@@ -103,7 +87,7 @@ function Navigation() {
             style={{ filter: isActive('/') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_home')}</NavText>
+        <NavText active={isActive('/') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_home')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/diaries')}>
         <IconContainer>
@@ -113,7 +97,7 @@ function Navigation() {
             style={{ filter: isActive('/diaries') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/diaries') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_diary')}</NavText>
+        <NavText active={isActive('/diaries') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_diary')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/novel')}>
         <IconContainer>
@@ -123,7 +107,7 @@ function Navigation() {
             style={{ filter: isActive('/novel') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/novel') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_novel')}</NavText>
+        <NavText active={isActive('/novel') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_novel')}</NavText>
       </NavButton>
       <NavButton onClick={() => navigate('/my')}>
         <IconContainer>
@@ -133,7 +117,7 @@ function Navigation() {
             style={{ filter: isActive('/my') ? 'none' : 'grayscale(1) opacity(0.5)' }}
           />
         </IconContainer>
-        <NavText active={isActive('/my') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_mypage')}</NavText>
+        <NavText active={isActive('/my') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme}>{t('nav_mypage')}</NavText>
       </NavButton>
     </NavBar>
   );
