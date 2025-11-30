@@ -1615,7 +1615,6 @@ function Home({ user }) {
                     display: 'block',
                     margin: '0 auto',
                     border: isGlassTheme ? '2px solid rgb(255, 255, 255)' : 'none',
-                    boxShadow: isGlassTheme ? '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
                   }}
                 />
               </CarouselSlide>
