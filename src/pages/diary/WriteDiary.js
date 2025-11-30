@@ -2648,6 +2648,7 @@ function WriteDiary({ user }) {
                                     textAlign: 'center',
                                     lineHeight: '1.3',
                                     padding: '0 4px',
+                                    backgroundColor: 'transparent',
                                 }}>
                                     {t('diary_image_premium_feature')}
                                 </span>
