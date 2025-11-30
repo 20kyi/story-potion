@@ -29,6 +29,7 @@ function Diary({ user }) {
     const { language } = useLanguage();
     const { t } = useTranslation();
     const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     // location.state에서 달 정보를 받아오거나, 없으면 현재 달 사용
     const initialDate = location.state?.targetDate ? new Date(location.state.targetDate) : new Date();
     const [currentDate, setCurrentDate] = useState(initialDate);
@@ -757,7 +758,7 @@ function Diary({ user }) {
                 <div className="diary-view-mode-toggle-container">
                     <div className="diary-view-mode-toggle">
                         <button
-                            className={`diary-view-mode-toggle-button ${isDiaryTheme ? 'diary-theme' : ''}`}
+                            className={`diary-view-mode-toggle-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
                             onClick={() => setViewMode(viewMode === 'month' ? 'week' : 'month')}
                             aria-label={viewMode === 'month' ? (language === 'en' ? 'Switch to week view' : '주간 보기로 전환') : (language === 'en' ? 'Switch to month view' : '월간 보기로 전환')}
                         >
@@ -768,7 +769,7 @@ function Diary({ user }) {
                                 {language === 'en' ? 'Week' : '주간'}
                             </span>
                             <span
-                                className={`diary-toggle-slider ${viewMode === 'week' ? 'week' : 'month'} ${isDiaryTheme ? 'diary-theme' : ''}`}
+                                className={`diary-toggle-slider ${viewMode === 'week' ? 'week' : 'month'} ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
                             />
                         </button>
                     </div>
