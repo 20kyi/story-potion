@@ -17,7 +17,7 @@ const HeaderContainer = styled.header`
   z-index: 200;
   background: ${({ theme, $isDiaryTheme }) => {
     if ($isDiaryTheme) return '#faf8f3';
-    if (theme.mode === 'dark') return '#202020';
+    if (theme.mode === 'dark') return '#18181b';
     return '#fdfdfd';
   }};
   box-shadow: ${({ theme, $isDiaryTheme }) => $isDiaryTheme

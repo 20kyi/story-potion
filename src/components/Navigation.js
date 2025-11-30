@@ -9,7 +9,7 @@ const NavBar = styled.nav`
   width: 100%;
   background: ${({ theme, $isDiaryTheme }) => {
     if ($isDiaryTheme) return '#faf8f3';
-    if (theme.mode === 'dark') return '#202020';
+    if (theme.mode === 'dark') return '#18181b';
     return theme.navCard;
   }};
   border-top-left-radius: 32px;
