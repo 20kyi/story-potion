@@ -123,7 +123,7 @@ const SaveButton = styled.button`
 `;
 
 const CancelButton = styled.button`
-  background: #f5f5f5;
+  background: #fdfdfd;
   color: #666;
   border: none;
   border-radius: 8px;
@@ -199,102 +199,102 @@ const defaultTermsContent = `제1조 목적
 본 약관은 대한민국 법령을 따르며, 분쟁 발생 시 회사 소재지 관할 법원에 따릅니다.`;
 
 function TermsOfService({ user }) {
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const [isEditing, setIsEditing] = useState(false);
-    const [termsContent, setTermsContent] = useState(defaultTermsContent);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isAdminUser, setIsAdminUser] = useState(false);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [isEditing, setIsEditing] = useState(false);
+  const [termsContent, setTermsContent] = useState(defaultTermsContent);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
-    useEffect(() => {
-        if (user) {
-            setIsAdminUser(isAdmin(user));
-            loadTermsFromFirestore();
+  useEffect(() => {
+    if (user) {
+      setIsAdminUser(isAdmin(user));
+      loadTermsFromFirestore();
+    }
+  }, [user]);
+
+  const loadTermsFromFirestore = async () => {
+    try {
+      const docRef = doc(db, 'config', 'terms');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data().service) {
+        setTermsContent(docSnap.data().service);
+      }
+    } catch (error) {
+      console.error('약관 로드 실패:', error);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    loadTermsFromFirestore();
+  };
+
+  const handleSave = async () => {
+    if (!isAdminUser) {
+      alert('관리자 권한이 필요합니다.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const docRef = doc(db, 'config', 'terms');
+      await setDoc(docRef, {
+        service: termsContent,
+        updatedAt: new Date(),
+        updatedBy: user.email
+      }, { merge: true });
+
+      alert('약관이 저장되었습니다.');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('약관 저장 실패:', error);
+      alert('약관 저장에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Header
+        user={user}
+        title="이용약관"
+        rightActions={
+          isAdminUser && !isEditing ? (
+            <EditButton theme={theme} onClick={handleEdit} title="수정">
+              <FaEdit />
+            </EditButton>
+          ) : null
         }
-    }, [user]);
-
-    const loadTermsFromFirestore = async () => {
-        try {
-            const docRef = doc(db, 'config', 'terms');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().service) {
-                setTermsContent(docSnap.data().service);
-            }
-        } catch (error) {
-            console.error('약관 로드 실패:', error);
-        }
-    };
-
-    const handleEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        loadTermsFromFirestore();
-    };
-
-    const handleSave = async () => {
-        if (!isAdminUser) {
-            alert('관리자 권한이 필요합니다.');
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const docRef = doc(db, 'config', 'terms');
-            await setDoc(docRef, {
-                service: termsContent,
-                updatedAt: new Date(),
-                updatedBy: user.email
-            }, { merge: true });
-
-            alert('약관이 저장되었습니다.');
-            setIsEditing(false);
-        } catch (error) {
-            console.error('약관 저장 실패:', error);
-            alert('약관 저장에 실패했습니다.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    return (
-        <>
-            <Header
-                user={user}
-                title="이용약관"
-                rightActions={
-                    isAdminUser && !isEditing ? (
-                        <EditButton theme={theme} onClick={handleEdit} title="수정">
-                            <FaEdit />
-                        </EditButton>
-                    ) : null
-                }
-            />
-            <Container theme={theme}>
-                <Section>
-                    {isEditing ? (
-                        <>
-                            <EditTextarea
-                                theme={theme}
-                                value={termsContent}
-                                onChange={(e) => setTermsContent(e.target.value)}
-                            />
-                            <ButtonContainer>
-                                <CancelButton onClick={handleCancel}>취소</CancelButton>
-                                <SaveButton onClick={handleSave} disabled={isSaving}>
-                                    {isSaving ? '저장 중...' : '저장'}
-                                </SaveButton>
-                            </ButtonContainer>
-                        </>
-                    ) : (
-                        <SectionContent theme={theme}>{termsContent}</SectionContent>
-                    )}
-                </Section>
-            </Container>
-        </>
-    );
+      />
+      <Container theme={theme}>
+        <Section>
+          {isEditing ? (
+            <>
+              <EditTextarea
+                theme={theme}
+                value={termsContent}
+                onChange={(e) => setTermsContent(e.target.value)}
+              />
+              <ButtonContainer>
+                <CancelButton onClick={handleCancel}>취소</CancelButton>
+                <SaveButton onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? '저장 중...' : '저장'}
+                </SaveButton>
+              </ButtonContainer>
+            </>
+          ) : (
+            <SectionContent theme={theme}>{termsContent}</SectionContent>
+          )}
+        </Section>
+      </Container>
+    </>
+  );
 }
 
 export default TermsOfService;

@@ -87,7 +87,7 @@ const Container = styled.div`
   background: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme
             ? '#faf8f3'
-            : theme.background};
+            : theme.mode === 'dark' ? theme.background : '#fdfdfd'};
   ${props => props.$isDiaryTheme && `
     background-image: 
       repeating-linear-gradient(
@@ -120,10 +120,12 @@ const Card = styled.div`
         ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
         : props.$isDark
             ? '0 2px 8px rgba(0, 0, 0, 0.18)'
-            : '0 2px 4px rgba(0, 0, 0, 0.1)'};
+            : '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)'};
   border: ${props => props.$isDiaryTheme
         ? '1px solid rgba(139, 111, 71, 0.15)'
-        : 'none'};
+        : props.$isDark
+            ? 'none'
+            : '1px solid rgba(0, 0, 0, 0.06)'};
 `;
 
 const DiaryDate = styled.div`
@@ -198,7 +200,7 @@ const ImagePreviewBox = styled.div`
         return theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2';
     }};
   background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#fafafa' : (theme.mode === 'dark' ? '#2a2a2a' : '#fafafa')};
+        $isDiaryTheme ? '#fdfdfd' : (theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd')};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -558,7 +560,7 @@ const StickerItem = styled.button`
   transition: background-color 0.2s;
   
   &:hover {
-    background: ${props => props.theme.mode === 'dark' ? '#333' : '#f5f5f5'};
+    background: ${props => props.theme.mode === 'dark' ? '#333' : '#fdfdfd'};
   }
   
   img {
@@ -731,7 +733,7 @@ const UploadLabel = styled.label`
   height: 100px;
   flex-shrink: 0;
   border-radius: 8px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#f5f5f5'};
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd'};
   color: ${({ theme }) => theme.mode === 'dark' ? '#ccc' : '#666'};
   font-size: 15px;
   font-weight: 600;
@@ -791,15 +793,9 @@ const ContentContainer = styled.div`
   width: 100%;
   max-width: 100%;
   min-height: 300px;
-  border: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? 'none'
-            : `1px solid ${theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2'}`};
-  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '0' : '12px'};
-  background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme
-            ? 'transparent'
-            : theme.mode === 'dark' ? '#2a2a2a' : '#fafafa'};
+  border: none;
+  border-radius: 0;
+  background: transparent;
   padding: 0;
   margin: 0;
   overflow: ${() => window.innerWidth <= 768 ? 'hidden' : 'visible'};
@@ -2219,7 +2215,7 @@ function WriteDiary({ user }) {
                                     height: '100px',
                                     flexShrink: 0,
                                     borderRadius: '8px',
-                                    background: isDark ? '#2a2a2a' : '#f5f5f5',
+                                    background: isDark ? '#2a2a2a' : '#fdfdfd',
                                     color: isDark ? '#ccc' : '#666',
                                     fontSize: '15px',
                                     fontWeight: 600,
@@ -2239,7 +2235,7 @@ function WriteDiary({ user }) {
                                     e.target.style.borderColor = isDark ? '#5a5a5a' : '#bbb';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.target.style.background = isDark ? '#2a2a2a' : '#f5f5f5';
+                                    e.target.style.background = isDark ? '#2a2a2a' : '#fdfdfd';
                                     e.target.style.boxShadow = isDark
                                         ? '0 2px 6px rgba(0,0,0,0.3)'
                                         : '0 2px 6px rgba(0,0,0,0.1)';
@@ -2438,7 +2434,7 @@ function WriteDiary({ user }) {
                             }}
                             onMouseEnter={(e) => {
                                 if (!isEnhancing && !isSubmitting) {
-                                    e.target.style.backgroundColor = isDark ? '#4a4a4a' : '#f5f5f5';
+                                    e.target.style.backgroundColor = isDark ? '#4a4a4a' : '#fdfdfd';
                                 }
                             }}
                             onMouseLeave={(e) => {

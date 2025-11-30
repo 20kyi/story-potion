@@ -255,7 +255,7 @@ function PointAnimationTest({ user }) {
         </TestButton>
       </InputGroup>
 
-      <div style={{ marginTop: '40px', padding: '20px', background: theme.mode === 'dark' ? '#2a2a2a' : '#f5f5f5', borderRadius: '12px' }}>
+      <div style={{ marginTop: '40px', padding: '20px', background: theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd', borderRadius: '12px' }}>
         <h3 style={{ marginTop: 0 }}>현재 상태</h3>
         <InfoText theme={theme}>애니메이션 표시: {showPointAnimation ? '✅ 표시 중' : '❌ 숨김'}</InfoText>
         <InfoText theme={theme}>다음 표시될 포인트: {earnedPoints}p</InfoText>

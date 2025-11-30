@@ -162,12 +162,12 @@ function PointHistory({ user }) {
                                             {getTypeLabel(item.type)} {item.amount > 0 ? '+' : ''}{item.amount}p
                                         </div>
                                         {item.desc && (
-                                            <div style={{ 
-                                                fontSize: '14px', 
-                                                color: theme.text || '#333', 
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: theme.text || '#333',
                                                 lineHeight: '1.4',
                                                 padding: '6px 10px',
-                                                backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
+                                                backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fdfdfd',
                                                 borderRadius: '6px',
                                                 display: 'inline-block'
                                             }}>
@@ -175,8 +175,8 @@ function PointHistory({ user }) {
                                             </div>
                                         )}
                                         {!item.desc && (
-                                            <div style={{ 
-                                                fontSize: '13px', 
+                                            <div style={{
+                                                fontSize: '13px',
                                                 color: theme.subText || '#999',
                                                 fontStyle: 'italic'
                                             }}>
@@ -184,8 +184,8 @@ function PointHistory({ user }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div style={{ 
-                                        color: theme.subText || '#aaa', 
+                                    <div style={{
+                                        color: theme.subText || '#aaa',
                                         fontSize: '12px',
                                         whiteSpace: 'nowrap',
                                         flexShrink: 0

@@ -44,21 +44,21 @@ const TestButton = styled.button`
   border-radius: 12px;
   background: ${({ variant, theme }) => {
     if (variant === 'primary') return '#e46262';
-    if (variant === 'secondary') return theme.card || '#f5f5f5';
-    return theme.card || '#f5f5f5';
+    if (variant === 'secondary') return theme.card || '#fdfdfd';
+    return theme.card || '#fdfdfd';
   }};
   color: ${({ variant }) => variant === 'primary' ? '#fff' : '#222'};
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: ${({ variant }) => variant === 'primary' 
-    ? '0 4px 12px rgba(228, 98, 98, 0.3)' 
+  box-shadow: ${({ variant }) => variant === 'primary'
+    ? '0 4px 12px rgba(228, 98, 98, 0.3)'
     : '0 2px 8px rgba(0, 0, 0, 0.1)'};
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${({ variant }) => variant === 'primary' 
-      ? '0 6px 16px rgba(228, 98, 98, 0.4)' 
-      : '0 4px 12px rgba(0, 0, 0, 0.15)'};
+    box-shadow: ${({ variant }) => variant === 'primary'
+    ? '0 6px 16px rgba(228, 98, 98, 0.4)'
+    : '0 4px 12px rgba(0, 0, 0, 0.15)'};
   }
   
   &:active {
@@ -126,22 +126,22 @@ function LoadingTest({ user }) {
         <Subtitle>다양한 로딩 화면 스타일을 테스트해보세요</Subtitle>
 
         <ButtonGroup>
-          <TestButton 
-            variant="primary" 
+          <TestButton
+            variant="primary"
             onClick={handleFullscreenTest}
           >
             전체 화면 로딩 (3초)
           </TestButton>
-          
-          <TestButton 
-            variant="secondary" 
+
+          <TestButton
+            variant="secondary"
             onClick={handleInlineTest}
           >
             {showInline ? '인라인 로딩 숨기기' : '인라인 로딩 보기'}
           </TestButton>
-          
-          <TestButton 
-            variant="secondary" 
+
+          <TestButton
+            variant="secondary"
             onClick={handleDarkTest}
           >
             다크 모드 로딩 (3초)
@@ -151,8 +151,8 @@ function LoadingTest({ user }) {
         {showInline && (
           <PreviewSection>
             <SectionTitle>인라인 로딩 미리보기</SectionTitle>
-            <LoadingScreen 
-              fullscreen={false} 
+            <LoadingScreen
+              fullscreen={false}
               darkMode={theme.theme === 'dark'}
               text="로딩 중..."
             />
@@ -163,16 +163,16 @@ function LoadingTest({ user }) {
         )}
 
         {showFullscreen && (
-          <LoadingScreen 
-            fullscreen={true} 
+          <LoadingScreen
+            fullscreen={true}
             darkMode={false}
             text="전체 화면 로딩 중..."
           />
         )}
 
         {showDark && (
-          <LoadingScreen 
-            fullscreen={true} 
+          <LoadingScreen
+            fullscreen={true}
             darkMode={true}
             text="다크 모드 로딩 중..."
           />

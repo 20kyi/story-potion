@@ -4,10 +4,10 @@
 // lightTheme: 라이트 모드 색상
 export const lightTheme = {
     mode: 'light', // 현재 테마 모드
-    background: '#fff', // 전체 배경색
+    background: '#fdfdfd', // 전체 배경색
     text: '#222', // 기본 텍스트 색상
     card: '#fff', // 일반 카드 배경색
-    navCard: '#fff', // 네비게이션 바 배경색
+    navCard: '#fdfdfd', // 네비게이션 바 배경색
     progressCard: '#f5f6fa', // 주간일기/통계 등 진행도 카드 배경색 (더 밝은 회색, 라이트)
     cardText: '#222', // 카드 내 주요 텍스트 색상
     cardSubText: '#555', // 카드 내 서브/보조 텍스트 색상 (라이트)

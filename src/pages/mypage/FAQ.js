@@ -277,11 +277,11 @@ const CloseButton = styled.button`
   }
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
   
   &:active {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
 `;
 
@@ -705,24 +705,24 @@ function FAQ({ user }) {
         // "📌 카테고리명" 형식에서 아이콘과 카테고리명 분리
         const trimmedValue = value.trim();
         const iconMatch = trimmedValue.match(/^([^\s]+)\s+(.+)$/);
-        
+
         if (iconMatch) {
-            newForm[index] = { 
-                ...newForm[index], 
+            newForm[index] = {
+                ...newForm[index],
                 icon: iconMatch[1],
                 category: iconMatch[2]
             };
         } else {
             // 아이콘만 입력된 경우
-            newForm[index] = { 
-                ...newForm[index], 
+            newForm[index] = {
+                ...newForm[index],
                 icon: trimmedValue || '📌',
                 category: newForm[index].category || ''
             };
         }
         setEditForm(newForm);
     };
-    
+
     const getCategoryDisplayValue = (category) => {
         return `${category.icon || '📌'} ${category.category || ''}`.trim();
     };
@@ -767,11 +767,11 @@ function FAQ({ user }) {
 
     const theme = actualTheme === 'dark'
         ? { text: '#fff', card: '#2a2a2a', cardHover: '#333', border: '#444' }
-        : { text: '#222', card: '#fff', cardHover: '#f5f5f5', border: '#e0e0e0' };
+        : { text: '#222', card: '#fff', cardHover: '#fdfdfd', border: '#e0e0e0' };
 
     return (
         <>
-            <Header 
+            <Header
                 user={user}
                 title="FAQ"
                 rightActions={
@@ -788,49 +788,49 @@ function FAQ({ user }) {
                 ) : (
                     <div className={styles.faqList}>
                         {faqData.map((category, categoryIndex) => (
-                        <div key={categoryIndex} className={styles.categorySection}>
-                            <div
-                                className={styles.categoryHeader}
-                                onClick={() => toggleCategory(categoryIndex)}
-                            >
-                                <span className={styles.categoryIcon}>{category.icon}</span>
-                                <span className={styles.categoryTitle}>{category.category}</span>
-                                <span className={styles.chevron}>
-                                    {openCategories[categoryIndex] ? '▼' : '▶'}
-                                </span>
-                            </div>
-
-                            {openCategories[categoryIndex] && (
-                                <div className={styles.categoryContent}>
-                                    {category.items.map((item, itemIndex) => (
-                                        <div key={itemIndex} className={styles.faqItem}>
-                                            <div
-                                                className={styles.question}
-                                                onClick={() => toggleItem(categoryIndex, itemIndex)}
-                                            >
-                                                <span className={styles.questionText}>Q. {item.question}</span>
-                                                <span className={styles.itemChevron}>
-                                                    {openItems[`${categoryIndex}-${itemIndex}`] ? '▼' : '▶'}
-                                                </span>
-                                            </div>
-                                            {openItems[`${categoryIndex}-${itemIndex}`] && (
-                                                <div className={styles.answer}>
-                                                    <span className={styles.answerLabel}>A.</span>
-                                                    <div className={styles.answerText}>
-                                                        {item.answer.split('\n').map((line, lineIndex) => (
-                                                            <React.Fragment key={lineIndex}>
-                                                                {line}
-                                                                {lineIndex < item.answer.split('\n').length - 1 && <br />}
-                                                            </React.Fragment>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                            <div key={categoryIndex} className={styles.categorySection}>
+                                <div
+                                    className={styles.categoryHeader}
+                                    onClick={() => toggleCategory(categoryIndex)}
+                                >
+                                    <span className={styles.categoryIcon}>{category.icon}</span>
+                                    <span className={styles.categoryTitle}>{category.category}</span>
+                                    <span className={styles.chevron}>
+                                        {openCategories[categoryIndex] ? '▼' : '▶'}
+                                    </span>
                                 </div>
-                            )}
-                        </div>
+
+                                {openCategories[categoryIndex] && (
+                                    <div className={styles.categoryContent}>
+                                        {category.items.map((item, itemIndex) => (
+                                            <div key={itemIndex} className={styles.faqItem}>
+                                                <div
+                                                    className={styles.question}
+                                                    onClick={() => toggleItem(categoryIndex, itemIndex)}
+                                                >
+                                                    <span className={styles.questionText}>Q. {item.question}</span>
+                                                    <span className={styles.itemChevron}>
+                                                        {openItems[`${categoryIndex}-${itemIndex}`] ? '▼' : '▶'}
+                                                    </span>
+                                                </div>
+                                                {openItems[`${categoryIndex}-${itemIndex}`] && (
+                                                    <div className={styles.answer}>
+                                                        <span className={styles.answerLabel}>A.</span>
+                                                        <div className={styles.answerText}>
+                                                            {item.answer.split('\n').map((line, lineIndex) => (
+                                                                <React.Fragment key={lineIndex}>
+                                                                    {line}
+                                                                    {lineIndex < item.answer.split('\n').length - 1 && <br />}
+                                                                </React.Fragment>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
                 )}

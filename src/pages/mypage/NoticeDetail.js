@@ -64,7 +64,7 @@ const CloseButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
 `;
 
@@ -196,186 +196,186 @@ const NoticeTitle = styled.h2`
 `;
 
 function NoticeDetail({ user }) {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const { actualTheme } = useTheme();
-    const [notice, setNotice] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ title: '', content: '' });
-    const [isSaving, setIsSaving] = useState(false);
-    const isAdminUser = user && isAdmin(user);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { actualTheme } = useTheme();
+  const [notice, setNotice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ title: '', content: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  const isAdminUser = user && isAdmin(user);
 
-    // 다크모드에 따른 색상 설정
-    const textColor = actualTheme === 'dark' ? '#f1f1f1' : '#222';
-    const secondaryTextColor = actualTheme === 'dark' ? '#ccc' : '#888';
-    const contentTextColor = actualTheme === 'dark' ? '#e0e0e0' : '#333';
+  // 다크모드에 따른 색상 설정
+  const textColor = actualTheme === 'dark' ? '#f1f1f1' : '#222';
+  const secondaryTextColor = actualTheme === 'dark' ? '#ccc' : '#888';
+  const contentTextColor = actualTheme === 'dark' ? '#e0e0e0' : '#333';
 
-    useEffect(() => {
-        const fetchNotice = async () => {
-            try {
-                const noticeDoc = await getDoc(doc(db, 'announcements', id));
-                if (noticeDoc.exists()) {
-                    const data = noticeDoc.data();
-                    const createdAt = data.createdAt?.toDate() || new Date();
-                    const dateStr = createdAt.toISOString().split('T')[0];
-                    const timeStr = createdAt.toTimeString().split(' ')[0].slice(0, 5); // HH:MM 형식
+  useEffect(() => {
+    const fetchNotice = async () => {
+      try {
+        const noticeDoc = await getDoc(doc(db, 'announcements', id));
+        if (noticeDoc.exists()) {
+          const data = noticeDoc.data();
+          const createdAt = data.createdAt?.toDate() || new Date();
+          const dateStr = createdAt.toISOString().split('T')[0];
+          const timeStr = createdAt.toTimeString().split(' ')[0].slice(0, 5); // HH:MM 형식
 
-                    setNotice({
-                        id: noticeDoc.id,
-                        ...data,
-                        date: dateStr,
-                        time: timeStr,
-                        createdAt: createdAt
-                    });
-                    setEditForm({
-                        title: data.title || '',
-                        content: data.content || ''
-                    });
-                }
-            } catch (error) {
-                console.error('공지사항 조회 실패:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (id) {
-            fetchNotice();
+          setNotice({
+            id: noticeDoc.id,
+            ...data,
+            date: dateStr,
+            time: timeStr,
+            createdAt: createdAt
+          });
+          setEditForm({
+            title: data.title || '',
+            content: data.content || ''
+          });
         }
-    }, [id]);
-
-    const handleEdit = () => {
-        if (!isAdminUser) {
-            alert('관리자 권한이 필요합니다.');
-            return;
-        }
-        setIsEditing(true);
+      } catch (error) {
+        console.error('공지사항 조회 실패:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleCancel = () => {
-        setIsEditing(false);
-        // 원래 값으로 복원
-        if (notice) {
-            setEditForm({
-                title: notice.title || '',
-                content: notice.content || ''
-            });
+    if (id) {
+      fetchNotice();
+    }
+  }, [id]);
+
+  const handleEdit = () => {
+    if (!isAdminUser) {
+      alert('관리자 권한이 필요합니다.');
+      return;
+    }
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    // 원래 값으로 복원
+    if (notice) {
+      setEditForm({
+        title: notice.title || '',
+        content: notice.content || ''
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!isAdminUser) {
+      alert('관리자 권한이 필요합니다.');
+      return;
+    }
+
+    if (!editForm.title.trim() || !editForm.content.trim()) {
+      alert('제목과 내용을 입력해주세요.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const noticeRef = doc(db, 'announcements', id);
+      await updateDoc(noticeRef, {
+        title: editForm.title.trim(),
+        content: editForm.content.trim(),
+        updatedAt: Timestamp.now()
+      });
+
+      // 로컬 상태 업데이트
+      setNotice({
+        ...notice,
+        title: editForm.title.trim(),
+        content: editForm.content.trim()
+      });
+
+      alert('공지사항이 수정되었습니다.');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('공지사항 수정 실패:', error);
+      alert('공지사항 수정에 실패했습니다: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const theme = actualTheme === 'dark'
+    ? { text: '#fff', card: '#2a2a2a', cardHover: '#333', border: '#444' }
+    : { text: '#222', card: '#fff', cardHover: '#fdfdfd', border: '#e0e0e0' };
+
+  return (
+    <>
+      <Header
+        user={user}
+        title="공지사항"
+        rightActions={
+          isAdminUser && notice ? (
+            <EditButton theme={theme} onClick={handleEdit} title="수정">
+              <FaEdit />
+            </EditButton>
+          ) : null
         }
-    };
-
-    const handleSave = async () => {
-        if (!isAdminUser) {
-            alert('관리자 권한이 필요합니다.');
-            return;
-        }
-
-        if (!editForm.title.trim() || !editForm.content.trim()) {
-            alert('제목과 내용을 입력해주세요.');
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const noticeRef = doc(db, 'announcements', id);
-            await updateDoc(noticeRef, {
-                title: editForm.title.trim(),
-                content: editForm.content.trim(),
-                updatedAt: Timestamp.now()
-            });
-
-            // 로컬 상태 업데이트
-            setNotice({
-                ...notice,
-                title: editForm.title.trim(),
-                content: editForm.content.trim()
-            });
-
-            alert('공지사항이 수정되었습니다.');
-            setIsEditing(false);
-        } catch (error) {
-            console.error('공지사항 수정 실패:', error);
-            alert('공지사항 수정에 실패했습니다: ' + error.message);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const theme = actualTheme === 'dark'
-        ? { text: '#fff', card: '#2a2a2a', cardHover: '#333', border: '#444' }
-        : { text: '#222', card: '#fff', cardHover: '#f5f5f5', border: '#e0e0e0' };
-
-    return (
-        <>
-            <Header
-                user={user}
-                title="공지사항"
-                rightActions={
-                    isAdminUser && notice ? (
-                        <EditButton theme={theme} onClick={handleEdit} title="수정">
-                            <FaEdit />
-                        </EditButton>
-                    ) : null
-                }
-            />
-            <div style={{ maxWidth: 600, margin: '50px auto', marginTop: 50, padding: 20, paddingTop: 20, paddingBottom: 20 }}>
-                {loading ? (
-                    <div style={{ color: secondaryTextColor, textAlign: 'center', marginTop: 80 }}>로딩 중...</div>
-                ) : notice ? (
-                    <>
-                        <NoticeTitle $textColor={textColor}>{notice.title}</NoticeTitle>
-                        <div style={{ color: secondaryTextColor, fontSize: 14, textAlign: 'left', marginBottom: 20 }}>
-                            {notice.date} {notice.time && `· ${notice.time}`}
-                        </div>
-                        <div style={{ fontSize: 16, color: contentTextColor, lineHeight: 1.7, whiteSpace: 'pre-line', textAlign: 'left', marginBottom: 40 }}>{notice.content}</div>
-                    </>
-                ) : (
-                    <div style={{ color: secondaryTextColor, textAlign: 'center', marginTop: 80 }}>존재하지 않는 공지입니다.</div>
-                )}
+      />
+      <div style={{ maxWidth: 600, margin: '50px auto', marginTop: 50, padding: 20, paddingTop: 20, paddingBottom: 20 }}>
+        {loading ? (
+          <div style={{ color: secondaryTextColor, textAlign: 'center', marginTop: 80 }}>로딩 중...</div>
+        ) : notice ? (
+          <>
+            <NoticeTitle $textColor={textColor}>{notice.title}</NoticeTitle>
+            <div style={{ color: secondaryTextColor, fontSize: 14, textAlign: 'left', marginBottom: 20 }}>
+              {notice.date} {notice.time && `· ${notice.time}`}
             </div>
+            <div style={{ fontSize: 16, color: contentTextColor, lineHeight: 1.7, whiteSpace: 'pre-line', textAlign: 'left', marginBottom: 40 }}>{notice.content}</div>
+          </>
+        ) : (
+          <div style={{ color: secondaryTextColor, textAlign: 'center', marginTop: 80 }}>존재하지 않는 공지입니다.</div>
+        )}
+      </div>
 
-            {/* 수정 모달 */}
-            {isEditing && (
-                <ModalOverlay onClick={handleCancel}>
-                    <ModalContent theme={theme} onClick={(e) => e.stopPropagation()}>
-                        <ModalHeader theme={theme}>
-                            <ModalTitle theme={theme}>공지사항 수정</ModalTitle>
-                            <CloseButton theme={theme} onClick={handleCancel}>×</CloseButton>
-                        </ModalHeader>
-                        <ModalBody>
-                            <FormGroup>
-                                <Label theme={theme}>제목</Label>
-                                <Input
-                                    theme={theme}
-                                    type="text"
-                                    value={editForm.title}
-                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                    placeholder="공지사항 제목을 입력하세요"
-                                />
-                            </FormGroup>
-                            <FormGroup>
-                                <Label theme={theme}>내용</Label>
-                                <Textarea
-                                    theme={theme}
-                                    value={editForm.content}
-                                    onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                                    placeholder="공지사항 내용을 입력하세요"
-                                />
-                            </FormGroup>
-                        </ModalBody>
-                        <ButtonContainer theme={theme}>
-                            <CancelButton theme={theme} onClick={handleCancel} disabled={isSaving}>
-                                취소
-                            </CancelButton>
-                            <SaveButton theme={theme} onClick={handleSave} disabled={isSaving}>
-                                {isSaving ? '저장 중...' : '저장'}
-                            </SaveButton>
-                        </ButtonContainer>
-                    </ModalContent>
-                </ModalOverlay>
-            )}
-        </>
-    );
+      {/* 수정 모달 */}
+      {isEditing && (
+        <ModalOverlay onClick={handleCancel}>
+          <ModalContent theme={theme} onClick={(e) => e.stopPropagation()}>
+            <ModalHeader theme={theme}>
+              <ModalTitle theme={theme}>공지사항 수정</ModalTitle>
+              <CloseButton theme={theme} onClick={handleCancel}>×</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <FormGroup>
+                <Label theme={theme}>제목</Label>
+                <Input
+                  theme={theme}
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="공지사항 제목을 입력하세요"
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label theme={theme}>내용</Label>
+                <Textarea
+                  theme={theme}
+                  value={editForm.content}
+                  onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                  placeholder="공지사항 내용을 입력하세요"
+                />
+              </FormGroup>
+            </ModalBody>
+            <ButtonContainer theme={theme}>
+              <CancelButton theme={theme} onClick={handleCancel} disabled={isSaving}>
+                취소
+              </CancelButton>
+              <SaveButton theme={theme} onClick={handleSave} disabled={isSaving}>
+                {isSaving ? '저장 중...' : '저장'}
+              </SaveButton>
+            </ButtonContainer>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+    </>
+  );
 }
 
 export default NoticeDetail; 

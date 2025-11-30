@@ -62,7 +62,7 @@ const CloseButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
 `;
 
@@ -87,7 +87,7 @@ const NotificationItem = styled.div`
   `}
   
   &:hover {
-    background-color: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background-color: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
   
   &:last-child {
@@ -151,7 +151,7 @@ const MarkAllReadButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
 `;
 
@@ -168,7 +168,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { actualTheme } = useTheme();
-  const theme = actualTheme === 'dark' ? { card: '#2a2a2a', text: '#fff', subText: '#aaa', border: '#444', cardHover: '#333', primary: '#cb6565' } : { card: '#fff', text: '#333', subText: '#666', border: '#e0e0e0', cardHover: '#f5f5f5', primary: '#cb6565' };
+  const theme = actualTheme === 'dark' ? { card: '#2a2a2a', text: '#fff', subText: '#aaa', border: '#444', cardHover: '#333', primary: '#cb6565' } : { card: '#fff', text: '#333', subText: '#666', border: '#e0e0e0', cardHover: '#fdfdfd', primary: '#cb6565' };
 
   useEffect(() => {
     if (isOpen && user) {
@@ -178,7 +178,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
 
   const fetchNotifications = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const notificationsRef = collection(db, 'users', user.uid, 'notifications');
@@ -198,12 +198,12 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
 
   const markAsRead = async (notificationId, notification) => {
     if (!user) return;
-    
+
     try {
       const notificationRef = doc(db, 'users', user.uid, 'notifications', notificationId);
       await updateDoc(notificationRef, { isRead: true });
       setNotifications(prev => {
-        const updated = prev.map(notif => 
+        const updated = prev.map(notif =>
           notif.id === notificationId ? { ...notif, isRead: true } : notif
         );
         // 읽지 않은 알림 개수 계산하여 부모에게 알림
@@ -226,7 +226,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
 
   const markAllAsRead = async () => {
     if (!user) return;
-    
+
     try {
       const unreadNotifications = notifications.filter(n => !n.isRead);
       const updatePromises = unreadNotifications.map(notif => {
@@ -234,7 +234,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
         return updateDoc(notificationRef, { isRead: true });
       });
       await Promise.all(updatePromises);
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(notif => ({ ...notif, isRead: true }))
       );
       // 모든 알림을 읽었으므로 읽지 않은 알림 개수는 0
@@ -248,7 +248,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diff = now - date;
@@ -260,7 +260,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
     if (minutes < 60) return `${minutes}분 전`;
     if (hours < 24) return `${hours}시간 전`;
     if (days < 7) return `${days}일 전`;
-    
+
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
@@ -291,7 +291,7 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
               // 포인트 적립 알림인 경우 상세 내역 표시
               const showDetail = notification.type === 'point_earn' && notification.data?.reason;
               const isRead = notification.isRead || false;
-              
+
               return (
                 <NotificationItem
                   key={notification.id}

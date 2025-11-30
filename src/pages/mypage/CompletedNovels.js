@@ -137,7 +137,7 @@ const ToggleButton = styled.button`
   touch-action: manipulation;
   
   &:hover {
-    background: ${props => props.$active ? '#cb6565' : '#f5f5f5'};
+    background: ${props => props.$active ? '#cb6565' : '#fdfdfd'};
     border-color: ${props => props.$active ? '#cb6565' : '#cb6565'};
   }
   
@@ -344,7 +344,7 @@ const BatchActionButton = styled.button`
   background: ${({ variant, theme }) => {
         if (variant === 'public') return '#cb6565';
         if (variant === 'private') return '#666';
-        return theme.card || '#f5f5f5';
+        return theme.card || '#fdfdfd';
     }};
   color: ${({ variant }) => variant ? '#fff' : '#333'};
   flex: 1;
@@ -444,7 +444,7 @@ const PaginationButton = styled.button`
   touch-action: manipulation;
   
   &:hover:not(:disabled) {
-    background: ${({ theme, $active }) => $active ? '#cb6565' : '#f5f5f5'};
+    background: ${({ theme, $active }) => $active ? '#cb6565' : '#fdfdfd'};
     border-color: ${({ theme }) => theme.primary || '#cb6565'};
   }
   

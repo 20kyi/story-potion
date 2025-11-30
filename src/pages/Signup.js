@@ -231,7 +231,7 @@ const Button = styled.button`
 `;
 
 const SecondaryButton = styled(Button)`
-  background: #f5f5f5;
+  background: #fdfdfd;
   color: #666;
   margin-top: 10px;
   &:hover:not(:disabled) {
@@ -241,7 +241,7 @@ const SecondaryButton = styled(Button)`
 `;
 
 const SendCodeButton = styled.button`
-  background: ${props => props.disabled ? '#f5f5f5' : 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)'};
+  background: ${props => props.disabled ? '#fdfdfd' : 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)'};
   color: ${props => props.disabled ? '#999' : '#fff'};
   padding: 0;
   width: 50px;
@@ -301,7 +301,7 @@ const LoginLink = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: #f5f5f5;
+  background: #fdfdfd;
   border: none;
   color: #666;
   font-size: 16px;
@@ -604,12 +604,12 @@ function Signup() {
       const functions = getFunctions(auth.app, 'us-central1');
       const sendCode = httpsCallable(functions, 'sendSignupVerificationCode');
       const result = await sendCode({ email: formData.email.trim() });
-      
+
       // 디버깅: 응답 전체를 콘솔에 출력
       console.log('인증 코드 발송 응답:', result.data);
-      
+
       setVerificationCodeSent(true);
-      
+
       // 개발 환경이거나 이메일 발송 설정이 없으면 코드를 화면에 표시
       if (result.data.code) {
         setSuccessMessage(`인증 코드가 생성되었습니다: ${result.data.code}\n(개발 환경 - 이메일 발송 설정이 필요합니다)`);
@@ -645,22 +645,22 @@ function Signup() {
     try {
       const functions = getFunctions(auth.app, 'us-central1');
       const verifyCode = httpsCallable(functions, 'verifySignupCode');
-      
+
       const emailToVerify = formData.email.trim();
       const codeToVerify = formData.verificationCode.trim();
-      
+
       // 디버깅: 전송할 값 로그
       console.log('인증 코드 확인 요청:', {
         email: emailToVerify,
         code: codeToVerify,
         codeLength: codeToVerify.length
       });
-      
-      await verifyCode({ 
-        email: emailToVerify, 
+
+      await verifyCode({
+        email: emailToVerify,
         code: codeToVerify
       });
-      
+
       setIsEmailVerified(true);
       setSuccessMessage('이메일 인증이 완료되었습니다.');
     } catch (error) {
@@ -977,7 +977,7 @@ function Signup() {
 
       // 이메일 인증은 1단계에서 완료했으므로 여기서는 발송하지 않음
       alert('회원가입이 완료되었습니다!');
-      
+
       setIsSubmitting(false);
       navigate('/login');
     } catch (error) {
@@ -1067,7 +1067,7 @@ function Signup() {
             </SendCodeButton>
           )}
         </EmailInputWrapper>
-        
+
         {verificationCodeSent && !isEmailVerified && (
           <EmailInputWrapper>
             <EmailInputContainer style={{ flex: 1 }}>

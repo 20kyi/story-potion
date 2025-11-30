@@ -38,9 +38,9 @@ const LoadingContainer = styled.div`
   width: ${props => props.fullscreen ? '100vw' : '100%'};
   height: ${props => props.fullscreen ? '100vh' : '100%'};
   min-height: ${props => props.fullscreen ? '100vh' : '400px'};
-  background: ${props => props.darkMode 
-    ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)' 
-    : 'linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)'};
+  background: ${props => props.darkMode
+    ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
+    : 'linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%)'};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -121,8 +121,8 @@ const LoadingText = styled.div`
 function LoadingScreen({ fullscreen = true, darkMode = false, text = '로딩 중...' }) {
   return (
     <LoadingContainer fullscreen={fullscreen} darkMode={darkMode}>
-      <LogoImage 
-        src={darkMode ? "/app_logo/logo5.png" : "/app_logo/logo3.png"} 
+      <LogoImage
+        src={darkMode ? "/app_logo/logo5.png" : "/app_logo/logo3.png"}
         alt="로딩"
         darkMode={darkMode}
       />

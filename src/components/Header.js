@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { useTheme as useStyledTheme } from 'styled-components';
 import BackIcon from './icons/BackIcon';
 import NotificationIcon from './icons/NotificationIcon';
 import { useTheme } from '../ThemeContext';
@@ -15,7 +15,11 @@ const HeaderContainer = styled.header`
   left: 0;
   right: 0;
   z-index: 200;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.card};
+  background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#faf8f3';
+    if (theme.mode === 'dark') return theme.navCard || theme.card;
+    return '#fdfdfd';
+  }};
   box-shadow: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
     ? 'none'
     : `0 2px 12px ${theme.cardShadow}`};
@@ -144,7 +148,7 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
     ? { text: '#8B6F47', card: '#faf8f3', cardHover: 'rgba(139, 111, 71, 0.1)' }
     : actualTheme === 'dark'
       ? { text: '#fff', card: '#2a2a2a', cardHover: '#333' }
-      : { text: '#222', card: '#fff', cardHover: '#f5f5f5' };
+      : { text: '#222', card: '#fdfdfd', cardHover: '#e8e8e8' };
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
   const photoURL = user?.photoURL || '/profile-placeholder.jpg';
@@ -203,8 +207,10 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
     }
   };
 
+  const styledTheme = useStyledTheme();
+
   return (
-    <HeaderContainer $isDiaryTheme={isDiaryTheme}>
+    <HeaderContainer $isDiaryTheme={isDiaryTheme} theme={styledTheme}>
       <LeftSection>
         {!isHome && (
           <BackButton onClick={handleBack} $isDiaryTheme={isDiaryTheme}>

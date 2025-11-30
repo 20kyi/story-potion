@@ -65,7 +65,7 @@ const CloseButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#f5f5f5'};
+    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
   }
 `;
 
@@ -269,7 +269,7 @@ function Notice({ user }) {
 
     const theme = actualTheme === 'dark'
         ? { text: '#fff', card: '#2a2a2a', cardHover: '#333', border: '#444' }
-        : { text: '#222', card: '#fff', cardHover: '#f5f5f5', border: '#e0e0e0' };
+        : { text: '#222', card: '#fff', cardHover: '#fdfdfd', border: '#e0e0e0' };
 
     return (
         <>

@@ -27,7 +27,7 @@ const Container = styled.div`
   background: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme
             ? '#faf8f3'
-            : theme.background};
+            : theme.mode === 'dark' ? theme.background : '#fdfdfd'};
   ${props => props.$isDiaryTheme && `
     background-image: 
       repeating-linear-gradient(
@@ -105,10 +105,12 @@ const Card = styled.div`
         ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
         : props.$isDark
             ? '0 2px 8px rgba(0, 0, 0, 0.18)'
-            : '0 2px 4px rgba(0, 0, 0, 0.1)'};
+            : '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)'};
   border: ${props => props.$isDiaryTheme
         ? '1px solid rgba(139, 111, 71, 0.15)'
-        : 'none'};
+        : props.$isDark
+            ? 'none'
+            : '1px solid rgba(0, 0, 0, 0.06)'};
   display: flex;
   align-items: center;
 `;

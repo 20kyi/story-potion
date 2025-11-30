@@ -60,7 +60,7 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
         style.color = '#C99A9A';
         style.border = '2px solid #C99A9A';
     } else if (children === 'AI 소설 쓰기' || children === 'Create novel' || children === '완성 ✨') {
-        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5';
+        style.background = theme.mode === 'dark' ? '#3A3A3A' : '#fdfdfd';
         style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         style.border = theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
     } else if (children === '소설 보기') {

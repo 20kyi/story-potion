@@ -86,7 +86,7 @@ body.dark .novel-current-week-diary-item {
 }
 
 body:not(.dark) .novel-current-week-diary-item {
-    background: #F5F5F5;
+    background: #fdfdfd;
 }
 
 .novel-current-week-diary-item:hover {

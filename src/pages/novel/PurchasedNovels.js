@@ -90,7 +90,7 @@ const ToggleButton = styled.button`
   height: 36px;
   
   &:hover {
-    background: ${props => props.$active ? '#cb6565' : '#f5f5f5'};
+    background: ${props => props.$active ? '#cb6565' : '#fdfdfd'};
     border-color: ${props => props.$active ? '#cb6565' : '#cb6565'};
   }
   
@@ -135,9 +135,9 @@ const NovelItem = styled.div`
   width: 100%;
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
   &:hover {
-    ${props => props.$viewMode === 'card' 
-      ? 'transform: translateY(-4px);' 
-      : 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);'
+    ${props => props.$viewMode === 'card'
+        ? 'transform: translateY(-4px);'
+        : 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);'
     }
   }
 `;
@@ -260,7 +260,7 @@ const PaginationButton = styled.button`
   touch-action: manipulation;
   
   &:hover:not(:disabled) {
-    background: ${({ theme, $active }) => $active ? '#cb6565' : '#f5f5f5'};
+    background: ${({ theme, $active }) => $active ? '#cb6565' : '#fdfdfd'};
     border-color: ${({ theme }) => theme.primary || '#cb6565'};
   }
   
@@ -302,7 +302,7 @@ function PurchasedNovels({ user }) {
     // 사용자 가입일 가져오기
     useEffect(() => {
         if (!user) return;
-        
+
         const fetchUserCreatedAt = async () => {
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -314,7 +314,7 @@ function PurchasedNovels({ user }) {
                 console.error('사용자 가입일 조회 실패:', error);
             }
         };
-        
+
         fetchUserCreatedAt();
     }, [user]);
 
@@ -330,7 +330,7 @@ function PurchasedNovels({ user }) {
                 // 사용자가 구매한 소설 ID 목록과 구매 날짜 가져오기
                 const viewedNovelsRef = collection(db, 'users', user.uid, 'viewedNovels');
                 const viewedSnapshot = await getDocs(viewedNovelsRef);
-                
+
                 if (viewedSnapshot.empty) {
                     setNovels([]);
                     setIsLoading(false);
@@ -348,7 +348,7 @@ function PurchasedNovels({ user }) {
                 const novelDocs = await Promise.all(
                     viewedNovelsData.map(item => getDoc(doc(novelsRef, item.novelId)))
                 );
-                
+
                 // 백업 데이터(purchasedNovels)도 함께 조회
                 const purchasedNovelsRef = collection(db, 'users', user.uid, 'purchasedNovels');
                 const purchasedNovelsSnapshot = await getDocs(purchasedNovelsRef);
@@ -356,7 +356,7 @@ function PurchasedNovels({ user }) {
                 purchasedNovelsSnapshot.docs.forEach(doc => {
                     purchasedNovelsMap[doc.id] = { id: doc.id, ...doc.data() };
                 });
-                
+
                 let purchased = novelDocs
                     .map((snap, idx) => {
                         const novelId = viewedNovelsData[idx].novelId;
@@ -379,13 +379,13 @@ function PurchasedNovels({ user }) {
                         };
                     })
                     .filter(novel => novel !== null);
-                
+
                 // 각 소설의 userId로 닉네임/아이디 조회
                 const ownerIds = [...new Set(purchased.map(novel => novel.userId))];
                 const userDocs = await Promise.all(
                     ownerIds.map(uid => getDoc(doc(db, 'users', uid)))
                 );
-                
+
                 const ownerMap = {};
                 userDocs.forEach((snap, idx) => {
                     if (snap.exists()) {
@@ -472,8 +472,8 @@ function PurchasedNovels({ user }) {
             ) : (
                 <>
                     <ViewToggle>
-                        <SortSelect 
-                            value={sortBy} 
+                        <SortSelect
+                            value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             theme={theme}
                         >
@@ -482,8 +482,8 @@ function PurchasedNovels({ user }) {
                             <option value="author">작가순</option>
                         </SortSelect>
                         <ViewToggleRight>
-                            <ToggleButton 
-                                $active={viewMode === 'card'} 
+                            <ToggleButton
+                                $active={viewMode === 'card'}
                                 onClick={() => {
                                     setViewMode('card');
                                     localStorage.setItem('purchasedNovelsViewMode', 'card');
@@ -492,8 +492,8 @@ function PurchasedNovels({ user }) {
                             >
                                 <GridIcon width={20} height={20} />
                             </ToggleButton>
-                            <ToggleButton 
-                                $active={viewMode === 'list'} 
+                            <ToggleButton
+                                $active={viewMode === 'list'}
                                 onClick={() => {
                                     setViewMode('list');
                                     localStorage.setItem('purchasedNovelsViewMode', 'list');
@@ -508,56 +508,56 @@ function PurchasedNovels({ user }) {
                         {sortedNovels
                             .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                             .map((novel) => {
-                            const formatPurchaseDate = (purchasedAt) => {
-                                if (!purchasedAt) return '';
-                                const date = purchasedAt.toDate ? purchasedAt.toDate() : new Date(purchasedAt);
-                                if (isNaN(date.getTime())) return '';
-                                const year = date.getFullYear();
-                                const month = date.getMonth() + 1;
-                                const day = date.getDate();
-                                return `${year}. ${month}. ${day}`;
-                            };
+                                const formatPurchaseDate = (purchasedAt) => {
+                                    if (!purchasedAt) return '';
+                                    const date = purchasedAt.toDate ? purchasedAt.toDate() : new Date(purchasedAt);
+                                    if (isNaN(date.getTime())) return '';
+                                    const year = date.getFullYear();
+                                    const month = date.getMonth() + 1;
+                                    const day = date.getDate();
+                                    return `${year}. ${month}. ${day}`;
+                                };
 
-                            // 튜토리얼 책인지 확인
-                            const isTutorial = novel.id === 'tutorial' || novel.isTutorial === true;
+                                // 튜토리얼 책인지 확인
+                                const isTutorial = novel.id === 'tutorial' || novel.isTutorial === true;
 
-                            return (
-                                <NovelItem
-                                    key={novel.id}
-                                    $viewMode={viewMode}
-                                    onClick={() => {
-                                        if (isTutorial) {
-                                            navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, { 
-                                                state: { tutorialNovel: novel, returnPath: '/purchased-novels' } 
-                                            });
-                                        } else {
-                                            navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, { 
-                                                state: { returnPath: '/purchased-novels' } 
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <NovelCover 
-                                        src={novel.imageUrl || '/novel_banner/default.png'} 
-                                        alt={novel.title || '소설 표지'}
+                                return (
+                                    <NovelItem
+                                        key={novel.id}
                                         $viewMode={viewMode}
-                                    />
-                                    {viewMode === 'card' ? (
-                                        <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
-                                    ) : (
-                                        <NovelInfo $viewMode={viewMode}>
+                                        onClick={() => {
+                                            if (isTutorial) {
+                                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
+                                                    state: { tutorialNovel: novel, returnPath: '/purchased-novels' }
+                                                });
+                                            } else {
+                                                navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
+                                                    state: { returnPath: '/purchased-novels' }
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <NovelCover
+                                            src={novel.imageUrl || '/novel_banner/default.png'}
+                                            alt={novel.title || '소설 표지'}
+                                            $viewMode={viewMode}
+                                        />
+                                        {viewMode === 'card' ? (
                                             <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
-                                            <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
-                                            <PurchaseDate $viewMode={viewMode}>
-                                                {isTutorial ? '튜토리얼' : `구매일: ${formatPurchaseDate(novel.purchasedAt)}`}
-                                            </PurchaseDate>
-                                        </NovelInfo>
-                                    )}
-                                </NovelItem>
-                            );
-                        })}
+                                        ) : (
+                                            <NovelInfo $viewMode={viewMode}>
+                                                <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
+                                                <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
+                                                <PurchaseDate $viewMode={viewMode}>
+                                                    {isTutorial ? '튜토리얼' : `구매일: ${formatPurchaseDate(novel.purchasedAt)}`}
+                                                </PurchaseDate>
+                                            </NovelInfo>
+                                        )}
+                                    </NovelItem>
+                                );
+                            })}
                     </NovelListWrapper>
-                    
+
                     {/* 페이지네이션 */}
                     {sortedNovels.length > itemsPerPage && (
                         <PaginationContainer theme={theme}>

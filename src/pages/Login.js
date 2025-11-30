@@ -85,46 +85,46 @@ function Login() {
     };
   }, []);
 
-    // 카카오 로그인 성공 시 자동으로 홈으로 이동
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        // 카카오 로그인 중이고 사용자가 로그인된 경우
-        if (kakaoLoading && user) {
-          console.log('✅ 카카오 로그인 성공 감지, 홈으로 이동');
+  // 카카오 로그인 성공 시 자동으로 홈으로 이동
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      // 카카오 로그인 중이고 사용자가 로그인된 경우
+      if (kakaoLoading && user) {
+        console.log('✅ 카카오 로그인 성공 감지, 홈으로 이동');
+        setKakaoLoading(false);
+        navigate('/');
+      }
+    });
+
+    // 카카오 로그인 성공 이벤트 리스너
+    const handleKakaoLoginSuccess = () => {
+      console.log('✅ 카카오 로그인 성공 이벤트 수신');
+      // auth 상태 변화를 기다리기 위해 약간의 지연
+      setTimeout(() => {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
           setKakaoLoading(false);
           navigate('/');
         }
-      });
+      }, 500);
+    };
 
-      // 카카오 로그인 성공 이벤트 리스너
-      const handleKakaoLoginSuccess = () => {
-        console.log('✅ 카카오 로그인 성공 이벤트 수신');
-        // auth 상태 변화를 기다리기 위해 약간의 지연
-        setTimeout(() => {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            setKakaoLoading(false);
-            navigate('/');
-          }
-        }, 500);
-      };
+    // 카카오 로그인 실패 이벤트 리스너
+    const handleKakaoLoginFailed = () => {
+      console.log('❌ 카카오 로그인 실패 이벤트 수신');
+      setKakaoLoading(false);
+      setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+    };
 
-      // 카카오 로그인 실패 이벤트 리스너
-      const handleKakaoLoginFailed = () => {
-        console.log('❌ 카카오 로그인 실패 이벤트 수신');
-        setKakaoLoading(false);
-        setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
-      };
+    window.addEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
+    window.addEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
 
-      window.addEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
-      window.addEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
-
-      return () => {
-        unsubscribe();
-        window.removeEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
-        window.removeEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
-      };
-    }, [kakaoLoading, navigate]);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('kakaoLoginSuccess', handleKakaoLoginSuccess);
+      window.removeEventListener('kakaoLoginFailed', handleKakaoLoginFailed);
+    };
+  }, [kakaoLoading, navigate]);
 
   useEffect(() => {
     let onShow, onHide;
@@ -751,7 +751,7 @@ function Login() {
                     transition: 'all 0.3s'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = '#f5f5f5';
+                    e.target.style.background = '#fdfdfd';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.background = '#fff';
@@ -780,7 +780,7 @@ function Login() {
                     transition: 'all 0.3s'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = '#f5f5f5';
+                    e.target.style.background = '#fdfdfd';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.background = '#fff';
@@ -793,18 +793,18 @@ function Login() {
             <Divider>또는</Divider>
             <SocialLoginContainer>
               <SocialButton color="#4285F4" onClick={handleSocialLogin}><FaGoogle size={16} /></SocialButton>
-              <SocialButton 
-                color="#FEE500" 
+              <SocialButton
+                color="#FEE500"
                 onClick={handleKakaoLogin}
                 disabled={kakaoLoading}
-                style={{ 
+                style={{
                   opacity: kakaoLoading ? 0.6 : 1,
                   cursor: kakaoLoading ? 'not-allowed' : 'pointer'
                 }}
               >
                 {kakaoLoading ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ 
+                    <span style={{
                       display: 'inline-block',
                       width: '16px',
                       height: '16px',
@@ -1119,7 +1119,7 @@ function Login() {
                   padding: '10px',
                   border: 'none',
                   borderRadius: '8px',
-                  background: findIdMethod === 'nickname' ? '#e46262' : '#f5f5f5',
+                  background: findIdMethod === 'nickname' ? '#e46262' : '#fdfdfd',
                   color: findIdMethod === 'nickname' ? 'white' : '#666',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -1142,7 +1142,7 @@ function Login() {
                   padding: '10px',
                   border: 'none',
                   borderRadius: '8px',
-                  background: findIdMethod === 'phone' ? '#e46262' : '#f5f5f5',
+                  background: findIdMethod === 'phone' ? '#e46262' : '#fdfdfd',
                   color: findIdMethod === 'phone' ? 'white' : '#666',
                   cursor: 'pointer',
                   fontSize: '14px',

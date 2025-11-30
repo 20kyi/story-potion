@@ -143,7 +143,7 @@ const EditCancelTextButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   &:hover {
-    background: #f5f5f5;
+    background: #fdfdfd;
   }
 `;
 
@@ -171,7 +171,7 @@ function ProfileEdit({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const { t } = useTranslation();
-  
+
   // 프로필 편집 관련 상태
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
@@ -394,13 +394,13 @@ function ProfileEdit({ user }) {
   const handleSave = async () => {
     setPwChangeError('');
     setPwChangeSuccess('');
-    
+
     // 1. 비밀번호 변경 로직 (입력값이 있을 때만)
     // 구글 로그인 또는 카카오 로그인 사용자는 비밀번호 변경 불가
     const isGoogleUser = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
     const isKakaoUser = authProvider === 'kakao';
     const canChangePassword = !isGoogleUser && !isKakaoUser;
-    
+
     if (user && canChangePassword && (currentPassword || newPassword || confirmPassword)) {
       if (!currentPassword || !newPassword || !confirmPassword) {
         setPwChangeError('모든 비밀번호 입력란을 채워주세요.');
@@ -434,7 +434,7 @@ function ProfileEdit({ user }) {
       }
       setPwChangeLoading(false);
     }
-    
+
     // 2. 프로필(닉네임/사진) 저장 로직
     await handleProfileUpdate();
   };
@@ -443,211 +443,211 @@ function ProfileEdit({ user }) {
     <>
       <Header user={user} title="프로필 수정" />
       <MainContainer className="profile-edit-container" style={{ paddingBottom: 20 + keyboardHeight }}>
-          <div style={{ position: 'relative', marginBottom: '16px' }}>
-            <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', opacity: removeProfileImage ? 0.5 : 1 }}>
-              {newProfileImageUrl ? (
-                <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
-              ) : (
-                <img
-                  src={process.env.PUBLIC_URL + '/default-profile.svg'}
-                  alt="Default Profile"
-                  style={{
-                    width: 120,
-                    height: 120,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    margin: 0,
-                    padding: 0
-                  }}
-                />
-              )}
-              <EditImageInput id="profile-image-upload" type="file" accept="image/*" onChange={handleFileChange} />
-            </EditImageLabel>
-
-            {/* 프로필 이미지 삭제 버튼 */}
-            {(newProfileImageUrl || user?.photoURL) && !removeProfileImage && (
-              <button
-                onClick={handleRemoveProfileImage}
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <EditImageLabel htmlFor="profile-image-upload" style={{ position: 'static', width: 120, height: 120, background: 'none', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', opacity: removeProfileImage ? 0.5 : 1 }}>
+            {newProfileImageUrl ? (
+              <EditProfileImgTag src={newProfileImageUrl} alt="Profile" />
+            ) : (
+              <img
+                src={process.env.PUBLIC_URL + '/default-profile.svg'}
+                alt="Default Profile"
                 style={{
-                  position: 'absolute',
-                  top: '0',
-                  right: 'calc(50% - 60px)',
-                  background: '#e46262',
-                  color: 'white',
-                  border: 'none',
+                  width: 120,
+                  height: 120,
                   borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  objectFit: 'cover',
+                  margin: 0,
+                  padding: 0
                 }}
-                title="프로필 이미지 삭제"
-              >
-                ×
-              </button>
+              />
             )}
+            <EditImageInput id="profile-image-upload" type="file" accept="image/*" onChange={handleFileChange} />
+          </EditImageLabel>
 
-            {/* 삭제 취소 버튼 */}
-            {removeProfileImage && (
-              <button
-                onClick={() => {
-                  setRemoveProfileImage(false);
-                  setNewProfileImageUrl(user?.photoURL || '');
-                }}
-                style={{
-                  position: 'absolute',
-                  top: '0',
-                  right: 'calc(50% - 60px)',
-                  background: '#27ae60',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-                title="삭제 취소"
-              >
-                ↺
-              </button>
-            )}
-          </div>
-          
-          <EditInputWrap>
-            <EditLabel htmlFor="edit-nickname">{t('nickname') || '닉네임'}</EditLabel>
-            <EditInput
-              id="edit-nickname"
-              type="text"
-              value={newDisplayName}
-              onChange={(e) => {
-                setNewDisplayName(e.target.value);
-                // 닉네임 변경 시 이전 에러/성공 메시지 초기화
-                if (isNicknameDuplicate) {
-                  setIsNicknameDuplicate(false);
-                  setNicknameError('');
-                  setNicknameSuccess('');
-                }
-              }}
-              placeholder="닉네임을 입력하세요"
-              maxLength={20}
-              autoComplete="off"
-              onBlur={(e) => {
-                const nickname = e.target.value.trim();
-                if (nickname && nickname !== user?.displayName) {
-                  checkNicknameDuplicate(nickname);
-                } else if (nickname === user?.displayName) {
-                  setIsNicknameDuplicate(false);
-                  setNicknameError('');
-                  setNicknameSuccess('');
-                }
-              }}
-              onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+          {/* 프로필 이미지 삭제 버튼 */}
+          {(newProfileImageUrl || user?.photoURL) && !removeProfileImage && (
+            <button
+              onClick={handleRemoveProfileImage}
               style={{
-                borderColor: isNicknameDuplicate ? '#d9534f' : nicknameSuccess ? '#5cb85c' : undefined
+                position: 'absolute',
+                top: '0',
+                right: 'calc(50% - 60px)',
+                background: '#e46262',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
               }}
-            />
-            {nicknameError && <div style={{ color: '#d9534f', fontSize: 12, marginTop: 4 }}>{nicknameError}</div>}
-            {nicknameSuccess && !nicknameError && <div style={{ color: '#5cb85c', fontSize: 12, marginTop: 4 }}>{nicknameSuccess}</div>}
-            {isNicknameChecking && <div style={{ color: '#ffa500', fontSize: 12, marginTop: 4 }}>확인 중...</div>}
-          </EditInputWrap>
-          
-          <EditInputWrap>
-            <EditLabel htmlFor="edit-phone">휴대전화 번호</EditLabel>
-            <EditInput
-              id="edit-phone"
-              type="tel"
-              value={newPhoneNumber}
-              onChange={(e) => setNewPhoneNumber(e.target.value)}
-              placeholder="휴대전화 번호 (예: 01012345678)"
-              autoComplete="off"
-              onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
-            />
-          </EditInputWrap>
-          
-          {/* 비밀번호 변경 입력창: 구글/카카오 로그인 사용자는 숨김 */}
-          {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && authProvider !== 'kakao' && (
-            <>
-              <PasswordInputWrap>
-                <EditLabel htmlFor="current-password">현재 비밀번호</EditLabel>
-                <div style={{ position: 'relative' }}>
-                  <EditInput
-                    id="current-password"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
-                    placeholder="현재 비밀번호 입력"
-                    autoComplete="current-password"
-                    onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
-                  />
-                  <PasswordInputIcon onClick={() => setShowCurrentPassword(v => !v)}>
-                    {showCurrentPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
-                  </PasswordInputIcon>
-                </div>
-              </PasswordInputWrap>
-              
-              <PasswordInputWrap>
-                <EditLabel htmlFor="new-password" style={{ marginTop: 12 }}>새 비밀번호</EditLabel>
-                <div style={{ position: 'relative' }}>
-                  <EditInput
-                    id="new-password"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    placeholder="새 비밀번호 입력"
-                    autoComplete="new-password"
-                    onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
-                  />
-                  <PasswordInputIcon onClick={() => setShowNewPassword(v => !v)}>
-                    {showNewPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
-                  </PasswordInputIcon>
-                </div>
-              </PasswordInputWrap>
-              
-              <PasswordInputWrap>
-                <EditLabel htmlFor="confirm-password" style={{ marginTop: 12 }}>새 비밀번호 확인</EditLabel>
-                <div style={{ position: 'relative' }}>
-                  <EditInput
-                    id="confirm-password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="새 비밀번호 확인"
-                    autoComplete="new-password"
-                    onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
-                  />
-                  <PasswordInputIcon onClick={() => setShowConfirmPassword(v => !v)}>
-                    {showConfirmPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
-                  </PasswordInputIcon>
-                </div>
-                {pwChangeError && <div style={{ color: '#e46262', fontSize: 13, marginTop: 8 }}>{pwChangeError}</div>}
-                {pwChangeSuccess && <div style={{ color: '#27ae60', fontSize: 13, marginTop: 8 }}>{pwChangeSuccess}</div>}
-              </PasswordInputWrap>
-            </>
-          )}
-          
-          <EditButtonRow>
-            <EditCancelTextButton onClick={() => navigate('/my')}>{t('cancel') || '취소'}</EditCancelTextButton>
-            <EditSaveButton
-              onClick={handleSave}
-              disabled={pwChangeLoading || isNicknameDuplicate || isNicknameChecking}
+              title="프로필 이미지 삭제"
             >
-              {t('save') || '저장'}
-            </EditSaveButton>
-          </EditButtonRow>
+              ×
+            </button>
+          )}
 
-          {/* 구글/카카오 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
-          {user && (
-            (user.providerData && user.providerData.some(p => p.providerId === 'google.com')) || authProvider === 'kakao'
-          ) && (
+          {/* 삭제 취소 버튼 */}
+          {removeProfileImage && (
+            <button
+              onClick={() => {
+                setRemoveProfileImage(false);
+                setNewProfileImageUrl(user?.photoURL || '');
+              }}
+              style={{
+                position: 'absolute',
+                top: '0',
+                right: 'calc(50% - 60px)',
+                background: '#27ae60',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}
+              title="삭제 취소"
+            >
+              ↺
+            </button>
+          )}
+        </div>
+
+        <EditInputWrap>
+          <EditLabel htmlFor="edit-nickname">{t('nickname') || '닉네임'}</EditLabel>
+          <EditInput
+            id="edit-nickname"
+            type="text"
+            value={newDisplayName}
+            onChange={(e) => {
+              setNewDisplayName(e.target.value);
+              // 닉네임 변경 시 이전 에러/성공 메시지 초기화
+              if (isNicknameDuplicate) {
+                setIsNicknameDuplicate(false);
+                setNicknameError('');
+                setNicknameSuccess('');
+              }
+            }}
+            placeholder="닉네임을 입력하세요"
+            maxLength={20}
+            autoComplete="off"
+            onBlur={(e) => {
+              const nickname = e.target.value.trim();
+              if (nickname && nickname !== user?.displayName) {
+                checkNicknameDuplicate(nickname);
+              } else if (nickname === user?.displayName) {
+                setIsNicknameDuplicate(false);
+                setNicknameError('');
+                setNicknameSuccess('');
+              }
+            }}
+            onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+            style={{
+              borderColor: isNicknameDuplicate ? '#d9534f' : nicknameSuccess ? '#5cb85c' : undefined
+            }}
+          />
+          {nicknameError && <div style={{ color: '#d9534f', fontSize: 12, marginTop: 4 }}>{nicknameError}</div>}
+          {nicknameSuccess && !nicknameError && <div style={{ color: '#5cb85c', fontSize: 12, marginTop: 4 }}>{nicknameSuccess}</div>}
+          {isNicknameChecking && <div style={{ color: '#ffa500', fontSize: 12, marginTop: 4 }}>확인 중...</div>}
+        </EditInputWrap>
+
+        <EditInputWrap>
+          <EditLabel htmlFor="edit-phone">휴대전화 번호</EditLabel>
+          <EditInput
+            id="edit-phone"
+            type="tel"
+            value={newPhoneNumber}
+            onChange={(e) => setNewPhoneNumber(e.target.value)}
+            placeholder="휴대전화 번호 (예: 01012345678)"
+            autoComplete="off"
+            onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+          />
+        </EditInputWrap>
+
+        {/* 비밀번호 변경 입력창: 구글/카카오 로그인 사용자는 숨김 */}
+        {user && user.providerData && !user.providerData.some(p => p.providerId === 'google.com') && authProvider !== 'kakao' && (
+          <>
+            <PasswordInputWrap>
+              <EditLabel htmlFor="current-password">현재 비밀번호</EditLabel>
+              <div style={{ position: 'relative' }}>
+                <EditInput
+                  id="current-password"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  placeholder="현재 비밀번호 입력"
+                  autoComplete="current-password"
+                  onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+                />
+                <PasswordInputIcon onClick={() => setShowCurrentPassword(v => !v)}>
+                  {showCurrentPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                </PasswordInputIcon>
+              </div>
+            </PasswordInputWrap>
+
+            <PasswordInputWrap>
+              <EditLabel htmlFor="new-password" style={{ marginTop: 12 }}>새 비밀번호</EditLabel>
+              <div style={{ position: 'relative' }}>
+                <EditInput
+                  id="new-password"
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호 입력"
+                  autoComplete="new-password"
+                  onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+                />
+                <PasswordInputIcon onClick={() => setShowNewPassword(v => !v)}>
+                  {showNewPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                </PasswordInputIcon>
+              </div>
+            </PasswordInputWrap>
+
+            <PasswordInputWrap>
+              <EditLabel htmlFor="confirm-password" style={{ marginTop: 12 }}>새 비밀번호 확인</EditLabel>
+              <div style={{ position: 'relative' }}>
+                <EditInput
+                  id="confirm-password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호 확인"
+                  autoComplete="new-password"
+                  onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)}
+                />
+                <PasswordInputIcon onClick={() => setShowConfirmPassword(v => !v)}>
+                  {showConfirmPassword ? <EyeOffIcon width={22} height={22} color="#888" /> : <EyeIcon width={22} height={22} color="#888" />}
+                </PasswordInputIcon>
+              </div>
+              {pwChangeError && <div style={{ color: '#e46262', fontSize: 13, marginTop: 8 }}>{pwChangeError}</div>}
+              {pwChangeSuccess && <div style={{ color: '#27ae60', fontSize: 13, marginTop: 8 }}>{pwChangeSuccess}</div>}
+            </PasswordInputWrap>
+          </>
+        )}
+
+        <EditButtonRow>
+          <EditCancelTextButton onClick={() => navigate('/my')}>{t('cancel') || '취소'}</EditCancelTextButton>
+          <EditSaveButton
+            onClick={handleSave}
+            disabled={pwChangeLoading || isNicknameDuplicate || isNicknameChecking}
+          >
+            {t('save') || '저장'}
+          </EditSaveButton>
+        </EditButtonRow>
+
+        {/* 구글/카카오 로그인 사용자에게 비밀번호 변경 안내 메시지 */}
+        {user && (
+          (user.providerData && user.providerData.some(p => p.providerId === 'google.com')) || authProvider === 'kakao'
+        ) && (
             <div style={{
               textAlign: 'center',
               color: '#888',

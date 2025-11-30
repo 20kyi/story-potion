@@ -123,7 +123,7 @@ const SaveButton = styled.button`
 `;
 
 const CancelButton = styled.button`
-  background: #f5f5f5;
+  background: #fdfdfd;
   color: #666;
   border: none;
   border-radius: 8px;
@@ -185,102 +185,102 @@ const defaultPrivacyContent = `1. 총칙
 storypotion.team@gmail.com`;
 
 function PrivacyPolicy({ user }) {
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const [isEditing, setIsEditing] = useState(false);
-    const [privacyContent, setPrivacyContent] = useState(defaultPrivacyContent);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isAdminUser, setIsAdminUser] = useState(false);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [isEditing, setIsEditing] = useState(false);
+  const [privacyContent, setPrivacyContent] = useState(defaultPrivacyContent);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
-    useEffect(() => {
-        if (user) {
-            setIsAdminUser(isAdmin(user));
-            loadPrivacyFromFirestore();
+  useEffect(() => {
+    if (user) {
+      setIsAdminUser(isAdmin(user));
+      loadPrivacyFromFirestore();
+    }
+  }, [user]);
+
+  const loadPrivacyFromFirestore = async () => {
+    try {
+      const docRef = doc(db, 'config', 'terms');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data().privacy) {
+        setPrivacyContent(docSnap.data().privacy);
+      }
+    } catch (error) {
+      console.error('개인정보처리방침 로드 실패:', error);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    loadPrivacyFromFirestore();
+  };
+
+  const handleSave = async () => {
+    if (!isAdminUser) {
+      alert('관리자 권한이 필요합니다.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const docRef = doc(db, 'config', 'terms');
+      await setDoc(docRef, {
+        privacy: privacyContent,
+        updatedAt: new Date(),
+        updatedBy: user.email
+      }, { merge: true });
+
+      alert('개인정보처리방침이 저장되었습니다.');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('개인정보처리방침 저장 실패:', error);
+      alert('개인정보처리방침 저장에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Header
+        user={user}
+        title="개인정보 처리방침"
+        rightActions={
+          isAdminUser && !isEditing ? (
+            <EditButton theme={theme} onClick={handleEdit} title="수정">
+              <FaEdit />
+            </EditButton>
+          ) : null
         }
-    }, [user]);
-
-    const loadPrivacyFromFirestore = async () => {
-        try {
-            const docRef = doc(db, 'config', 'terms');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().privacy) {
-                setPrivacyContent(docSnap.data().privacy);
-            }
-        } catch (error) {
-            console.error('개인정보처리방침 로드 실패:', error);
-        }
-    };
-
-    const handleEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        loadPrivacyFromFirestore();
-    };
-
-    const handleSave = async () => {
-        if (!isAdminUser) {
-            alert('관리자 권한이 필요합니다.');
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const docRef = doc(db, 'config', 'terms');
-            await setDoc(docRef, {
-                privacy: privacyContent,
-                updatedAt: new Date(),
-                updatedBy: user.email
-            }, { merge: true });
-
-            alert('개인정보처리방침이 저장되었습니다.');
-            setIsEditing(false);
-        } catch (error) {
-            console.error('개인정보처리방침 저장 실패:', error);
-            alert('개인정보처리방침 저장에 실패했습니다.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    return (
-        <>
-            <Header
-                user={user}
-                title="개인정보 처리방침"
-                rightActions={
-                    isAdminUser && !isEditing ? (
-                        <EditButton theme={theme} onClick={handleEdit} title="수정">
-                            <FaEdit />
-                        </EditButton>
-                    ) : null
-                }
-            />
-            <Container theme={theme}>
-                <Section>
-                    {isEditing ? (
-                        <>
-                            <EditTextarea
-                                theme={theme}
-                                value={privacyContent}
-                                onChange={(e) => setPrivacyContent(e.target.value)}
-                            />
-                            <ButtonContainer>
-                                <CancelButton onClick={handleCancel}>취소</CancelButton>
-                                <SaveButton onClick={handleSave} disabled={isSaving}>
-                                    {isSaving ? '저장 중...' : '저장'}
-                                </SaveButton>
-                            </ButtonContainer>
-                        </>
-                    ) : (
-                        <SectionContent theme={theme}>{privacyContent}</SectionContent>
-                    )}
-                </Section>
-            </Container>
-        </>
-    );
+      />
+      <Container theme={theme}>
+        <Section>
+          {isEditing ? (
+            <>
+              <EditTextarea
+                theme={theme}
+                value={privacyContent}
+                onChange={(e) => setPrivacyContent(e.target.value)}
+              />
+              <ButtonContainer>
+                <CancelButton onClick={handleCancel}>취소</CancelButton>
+                <SaveButton onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? '저장 중...' : '저장'}
+                </SaveButton>
+              </ButtonContainer>
+            </>
+          ) : (
+            <SectionContent theme={theme}>{privacyContent}</SectionContent>
+          )}
+        </Section>
+      </Container>
+    </>
+  );
 }
 
 export default PrivacyPolicy;
