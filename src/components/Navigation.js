@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { useTheme as useStyledTheme } from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { useTranslation } from '../LanguageContext';
@@ -7,7 +7,11 @@ const NavBar = styled.nav`
   position: fixed;
   left: 0; right: 0; bottom: 0;
   width: 100%;
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.navCard};
+  background: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#faf8f3';
+    if (theme.mode === 'dark') return '#202020';
+    return theme.navCard;
+  }};
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
   box-shadow: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
@@ -65,6 +69,7 @@ function Navigation() {
   const { actualTheme } = useTheme();
   const { t } = useTranslation();
   const isDiaryTheme = actualTheme === 'diary';
+  const styledTheme = useStyledTheme();
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' || location.pathname === '/home';
@@ -78,7 +83,7 @@ function Navigation() {
   };
 
   return (
-    <NavBar $isDiaryTheme={isDiaryTheme}>
+    <NavBar $isDiaryTheme={isDiaryTheme} theme={styledTheme}>
       <NavButton onClick={() => navigate('/')}>
         <IconContainer>
           <IconImage
