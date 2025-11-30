@@ -24,7 +24,7 @@ const NavBar = styled.nav`
     if ($isDiaryTheme) return '0 -2px 8px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)';
     return theme.cardShadow;
   }};
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+  padding: ${({ $isGlassTheme }) => $isGlassTheme ? '8px 0' : '12px 0 calc(12px + env(safe-area-inset-bottom)) 0'};
   display: flex;
   justify-content: space-around;
   z-index: 100;
