@@ -266,8 +266,17 @@ function Diary({ user }) {
         cry: '/emotions/cry.png',
     };
 
-    // 감정별 색상 매핑
-    const emotionBarColors = {
+    // 감정별 색상 매핑 (다크모드 대응)
+    const isDark = actualTheme === 'dark';
+    const emotionBarColors = isDark ? {
+        love: '#d977a6',      // 다크모드용 분홍 (톤다운)
+        good: '#c9a961',      // 다크모드용 노랑 (톤다운)
+        normal: '#6ba87a',    // 다크모드용 녹색 (톤다운)
+        surprised: '#6b8fc4', // 다크모드용 하늘색 (톤다운)
+        angry: '#c95a5a',     // 다크모드용 빨강 (톤다운)
+        cry: '#7a7f8a',       // 다크모드용 보라/회색 (톤다운)
+        empty: '#3A3A3A'      // 다크모드용 회색(미작성)
+    } : {
         love: '#ffb3de',      // 연분홍
         good: '#ffe156',      // 노랑
         normal: '#b2f2bb',    // 연녹
