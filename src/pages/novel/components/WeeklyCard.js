@@ -209,7 +209,7 @@ const WeeklyCard = ({
                         onClick={handleAddNovel}
                         disabled={allGenresCreated}
                         style={getCreateButtonStyle(
-                            allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑"),
+                            allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : t('novel_create_other_genre')),
                             true,
                             theme,
                             false,
@@ -217,7 +217,7 @@ const WeeklyCard = ({
                             isListMode
                         )}
                     >
-                        {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : "+ 다른 장르 👑")}
+                        {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : t('novel_create_other_genre'))}
                     </button>
                 ) : (
                     <button

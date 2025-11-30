@@ -34,7 +34,7 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
         fontFamily: 'inherit',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
-        transition: childrenStr.includes('다른 장르') ? 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease' : 'all 0.2s ease',
+        transition: (childrenStr.includes('다른 장르') || childrenStr.includes('Other Genre') || childrenStr.includes('other genre')) ? 'opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease' : 'all 0.2s ease',
         overflow: 'visible',
         boxShadow: children === '소설 보기' ? '0 2px 8px rgba(228,98,98,0.08)' : 'none'
     };
@@ -51,15 +51,15 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
         style.background = theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)';
         style.color = theme.premiumBannerText || '#8B4513';
         style.border = 'none';
-    } else if (children === '일기 채우기') {
+    } else if (children === '일기 채우기' || children === 'Write diary') {
         style.background = theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA';
         style.color = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
         style.border = theme.mode === 'dark' ? '2px solid #BFBFBF' : '2px solid #868E96';
-    } else if (childrenStr.includes('다른 장르')) {
+    } else if (childrenStr.includes('다른 장르') || childrenStr.includes('Other Genre') || childrenStr.includes('other genre')) {
         style.background = 'transparent';
         style.color = '#C99A9A';
         style.border = '2px solid #C99A9A';
-    } else if (children === 'AI 소설 쓰기' || children === '완성 ✨') {
+    } else if (children === 'AI 소설 쓰기' || children === 'Create novel' || children === '완성 ✨') {
         style.background = theme.mode === 'dark' ? '#3A3A3A' : '#f5f5f5';
         style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
         style.border = theme.mode === 'dark' ? '2px solid #FFB3B3' : '2px solid #e07e7e';
