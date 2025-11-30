@@ -922,14 +922,30 @@ const CarouselContainer = styled.div`
     bottom: -35px;
     li {
       margin: 0 4px;
-      button:before {
-        color: #fdd2d2;
-        opacity: 0.5;
-        font-size: 8px;
+      button {
+        width: ${({ $isGlassTheme }) => $isGlassTheme ? '10px' : 'auto'};
+        height: ${({ $isGlassTheme }) => $isGlassTheme ? '10px' : 'auto'};
+        padding: 0;
+        background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+        backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+        -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+        border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+        border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '50%' : '0'};
+        box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+        &:before {
+          color: ${({ $isGlassTheme }) => $isGlassTheme ? 'transparent' : '#fdd2d2'};
+          opacity: ${({ $isGlassTheme }) => $isGlassTheme ? '0' : '0.5'};
+          font-size: 8px;
+        }
       }
-      &.slick-active button:before {
-        color: #cb6565;
-        opacity: 1;
+      &.slick-active button {
+        background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.4)' : 'transparent'};
+        border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.9)' : 'none'};
+        box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)' : 'none'};
+        &:before {
+          color: ${({ $isGlassTheme }) => $isGlassTheme ? 'transparent' : '#cb6565'};
+          opacity: ${({ $isGlassTheme }) => $isGlassTheme ? '0' : '1'};
+        }
       }
     }
   }
@@ -1599,7 +1615,7 @@ function Home({ user }) {
 
       <ContentGrid>
         {/* 캐러셀 배너 */}
-        <CarouselContainer>
+        <CarouselContainer $isGlassTheme={isGlassTheme}>
           <Slider {...sliderSettings}>
             {bannerData.map((banner, idx) => (
               <CarouselSlide key={idx}>
