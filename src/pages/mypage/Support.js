@@ -16,8 +16,10 @@ const SettingsContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   padding: 20px;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.background};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   min-height: 500px;
+  position: relative;
 `;
 
 const SettingsList = styled.ul`
@@ -27,14 +29,19 @@ const SettingsList = styled.ul`
 `;
 
 const SettingsItem = styled.li`
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+  border-bottom: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) {
+      return '1px solid rgba(139, 111, 71, 0.15)';
+    }
+    return `1px solid ${theme.border}`;
+  }};
   padding: 18px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 400;
   font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   flex-direction: ${props => props.expanded ? 'column' : 'row'};
   align-items: ${props => props.expanded ? 'stretch' : 'center'};
   cursor: ${props => props.clickable ? 'pointer' : 'default'};
@@ -45,13 +52,13 @@ const SettingsItem = styled.li`
 const ItemTitle = styled.span`
   font-weight: 400;
   font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   font-family: inherit;
 `;
 
 const ItemDescription = styled.span`
   font-size: 13px;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
   font-weight: 400;
   font-family: inherit;
 `;
@@ -105,104 +112,105 @@ const ItemDetailsDescription = styled.div`
 `;
 
 function Support({ user }) {
-    const navigate = useNavigate();
-    const { actualTheme } = useTheme();
-    const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
-    const { t } = useTranslation();
-    const [userCreatedAt, setUserCreatedAt] = useState(null);
-    
-    // 사용자 가입일 가져오기
-    useEffect(() => {
-        if (user?.uid) {
-            const fetchUserCreatedAt = async () => {
-                try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        setUserCreatedAt(userData.createdAt || null);
-                    }
-                } catch (error) {
-                    console.error('사용자 가입일 조회 실패:', error);
-                }
-            };
-            fetchUserCreatedAt();
-        }
-    }, [user]);
-    
-    const handleMenuClick = (menuType) => {
-        switch (menuType) {
-            case 'notice':
-                navigate('/my/notice');
-                break;
-            case 'faq':
-                navigate('/my/faq');
-                break;
-            case 'inquiry':
-                // 문의하기 페이지로 이동 (추후 구현)
-                alert('문의하기 기능은 준비 중입니다.');
-                break;
-            case 'feedback':
-                // 피드백 페이지로 이동 (추후 구현)
-                alert('피드백 기능은 준비 중입니다.');
-                break;
-            default:
-                break;
-        }
-    };
-    
-    const handleTutorial = () => {
-        navigate('/my/tutorial');
-    };
+  const navigate = useNavigate();
+  const { actualTheme } = useTheme();
+  const isDiaryTheme = actualTheme === 'diary';
+  const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
+  const { t } = useTranslation();
+  const [userCreatedAt, setUserCreatedAt] = useState(null);
 
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Story Potion',
-                text: '당신의 이야기를 담는 마법의 포션',
-                url: 'https://story-potion.web.app'
-            });
-        } else {
-            navigator.clipboard.writeText('https://story-potion.web.app');
-            alert('링크가 클립보드에 복사되었습니다!');
+  // 사용자 가입일 가져오기
+  useEffect(() => {
+    if (user?.uid) {
+      const fetchUserCreatedAt = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUserCreatedAt(userData.createdAt || null);
+          }
+        } catch (error) {
+          console.error('사용자 가입일 조회 실패:', error);
         }
-    };
+      };
+      fetchUserCreatedAt();
+    }
+  }, [user]);
 
-    return (
-        <>
-            <Header user={user} title={t('support_title')} />
-            <SettingsContainer theme={theme}>
-                <SettingsList>
-                    <SettingsItem theme={theme} clickable onClick={() => handleMenuClick('notice')}>
-                        <ItemTitle theme={theme}>{t('notice')}</ItemTitle>
-                    </SettingsItem>
-                    <SettingsItem theme={theme} clickable onClick={() => handleMenuClick('faq')}>
-                        <ItemTitle theme={theme}>{t('faq')}</ItemTitle>
-                    </SettingsItem>
-                    <SettingsItem theme={theme} clickable onClick={() => handleMenuClick('inquiry')}>
-                        <ItemTitle theme={theme}>{t('inquiry')}</ItemTitle>
-                    </SettingsItem>
-                    <SettingsItem theme={theme} clickable onClick={() => handleMenuClick('feedback')}>
-                        <ItemTitle theme={theme}>{t('feedback')}</ItemTitle>
-                    </SettingsItem>
-                    <SettingsItem theme={theme} clickable onClick={handleTutorial}>
-                        <ItemTitle theme={theme}>{t('tutorial_again') || '튜토리얼 다시 보기'}</ItemTitle>
-                    </SettingsItem>
-                    
-                    {/* 앱 공유 - 소셜 메뉴에서 이동 */}
-                    <SettingsItem theme={theme} expanded clickable>
-                        <ItemContent>
-                            <ItemTitle theme={theme}>{t('share_app')}</ItemTitle>
-                        </ItemContent>
-                        <ItemDetails>
-                            <ItemDescription theme={theme}>{t('share_app_desc')}</ItemDescription>
-                            <ActionButton theme={theme} onClick={handleShare}>{t('share')}</ActionButton>
-                        </ItemDetails>
-                    </SettingsItem>
-                </SettingsList>
-            </SettingsContainer>
-            <Navigation />
-        </>
-    );
+  const handleMenuClick = (menuType) => {
+    switch (menuType) {
+      case 'notice':
+        navigate('/my/notice');
+        break;
+      case 'faq':
+        navigate('/my/faq');
+        break;
+      case 'inquiry':
+        // 문의하기 페이지로 이동 (추후 구현)
+        alert('문의하기 기능은 준비 중입니다.');
+        break;
+      case 'feedback':
+        // 피드백 페이지로 이동 (추후 구현)
+        alert('피드백 기능은 준비 중입니다.');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleTutorial = () => {
+    navigate('/my/tutorial');
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Story Potion',
+        text: '당신의 이야기를 담는 마법의 포션',
+        url: 'https://story-potion.web.app'
+      });
+    } else {
+      navigator.clipboard.writeText('https://story-potion.web.app');
+      alert('링크가 클립보드에 복사되었습니다!');
+    }
+  };
+
+  return (
+    <>
+      <Header user={user} title={t('support_title')} />
+      <SettingsContainer theme={theme} $isDiaryTheme={isDiaryTheme}>
+        <SettingsList>
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} clickable onClick={() => handleMenuClick('notice')}>
+            <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('notice')}</ItemTitle>
+          </SettingsItem>
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} clickable onClick={() => handleMenuClick('faq')}>
+            <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('faq')}</ItemTitle>
+          </SettingsItem>
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} clickable onClick={() => handleMenuClick('inquiry')}>
+            <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('inquiry')}</ItemTitle>
+          </SettingsItem>
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} clickable onClick={() => handleMenuClick('feedback')}>
+            <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('feedback')}</ItemTitle>
+          </SettingsItem>
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} clickable onClick={handleTutorial}>
+            <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('tutorial_again') || '튜토리얼 다시 보기'}</ItemTitle>
+          </SettingsItem>
+
+          {/* 앱 공유 - 소셜 메뉴에서 이동 */}
+          <SettingsItem theme={theme} $isDiaryTheme={isDiaryTheme} expanded clickable>
+            <ItemContent>
+              <ItemTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('share_app')}</ItemTitle>
+            </ItemContent>
+            <ItemDetails>
+              <ItemDescription theme={theme} $isDiaryTheme={isDiaryTheme}>{t('share_app_desc')}</ItemDescription>
+              <ActionButton theme={theme} $isDiaryTheme={isDiaryTheme} onClick={handleShare}>{t('share')}</ActionButton>
+            </ItemDetails>
+          </SettingsItem>
+        </SettingsList>
+      </SettingsContainer>
+      <Navigation />
+    </>
+  );
 }
 
 export default Support; 
