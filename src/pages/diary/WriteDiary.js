@@ -988,9 +988,41 @@ function WriteDiary({ user }) {
         return `diary_temp_${user?.uid}_${dateStr}`;
     }, [user?.uid]);
 
+    // blob URL을 base64로 변환하는 함수
+    const blobUrlToBase64 = async (blobUrl) => {
+        try {
+            const response = await fetch(blobUrl);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } catch (error) {
+            console.error('blob URL을 base64로 변환 실패:', error);
+            return null;
+        }
+    };
+
     // 임시저장 함수
-    const saveTempDiary = useCallback((date) => {
+    const saveTempDiary = useCallback(async (date, showNotification = false) => {
         if (!user?.uid) return;
+
+        // blob URL을 base64로 변환
+        const imageDataPromises = imagePreview.map(async (url) => {
+            if (url.startsWith('blob:')) {
+                const base64 = await blobUrlToBase64(url);
+                return base64 ? { type: 'base64', data: base64 } : null;
+            } else {
+                // 기존 URL은 그대로 저장
+                return { type: 'url', data: url };
+            }
+        });
+
+        const imageData = await Promise.all(imageDataPromises);
+        const validImageData = imageData.filter(data => data !== null);
+
         const tempData = {
             title: diary.title,
             content: diary.content,
@@ -998,20 +1030,37 @@ function WriteDiary({ user }) {
             weather: diary.weather,
             emotion: diary.emotion,
             stickers: stickers,
-            imagePreview: imagePreview.filter(url => !url.startsWith('blob:')), // blob URL은 저장하지 않음
+            imageData: validImageData, // base64 또는 URL 저장
             savedAt: new Date().toISOString()
         };
+
         // 내용이 있을 때만 저장
         if (tempData.content.trim().length > 0 || tempData.title.trim().length > 0) {
+            const key = getTempSaveKey(date);
             try {
-                const key = getTempSaveKey(date);
                 localStorage.setItem(key, JSON.stringify(tempData));
                 setHasTempSave(true);
+                // 알림 표시 옵션이 있으면 토스트 표시
+                if (showNotification) {
+                    toast.showToast('임시저장됨', 'success');
+                }
             } catch (error) {
                 console.error('임시저장 실패:', error);
+                // localStorage 크기 제한 초과 시 이전 방식으로 저장 (blob URL 제외)
+                if (error.name === 'QuotaExceededError') {
+                    const fallbackData = {
+                        ...tempData,
+                        imageData: imagePreview.filter(url => !url.startsWith('blob:')).map(url => ({ type: 'url', data: url }))
+                    };
+                    try {
+                        localStorage.setItem(key, JSON.stringify(fallbackData));
+                    } catch (fallbackError) {
+                        console.error('임시저장 폴백 실패:', fallbackError);
+                    }
+                }
             }
         }
-    }, [diary, stickers, imagePreview, user?.uid, getTempSaveKey]);
+    }, [diary, stickers, imagePreview, user?.uid, getTempSaveKey, toast]);
 
     // 임시저장 불러오기 함수
     const loadTempDiary = useCallback((date) => {
@@ -1190,17 +1239,48 @@ function WriteDiary({ user }) {
         return () => clearTimeout(timeoutId);
     }, [diary.title, diary.content, diary.mood, diary.weather, diary.emotion, stickers, selectedDate, saveTempDiary]);
 
+    // 중복 토스트 방지를 위한 ref
+    const lastSaveTimeRef = useRef(0);
+    const SAVE_COOLDOWN = 3000; // 3초 내 중복 저장 방지
+
     // 페이지 이탈 시 임시저장
     useEffect(() => {
         if (!user?.uid || !selectedDate) return;
 
+        let visibilityChangeTimeout = null;
+        let isUnmounting = false;
+
         const handleBeforeUnload = (e) => {
-            saveTempDiary(selectedDate);
+            saveTempDiary(selectedDate, false); // beforeunload에서는 토스트 표시 불가
         };
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                saveTempDiary(selectedDate);
+                const now = Date.now();
+                // 최근에 저장했으면 토스트 표시하지 않음
+                if (now - lastSaveTimeRef.current < SAVE_COOLDOWN) {
+                    saveTempDiary(selectedDate, false);
+                    return;
+                }
+
+                // 디바운싱: 짧은 시간 내 여러 번 호출되는 것을 방지
+                if (visibilityChangeTimeout) {
+                    clearTimeout(visibilityChangeTimeout);
+                }
+                visibilityChangeTimeout = setTimeout(() => {
+                    // 탭 전환 시 토스트 표시 (언마운트 중이 아닐 때만)
+                    if (!isUnmounting) {
+                        saveTempDiary(selectedDate, true);
+                        lastSaveTimeRef.current = Date.now();
+                    } else {
+                        saveTempDiary(selectedDate, false);
+                    }
+                }, 200);
+            } else {
+                // 탭이 다시 보일 때 타이머 취소
+                if (visibilityChangeTimeout) {
+                    clearTimeout(visibilityChangeTimeout);
+                }
             }
         };
 
@@ -1208,12 +1288,37 @@ function WriteDiary({ user }) {
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
+            isUnmounting = true; // 언마운트 시작 표시
             window.removeEventListener('beforeunload', handleBeforeUnload);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            // 컴포넌트 언마운트 시에도 저장
-            saveTempDiary(selectedDate);
+            if (visibilityChangeTimeout) {
+                clearTimeout(visibilityChangeTimeout);
+            }
+            // cleanup에서는 토스트 표시하지 않음 (의존성 변경으로 인한 재실행 방지)
+            saveTempDiary(selectedDate, false);
         };
     }, [selectedDate, saveTempDiary]);
+
+    // location 변경 감지로 실제 페이지 이탈 확인
+    const prevLocationRef = useRef(location.pathname);
+    useEffect(() => {
+        const currentPath = location.pathname;
+        const prevPath = prevLocationRef.current;
+
+        // 실제로 다른 페이지로 이동한 경우
+        if (prevPath === '/write' || prevPath.startsWith('/write')) {
+            if (currentPath !== '/write' && !currentPath.startsWith('/write')) {
+                const now = Date.now();
+                // 최근에 저장하지 않았을 때만 토스트 표시
+                if (now - lastSaveTimeRef.current > SAVE_COOLDOWN) {
+                    saveTempDiary(selectedDate, true);
+                    lastSaveTimeRef.current = now;
+                }
+            }
+        }
+
+        prevLocationRef.current = currentPath;
+    }, [location.pathname, selectedDate, saveTempDiary]);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -2149,7 +2254,7 @@ function WriteDiary({ user }) {
     };
 
     // 임시저장 불러오기 핸들러
-    const handleLoadTempSave = () => {
+    const handleLoadTempSave = async () => {
         const tempData = loadTempDiary(selectedDate);
         if (tempData) {
             setDiary(prev => ({
@@ -2164,9 +2269,43 @@ function WriteDiary({ user }) {
                 setStickers(tempData.stickers);
                 setStickerCounter(tempData.stickers.length);
             }
-            if (tempData.imagePreview && tempData.imagePreview.length > 0) {
+
+            // 이미지 데이터 불러오기 (기존 방식과 새 방식 모두 지원)
+            if (tempData.imageData && tempData.imageData.length > 0) {
+                const restoredPreviews = [];
+                const base64Files = [];
+
+                for (let i = 0; i < tempData.imageData.length; i++) {
+                    const item = tempData.imageData[i];
+                    if (item.type === 'base64') {
+                        // base64를 blob URL로 변환
+                        try {
+                            const response = await fetch(item.data);
+                            const blob = await response.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            restoredPreviews.push(blobUrl);
+
+                            // File 객체로도 변환하여 imageFiles에 저장
+                            const file = new File([blob], `temp-image-${i}.jpg`, { type: blob.type });
+                            base64Files.push(file);
+                        } catch (error) {
+                            console.error('base64를 blob URL로 변환 실패:', error);
+                        }
+                    } else {
+                        // 기존 URL
+                        restoredPreviews.push(item.data);
+                    }
+                }
+
+                setImagePreview(restoredPreviews);
+                if (base64Files.length > 0) {
+                    setImageFiles(base64Files);
+                }
+            } else if (tempData.imagePreview && tempData.imagePreview.length > 0) {
+                // 기존 방식 호환성
                 setImagePreview(tempData.imagePreview);
             }
+
             setIsTempSaveModalOpen(false);
             toast.showToast('임시저장된 내용을 불러왔습니다.', 'success');
         }
