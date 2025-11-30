@@ -21,8 +21,8 @@ const Container = styled.div`
   margin-right: auto;
   // padding-bottom: 100px;
   max-width: 600px;
-  background: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.text};
+  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : theme.background};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   position: relative;
 `;
 
@@ -30,9 +30,29 @@ const PointDisplay = styled.div`
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '15px'};
+  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
+    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+    : '0 2px 8px rgba(0,0,0,0.1)'};
+  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  position: relative;
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.2deg)' : 'none'};
+  
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const PointAmount = styled.div`
@@ -48,7 +68,7 @@ const PointAmount = styled.div`
 
 const PointLabel = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
 `;
 
 const MenuGrid = styled.div`
@@ -63,18 +83,66 @@ const MenuButton = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: ${({ theme }) => theme.card};
-  border: none;
-  border-radius: 15px;
+  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
+  border: ${({ $isDiaryTheme }) => $isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.2)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, index }) => {
+    if (!$isDiaryTheme) return '15px';
+    const borderRadiuses = [
+      '14px 18px 16px 15px',
+      '16px 14px 18px 15px',
+      '15px 16px 14px 18px',
+      '18px 15px 17px 14px'
+    ];
+    return borderRadiuses[index % borderRadiuses.length];
+  }};
   padding: 16px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
+    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+    : '0 2px 8px rgba(0,0,0,0.1)'};
   text-align: center;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transform: ${({ $isDiaryTheme, index }) => {
+    if (!$isDiaryTheme) return 'none';
+    const rotations = [0.2, -0.3, 0.1, -0.2];
+    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+  }};
+
+  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: ${({ $isDiaryTheme, index }) => {
+    if (!$isDiaryTheme) return 'translateY(-2px)';
+    const rotations = [0.2, -0.3, 0.1, -0.2];
+    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+  }};
+    box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
+    ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+    : '0 4px 12px rgba(0,0,0,0.15)'};
+  }
+
+  &:active {
+    transform: ${({ $isDiaryTheme, index }) => {
+    if (!$isDiaryTheme) return 'scale(0.95)';
+    const rotations = [0.2, -0.3, 0.1, -0.2];
+    return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
+  }};
+    background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || '#f8f9fa')};
   }
 `;
 
@@ -96,7 +164,7 @@ const MenuContent = styled.div`
 const MenuTitle = styled.div`
   font-size: 15px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   margin-bottom: 2px;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -104,7 +172,7 @@ const MenuTitle = styled.div`
 
 const MenuDescription = styled.div`
   font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#666')};
   text-align: center;
   margin-top: 4px;
   word-break: keep-all;
@@ -114,6 +182,8 @@ const MenuDescription = styled.div`
 function Shop({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const isDiaryTheme = actualTheme === 'diary';
   const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
 
@@ -136,38 +206,48 @@ function Shop({ user }) {
   }, [user]);
 
   return (
-    <Container theme={theme}>
+    <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
       <Header user={user} title={t('shop_title')} />
 
-      <PointDisplay theme={theme}>
+      <PointDisplay theme={theme} $isDiaryTheme={isDiaryTheme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
         </PointAmount>
-        <PointLabel theme={theme}>{t('current_points')}</PointLabel>
+        <PointLabel theme={theme} $isDiaryTheme={isDiaryTheme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
       {/* 메뉴 그리드 */}
       <MenuGrid>
-        <MenuButton onClick={() => navigate('/my/shop/charge')}>
+        <MenuButton
+          theme={theme}
+          $isDiaryTheme={isDiaryTheme}
+          index={0}
+          onClick={() => navigate('/my/shop/charge')}
+        >
           <MenuIcon>
             <PointIcon width={24} height={24} color="#3498f3" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle>{t('point_charge')}</MenuTitle>
-            <MenuDescription>
+            <MenuTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_charge')}</MenuTitle>
+            <MenuDescription theme={theme} $isDiaryTheme={isDiaryTheme}>
               {t('point_charge_desc') || '포인트로 다양한 기능을 이용해보세요!'}
             </MenuDescription>
           </MenuContent>
         </MenuButton>
 
-        <MenuButton onClick={() => navigate('/my/potion-shop')}>
+        <MenuButton
+          theme={theme}
+          $isDiaryTheme={isDiaryTheme}
+          index={1}
+          onClick={() => navigate('/my/potion-shop')}
+        >
           <MenuIcon>
             <ShopIcon width={24} height={24} color="#e46262" />
           </MenuIcon>
           <MenuContent>
-            <MenuTitle>{t('potion_shop')}</MenuTitle>
-            <MenuDescription>
+            <MenuTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('potion_shop')}</MenuTitle>
+            <MenuDescription theme={theme} $isDiaryTheme={isDiaryTheme}>
               {t('potion_shop_desc')}
             </MenuDescription>
           </MenuContent>
