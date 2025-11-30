@@ -11,8 +11,13 @@
     background-color: #fdfdfd;
 }
 
-body.dark .diary-container:not(.diary-theme) {
+body.dark .diary-container:not(.diary-theme):not(.glass-theme) {
     background-color: #202020;
+}
+
+body.glass .diary-container:not(.diary-theme) {
+    background: linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%);
+    background-attachment: fixed;
 }
 
 .diary-container.diary-theme {
