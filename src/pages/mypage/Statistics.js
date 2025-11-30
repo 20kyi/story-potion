@@ -24,37 +24,37 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
   border-radius: ${({ $isDiaryTheme, index }) => {
-    if (!$isDiaryTheme) return '18px';
-    const borderRadiuses = [
-      '16px 20px 18px 17px',
-      '18px 16px 20px 17px',
-      '17px 18px 16px 20px',
-      '20px 17px 19px 16px',
-      '18px 20px 17px 19px',
-      '19px 17px 18px 20px'
-    ];
-    return borderRadiuses[index % borderRadiuses.length];
-  }};
+        if (!$isDiaryTheme) return '18px';
+        const borderRadiuses = [
+            '16px 20px 18px 17px',
+            '18px 16px 20px 17px',
+            '17px 18px 16px 20px',
+            '20px 17px 19px 16px',
+            '18px 20px 17px 19px',
+            '19px 17px 18px 20px'
+        ];
+        return borderRadiuses[index % borderRadiuses.length];
+    }};
   box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-    ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-    : '0 2px 8px rgba(0,0,0,0.08)'};
+        ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+        : '0 2px 8px rgba(0,0,0,0.08)'};
   padding: 24px 12px 18px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: ${({ theme, $isDiaryTheme }) => $isDiaryTheme 
-    ? '1px solid rgba(139, 111, 71, 0.2)' 
-    : `1px solid ${theme.border || '#f0f0f0'}`};
+  border: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
+        ? '1px solid rgba(139, 111, 71, 0.2)'
+        : `1px solid ${theme.border || '#f0f0f0'}`};
   min-height: 100px;
   transition: box-shadow 0.2s, transform 0.2s;
   position: relative;
   background-clip: padding-box;
   transform: ${({ $isDiaryTheme, index }) => {
-    if (!$isDiaryTheme) return 'none';
-    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
-  }};
+        if (!$isDiaryTheme) return 'none';
+        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+        return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+    }};
 
   /* 점선 내부 테두리 */
   &::before {
@@ -65,12 +65,12 @@ const StatCard = styled.div`
     right: 8px;
     bottom: 8px;
     border: 2px dashed ${({ theme, $isDiaryTheme }) => {
-      if ($isDiaryTheme) {
-        return 'rgba(139, 111, 71, 0.25)';
-      }
-      return theme.mode === 'dark'
-        ? 'rgba(255, 255, 255, 0.25)'
-        : 'rgba(0, 0, 0, 0.15)';
+        if ($isDiaryTheme) {
+            return 'rgba(139, 111, 71, 0.25)';
+        }
+        return theme.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.25)'
+            : 'rgba(0, 0, 0, 0.15)';
     }};
     border-radius: 12px;
     pointer-events: none;
@@ -95,12 +95,12 @@ const StatCard = styled.div`
 
   &:hover {
     box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-      ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-      : '0 8px 24px rgba(0,0,0,0.13)'};
+        ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+        : '0 8px 24px rgba(0,0,0,0.13)'};
     transform: ${({ $isDiaryTheme, index }) => {
-      if (!$isDiaryTheme) return 'translateY(-2px)';
-      const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-      return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+        if (!$isDiaryTheme) return 'translateY(-2px)';
+        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+        return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
     }};
   }
 `;
@@ -360,14 +360,14 @@ function Statistics({ user }) {
     return (
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('stats_title')} />
-            <div style={{ 
-                maxWidth: 600, 
-                marginTop: 60, 
-                marginBottom: 80, 
-                marginLeft: 'auto', 
-                marginRight: 'auto', 
-                padding: 24, 
-                paddingTop: 40, 
+            <div style={{
+                maxWidth: 600,
+                marginTop: 60,
+                marginBottom: 80,
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                padding: 24,
+                paddingTop: 40,
                 paddingBottom: 100,
                 background: isDiaryTheme ? '#faf8f3' : 'transparent',
                 color: isDiaryTheme ? '#5C4B37' : 'inherit'
