@@ -15,14 +15,19 @@ const HeaderContainer = styled.header`
   left: 0;
   right: 0;
   z-index: 200;
-  background: ${({ theme, $isDiaryTheme }) => {
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
     if ($isDiaryTheme) return '#faf8f3';
     if (theme.mode === 'dark') return '#18181b';
     return '#fdfdfd';
   }};
-  box-shadow: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
-    ? 'none'
-    : `0 2px 12px ${theme.cardShadow}`};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px)' : 'none'};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 2px 12px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return 'none';
+    return `0 2px 12px ${theme.cardShadow}`;
+  }};
   padding: 16px 20px 16px 20px;
   padding-top: calc(env(safe-area-inset-top, 24px) + 18px); /* 모바일 상단 safe area 대응 */
   min-height: 56px;
@@ -40,7 +45,11 @@ const LeftSection = styled.div`
 `;
 
 const BackButton = styled.div`
-  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -59,7 +68,11 @@ const ProfileImage = styled.img`
 
 const Nickname = styled.span`
   font-size: 18px !important;
-  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   font-weight: 500;
 `;
 
@@ -80,16 +93,19 @@ const NotificationButton = styled.button`
   justify-content: center;
   position: relative;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) {
-      return '#2C3E50';
-    }
-    return $isDiaryTheme ? '#8B6F47' : (theme.text || '#333');
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#333';
   }};
   border-radius: 50%;
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? 'rgba(139, 111, 71, 0.1)' : (theme.cardHover || 'rgba(0, 0, 0, 0.05)')};
+    background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+    return theme.cardHover || 'rgba(0, 0, 0, 0.05)';
+  }};
   }
 `;
 
@@ -109,7 +125,7 @@ const LogoText = styled.span`
   font-weight: 700;
   letter-spacing: 0.02em;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '#2C3E50';
+    if ($isGlassTheme) return '#000000';
     if ($isDiaryTheme) return '#8B6F47';
     return theme.mode === 'dark' ? '#fff' : '#111';
   }};
@@ -135,7 +151,11 @@ const TitleText = styled.span`
   display: flex;
   align-items: center;
   height: 100%;
-  color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : 'inherit'};
+  color: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return 'inherit';
+  }};
 `;
 
 const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotifications }) => {
@@ -144,6 +164,7 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const { theme: themeMode, actualTheme, setThemeMode, toggleTheme } = useTheme();
   const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
   const theme = isDiaryTheme
     ? { text: '#8B6F47', card: '#faf8f3', cardHover: 'rgba(139, 111, 71, 0.1)' }
     : actualTheme === 'dark'
@@ -210,26 +231,26 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   const styledTheme = useStyledTheme();
 
   return (
-    <HeaderContainer $isDiaryTheme={isDiaryTheme} theme={styledTheme}>
+    <HeaderContainer $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} theme={styledTheme}>
       <LeftSection>
         {!isHome && (
-          <BackButton onClick={handleBack} $isDiaryTheme={isDiaryTheme}>
-            <BackIcon size={20} color={theme.text} />
+          <BackButton onClick={handleBack} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+            <BackIcon size={20} color={isGlassTheme ? '#000000' : theme.text} />
           </BackButton>
         )}
         {isHome && (
-          <LogoText data-logo="true" $isDiaryTheme={isDiaryTheme}>STORYPOTION</LogoText>
+          <LogoText data-logo="true" $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>STORYPOTION</LogoText>
         )}
       </LeftSection>
       {!isHome && title && (
         <CenterSection>
-          <TitleText $isDiaryTheme={isDiaryTheme}>{title}</TitleText>
+          <TitleText $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{title}</TitleText>
         </CenterSection>
       )}
       <RightSection>
         {isHome && onNotificationClick && (
-          <NotificationButton theme={theme} $isDiaryTheme={isDiaryTheme} onClick={onNotificationClick}>
-            <NotificationIcon size={24} color={theme.text} />
+          <NotificationButton theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} onClick={onNotificationClick}>
+            <NotificationIcon size={24} color={isGlassTheme ? '#000000' : theme.text} />
             {hasUnreadNotifications && <NotificationBadge theme={theme} $isDiaryTheme={isDiaryTheme} />}
           </NotificationButton>
         )}
