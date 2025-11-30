@@ -613,6 +613,114 @@ const StickerPlaceholder = styled.div`
   }
 `;
 
+// 포인트 지급 애니메이션 스타일 (카카오 로딩 화면 스타일)
+const PointEarnOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  pointer-events: none;
+  animation: fadeIn 0.3s ease-in-out;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const PointEarnAnimation = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  animation: pointEarnPop 2s ease-out forwards;
+  
+  @keyframes pointEarnPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    15% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    30% {
+      transform: scale(1);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.9) translateY(-30px);
+    }
+  }
+`;
+
+const PointEarnIcon = styled.div`
+  font-size: 48px;
+  animation: coinSpin 0.6s ease-out;
+  
+  @keyframes coinSpin {
+    0% {
+      transform: rotateY(0deg) scale(0.5);
+    }
+    50% {
+      transform: rotateY(180deg) scale(1.2);
+    }
+    100% {
+      transform: rotateY(360deg) scale(1);
+    }
+  }
+`;
+
+const PointEarnText = styled.div`
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+`;
+
+const PointEarnAmount = styled.div`
+  font-size: 42px;
+  font-weight: 700;
+  color: #FFD700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+  animation: numberPop 0.4s ease-out 0.2s both;
+  
+  @keyframes numberPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;
+
+const PointEarnDesc = styled.div`
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+`;
+
 // 사진 추가하기 버튼 styled-component 추가
 const UploadLabel = styled.label`
   display: flex;
@@ -767,6 +875,11 @@ function WriteDiary({ user }) {
 
     // 이미지 뷰어 모달 관련 state
     const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+
+    // 포인트 지급 애니메이션 관련 state
+    const [showPointAnimation, setShowPointAnimation] = useState(false);
+    const [earnedPoints, setEarnedPoints] = useState(0);
+    const [shouldDelayNavigation, setShouldDelayNavigation] = useState(false);
 
     // 이미지 뷰어 키보드 이벤트
     useEffect(() => {
@@ -1684,6 +1797,11 @@ function WriteDiary({ user }) {
                         // 포인트 적립 알림 생성
                         await createPointEarnNotification(user.uid, earnPoint, t('today_diary'));
 
+                        // 포인트 지급 애니메이션 표시
+                        setEarnedPoints(earnPoint);
+                        setShowPointAnimation(true);
+                        setShouldDelayNavigation(true);
+
                         // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
                         await checkWeeklyBonus(user.uid, today);
                     } else {
@@ -1748,7 +1866,16 @@ function WriteDiary({ user }) {
             }
             await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
 
-            navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+            // 포인트 애니메이션이 표시 중이면 애니메이션이 끝난 후에 페이지 이동
+            if (shouldDelayNavigation) {
+                setTimeout(() => {
+                    setShowPointAnimation(false);
+                    setShouldDelayNavigation(false);
+                    navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                }, 2000);
+            } else {
+                navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+            }
         } catch (error) {
             toast.showToast(t('diary_save_failed'), 'error');
         } finally {
@@ -2493,6 +2620,20 @@ function WriteDiary({ user }) {
 
                 <Navigation />
             </div>
+
+            {/* 포인트 지급 애니메이션 */}
+            {showPointAnimation && (
+                <PointEarnOverlay>
+                    <PointEarnAnimation>
+                        <PointEarnIcon>🪙</PointEarnIcon>
+                        <PointEarnText>{t('point_earned')}</PointEarnText>
+                        <PointEarnAmount>
+                            +{earnedPoints}p
+                        </PointEarnAmount>
+                        <PointEarnDesc>{t('today_diary')}</PointEarnDesc>
+                    </PointEarnAnimation>
+                </PointEarnOverlay>
+            )}
         </Container>
     );
 }

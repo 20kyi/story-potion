@@ -73,6 +73,7 @@ import { checkAndRenewMonthlyPremium } from './utils/premiumRenewal';
 import { convertKakaoImageUrlToHttps } from './utils/profileImageUtils';
 import LoadingScreen from './components/LoadingScreen';
 import LoadingTest from './pages/LoadingTest';
+import PointAnimationTest from './pages/test/PointAnimationTest';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -135,6 +136,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
                 <Route path="/loading-test" element={user ? <LoadingTest user={user} /> : <Navigate to="/login" />} />
+                <Route path="/test/point-animation" element={user ? <PointAnimationTest user={user} /> : <Navigate to="/login" />} />
             </Routes>
             {showNavigation && user && <Navigation user={user} />}
             <DebugPanel />

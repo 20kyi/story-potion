@@ -142,6 +142,7 @@
     "security_reset_success": "Password changed successfully.",
     "security_reset_failed": "Failed to reset password.",
     "today_diary": "Today's diary",
+    "point_earned": "Points Earned!",
     "home_recent_diary": "Recent diary",
     "home_no_diary_yet": "No diary has been written yet.",
     "home_write_first_diary": "Write your first diary today!",

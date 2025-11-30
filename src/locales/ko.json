@@ -142,6 +142,7 @@
     "security_reset_success": "비밀번호가 성공적으로 변경되었습니다.",
     "security_reset_failed": "비밀번호 재설정에 실패했습니다.",
     "today_diary": "오늘의 일기",
+    "point_earned": "포인트 적립!",
     "home_recent_diary": "최근일기",
     "home_no_diary_yet": "아직 작성된 일기가 없어요",
     "home_write_first_diary": "오늘의 첫 일기를 작성해보세요!",
