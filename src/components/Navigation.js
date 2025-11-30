@@ -46,7 +46,7 @@ const NavText = styled.span`
   font-size: 12px !important;
   color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
-      return active ? theme.primary : '#5A6C7D';
+      return active ? 'rgb(80, 80, 80)' : 'rgba(255, 255, 255, 0.8)';
     }
     if (active) {
       return $isDiaryTheme ? '#8B6F47' : theme.primary;
