@@ -48,15 +48,21 @@ const formatDate = (dateString) => {
             ? (localStorage.getItem('language') || 'ko')
             : 'ko';
 
+    // 요일 배열
+    const weekdaysKo = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayOfWeek = date.getDay();
+
     if (lang === 'en') {
-        return date.toLocaleDateString('en-US', {
+        const dateStr = date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
         });
+        return `${dateStr}, ${weekdaysEn[dayOfWeek]}`;
     }
 
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${weekdaysKo[dayOfWeek]}`;
 };
 
 // TopRow styled-component 추가

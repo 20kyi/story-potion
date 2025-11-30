@@ -511,10 +511,16 @@ function DiaryView({ user }) {
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
+        // 요일 배열
+        const weekdaysKo = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayOfWeek = date.getDay();
+
         if (language === 'en') {
-            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            return `${dateStr}, ${weekdaysEn[dayOfWeek]}`;
         }
-        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${weekdaysKo[dayOfWeek]}`;
     };
 
     // 감정/날씨 이미지 매핑 추가
