@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled, { useTheme as useStyledTheme } from 'styled-components';
 import BackIcon from './icons/BackIcon';
@@ -15,22 +15,37 @@ const HeaderContainer = styled.header`
   left: 0;
   right: 0;
   z-index: 200;
-  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme, $isScrolled }) => {
+    if ($isGlassTheme) {
+      return $isScrolled ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.05)';
+    }
     if ($isDiaryTheme) return '#faf8f3';
     if (theme.mode === 'dark') return '#18181b';
     return '#fdfdfd';
   }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(20px)' : 'none'};
-  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-    if ($isGlassTheme) return '0 2px 12px rgba(0, 0, 0, 0.1)';
+  backdrop-filter: ${({ $isGlassTheme, $isScrolled }) => {
+    if ($isGlassTheme) {
+      return $isScrolled ? 'blur(20px)' : 'blur(5px)';
+    }
+    return 'none';
+  }};
+  -webkit-backdrop-filter: ${({ $isGlassTheme, $isScrolled }) => {
+    if ($isGlassTheme) {
+      return $isScrolled ? 'blur(20px)' : 'blur(5px)';
+    }
+    return 'none';
+  }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme, $isScrolled }) => {
+    if ($isGlassTheme) {
+      return $isScrolled ? '0 2px 12px rgba(0, 0, 0, 0.1)' : 'none';
+    }
     if ($isDiaryTheme) return 'none';
     return `0 2px 12px ${theme.cardShadow}`;
   }};
   padding: 16px 20px 16px 20px;
   padding-top: calc(env(safe-area-inset-top, 24px) + 18px); /* 모바일 상단 safe area 대응 */
   min-height: 56px;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
   // padding-top: env(safe-area-inset-top, 24px);
 
   @media (min-width: 768px) {
@@ -165,6 +180,7 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   const { theme: themeMode, actualTheme, setThemeMode, toggleTheme } = useTheme();
   const isDiaryTheme = actualTheme === 'diary';
   const isGlassTheme = actualTheme === 'glass';
+  const [isScrolled, setIsScrolled] = useState(false);
   const theme = isDiaryTheme
     ? { text: '#8B6F47', card: '#faf8f3', cardHover: 'rgba(139, 111, 71, 0.1)' }
     : actualTheme === 'dark'
@@ -173,6 +189,24 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
 
   const displayName = user?.displayName || user?.email?.split('@')[0];
   const photoURL = user?.photoURL || '/profile-placeholder.jpg';
+
+  useEffect(() => {
+    if (!isGlassTheme) {
+      setIsScrolled(false);
+      return;
+    }
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      setIsScrolled(scrollY > 10);
+    };
+
+    // 초기 상태 확인
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isGlassTheme]);
 
   const handleBack = () => {
     if (location.pathname === '/diaries') {
@@ -231,7 +265,7 @@ const Header = ({ user, rightActions, title, onNotificationClick, hasUnreadNotif
   const styledTheme = useStyledTheme();
 
   return (
-    <HeaderContainer $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} theme={styledTheme}>
+    <HeaderContainer $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} $isScrolled={isScrolled} theme={styledTheme}>
       <LeftSection>
         {!isHome && (
           <BackButton onClick={handleBack} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
