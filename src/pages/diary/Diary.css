@@ -994,10 +994,12 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
 
 .diary-weekly-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
     margin-bottom: 4px;
+    gap: 6px;
+    position: relative;
 }
 
 .diary-weekly-day-name {
@@ -1038,6 +1040,21 @@ body.dark .diary-weekly-date {
     height: 18px;
     border-radius: 6px 8px 7px 6px;
     top: 10%;
+}
+
+.diary-weekly-header>div {
+    position: relative;
+}
+
+.diary-weekly-header .diary-today-circle.weekly-highlighter {
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: calc(100% + 4px);
+    height: 20px;
+    border-radius: 6px 8px 7px 6px;
+    z-index: 1;
 }
 
 .diary-weekly-image-container {

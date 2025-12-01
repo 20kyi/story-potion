@@ -585,30 +585,32 @@ function Diary({ user }) {
                         onTouchEnd={handleDateLongPressEnd}
                         onTouchCancel={handleDateLongPressEnd}
                     >
-                        <div className="diary-weekly-header">
-                            <div className="diary-weekly-day-name">{dayName}</div>
-                            <span className="diary-weekly-date" style={{
-                                color: isToday
-                                    ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#333' : '#fff')
-                                    : (isSunday
-                                        ? '#e46262'
-                                        : (document.body.classList.contains('dark') ? '#ddd' : '#333')),
-                                position: 'relative',
-                                zIndex: isToday ? 2 : 1,
-                                fontSize: '12px',
-                                marginRight: '4px'
-                            }}>{date.getDate()}</span>
+                        <div className="diary-weekly-header" style={{ position: 'relative' }}>
+                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                {isToday && (() => {
+                                    const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
+                                    return <div
+                                        className="diary-today-circle weekly-highlighter"
+                                        style={{
+                                            background: colorOption.color,
+                                            boxShadow: `0 1px 3px ${colorOption.shadowColor}, inset 0 0 8px ${colorOption.color.replace('0.6', '0.3')}`
+                                        }}
+                                    />;
+                                })()}
+                                <div className="diary-weekly-day-name" style={{ position: 'relative', zIndex: 2 }}>{dayName}</div>
+                                <span className="diary-weekly-date" style={{
+                                    color: isToday
+                                        ? (isDiaryTheme || !document.body.classList.contains('dark') ? '#333' : '#fff')
+                                        : (isSunday
+                                            ? '#e46262'
+                                            : (document.body.classList.contains('dark') ? '#ddd' : '#333')),
+                                    position: 'relative',
+                                    zIndex: isToday ? 2 : 1,
+                                    fontSize: '12px',
+                                    marginRight: '4px'
+                                }}>{date.getDate()}</span>
+                            </div>
                         </div>
-                        {isToday && (() => {
-                            const colorOption = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
-                            return <div
-                                className="diary-today-circle"
-                                style={{
-                                    background: colorOption.color,
-                                    boxShadow: `0 1px 3px ${colorOption.shadowColor}, inset 0 0 8px ${colorOption.color.replace('0.6', '0.3')}`
-                                }}
-                            />;
-                        })()}
                         {displayImg && (
                             <div className={`diary-weekly-image-container ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`}>
                                 <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`} />
