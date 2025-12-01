@@ -1036,6 +1036,7 @@ const Novel = ({ user }) => {
             {/* 소설 만들기 CTA */}
             <NovelCTACard
                 isDiaryTheme={isDiaryTheme}
+                isGlassTheme={isGlassTheme}
                 currentWeekDiariesForProgress={currentWeekDiariesForProgress}
                 onClick={openCurrentWeekDiaryModal}
             />
