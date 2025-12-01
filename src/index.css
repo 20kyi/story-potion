@@ -64,9 +64,38 @@ body.diary {
 }
 
 body.glass {
-    background: linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%);
+    background: linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 33%, #e1bee7 66%, #d1c4e9 100%);
     background-attachment: fixed;
+    background-size: 200% 200%;
     color: #2C3E50;
+    position: relative;
+    animation: gradientShift 20s ease infinite;
+}
+
+/* 노이즈 텍스처를 위한 가상 요소 */
+body.glass::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 움직이는 배경 애니메이션 */
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 

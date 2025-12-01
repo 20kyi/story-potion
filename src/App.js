@@ -1380,13 +1380,17 @@ function ThemeConsumerWrapper({ children }) {
                 )
             `;
         } else if (actualTheme === 'glass') {
-            // 글래스 모피즘 테마: 하늘색에서 연보라색으로 그라데이션
-            document.body.style.background = 'linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%)';
+            // 글래스 모피즘 테마: 하늘색에서 연보라색으로 그라데이션 (#e1bee7, #d1c4e9 포함)
+            document.body.style.background = 'linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 33%, #e1bee7 66%, #d1c4e9 100%)';
             document.body.style.backgroundAttachment = 'fixed';
+            document.body.style.backgroundSize = '200% 200%';
+            document.body.style.animation = 'gradientShift 20s ease infinite';
         } else {
             document.body.style.background = '';
             document.body.style.backgroundImage = '';
             document.body.style.backgroundAttachment = '';
+            document.body.style.backgroundSize = '';
+            document.body.style.animation = '';
         }
     }, [actualTheme]);
 
