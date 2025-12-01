@@ -174,8 +174,11 @@ body.dark .diary-month-button:not(.diary-theme):not(.glass-theme):hover {
 }
 
 .diary-today-button.glass-theme {
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
     color: #000000;
 }
 
@@ -199,7 +202,8 @@ body.dark .diary-today-button:not(.diary-theme):not(.glass-theme) {
 }
 
 .diary-today-button.glass-theme:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .diary-today-button:not(.diary-theme):not(.glass-theme):hover {
@@ -531,6 +535,14 @@ body:not(.dark) .diary-color-palette {
     background: rgba(255, 255, 255, 0.95);
 }
 
+.diary-highlighter-color-picker.glass-theme .diary-color-palette {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .diary-color-button {
     width: 28px;
     height: 28px;
@@ -564,6 +576,17 @@ body:not(.dark) .diary-color-palette {
     flex-shrink: 0;
     position: relative;
     z-index: 11;
+}
+
+.diary-highlighter-color-picker.glass-theme .diary-selected-color-button {
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.diary-highlighter-color-picker.glass-theme .diary-selected-color-button:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .diary-selected-color-button:hover {

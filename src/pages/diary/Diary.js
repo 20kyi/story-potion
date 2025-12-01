@@ -697,7 +697,7 @@ function Diary({ user }) {
                             </>
                         )}
                     </div>
-                    <div className="diary-highlighter-color-picker" ref={paletteRef}>
+                    <div className={`diary-highlighter-color-picker ${isGlassTheme ? 'glass-theme' : ''}`} ref={paletteRef}>
                         {(() => {
                             const selectedColor = HIGHLIGHTER_COLORS.find(c => c.id === selectedHighlighterColor) || HIGHLIGHTER_COLORS[0];
                             const unselectedColors = HIGHLIGHTER_COLORS.filter(c => c.id !== selectedHighlighterColor);
