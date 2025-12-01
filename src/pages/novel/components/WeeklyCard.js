@@ -14,6 +14,7 @@ const WeeklyCard = ({
     novelsForWeek,
     diaries,
     isDiaryTheme,
+    isGlassTheme,
     isPremium,
     ownedPotions,
     currentDate,
@@ -150,7 +151,7 @@ const WeeklyCard = ({
 
     return (
         <div
-            className={`novel-weekly-card ${isListMode ? 'list-mode' : ''} ${isDiaryTheme ? 'diary-theme' : ''}`}
+            className={`novel-weekly-card ${isListMode ? 'list-mode' : ''} ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
             ref={weekRef}
             style={{
                 ...(isDiaryTheme ? {
@@ -168,7 +169,7 @@ const WeeklyCard = ({
             }}
         >
             <div style={isListMode ? { display: 'flex', flexDirection: 'column', gap: '4px', flex: '1', minWidth: 0 } : {}}>
-                <h3 className={`novel-week-title ${isListMode ? 'list-mode' : ''} ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <h3 className={`novel-week-title ${isListMode ? 'list-mode' : ''} ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                     <span>{t('week_num', { num: week.weekNum })}</span>
                     {firstNovel && isCompleted && (
                         <button
@@ -195,7 +196,7 @@ const WeeklyCard = ({
                                 key={idx}
                                 className={`novel-day-indicator ${isListMode ? 'list-mode' : ''}`}
                                 style={{
-                                    background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted)
+                                    background: getDayIndicatorBackground(hasDiary, barColor, theme, isCompleted, isGlassTheme)
                                 }}
                             />
                         );
@@ -230,7 +231,8 @@ const WeeklyCard = ({
                             theme,
                             false,
                             !isCompleted && (isFutureWeek || hasTodayDiary),
-                            isListMode
+                            isListMode,
+                            isGlassTheme
                         )}
                     >
                         {isCompleted

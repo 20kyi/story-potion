@@ -1141,6 +1141,7 @@ const Novel = ({ user }) => {
                                     novelsForWeek={novelsForWeek}
                                     diaries={diaries}
                                     isDiaryTheme={isDiaryTheme}
+                                    isGlassTheme={isGlassTheme}
                                     isPremium={isPremium}
                                     ownedPotions={ownedPotions}
                                     currentDate={currentDate}
@@ -1177,6 +1178,7 @@ const Novel = ({ user }) => {
                                     novelsForWeek={novelsForWeek}
                                     diaries={diaries}
                                     isDiaryTheme={isDiaryTheme}
+                                    isGlassTheme={isGlassTheme}
                                     isPremium={isPremium}
                                     ownedPotions={ownedPotions}
                                     currentDate={currentDate}
