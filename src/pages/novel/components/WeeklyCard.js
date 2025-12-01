@@ -24,7 +24,8 @@ const WeeklyCard = ({
     onWriteDiary,
     isFutureWeek,
     hasTodayDiary,
-    weekRef
+    weekRef,
+    isLoading
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -115,7 +116,13 @@ const WeeklyCard = ({
         }
     };
 
-    const barColor = firstNovel ? 'view' : isCompleted ? 'create' : 'fill';
+    // 로딩 중이거나 데이터가 아직 불완전할 때는 안정적인 색상 사용
+    // isLoading이 true이면 barColor를 progress와 isCompleted 기반으로만 결정
+    // 데이터가 로드되기 전에는 firstNovel을 사용하지 않고 progress 기반으로만 결정하여
+    // 색상이 로딩 중에 변경되지 않도록 함
+    const barColor = isLoading
+        ? (isCompleted ? 'create' : 'fill')
+        : (firstNovel ? 'view' : isCompleted ? 'create' : 'fill');
 
     // 주의 시작일부터 7일간의 날짜 생성
     const weekStart = new Date(week.start);

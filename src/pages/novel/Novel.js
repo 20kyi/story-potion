@@ -1146,6 +1146,7 @@ const Novel = ({ user }) => {
                                     onWriteDiary={handleWriteDiary}
                                     isFutureWeek={isFutureWeek(week)}
                                     hasTodayDiary={hasTodayDiary(week)}
+                                    isLoading={isLoading}
                                     weekRef={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
@@ -1183,6 +1184,7 @@ const Novel = ({ user }) => {
                                     onWriteDiary={handleWriteDiary}
                                     isFutureWeek={isFutureWeek(week)}
                                     hasTodayDiary={hasTodayDiary(week)}
+                                    isLoading={isLoading}
                                     weekRef={(el) => {
                                         if (el) {
                                             weekRefs.current[week.weekNum] = el;
