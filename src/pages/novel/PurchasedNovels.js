@@ -6,7 +6,7 @@ import { collection, query, getDocs, doc, getDoc, orderBy } from 'firebase/fires
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useTheme } from '../../ThemeContext';
-import { createNovelUrl } from '../../utils/novelUtils';
+import { createNovelUrl, getGenreKey } from '../../utils/novelUtils';
 import { useLanguage, useTranslation } from '../../LanguageContext';
 import GridIcon from '../../components/icons/GridIcon';
 import ListIcon from '../../components/icons/ListIcon';
@@ -33,7 +33,7 @@ const Container = styled.div`
 `;
 
 const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   font-size: 20px;
   font-weight: 700;
   text-align: center;
@@ -50,23 +50,51 @@ const ViewToggle = styled.div`
 `;
 
 const SortSelect = styled.select`
-  padding: 8px 12px;
-  background: ${({ theme }) => theme.card || '#fff'};
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid'};
+  border-color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.5)' : (theme.border || '#ddd')};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.card || '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : (theme.text || '#333')};
   font-size: 14px;
-  color: ${({ theme }) => theme.text || '#333'};
   cursor: pointer;
+  width: auto;
+  min-width: 140px;
+  max-width: 180px;
   transition: all 0.2s;
   font-family: inherit;
   outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: ${({ theme, $isGlassTheme }) => {
+        const arrowColor = $isGlassTheme ? '%23000000' : (theme.mode === 'dark' ? '%23ccc' : '%23333');
+        return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${arrowColor}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`;
+    }};
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 36px;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   
   &:hover {
-    border-color: #cb6565;
+    border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        return theme.primary || '#cb6565';
+    }};
   }
   
   &:focus {
-    border-color: #cb6565;
+    outline: none;
+    border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        return theme.primary || '#cb6565';
+    }};
   }
 `;
 
@@ -75,32 +103,84 @@ const ViewToggleRight = styled.div`
   gap: 8px;
 `;
 
-const ToggleButton = styled.button`
-  padding: 8px;
-  background: ${props => props.$active ? '#cb6565' : 'transparent'};
-  border: 1px solid ${props => props.$active ? '#cb6565' : '#ddd'};
-  border-radius: 8px;
+const ViewToggleButton = styled.button`
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 24px;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid'};
+  border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        return theme.primary || '#cb6565';
+    }};
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
+  transition: all 0.3s ease;
+  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  min-width: 90px;
+  height: 36px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  
+  @media (min-width: 480px) {
+    font-size: 13px;
+    min-width: 100px;
+    height: 36px;
+  }
+`;
+
+const ToggleOption = styled.span`
+  position: relative;
+  z-index: 2;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  
-  &:hover {
-    background: ${props => props.$active ? '#cb6565' : '#fdfdfd'};
-    border-color: ${props => props.$active ? '#cb6565' : '#cb6565'};
-  }
+  padding: 4px 12px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
   
   svg {
-    stroke: ${props => props.$active ? '#fff' : '#888'};
-    transition: stroke 0.2s;
+    transition: stroke 0.3s ease;
+    stroke: ${({ $active, $isGlassTheme }) => {
+        if ($active && $isGlassTheme) return '#000000';
+        if ($active) return '#fff';
+        if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+        return '#888';
+    }};
   }
+`;
+
+const ToggleSlider = styled.span`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  z-index: 1;
+  transform: ${({ $isList }) => $isList ? 'translateX(100%)' : 'translateX(0)'};
+  background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        return 'rgba(203, 101, 101, 0.25)';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.4)' : 'none'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   
-  &:hover svg {
-    stroke: ${props => props.$active ? '#fff' : '#cb6565'};
+  ${ViewToggleButton}:hover & {
+    background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        return 'rgba(203, 101, 101, 0.35)';
+    }};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 `;
 
@@ -121,24 +201,46 @@ const NovelListWrapper = styled.div`
 `;
 
 const NovelItem = styled.div`
-  background: ${props => props.$viewMode === 'card' ? 'transparent' : props.theme.card};
-  border-radius: ${props => props.$viewMode === 'card' ? '0' : '12px'};
+  background: ${({ theme, $viewMode, $isGlassTheme }) => {
+        if ($viewMode === 'card') return 'transparent';
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.card;
+    }};
+  backdrop-filter: ${({ $isGlassTheme, $viewMode }) => ($isGlassTheme && $viewMode !== 'card') ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme, $viewMode }) => ($isGlassTheme && $viewMode !== 'card') ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $viewMode, $isGlassTheme }) => {
+        if ($viewMode === 'card') return '0';
+        return $isGlassTheme ? '24px' : '12px';
+    }};
   padding: ${props => props.$viewMode === 'card' ? '0' : '16px'};
-  box-shadow: ${props => props.$viewMode === 'card' ? 'none' : props.theme.cardShadow};
-  border: ${props => props.$viewMode === 'card' ? 'none' : `1px solid ${props.theme.border}`};
+  box-shadow: ${({ theme, $viewMode, $isGlassTheme }) => {
+        if ($viewMode === 'card') return 'none';
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        return theme.cardShadow;
+    }};
+  border: ${({ theme, $viewMode, $isGlassTheme }) => {
+        if ($viewMode === 'card') return 'none';
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        return `1px solid ${theme.border}`;
+    }};
   cursor: pointer;
   transition: ${props => props.$viewMode === 'card' ? 'transform 0.2s' : 'box-shadow 0.15s'};
   display: flex;
   flex-direction: ${props => props.$viewMode === 'card' ? 'column' : 'row'};
-  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
+  align-items: ${props => props.$viewMode === 'card' ? 'center' : 'center'};
   gap: ${props => props.$viewMode === 'card' ? '12px' : '16px'};
   width: 100%;
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
   &:hover {
-    ${props => props.$viewMode === 'card'
-        ? 'transform: translateY(-4px);'
-        : 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);'
-    }
+    ${({ $viewMode, $isGlassTheme }) => {
+        if ($viewMode === 'card') {
+            return 'transform: translateY(-4px);';
+        }
+        if ($isGlassTheme) {
+            return 'box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12);';
+        }
+        return 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);';
+    }}
   }
 `;
 
@@ -151,7 +253,7 @@ const NovelCover = styled.img`
   border-radius: ${props => props.$viewMode === 'card' ? '4px' : '12px'};
   background: #E5E5E5;
   box-shadow: ${props => props.$viewMode === 'card' ? '0 2px 8px rgba(0,0,0,0.07)' : '0 2px 8px rgba(0,0,0,0.1)'};
-  margin-bottom: ${props => props.$viewMode === 'card' ? '12px' : '0'};
+  margin-bottom: 0;
   flex-shrink: 0;
 `;
 
@@ -163,7 +265,7 @@ const TutorialCover = styled.div`
   background: #ffffff;
   border-radius: ${props => props.$viewMode === 'card' ? '4px' : '12px'};
   box-shadow: ${props => props.$viewMode === 'card' ? '0 2px 8px rgba(0,0,0,0.07)' : '0 2px 8px rgba(0,0,0,0.1)'};
-  margin-bottom: ${props => props.$viewMode === 'card' ? '12px' : '0'};
+  margin-bottom: 0;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -186,14 +288,14 @@ const NovelInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
-  gap: 8px;
+  gap: ${props => props.$viewMode === 'card' ? '4px' : '8px'};
   flex: 1;
   width: 100%;
 `;
 
 const NovelTitle = styled.div`
   font-size: ${props => props.$viewMode === 'card' ? '14px' : '15px'};
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   font-weight: ${props => props.$viewMode === 'card' ? '500' : '600'};
   margin-bottom: ${props => props.$viewMode === 'card' ? '0' : '4px'};
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
@@ -209,16 +311,24 @@ const NovelTitle = styled.div`
 `;
 
 const NovelOwner = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.text};
+  font-size: ${props => props.$viewMode === 'card' ? '12px' : '14px'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#888')};
   margin-bottom: 0;
-  font-weight: 500;
+  font-weight: 400;
+  text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
+`;
+
+const NovelMeta = styled.div`
+  font-size: 12px;
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#666')};
+  margin-bottom: 0;
+  font-weight: 400;
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
 `;
 
 const PurchaseDate = styled.div`
   font-size: 11px;
-  color: ${({ theme }) => theme.cardSubText || '#888'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#888')};
   margin-bottom: 0;
   margin-top: 4px;
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
@@ -230,7 +340,7 @@ const PurchaseDate = styled.div`
 
 const EmptyMessage = styled.div`
   text-align: center;
-  color: ${({ theme }) => theme.cardSubText || '#999'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#999')};
   font-size: 16px;
   padding: 60px 20px;
 `;
@@ -247,10 +357,37 @@ const PaginationContainer = styled.div`
 
 const PaginationButton = styled.button`
   padding: 10px 16px;
-  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
-  border-radius: 8px;
-  background: ${({ theme, $active }) => $active ? '#cb6565' : theme.card || '#fff'};
-  color: ${({ $active }) => $active ? '#fff' : '#333'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid'};
+  border-color: ${({ theme, $isGlassTheme, $active }) => {
+        if ($isGlassTheme) {
+            if ($active) return 'rgba(203, 101, 101, 0.8)';
+            return 'rgba(255, 255, 255, 0.5)';
+        }
+        if ($active) return theme.primary || '#cb6565';
+        return theme.border || '#ddd';
+    }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ theme, $active, $isGlassTheme }) => {
+        if ($isGlassTheme) {
+            if ($active) {
+                const primary = theme.primary || '#cb6565';
+                const r = parseInt(primary.slice(1, 3), 16);
+                const g = parseInt(primary.slice(3, 5), 16);
+                const b = parseInt(primary.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, 0.8)`;
+            }
+            return 'rgba(255, 255, 255, 0.2)';
+        }
+        if ($active) return theme.primary || '#cb6565';
+        return theme.card || '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ $active, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($active) return '#fff';
+        return '#333';
+    }};
   font-size: 14px;
   font-weight: ${({ $active }) => $active ? '600' : '500'};
   cursor: pointer;
@@ -258,10 +395,55 @@ const PaginationButton = styled.button`
   min-width: 44px;
   min-height: 44px;
   touch-action: manipulation;
+  box-shadow: ${({ $isGlassTheme, $active, theme }) => {
+        if ($isGlassTheme && $active) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`;
+        }
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        return 'none';
+    }};
   
   &:hover:not(:disabled) {
-    background: ${({ theme, $active }) => $active ? '#cb6565' : '#fdfdfd'};
-    border-color: ${({ theme }) => theme.primary || '#cb6565'};
+    background: ${({ theme, $active, $isGlassTheme }) => {
+        if ($isGlassTheme) {
+            if ($active) {
+                const primary = theme.primary || '#cb6565';
+                const r = parseInt(primary.slice(1, 3), 16);
+                const g = parseInt(primary.slice(3, 5), 16);
+                const b = parseInt(primary.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, 0.9)`;
+            }
+            return 'rgba(255, 255, 255, 0.3)';
+        }
+        if ($active) return theme.primary || '#cb6565';
+        return '#fdfdfd';
+    }};
+    border-color: ${({ theme, $isGlassTheme, $active }) => {
+        if ($isGlassTheme && $active) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, 1)`;
+        }
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        return theme.primary || '#cb6565';
+    }};
+    box-shadow: ${({ $isGlassTheme, $active, theme }) => {
+        if ($isGlassTheme && $active) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `0 6px 16px rgba(${r}, ${g}, ${b}, 0.4)`;
+        }
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        return 'none';
+    }};
   }
   
   &:disabled {
@@ -276,7 +458,7 @@ const PaginationButton = styled.button`
 
 const PaginationInfo = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.cardSubText || '#666'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#666')};
   margin: 0 8px;
   white-space: nowrap;
 `;
@@ -284,6 +466,8 @@ const PaginationInfo = styled.div`
 function PurchasedNovels({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { actualTheme } = theme;
+    const isGlassTheme = actualTheme === 'glass';
     const { language } = useLanguage();
     const { t } = useTranslation();
     const [novels, setNovels] = useState([]);
@@ -465,10 +649,10 @@ function PurchasedNovels({ user }) {
     }, [novels, sortBy, userCreatedAt]);
 
     return (
-        <Container theme={theme}>
+        <Container theme={theme} $isGlassTheme={isGlassTheme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('home_purchased_novel')} />
             {isLoading ? (
-                <div style={{ textAlign: 'center', marginTop: 40 }}>로딩 중...</div>
+                <div style={{ textAlign: 'center', marginTop: 40, color: isGlassTheme ? '#000000' : theme.text }}>로딩 중...</div>
             ) : (
                 <>
                     <ViewToggle>
@@ -476,32 +660,31 @@ function PurchasedNovels({ user }) {
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             theme={theme}
+                            $isGlassTheme={isGlassTheme}
                         >
                             <option value="newest">구매일 최신순</option>
                             <option value="oldest">구매일 오래된순</option>
                             <option value="author">작가순</option>
                         </SortSelect>
                         <ViewToggleRight>
-                            <ToggleButton
-                                $active={viewMode === 'card'}
+                            <ViewToggleButton
+                                $isGlassTheme={isGlassTheme}
+                                theme={theme}
                                 onClick={() => {
-                                    setViewMode('card');
-                                    localStorage.setItem('purchasedNovelsViewMode', 'card');
+                                    const newMode = viewMode === 'card' ? 'list' : 'card';
+                                    setViewMode(newMode);
+                                    localStorage.setItem('purchasedNovelsViewMode', newMode);
                                 }}
-                                title="그리드형"
+                                aria-label={viewMode === 'card' ? '목록형으로 전환' : '카드형으로 전환'}
                             >
-                                <GridIcon width={20} height={20} />
-                            </ToggleButton>
-                            <ToggleButton
-                                $active={viewMode === 'list'}
-                                onClick={() => {
-                                    setViewMode('list');
-                                    localStorage.setItem('purchasedNovelsViewMode', 'list');
-                                }}
-                                title="목록형"
-                            >
-                                <ListIcon width={20} height={20} />
-                            </ToggleButton>
+                                <ToggleOption $active={viewMode === 'card'} $isGlassTheme={isGlassTheme}>
+                                    <GridIcon width={16} height={16} />
+                                </ToggleOption>
+                                <ToggleOption $active={viewMode === 'list'} $isGlassTheme={isGlassTheme}>
+                                    <ListIcon width={16} height={16} />
+                                </ToggleOption>
+                                <ToggleSlider $isList={viewMode === 'list'} $isGlassTheme={isGlassTheme} />
+                            </ViewToggleButton>
                         </ViewToggleRight>
                     </ViewToggle>
                     <NovelListWrapper $viewMode={viewMode}>
@@ -525,6 +708,8 @@ function PurchasedNovels({ user }) {
                                     <NovelItem
                                         key={novel.id}
                                         $viewMode={viewMode}
+                                        $isGlassTheme={isGlassTheme}
+                                        theme={theme}
                                         onClick={() => {
                                             if (isTutorial) {
                                                 navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`, {
@@ -543,9 +728,20 @@ function PurchasedNovels({ user }) {
                                             $viewMode={viewMode}
                                         />
                                         {viewMode === 'card' ? (
-                                            <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
+                                            <NovelInfo $viewMode={viewMode}>
+                                                <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
+                                                <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
+                                            </NovelInfo>
                                         ) : (
                                             <NovelInfo $viewMode={viewMode}>
+                                                {novel.genre && (
+                                                    <NovelMeta $viewMode={viewMode} theme={theme} $isGlassTheme={isGlassTheme}>
+                                                        {(() => {
+                                                            const genreKey = getGenreKey(novel.genre);
+                                                            return genreKey ? t(`novel_genre_${genreKey}`) : novel.genre;
+                                                        })()}
+                                                    </NovelMeta>
+                                                )}
                                                 <NovelTitle $viewMode={viewMode}>{novel.title}</NovelTitle>
                                                 <NovelOwner $viewMode={viewMode}>by {novel.ownerName}</NovelOwner>
                                                 <PurchaseDate $viewMode={viewMode}>
@@ -563,16 +759,18 @@ function PurchasedNovels({ user }) {
                         <PaginationContainer theme={theme}>
                             <PaginationButton
                                 theme={theme}
+                                $isGlassTheme={isGlassTheme}
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
                             >
                                 이전
                             </PaginationButton>
-                            <PaginationInfo theme={theme}>
+                            <PaginationInfo theme={theme} $isGlassTheme={isGlassTheme}>
                                 {currentPage} / {Math.ceil(sortedNovels.length / itemsPerPage)}
                             </PaginationInfo>
                             <PaginationButton
                                 theme={theme}
+                                $isGlassTheme={isGlassTheme}
                                 onClick={() => setCurrentPage(prev => Math.min(Math.ceil(sortedNovels.length / itemsPerPage), prev + 1))}
                                 disabled={currentPage >= Math.ceil(sortedNovels.length / itemsPerPage)}
                             >
