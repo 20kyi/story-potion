@@ -22,41 +22,55 @@ const StatsGrid = styled.div`
   height: 480px;
 `;
 const StatCard = styled.div`
-  background: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#fffef9' : theme.card};
-  border-radius: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return '18px';
-        const borderRadiuses = [
-            '16px 20px 18px 17px',
-            '18px 16px 20px 17px',
-            '17px 18px 16px 20px',
-            '20px 17px 19px 16px',
-            '18px 20px 17px 19px',
-            '19px 17px 18px 20px'
-        ];
-        return borderRadiuses[index % borderRadiuses.length];
-    }};
-  box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-        ? '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-        : '0 2px 8px rgba(0,0,0,0.08)'};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return '24px';
+    if (!$isDiaryTheme) return '18px';
+    const borderRadiuses = [
+      '16px 20px 18px 17px',
+      '18px 16px 20px 17px',
+      '17px 18px 16px 20px',
+      '20px 17px 19px 16px',
+      '18px 20px 17px 19px',
+      '19px 17px 18px 20px'
+    ];
+    return borderRadiuses[index % borderRadiuses.length];
+  }};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return '0 2px 8px rgba(0,0,0,0.08)';
+  }};
   padding: 24px 12px 18px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: ${({ theme, $isDiaryTheme }) => $isDiaryTheme
-        ? '1px solid rgba(139, 111, 71, 0.2)'
-        : `1px solid ${theme.border || '#f0f0f0'}`};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return `1px solid ${theme.border || '#f0f0f0'}`;
+  }};
   min-height: 100px;
   transition: box-shadow 0.2s, transform 0.2s;
   position: relative;
   background-clip: padding-box;
-  transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'none';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg)`;
-    }};
+  transform: ${({ $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return 'none';
+    if (!$isDiaryTheme) return 'none';
+    const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+    return `rotate(${rotations[index % rotations.length] || 0}deg)`;
+  }};
 
-  /* 점선 내부 테두리 */
+  /* 점선 내부 테두리 - 유지 */
   &::before {
     content: '';
     position: absolute;
@@ -64,13 +78,16 @@ const StatCard = styled.div`
     left: 8px;
     right: 8px;
     bottom: 8px;
-    border: 2px dashed ${({ theme, $isDiaryTheme }) => {
-        if ($isDiaryTheme) {
-            return 'rgba(139, 111, 71, 0.25)';
-        }
-        return theme.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.25)'
-            : 'rgba(0, 0, 0, 0.15)';
+    border: 2px dashed ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+      if ($isDiaryTheme) {
+        return 'rgba(139, 111, 71, 0.25)';
+      }
+      if ($isGlassTheme) {
+        return 'rgba(0, 0, 0, 0.2)';
+      }
+      return theme.mode === 'dark'
+        ? 'rgba(255, 255, 255, 0.25)'
+        : 'rgba(0, 0, 0, 0.15)';
     }};
     border-radius: 12px;
     pointer-events: none;
@@ -78,7 +95,7 @@ const StatCard = styled.div`
   }
 
   /* 그라데이션 배경 효과 */
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
     &::after {
       content: '';
       position: absolute;
@@ -94,13 +111,18 @@ const StatCard = styled.div`
   `}
 
   &:hover {
-    box-shadow: ${({ $isDiaryTheme }) => $isDiaryTheme
-        ? '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-        : '0 8px 24px rgba(0,0,0,0.13)'};
-    transform: ${({ $isDiaryTheme, index }) => {
-        if (!$isDiaryTheme) return 'translateY(-2px)';
-        const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
-        return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) {
+        return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      }
+      return '0 8px 24px rgba(0,0,0,0.13)';
+    }};
+    transform: ${({ $isDiaryTheme, $isGlassTheme, index }) => {
+      if ($isGlassTheme) return 'translateY(-2px)';
+      if (!$isDiaryTheme) return 'translateY(-2px)';
+      const rotations = [0.2, -0.3, 0.1, -0.2, 0.3, -0.1];
+      return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
     }};
   }
 `;
@@ -183,7 +205,11 @@ const FavoriteGenreText = styled.div`
   margin-bottom: 20px;
   font-size: 1.05rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#333';
+  }};
 `;
 
 // 장르별 배너 데이터
@@ -226,6 +252,7 @@ function Statistics({ user }) {
     const theme = useStyledTheme();
     const { actualTheme } = useThemeContext();
     const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     const [diaryCount, setDiaryCount] = useState(0);
     const [novelCount, setNovelCount] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
@@ -369,7 +396,7 @@ function Statistics({ user }) {
                 padding: 24,
                 paddingTop: 40,
                 paddingBottom: 100,
-                background: isDiaryTheme ? '#faf8f3' : 'transparent',
+                background: isDiaryTheme ? '#faf8f3' : (isGlassTheme ? 'transparent' : 'transparent'),
                 color: isDiaryTheme ? '#5C4B37' : 'inherit'
             }}>
                 {/* 가장 많이 제작한 장르 이미지 또는 빈 방 이미지 */}
@@ -384,7 +411,7 @@ function Statistics({ user }) {
                                             alt={t(`novel_genre_${favoriteGenreBanner.genreKey}`)}
                                         />
                                     </FavoriteGenreCard>
-                                    <FavoriteGenreText>
+                                    <FavoriteGenreText theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                         {favoriteGenreBanner.text}
                                     </FavoriteGenreText>
                                 </>
@@ -396,7 +423,7 @@ function Statistics({ user }) {
                                             alt="빈 방"
                                         />
                                     </FavoriteGenreCard>
-                                    <FavoriteGenreText>
+                                    <FavoriteGenreText theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                         {emptyRoomData.text}
                                     </FavoriteGenreText>
                                 </>
@@ -405,17 +432,17 @@ function Statistics({ user }) {
                     </FavoriteGenreContainer>
                 )}
                 {loading ? (
-                    <div style={{ textAlign: 'center', color: theme.cardSubText || '#888', marginTop: 40 }}>{t('loading')}</div>
+                    <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : (theme.cardSubText || '#888'), marginTop: 40 }}>{t('loading')}</div>
                 ) : (
                     <StatsGrid>
                         {/* 작성한 일기 */}
-                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} index={0} style={{ gridColumn: 1, gridRow: '1 / 4' }}>
+                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} index={0} style={{ gridColumn: 1, gridRow: '1 / 4' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/작성한일기.png'} alt={t('stat_diary_count')} />
                             <StatLabel color={statColors.diary}>{t('stat_diary_count')}</StatLabel>
                             <StatNumber color={statColors.diary}>{diaryCount}</StatNumber>
                         </StatCard>
                         {/* 내 관심사 */}
-                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} index={1} style={{ gridColumn: 1, gridRow: '4 / 7' }}>
+                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} index={1} style={{ gridColumn: 1, gridRow: '4 / 7' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/내관심사.png'} alt={t('stat_interest')} />
                             <StatLabel color={statColors.interest}>{t('stat_interest')}</StatLabel>
                             <Rank1 color={statColors.interest}>🥇 {topWords[0]}</Rank1>
@@ -423,7 +450,7 @@ function Statistics({ user }) {
                             <Rank3 color={statColors.interest}>🥉 {topWords[2]}</Rank3>
                         </StatCard>
                         {/* 연속일수 */}
-                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} index={2} style={{ gridColumn: 2, gridRow: '1 / 3' }}>
+                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} index={2} style={{ gridColumn: 2, gridRow: '1 / 3' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/연속일수.png'} alt={t('stat_streak')} />
                             <StatLabel color={statColors.streak}>{t('stat_streak')}</StatLabel>
                             <StatNumber color={statColors.streak}>{maxStreak}</StatNumber>
@@ -432,6 +459,7 @@ function Statistics({ user }) {
                         <StatCard
                             theme={theme}
                             $isDiaryTheme={isDiaryTheme}
+                            $isGlassTheme={isGlassTheme}
                             index={3}
                             style={{ gridColumn: 2, gridRow: '3 / 5', cursor: novelCount > 0 ? 'pointer' : 'default' }}
                             onClick={() => {
@@ -445,7 +473,7 @@ function Statistics({ user }) {
                             <StatNumber color={statColors.novel}>{novelCount}</StatNumber>
                         </StatCard>
                         {/* 최애 장르 */}
-                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} index={4} style={{ gridColumn: 2, gridRow: '5 / 7' }}>
+                        <StatCard theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} index={4} style={{ gridColumn: 2, gridRow: '5 / 7' }}>
                             <StatImage src={process.env.PUBLIC_URL + '/my_stats/최애장르.png'} alt={t('stat_favorite_genre')} />
                             <StatLabel color={statColors.genre}>{t('stat_favorite_genre')}</StatLabel>
                             <StatNumberSmall color={statColors.genre}>{favoriteGenre !== '-' ? `${favoriteGenre} (${favoriteGenreCount}${t('unit_count') || '편'})` : t('no_data') || '데이터 없음'}</StatNumberSmall>
