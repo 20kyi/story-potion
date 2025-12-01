@@ -1092,28 +1092,23 @@ const Novel = ({ user }) => {
                         </button>
                     </div>
                     <div className="novel-view-toggle-container">
-                        <button
-                            className={`novel-view-toggle-button ${weeklyViewMode === 'card' ? 'active' : ''}`}
-                            onClick={() => setWeeklyViewMode('card')}
-                            title="카드형"
-                            style={{
-                                background: weeklyViewMode === 'card' ? (theme.primary || '#cb6565') : 'transparent',
-                                borderColor: weeklyViewMode === 'card' ? (theme.primary || '#cb6565') : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')
-                            }}
-                        >
-                            <GridIcon width={20} height={20} />
-                        </button>
-                        <button
-                            className={`novel-view-toggle-button ${weeklyViewMode === 'list' ? 'active' : ''}`}
-                            onClick={() => setWeeklyViewMode('list')}
-                            title="목록형"
-                            style={{
-                                background: weeklyViewMode === 'list' ? (theme.primary || '#cb6565') : 'transparent',
-                                borderColor: weeklyViewMode === 'list' ? (theme.primary || '#cb6565') : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd')
-                            }}
-                        >
-                            <ListIcon width={20} height={20} />
-                        </button>
+                        <div className="novel-view-mode-toggle">
+                            <button
+                                className={`novel-view-mode-toggle-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+                                onClick={() => setWeeklyViewMode(weeklyViewMode === 'card' ? 'list' : 'card')}
+                                aria-label={weeklyViewMode === 'card' ? '목록형으로 전환' : '카드형으로 전환'}
+                            >
+                                <span className={`novel-toggle-option ${weeklyViewMode === 'card' ? 'active' : ''}`}>
+                                    <GridIcon width={16} height={16} />
+                                </span>
+                                <span className={`novel-toggle-option ${weeklyViewMode === 'list' ? 'active' : ''}`}>
+                                    <ListIcon width={16} height={16} />
+                                </span>
+                                <span
+                                    className={`novel-toggle-slider ${weeklyViewMode === 'list' ? 'list' : 'card'} ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <DatePickerModal

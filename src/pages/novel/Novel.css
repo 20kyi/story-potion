@@ -271,74 +271,161 @@ body.dark .diary-month-text:not(.diary-theme):not(.glass-theme) {
 
 .novel-view-toggle-container {
     display: flex;
-    gap: 8px;
     margin-bottom: 0;
     justify-content: flex-end;
     margin-left: auto;
 }
 
-.novel-view-toggle-button {
-    border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.novel-view-mode-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid #ddd;
+}
+
+.novel-view-mode-toggle-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 24px;
+    border: 1.5px solid;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
     background: transparent;
+    min-width: 90px;
+    height: 36px;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
-.novel-view-toggle-button.active {
-    border-color: #cb6565;
-    background: #cb6565;
+@media (min-width: 480px) {
+    .novel-view-mode-toggle-button {
+        font-size: 13px;
+        min-width: 100px;
+        height: 36px;
+    }
 }
 
-body.dark .novel-view-toggle-button {
-    border-color: rgba(255, 255, 255, 0.2);
+.novel-view-mode-toggle-button.diary-theme {
+    border-color: #8B6F47;
 }
 
-body.dark .novel-view-toggle-button.active {
-    border-color: #cb6565;
-    background: #cb6565;
+.novel-view-mode-toggle-button.glass-theme {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.novel-view-toggle-button:hover {
-    background: #fdfdfd;
-    border-color: #cb6565;
+.novel-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) {
+    border-color: #e46262;
 }
 
-body.dark .novel-view-toggle-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #cb6565;
+body.dark .novel-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) {
+    border-color: #FFB3B3;
 }
 
-.novel-view-toggle-button.active:hover {
-    background: #cb6565;
-    border-color: #cb6565;
+.novel-toggle-option {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
-.novel-view-toggle-button svg {
-    transition: stroke 0.2s;
+.novel-toggle-option svg {
+    transition: stroke 0.3s ease;
+}
+
+.novel-toggle-option.active svg {
+    stroke: #fff;
+}
+
+.novel-toggle-option:not(.active) svg {
     stroke: #888;
 }
 
-body.dark .novel-view-toggle-button svg {
-    stroke: rgba(255, 255, 255, 0.7);
+.novel-view-mode-toggle-button.diary-theme .novel-toggle-option:not(.active) svg {
+    stroke: #8B6F47;
 }
 
-.novel-view-toggle-button.active svg {
-    stroke: #fff;
+.novel-view-mode-toggle-button.glass-theme .novel-toggle-option.active svg {
+    stroke: #000000;
 }
 
-.novel-view-toggle-button:hover svg {
-    stroke: #cb6565;
+.novel-view-mode-toggle-button.glass-theme .novel-toggle-option:not(.active) svg {
+    stroke: rgba(0, 0, 0, 0.6);
 }
 
-.novel-view-toggle-button.active:hover svg {
-    stroke: #fff;
+.novel-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) .novel-toggle-option:not(.active) svg {
+    stroke: #e46262;
+}
+
+body.dark .novel-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) .novel-toggle-option:not(.active) svg {
+    stroke: #FFB3B3;
+}
+
+.novel-toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.novel-toggle-slider.card {
+    transform: translateX(0);
+}
+
+.novel-toggle-slider.list {
+    transform: translateX(100%);
+}
+
+.novel-toggle-slider.diary-theme {
+    background: rgba(139, 111, 71, 0.25);
+}
+
+.novel-toggle-slider.glass-theme {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.novel-toggle-slider:not(.diary-theme):not(.glass-theme) {
+    background: rgba(228, 98, 98, 0.25);
+}
+
+body.dark .novel-toggle-slider:not(.diary-theme):not(.glass-theme) {
+    background: rgba(255, 179, 179, 0.25);
+}
+
+.novel-view-mode-toggle-button:hover .novel-toggle-slider.diary-theme {
+    background: rgba(139, 111, 71, 0.35);
+}
+
+.novel-view-mode-toggle-button:hover .novel-toggle-slider.glass-theme {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.novel-view-mode-toggle-button:hover .novel-toggle-slider:not(.diary-theme):not(.glass-theme) {
+    background: rgba(228, 98, 98, 0.35);
+}
+
+body.dark .novel-view-mode-toggle-button:hover .novel-toggle-slider:not(.diary-theme):not(.glass-theme) {
+    background: rgba(255, 179, 179, 0.35);
 }
 
 
