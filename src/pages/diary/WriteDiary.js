@@ -650,10 +650,27 @@ const StickerPanel = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: ${props => props.theme.mode === 'dark' ? '#232323' : '#fff'};
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: ${props => props.theme.mode === 'dark' ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)'};
+  background: ${props => {
+        if (props.$isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if (props.$isDiaryTheme) return '#faf8f3';
+        if (props.theme.mode === 'dark') return '#232323';
+        return '#fff';
+    }};
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  border-top-left-radius: ${props => props.$isGlassTheme ? '24px' : '20px'};
+  border-top-right-radius: ${props => props.$isGlassTheme ? '24px' : '20px'};
+  border-top: ${props => {
+        if (props.$isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if (props.$isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
+  box-shadow: ${props => {
+        if (props.$isGlassTheme) return '0 -4px 20px rgba(0, 0, 0, 0.15), 0 -2px 8px rgba(0, 0, 0, 0.1)';
+        if (props.$isDiaryTheme) return '0 -2px 16px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)';
+        if (props.theme.mode === 'dark') return '0 -2px 16px rgba(0,0,0,0.32)';
+        return '0 -2px 16px rgba(0,0,0,0.12)';
+    }};
   padding: 24px;
   z-index: 1000;
   max-height: 60vh;
@@ -686,7 +703,12 @@ const StickerItem = styled.button`
   transition: background-color 0.2s;
   
   &:hover {
-    background: ${props => props.theme.mode === 'dark' ? '#333' : '#fdfdfd'};
+    background: ${props => {
+        if (props.$isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if (props.$isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+        if (props.theme.mode === 'dark') return '#333';
+        return '#fdfdfd';
+    }};
   }
   
   img {
@@ -2538,15 +2560,19 @@ function WriteDiary({ user }) {
                 {isWeatherSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: isDark ? '#1a1a1a' : '#fff',
-                        borderTopLeftRadius: 20, borderTopRightRadius: 20,
-                        boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
+                        background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : isDiaryTheme ? '#faf8f3' : isDark ? '#1a1a1a' : '#fff',
+                        backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                        WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                        borderTopLeftRadius: isGlassTheme ? 24 : 20,
+                        borderTopRightRadius: isGlassTheme ? 24 : 20,
+                        borderTop: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.15)' : 'none',
+                        boxShadow: isGlassTheme ? '0 -4px 20px rgba(0, 0, 0, 0.15), 0 -2px 8px rgba(0, 0, 0, 0.1)' : isDiaryTheme ? '0 -2px 16px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)' : isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
                         padding: 24, minHeight: 220,
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                         animation: 'slideUp 0.2s ease',
-                        color: isDark ? '#f1f1f1' : '#222',
+                        color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>{t('today_weather_select')}</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#f1f1f1' : '#222' }}>{t('today_weather_select')}</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -2573,29 +2599,33 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`weather_${opt.value}`)}</span>
+                                    <span style={{ fontSize: 14, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`weather_${opt.value}`)}</span>
                                 </button>
                             ))}
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsWeatherSheetOpen(false)}
-                            style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                            style={{ marginTop: 24, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
                         >{t('close')}</button>
                     </div>
                 )}
                 {isEmotionSheetOpen && (
                     <div style={{
                         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-                        background: isDark ? '#1a1a1a' : '#fff',
-                        borderTopLeftRadius: 20, borderTopRightRadius: 20,
-                        boxShadow: isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
+                        background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : isDiaryTheme ? '#faf8f3' : isDark ? '#1a1a1a' : '#fff',
+                        backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                        WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                        borderTopLeftRadius: isGlassTheme ? 24 : 20,
+                        borderTopRightRadius: isGlassTheme ? 24 : 20,
+                        borderTop: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : isDiaryTheme ? '1px solid rgba(139, 111, 71, 0.15)' : 'none',
+                        boxShadow: isGlassTheme ? '0 -4px 20px rgba(0, 0, 0, 0.15), 0 -2px 8px rgba(0, 0, 0, 0.1)' : isDiaryTheme ? '0 -2px 16px rgba(0, 0, 0, 0.06), 0 -1px 3px rgba(0, 0, 0, 0.04)' : isDark ? '0 -2px 16px rgba(0,0,0,0.32)' : '0 -2px 16px rgba(0,0,0,0.12)',
                         padding: 24, minHeight: 220,
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                         animation: 'slideUp 0.2s ease',
-                        color: isDark ? '#f1f1f1' : '#222',
+                        color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#f1f1f1' : '#222',
                     }}>
-                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isDark ? '#f1f1f1' : '#222' }}>{t('today_mood_select')}</div>
+                        <div style={{ fontWeight: 300, fontSize: 18, marginBottom: 16, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#f1f1f1' : '#222' }}>{t('today_mood_select')}</div>
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -2622,14 +2652,14 @@ function WriteDiary({ user }) {
                                     }}
                                 >
                                     <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
-                                    <span style={{ fontSize: 14, color: isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`emotion_${opt.value}`)}</span>
+                                    <span style={{ fontSize: 14, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`emotion_${opt.value}`)}</span>
                                 </button>
                             ))}
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsEmotionSheetOpen(false)}
-                            style={{ marginTop: 24, color: isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
+                            style={{ marginTop: 24, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#aaa' : '#888', background: 'none', border: 'none', fontSize: 16, cursor: 'pointer' }}
                         >{t('close')}</button>
                     </div>
                 )}
@@ -3048,12 +3078,12 @@ function WriteDiary({ user }) {
                                 background: 'rgba(0,0,0,0.15)'
                             }}
                         />
-                        <StickerPanel>
+                        <StickerPanel $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                             <div style={{
                                 fontWeight: 300,
                                 fontSize: 18,
                                 marginBottom: 16,
-                                color: isDark ? '#f1f1f1' : '#222',
+                                color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#f1f1f1' : '#222',
                                 textAlign: 'center'
                             }}>
                                 스티커를 선택하세요
@@ -3064,6 +3094,8 @@ function WriteDiary({ user }) {
                                         key={sticker.id}
                                         onClick={() => addSticker(sticker)}
                                         title={sticker.name}
+                                        $isDiaryTheme={isDiaryTheme}
+                                        $isGlassTheme={isGlassTheme}
                                     >
                                         <img src={sticker.src} alt={sticker.name} />
                                     </StickerItem>
@@ -3074,7 +3106,7 @@ function WriteDiary({ user }) {
                                 onClick={() => setIsStickerPanelOpen(false)}
                                 style={{
                                     marginTop: 24,
-                                    color: isDark ? '#aaa' : '#888',
+                                    color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#aaa' : '#888',
                                     background: 'none',
                                     border: 'none',
                                     fontSize: 16,
