@@ -68,9 +68,9 @@ const NovelItem = styled.div`
 `;
 
 const WeekTitle = styled.h2`
-  font-size: 14px;
+  font-size: 16px !important;
   color: ${({ theme }) => theme.primary};
-  font-weight: 500;
+  font-weight: 600 !important;
   margin: 0 0 12px 0;
 `;
 

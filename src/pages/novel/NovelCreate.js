@@ -92,9 +92,10 @@ const DiariesSection = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 18px;
+  font-size: 16px !important;
   color: ${({ theme }) => theme.text};
   margin: 0 0 15px 0;
+  font-weight: 600 !important;
 `;
 
 const DiaryCard = styled.div`
@@ -1312,7 +1313,7 @@ function NovelCreate({ user }) {
                         <img src={generatedImageUrl} alt="소설 표지" style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 16, marginBottom: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
                     )}
                     {/* 소설 제목 */}
-                    <h2 style={{ fontSize: 24, fontWeight: 700, color: '#e46262', marginBottom: 18, textAlign: 'center', fontFamily: 'inherit' }}>{title}</h2>
+                    <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#e46262', marginBottom: 18, textAlign: 'center', fontFamily: 'inherit' }}>{title}</h2>
 
                     {/* 서사 요약표 표시 */}
                     {narrativeSummary && (

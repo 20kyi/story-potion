@@ -294,11 +294,11 @@ const TutorialLargeCoverTitle = styled.div`
 `;
 
 const CoverTitle = styled.h2`
-  font-size: 24px;
+  font-size: 16px !important;
   color: ${({ theme }) => theme.primary};
   margin-top: 24px;
   margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: 600 !important;
   text-align: center;
   font-family: inherit;
 `;
@@ -830,7 +830,7 @@ function NovelView({ user }) {
 
                 if (isDateKey) {
                     const { year, month, weekNum, genre, id: novelId } = parsedUrl;
-                    
+
                     // ID가 있으면 ID로 직접 조회 (가장 우선)
                     if (novelId) {
                         try {
@@ -847,7 +847,7 @@ function NovelView({ user }) {
                             console.error('ID로 소설 조회 실패:', error);
                         }
                     }
-                    
+
                     // ID로 조회 실패했거나 ID가 없는 경우 연-월-주차(및 장르)로 쿼리
                     if (!fetchedNovel) {
                         const novelsRef = collection(db, 'novels');
@@ -869,7 +869,7 @@ function NovelView({ user }) {
                             const validNovels = snapshot.docs
                                 .map(doc => ({ id: doc.id, ...doc.data() }))
                                 .filter(novel => novel.deleted !== true);
-                            
+
                             if (validNovels.length > 0) {
                                 fetchedNovel = validNovels[0]; // 이미 createdAt desc로 정렬되어 있으므로 첫 번째가 최신
                             }
@@ -1205,16 +1205,16 @@ function NovelView({ user }) {
                 pages.push(currentPage.trim());
                 currentPage = line;
                 tempDiv.textContent = line;
-                
+
                 // 한 줄이 페이지 높이를 넘는 경우, 단어 단위로 나누기
                 if (tempDiv.scrollHeight > pageHeight) {
                     const words = line.split(/(\s+)/);
                     let pageText = '';
-                    
+
                     words.forEach((word) => {
                         const testPage = pageText + word;
                         tempDiv.textContent = testPage;
-                        
+
                         if (tempDiv.scrollHeight > pageHeight && pageText.trim()) {
                             // 현재 페이지가 꽉 찼으므로 저장하고 새 페이지 시작
                             pages.push(pageText.trim());

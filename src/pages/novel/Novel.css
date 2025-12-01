@@ -114,9 +114,9 @@
 }
 
 .novel-current-month {
-    font-size: 24px;
+    font-size: 16px !important;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 600 !important;
     margin: 0;
     cursor: pointer;
     display: flex;

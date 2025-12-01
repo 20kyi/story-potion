@@ -11,8 +11,8 @@
 }
 
 .novel-section-title {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 16px !important;
+    font-weight: 600 !important;
     margin: 0;
     display: flex;
     align-items: center;
