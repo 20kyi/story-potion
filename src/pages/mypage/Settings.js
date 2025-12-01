@@ -38,6 +38,61 @@ function Settings() {
     });
     const [logoutModal, setLogoutModal] = useState(false);
 
+    // 테마별 드롭다운 스타일 함수
+    const getDropdownStyles = () => {
+        if (actualTheme === 'diary') {
+            return {
+                backgroundColor: '#fff',
+                color: '#8B6F47',
+                border: '1px solid rgba(139, 111, 71, 0.3)'
+            };
+        } else if (actualTheme === 'glass') {
+            return {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                color: '#000000',
+                border: '1px solid rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
+            };
+        } else if (actualTheme === 'dark') {
+            return {
+                backgroundColor: '#232323',
+                color: '#f1f1f1',
+                border: '1px solid #333333'
+            };
+        } else {
+            return {
+                backgroundColor: '#fff',
+                color: '#222',
+                border: '1px solid #e0e0e0'
+            };
+        }
+    };
+
+    const getOptionStyles = () => {
+        if (actualTheme === 'diary') {
+            return {
+                backgroundColor: '#fff',
+                color: '#8B6F47'
+            };
+        } else if (actualTheme === 'glass') {
+            return {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                color: '#000000'
+            };
+        } else if (actualTheme === 'dark') {
+            return {
+                backgroundColor: '#232323',
+                color: '#f1f1f1'
+            };
+        } else {
+            return {
+                backgroundColor: '#fff',
+                color: '#222'
+            };
+        }
+    };
+
 
 
     const handleAccordion = (key) => {
@@ -85,18 +140,16 @@ function Settings() {
                                 width: 160,
                                 padding: '8px 12px',
                                 borderRadius: '6px',
-                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#ddd'}`,
                                 fontSize: '14px',
-                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                ...getDropdownStyles()
                             }}
                         >
-                            <option value="light" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_light') || '라이트 모드'}</option>
-                            <option value="dark" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_dark') || '다크 모드'}</option>
-                            <option value="diary" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>다이어리 테마</option>
-                            <option value="glass" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>글래스모피즘 테마</option>
-                            <option value="system" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>{t('theme_system') || '시스템 설정'}</option>
+                            <option value="light" style={getOptionStyles()}>{t('theme_light') || '라이트 모드'}</option>
+                            <option value="dark" style={getOptionStyles()}>{t('theme_dark') || '다크 모드'}</option>
+                            <option value="diary" style={getOptionStyles()}>다이어리 테마</option>
+                            <option value="glass" style={getOptionStyles()}>글래스모피즘 테마</option>
+                            <option value="system" style={getOptionStyles()}>{t('theme_system') || '시스템 설정'}</option>
                         </select>
                     </li>
                     {/* 언어 */}
@@ -109,16 +162,15 @@ function Settings() {
                             style={{
                                 marginLeft: 'auto',
                                 width: 160,
-                                fontSize: 18,
+                                fontSize: '14px',
                                 padding: '6px 12px',
                                 borderRadius: 8,
-                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
-                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                                cursor: 'pointer',
+                                ...getDropdownStyles()
                             }}
                         >
-                            <option value="ko" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>한국어</option>
-                            <option value="en" style={{ backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff', color: actualTheme === 'dark' ? '#f1f1f1' : '#222' }}>English</option>
+                            <option value="ko" style={getOptionStyles()}>한국어</option>
+                            <option value="en" style={getOptionStyles()}>English</option>
                         </select>
                     </li>
                     {/* 폰트 선택 */}
@@ -131,22 +183,18 @@ function Settings() {
                             style={{
                                 marginLeft: 'auto',
                                 width: 200,
-                                fontSize: 18,
+                                fontSize: '14px',
                                 padding: '6px 12px',
                                 borderRadius: 8,
-                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
-                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                                cursor: 'pointer',
+                                ...getDropdownStyles()
                             }}
                         >
                             {FONT_OPTIONS.map(opt => (
                                 <option
                                     key={opt.value}
                                     value={opt.value}
-                                    style={{
-                                        backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                        color: actualTheme === 'dark' ? '#f1f1f1' : '#222'
-                                    }}
+                                    style={getOptionStyles()}
                                 >
                                     {opt.label}
                                 </option>
@@ -163,22 +211,18 @@ function Settings() {
                             style={{
                                 marginLeft: 'auto',
                                 width: 160,
-                                fontSize: 18,
+                                fontSize: '14px',
                                 padding: '6px 12px',
                                 borderRadius: 8,
-                                backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                color: actualTheme === 'dark' ? '#f1f1f1' : '#222',
-                                border: `1px solid ${actualTheme === 'dark' ? '#333333' : '#e0e0e0'}`
+                                cursor: 'pointer',
+                                ...getDropdownStyles()
                             }}
                         >
                             {FONT_SIZE_OPTIONS.map(opt => (
                                 <option
                                     key={opt.value}
                                     value={opt.value}
-                                    style={{
-                                        backgroundColor: actualTheme === 'dark' ? '#232323' : '#fff',
-                                        color: actualTheme === 'dark' ? '#f1f1f1' : '#222'
-                                    }}
+                                    style={getOptionStyles()}
                                 >
                                     {opt.label}
                                 </option>
