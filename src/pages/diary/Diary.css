@@ -69,7 +69,7 @@ body.glass .diary-container:not(.diary-theme) {
 }
 
 .diary-month-text {
-    font-size: 20px;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -79,12 +79,14 @@ body.glass .diary-container:not(.diary-theme) {
 
 .diary-month-text.glass-theme {
     color: #000000;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .diary-month-section.glass-theme .diary-month-text.glass-theme {
     color: #000000;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .diary-month-text:not(.diary-theme):not(.glass-theme) {
@@ -422,6 +424,10 @@ body.dark .diary-date-button {
 .diary-date-button>span {
     font-size: 12px !important;
     font-weight: normal !important;
+}
+
+.diary-date-button * {
+    font-size: 12px !important;
 }
 
 .diary-date-button.today {
@@ -995,7 +1001,7 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
 }
 
 .diary-weekly-day-name {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: #888;
     text-transform: uppercase;
@@ -1007,7 +1013,7 @@ body.dark .diary-weekly-day-name {
 }
 
 .diary-weekly-date {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 400;
     color: #666;
 }
@@ -1023,6 +1029,7 @@ body.dark .diary-weekly-date {
     justify-content: flex-start;
     align-items: flex-start;
     text-align: left;
+    font-size: 12px !important;
 }
 
 .diary-date-cell.weekly-cell .diary-today-circle {

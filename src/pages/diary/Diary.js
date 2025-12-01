@@ -594,7 +594,8 @@ function Diary({ user }) {
                                         ? '#e46262'
                                         : (document.body.classList.contains('dark') ? '#ccc' : '#666')),
                                 position: 'relative',
-                                zIndex: isToday ? 2 : 1
+                                zIndex: isToday ? 2 : 1,
+                                fontSize: '12px'
                             }}>{date.getDate()}</span>
                         </div>
                         {isToday && (() => {
