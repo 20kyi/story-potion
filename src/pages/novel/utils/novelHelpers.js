@@ -34,8 +34,11 @@ export const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted
     }
     // 활성화된 진행도(hasDiary === true)는 불투명하게 유지
     if (isCompleted && hasDiary) {
+        if (isGlassTheme) {
+            return '#b3a1d6'; // 글래스 테마에서 7일치 완료 색상
+        }
         const gradient = 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
-        return gradient; // 완료 색상은 원래대로 유지
+        return gradient; // 다른 테마에서는 완료 색상 원래대로 유지
     }
     if (barColor === 'fill') {
         if (isGlassTheme) {
