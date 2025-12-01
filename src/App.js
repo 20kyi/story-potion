@@ -537,6 +537,8 @@ const KakaoCallback = () => {
 function App() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [videoPlayed, setVideoPlayed] = useState(false);
+    const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
         // 주의: 커스텀 OAuth 플로우를 사용하므로 getRedirectResult는 호출하지 않음
@@ -546,7 +548,7 @@ function App() {
 
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
-            setIsLoading(false);
+            setAuthReady(true);
 
             // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
             if (user?.uid) {
@@ -1287,9 +1289,18 @@ function App() {
             });
         }
 
+        // 동영상 재생 이벤트 리스너
+        const handleVideoPlaying = () => {
+            console.log('동영상 재생 시작됨, 최소 2초 후 로딩 화면 종료');
+            setVideoPlayed(true);
+        };
+
+        window.addEventListener('loadingVideoPlaying', handleVideoPlaying);
+
         // 컴포넌트 언마운트 시 리스너 정리
         return () => {
             unsubscribe();
+            window.removeEventListener('loadingVideoPlaying', handleVideoPlaying);
             if (pushReceivedListener) {
                 pushReceivedListener.remove();
             }
@@ -1301,6 +1312,31 @@ function App() {
             }
         };
     }, []);
+
+    // 로딩 화면 종료 조건: 인증 완료 + (동영상 재생 또는 3초 경과)
+    useEffect(() => {
+        if (!authReady) return;
+
+        let timeoutId;
+
+        if (videoPlayed) {
+            // 동영상이 재생되면 최소 2초 후 종료
+            console.log('동영상 재생됨, 2초 후 로딩 화면 종료');
+            timeoutId = setTimeout(() => {
+                setIsLoading(false);
+            }, 2000);
+        } else {
+            // 동영상이 재생되지 않으면 3초 후 종료
+            console.log('동영상 미재생, 3초 후 로딩 화면 종료');
+            timeoutId = setTimeout(() => {
+                setIsLoading(false);
+            }, 3000);
+        }
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [authReady, videoPlayed]);
 
     if (Capacitor.getPlatform() !== 'web') {
         StatusBar.setOverlaysWebView({ overlay: false });

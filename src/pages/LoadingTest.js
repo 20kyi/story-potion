@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
@@ -93,10 +93,63 @@ const InfoText = styled.p`
   line-height: 1.6;
 `;
 
+const VideoContainer = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  background: #000;
+`;
+
+const VideoPlayer = styled.video`
+  width: 100%;
+  height: auto;
+  display: block;
+`;
+
+const VideoControls = styled.div`
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: ${({ theme }) => theme.card};
+  border-top: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+`;
+
+const ControlButton = styled.button`
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: ${({ variant, theme }) => {
+    if (variant === 'primary') return '#e46262';
+    if (variant === 'secondary') return theme.card || '#fdfdfd';
+    return '#f0f0f0';
+  }};
+  color: ${({ variant }) => variant === 'primary' ? '#fff' : '#222'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 function LoadingTest({ user }) {
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showInline, setShowInline] = useState(false);
   const [showDark, setShowDark] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -116,6 +169,36 @@ function LoadingTest({ user }) {
     setTimeout(() => {
       setShowDark(false);
     }, 3000);
+  };
+
+  const handleVideoToggle = () => {
+    setShowVideo(!showVideo);
+    if (!showVideo && videoRef.current) {
+      videoRef.current.load();
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const handleVideoPlay = () => {
+    setIsPlaying(true);
+  };
+
+  const handleVideoPause = () => {
+    setIsPlaying(false);
   };
 
   return (
@@ -145,6 +228,13 @@ function LoadingTest({ user }) {
             onClick={handleDarkTest}
           >
             다크 모드 로딩 (3초)
+          </TestButton>
+
+          <TestButton
+            variant="primary"
+            onClick={handleVideoToggle}
+          >
+            {showVideo ? '동영상 숨기기' : '로딩 동영상 보기'}
           </TestButton>
         </ButtonGroup>
 
@@ -176,6 +266,47 @@ function LoadingTest({ user }) {
             darkMode={true}
             text="다크 모드 로딩 중..."
           />
+        )}
+
+        {showVideo && (
+          <PreviewSection>
+            <SectionTitle>로딩 동영상 미리보기</SectionTitle>
+            <VideoContainer>
+              <VideoPlayer
+                ref={videoRef}
+                controls
+                onEnded={handleVideoEnded}
+                onPlay={handleVideoPlay}
+                onPause={handleVideoPause}
+              >
+                <source src="/videos/책과포션.mp4" type="video/mp4" />
+                브라우저가 동영상 태그를 지원하지 않습니다.
+              </VideoPlayer>
+              <VideoControls>
+                <ControlButton
+                  variant="primary"
+                  onClick={handlePlayPause}
+                >
+                  {isPlaying ? '일시정지' : '재생'}
+                </ControlButton>
+                <ControlButton
+                  variant="secondary"
+                  onClick={() => {
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = 0;
+                      videoRef.current.pause();
+                      setIsPlaying(false);
+                    }
+                  }}
+                >
+                  처음으로
+                </ControlButton>
+              </VideoControls>
+            </VideoContainer>
+            <InfoText>
+              이 동영상은 앱 시작 시 로딩 화면에 표시됩니다.
+            </InfoText>
+          </PreviewSection>
         )}
       </Container>
     </>
