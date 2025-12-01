@@ -8,20 +8,18 @@
     margin-left: auto;
     margin-right: auto;
     max-width: 600px;
-    background-color: #fdfdfd;
+    background-color: transparent;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
 }
 
-body.dark .diary-container:not(.diary-theme):not(.glass-theme) {
-    background-color: #202020;
-}
-
-body.glass .diary-container:not(.diary-theme) {
-    background: linear-gradient(135deg, #bfe9ff 0%, #a7c3ff 100%);
-    background-attachment: fixed;
+.diary-container::-webkit-scrollbar {
+    display: none;
 }
 
 .diary-container.diary-theme {
-    background: #faf8f3;
+    background-color: #faf8f3;
     background-image:
         repeating-linear-gradient(0deg,
             transparent,
