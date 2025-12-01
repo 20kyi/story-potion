@@ -118,7 +118,7 @@ const ActionButtonsContainer = styled.div`
 const ActionButton = styled.button`
   flex: 1;
   padding: 14px 20px;
-  border: none;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
@@ -128,7 +128,9 @@ const ActionButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(0,0,0,0.1)'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   
   &:active {
     transform: scale(0.98);
@@ -137,44 +139,34 @@ const ActionButton = styled.button`
   @media (min-width: 480px) {
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 4px 12px rgba(0,0,0,0.15)'};
     }
   }
 `;
 
 const ReadingModeButton = styled(ActionButton)`
-  background: ${({ $isGlassTheme, theme }) => {
-        if ($isGlassTheme) {
-            const primary = theme.primary || '#cb6565';
-            const r = parseInt(primary.slice(1, 3), 16);
-            const g = parseInt(primary.slice(3, 5), 16);
-            const b = parseInt(primary.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, 0.8)`;
-        }
+  background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
         return '#cb6565';
     }};
   color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#fff'};
-  box-shadow: ${({ $isGlassTheme, theme }) => {
-        if ($isGlassTheme) {
-            const primary = theme.primary || '#cb6565';
-            const r = parseInt(primary.slice(1, 3), 16);
-            const g = parseInt(primary.slice(3, 5), 16);
-            const b = parseInt(primary.slice(5, 7), 16);
-            return `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`;
-        }
+  border: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        return 'none';
+    }};
+  box-shadow: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
         return '0 4px 12px rgba(203, 101, 101, 0.3)';
     }};
   
   @media (min-width: 480px) {
     &:hover {
-      box-shadow: ${({ $isGlassTheme, theme }) => {
-        if ($isGlassTheme) {
-            const primary = theme.primary || '#cb6565';
-            const r = parseInt(primary.slice(1, 3), 16);
-            const g = parseInt(primary.slice(3, 5), 16);
-            const b = parseInt(primary.slice(5, 7), 16);
-            return `0 6px 16px rgba(${r}, ${g}, ${b}, 0.4)`;
-        }
+      background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        return '#cb6565';
+    }};
+      box-shadow: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
         return '0 6px 16px rgba(203, 101, 101, 0.4)';
     }};
     }
@@ -183,16 +175,17 @@ const ReadingModeButton = styled(ActionButton)`
 
 const DeleteButton = styled(ActionButton)`
   background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
-  color: #e46262;
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(228, 98, 98, 0.7)' : '1px solid #e46262'};
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#e46262'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid #e46262'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   
   @media (min-width: 480px) {
     &:hover {
       background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.25)' : 'rgba(228, 98, 98, 0.1)'};
-      box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(228, 98, 98, 0.3)' : '0 2px 8px rgba(228, 98, 98, 0.2)'};
+      border-color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.7)' : '#e46262'};
+      box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)' : '0 2px 8px rgba(228, 98, 98, 0.2)'};
     }
   }
 `;
