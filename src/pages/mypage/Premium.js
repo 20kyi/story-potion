@@ -222,38 +222,19 @@ const SubscriptionDetail = styled.div`
 
 const CancelButton = styled.button`
   padding: 10px 20px;
-  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
-    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
-    if ($isDiaryTheme) return 'transparent';
-    return 'transparent';
-  }};
-  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
-  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
-  color: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
-    if ($isGlassTheme) return '#000000';
-    if ($isDiaryTheme) return '#8B6F47';
-    return theme.mode === 'dark' ? '#ff6b6b' : '#e46262';
-  }};
-  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
-    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
-    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
-    return 'none';
-  }};
-  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: transparent;
+  color: #e46262;
+  border: none;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   margin-top: 8px;
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
 
   &:hover {
-    background: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
-      return theme.mode === 'dark' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(228, 98, 98, 0.1)';
-    }};
-    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
+    background: rgba(228, 98, 98, 0.1);
+    color: #e46262;
   }
 
   &:disabled {
@@ -816,9 +797,6 @@ function Premium({ user }) {
             Google Play Store에서 구독을 관리하실 수 있습니다.
           </SubscriptionDetail>
           <CancelButton
-            $isGlassTheme={isGlassTheme}
-            $isDiaryTheme={isDiaryTheme}
-            theme={theme}
             onClick={handleCancelPremium}
           >
             {t('premium_cancel_button') || '구독 관리'}
