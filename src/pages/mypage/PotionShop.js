@@ -31,9 +31,12 @@ const PointDisplay = styled.div`
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : theme.card};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '15px'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(0,0,0,0.1)'};
 `;
 
 const PointAmount = styled.div`
@@ -60,18 +63,20 @@ const PotionGrid = styled.div`
 `;
 
 const PotionCard = styled(motion.div)`
-  background: ${({ theme }) => theme.card};
-  border-radius: 13px;
+  background: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : theme.card};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid transparent'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '13px'};
   padding: 12px 8px 14px 8px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-  border: 1.5px solid transparent;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 1px 4px rgba(0,0,0,0.07)'};
   ${({ isSet }) => isSet && `grid-column: span 2;`}
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0,0,0,0.13)'};
   }
 `;
 
@@ -107,36 +112,42 @@ const PotionDescription = styled.div`
 `;
 
 const BuyButton = styled.button`
-  background-color: rgba(190, 71, 71, 0.62);
-  color: #fff;
-  border: none;
-  border-radius: 14px;
+  background-color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(190, 71, 71, 0.62)'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#fff'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '14px'};
   padding: 8px 0;
   font-size: 16px;
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: background-color 0.2s;
-  box-shadow: 0 2px 8px rgba(190, 71, 71, 0.08);
+  transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(190, 71, 71, 0.08)'};
   margin-top: 4px;
   &:hover, &:focus {
-    background-color: rgba(190, 71, 71, 0.82);
+    background-color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(190, 71, 71, 0.82)'};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(190, 71, 71, 0.08)'};
   }
   &:disabled {
-    background: #ccc;
-    color: #fff;
+    background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(204, 204, 204, 0.3)' : '#ccc'};
+    color: ${({ $isGlassTheme }) => $isGlassTheme ? '#666' : '#fff'};
     cursor: not-allowed;
     opacity: 0.7;
   }
 `;
 
 const InfoSection = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
+  background: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : theme.card};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '15px'};
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(0,0,0,0.1)'};
 `;
 
 const InfoTitle = styled.h3`
@@ -223,6 +234,8 @@ function PotionShop({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const isGlassTheme = actualTheme === 'glass';
   const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [ownedPotions, setOwnedPotions] = useState({});
@@ -354,7 +367,7 @@ function PotionShop({ user }) {
     <Container theme={theme}>
       <Header user={user} title={t('potion_shop')} />
 
-      <PointDisplay theme={theme}>
+      <PointDisplay theme={theme} $isGlassTheme={isGlassTheme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
@@ -362,7 +375,7 @@ function PotionShop({ user }) {
         <PointLabel theme={theme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
-      <InfoSection theme={theme}>
+      <InfoSection theme={theme} $isGlassTheme={isGlassTheme}>
         <InfoTitle theme={theme}>{t('potion_guide_title')}</InfoTitle>
         <InfoText theme={theme}>{t('potion_guide_item1')}</InfoText>
         <InfoText theme={theme}>{t('potion_guide_item2')}</InfoText>
@@ -383,15 +396,17 @@ function PotionShop({ user }) {
           <button
             onClick={() => navigate('/my/shop/charge')}
             style={{
-              background: '#e46262',
-              color: 'white',
-              border: 'none',
+              background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : '#e46262',
+              backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+              WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+              color: isGlassTheme ? '#000000' : 'white',
+              border: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
               borderRadius: '20px',
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(228, 98, 98, 0.3)'
+              boxShadow: isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(228, 98, 98, 0.3)'
             }}
           >
             {t('point_history_charge_button')}
@@ -404,13 +419,14 @@ function PotionShop({ user }) {
           <PotionCard
             key={potion.id}
             isSet={potion.isSet}
+            $isGlassTheme={isGlassTheme}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleBuyPotion(potion.id)}
             style={{
               cursor: currentPoints < potion.price || isLoading ? 'not-allowed' : 'pointer',
               opacity: currentPoints < potion.price || isLoading ? 0.5 : 1,
-              ...(potion.isSet ? {
+              ...(potion.isSet && !isGlassTheme ? {
                 background: 'linear-gradient(90deg, #ffe0ec 60%, #e0e7ff 100%)',
                 border: '2.5px solid #e462a0',
                 boxShadow: '0 4px 16px rgba(228,98,160,0.13)',
@@ -501,10 +517,12 @@ function PotionShop({ user }) {
               onClick={() => handleBuyThemeSet(set.id)}
               style={{
                 width: '100%',
-                background: theme.card,
-                borderRadius: 16,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-                border: '2px solid #e462a0',
+                background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : theme.card,
+                backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                borderRadius: isGlassTheme ? 24 : 16,
+                boxShadow: isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 12px rgba(0,0,0,0.07)',
+                border: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '2px solid #e462a0',
                 padding: '18px 14px 14px 14px',
                 cursor: 'pointer',
                 display: 'flex',

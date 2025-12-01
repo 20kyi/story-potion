@@ -30,12 +30,19 @@ const PointDisplay = styled.div`
   text-align: center;
   margin-bottom: 30px;
   padding: 24px 20px;
-  background: ${({ theme, $isDiaryTheme }) => {
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
     if ($isDiaryTheme) return '#fffef9';
     return theme.mode === 'dark' ? theme.card : '#ffffff';
   }};
-  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '16px 20px 18px 17px' : '16px';
+  }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) {
       return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     }
@@ -43,15 +50,16 @@ const PointDisplay = styled.div`
       ? '0 2px 8px rgba(0,0,0,0.18)'
       : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
   }};
-  border: ${({ theme, $isDiaryTheme }) => {
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
     if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
     return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
   }};
   position: relative;
-  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.2deg)' : 'none'};
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(0.2deg)' : 'none'};
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
     &::before {
       content: '';
       position: absolute;
@@ -86,12 +94,19 @@ const PointLabel = styled.div`
 const PotionDisplay = styled.div`
   margin-bottom: 30px;
   padding: 20px;
-  background: ${({ theme, $isDiaryTheme }) => {
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
     if ($isDiaryTheme) return '#fffef9';
     return theme.mode === 'dark' ? theme.card : '#ffffff';
   }};
-  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '16px 20px 18px 17px' : '16px'};
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '16px 20px 18px 17px' : '16px';
+  }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) {
       return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     }
@@ -99,15 +114,16 @@ const PotionDisplay = styled.div`
       ? '0 2px 8px rgba(0,0,0,0.18)'
       : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
   }};
-  border: ${({ theme, $isDiaryTheme }) => {
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
     if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
     return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
   }};
   position: relative;
-  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.1deg)' : 'none'};
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
     &::before {
       content: '';
       position: absolute;
@@ -163,9 +179,13 @@ const PotionCount = styled.div`
 
 const MenuGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-bottom: 30px;
+  
+  @media (max-width: 480px) {
+    gap: 12px;
+  }
 `;
 
 const MenuButton = styled.button`
@@ -173,15 +193,20 @@ const MenuButton = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: ${({ theme, $isDiaryTheme }) => {
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
     if ($isDiaryTheme) return '#fffef9';
     return theme.mode === 'dark' ? theme.card : '#ffffff';
   }};
-  border: ${({ theme, $isDiaryTheme }) => {
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
     if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
     return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
   }};
-  border-radius: ${({ $isDiaryTheme, index }) => {
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return '24px';
     if (!$isDiaryTheme) return '16px';
     const borderRadiuses = [
       '14px 18px 16px 15px',
@@ -194,7 +219,8 @@ const MenuButton = styled.button`
   padding: 20px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: ${({ theme, $isDiaryTheme }) => {
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
     if ($isDiaryTheme) {
       return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     }
@@ -205,13 +231,14 @@ const MenuButton = styled.button`
   text-align: center;
   position: relative;
   -webkit-tap-highlight-color: transparent;
-  transform: ${({ $isDiaryTheme, index }) => {
+  transform: ${({ $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return 'none';
     if (!$isDiaryTheme) return 'none';
     const rotations = [0.2, -0.3, 0.1, -0.2];
     return `rotate(${rotations[index % rotations.length] || 0}deg)`;
   }};
 
-  ${({ $isDiaryTheme }) => $isDiaryTheme && `
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
     &::before {
       content: '';
       position: absolute;
@@ -227,14 +254,16 @@ const MenuButton = styled.button`
   `}
 
   &:hover {
-    transform: ${({ theme, $isDiaryTheme, index }) => {
+    transform: ${({ theme, $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return 'translateY(-2px)';
     if ($isDiaryTheme) {
       const rotations = [0.2, -0.3, 0.1, -0.2];
       return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.98) translateY(-1px)`;
     }
     return theme.mode === 'dark' ? 'translateY(-2px)' : 'translateY(-3px)';
   }};
-    box-shadow: ${({ theme, $isDiaryTheme }) => {
+    box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
     if ($isDiaryTheme) {
       return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
     }
@@ -242,21 +271,24 @@ const MenuButton = styled.button`
       ? '0 4px 12px rgba(0,0,0,0.25)'
       : '0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
   }};
-    border-color: ${({ theme, $isDiaryTheme }) => {
+    border-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.6)';
     if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.3)';
     return theme.mode === 'dark' ? 'none' : '#e0e0e0';
   }};
   }
 
   &:active {
-    transform: ${({ theme, $isDiaryTheme, index }) => {
+    transform: ${({ theme, $isDiaryTheme, $isGlassTheme, index }) => {
+    if ($isGlassTheme) return 'scale(0.97)';
     if ($isDiaryTheme) {
       const rotations = [0.2, -0.3, 0.1, -0.2];
       return `rotate(${rotations[index % rotations.length] || 0}deg) scale(0.95)`;
     }
     return 'scale(0.97)';
   }};
-    background: ${({ theme, $isDiaryTheme }) => {
+    background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25)';
     if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
     return theme.mode === 'dark' ? '#2a2a2a' : '#f8f9fa';
   }};
@@ -276,13 +308,14 @@ const MenuIcon = styled.div`
 
 const MenuContent = styled.div`
   flex: 1;
+  margin-bottom: 8px;
 `;
 
 const MenuTitle = styled.div`
   font-size: 15px;
   font-weight: 600;
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
-  margin-bottom: 2px;
+  margin-bottom: 8px;
   word-break: keep-all;
   overflow-wrap: break-word;
 `;
@@ -311,6 +344,7 @@ function Shop({ user }) {
   const theme = useTheme();
   const { actualTheme } = useTheme();
   const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
   const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [ownedPotions, setOwnedPotions] = useState({});
@@ -338,7 +372,7 @@ function Shop({ user }) {
     <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
       <Header user={user} title={t('shop_title')} />
 
-      <PointDisplay theme={theme} $isDiaryTheme={isDiaryTheme}>
+      <PointDisplay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
@@ -347,7 +381,7 @@ function Shop({ user }) {
       </PointDisplay>
 
       {/* 보유 포션 표시 */}
-      <PotionDisplay theme={theme} $isDiaryTheme={isDiaryTheme}>
+      <PotionDisplay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
         <PotionLabel theme={theme} $isDiaryTheme={isDiaryTheme}>
           {t('current_potions') || '보유 포션'}
         </PotionLabel>
@@ -372,6 +406,7 @@ function Shop({ user }) {
         <MenuButton
           theme={theme}
           $isDiaryTheme={isDiaryTheme}
+          $isGlassTheme={isGlassTheme}
           index={0}
           onClick={() => navigate('/my/shop/charge')}
         >
@@ -389,6 +424,7 @@ function Shop({ user }) {
         <MenuButton
           theme={theme}
           $isDiaryTheme={isDiaryTheme}
+          $isGlassTheme={isGlassTheme}
           index={1}
           onClick={() => navigate('/my/potion-shop')}
         >
