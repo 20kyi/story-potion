@@ -1068,13 +1068,42 @@ function WriteDiary({ user }) {
         try {
             const key = getTempSaveKey(date);
             const saved = localStorage.getItem(key);
-            if (saved) {
-                return JSON.parse(saved);
+            if (!saved) return null;
+
+            const parsed = JSON.parse(saved);
+
+            // 빈 객체나 null이 아닌지 확인
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                // 잘못된 형식의 데이터는 삭제
+                localStorage.removeItem(key);
+                return null;
+            }
+
+            // 실제로 내용이 있는지 엄격하게 확인
+            const hasContent =
+                (parsed.content && typeof parsed.content === 'string' && parsed.content.trim().length > 0) ||
+                (parsed.title && typeof parsed.title === 'string' && parsed.title.trim().length > 0) ||
+                (parsed.imageData && Array.isArray(parsed.imageData) && parsed.imageData.length > 0) ||
+                (parsed.stickers && Array.isArray(parsed.stickers) && parsed.stickers.length > 0);
+
+            if (hasContent) {
+                return parsed;
+            } else {
+                // 내용이 없는 빈 데이터는 삭제
+                localStorage.removeItem(key);
+                return null;
             }
         } catch (error) {
             console.error('임시저장 불러오기 실패:', error);
+            // 파싱 에러가 발생하면 잘못된 데이터이므로 삭제
+            try {
+                const key = getTempSaveKey(date);
+                localStorage.removeItem(key);
+            } catch (e) {
+                // 삭제 실패는 무시
+            }
+            return null;
         }
-        return null;
     }, [user?.uid, getTempSaveKey]);
 
     // 임시저장 삭제 함수
@@ -1187,6 +1216,8 @@ function WriteDiary({ user }) {
             const date = new Date(location.state.selectedDate.replace(/-/g, '/'));
             setSelectedDate(date);
             fetchDiaryForDate(date);
+            // 날짜가 변경되면 초기 로드 상태로 리셋
+            isInitialLoad.current = true;
         } else {
             // URL 파라미터에서 날짜 처리 (기존 방식)
             const params = new URLSearchParams(location.search);
@@ -1196,9 +1227,18 @@ function WriteDiary({ user }) {
                 const date = new Date(dateParam.replace(/-/g, '/'));
                 setSelectedDate(date);
                 fetchDiaryForDate(date);
+                // 날짜가 변경되면 초기 로드 상태로 리셋
+                isInitialLoad.current = true;
             }
         }
     }, [location, user]);
+
+    // selectedDate가 변경될 때마다 isInitialLoad 리셋
+    useEffect(() => {
+        if (selectedDate) {
+            isInitialLoad.current = true;
+        }
+    }, [selectedDate]);
 
     // 페이지 진입 시 임시저장 확인 (fetchDiaryForDate 완료 후)
     useEffect(() => {
@@ -1217,7 +1257,8 @@ function WriteDiary({ user }) {
             // 기존 일기가 없고, 임시저장이 있으면 모달 표시
             if (querySnapshot.empty) {
                 const tempData = loadTempDiary(selectedDate);
-                if (tempData && isInitialLoad.current) {
+                // loadTempDiary에서 이미 내용 검증을 했으므로, null이 아니면 유효한 데이터
+                if (tempData) {
                     setHasTempSave(true);
                     setIsTempSaveModalOpen(true);
                 }
