@@ -135,7 +135,7 @@ const DiaryMeta = styled.div`
   gap: 24px;
   align-items: center;
   margin: 0;
-  min-height: 28px;
+  min-height: auto;
   font-size: 16px;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
@@ -586,18 +586,18 @@ function DiaryView({ user }) {
                                 <DiaryDate $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{formatDate(diary.date)}</DiaryDate>
                             </Card>
 
-                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme} $isMetaCard={true}>
                                 <DiaryMeta $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                     <span>
                                         {t('today_weather')}
                                         {diary.weather && weatherImageMap[diary.weather] && (
-                                            <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28 }} />
+                                            <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, alignSelf: 'center' }} />
                                         )}
                                     </span>
                                     <span>
                                         {t('today_mood')}
                                         {diary.emotion && emotionImageMap[diary.emotion] && (
-                                            <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 32, height: 32 }} />
+                                            <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 28, height: 28, alignSelf: 'center' }} />
                                         )}
                                     </span>
                                 </DiaryMeta>

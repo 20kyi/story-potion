@@ -125,7 +125,7 @@ const Card = styled.div`
   backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
   -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
   border-radius: ${props => props.$isGlassTheme ? '24px' : '12px'};
-  padding: 16px;
+  padding: ${props => props.$isMetaCard ? '10px 16px' : '16px'};
   margin-bottom: 16px;
   box-shadow: ${props => {
         if (props.$isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
@@ -166,7 +166,7 @@ const DiaryMeta = styled.div`
   gap: 24px;
   align-items: center;
   margin: 0;
-  min-height: 28px;
+  min-height: auto;
   font-size: 16px;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
@@ -2448,7 +2448,7 @@ function WriteDiary({ user }) {
                     <DiaryDate $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{formatDate(diary.date)}</DiaryDate>
                 </Card>
 
-                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme} $isMetaCard={true}>
                     <DiaryMeta $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                         <MetaLabel>
                             {!diary.weather ? (
@@ -2459,7 +2459,7 @@ function WriteDiary({ user }) {
                                     }}
                                     style={{
                                         width: '100%',
-                                        height: 44,
+                                        height: 32,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
@@ -2472,12 +2472,12 @@ function WriteDiary({ user }) {
                                     {t('today_weather')}
                                 </Button>
                             ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 32, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
                                     {t('today_weather')}
                                     <img
                                         src={weatherImageMap[diary.weather]}
                                         alt={diary.weather}
-                                        style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                        style={{ width: 28, height: 28, cursor: 'pointer', alignSelf: 'center', marginLeft: 8 }}
                                         onClick={(e) => {
                                             setIsWeatherSheetOpen(true);
                                             setIsEmotionSheetOpen(false);
@@ -2495,7 +2495,7 @@ function WriteDiary({ user }) {
                                     }}
                                     style={{
                                         width: '100%',
-                                        height: 44,
+                                        height: 32,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
@@ -2508,12 +2508,12 @@ function WriteDiary({ user }) {
                                     {t('today_mood')}
                                 </Button>
                             ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 32, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
                                     {t('today_mood')}
                                     <img
                                         src={emotionImageMap[diary.emotion]}
                                         alt={diary.emotion}
-                                        style={{ width: 36, height: 36, cursor: 'pointer', verticalAlign: 'middle', marginLeft: 8 }}
+                                        style={{ width: 28, height: 28, cursor: 'pointer', alignSelf: 'center', marginLeft: 8 }}
                                         onClick={(e) => {
                                             setIsEmotionSheetOpen(true);
                                             setIsWeatherSheetOpen(false);
