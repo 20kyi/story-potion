@@ -938,19 +938,66 @@ function NovelCreate({ user }) {
                     style={{
                         position: 'fixed',
                         top: 0, left: 0, width: '100vw', height: '100vh',
-                        background: 'rgba(255,255,255,0.97)',
+                        background: '#000000',
                         zIndex: 9999,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        overflow: 'hidden',
                     }}
                 >
-                    <img src="/app_logo/logo3.png" alt="로딩" style={{ width: 120, marginBottom: 32, animation: 'spin 1.5s linear infinite' }} />
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#e46262', marginBottom: 12, fontFamily: 'inherit' }}>
-                        소설을 만드는 중입니다...
+                    {/* 장르별 동영상 표시 */}
+                    {selectedGenre && (() => {
+                        const genreVideoMap = {
+                            '로맨스': '/videos/로맨스.mp4',
+                            '역사': '/videos/역사.mp4',
+                            '추리': '/videos/추리.mp4',
+                            '공포': '/videos/공포.mp4',
+                            '동화': '/videos/동화.mp4',
+                            '판타지': '/videos/판타지.mp4',
+                        };
+                        const videoSrc = genreVideoMap[selectedGenre];
+                        // 저장된 확대 비율 가져오기 (기본값: 1.2)
+                        const savedScale = parseFloat(localStorage.getItem('novelLoadingVideoScale') || '1.2');
+                        return videoSrc ? (
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                preload="auto"
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: `translate(-50%, -50%) scale(${savedScale})`,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    zIndex: 1,
+                                }}
+                            >
+                                <source src={videoSrc} type="video/mp4" />
+                            </video>
+                        ) : null;
+                    })()}
+
+                    {/* 로딩 텍스트 (동영상 위에 표시) */}
+                    <div style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                    }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#ffffff', marginBottom: 12, fontFamily: 'inherit', textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
+                            소설을 만드는 중입니다...
+                        </div>
+                        <div style={{ fontSize: 16, color: '#ffffff', textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>{loadingMessage}</div>
                     </div>
-                    <div style={{ fontSize: 16, color: '#888' }}>{loadingMessage}</div>
                     <style>{`
                         @keyframes spin {
                             0% { transform: rotate(0deg); }

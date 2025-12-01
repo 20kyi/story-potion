@@ -251,6 +251,9 @@ function LoadingScreen({ fullscreen = true, darkMode = false, text = '로딩 중
     };
   }, []);
 
+  // 저장된 확대 비율 가져오기 (기본값: 1.0)
+  const savedScale = parseFloat(localStorage.getItem('startLoadingVideoScale') || '1.0');
+
   return (
     <LoadingContainer fullscreen={fullscreen} darkMode={darkMode}>
       {/* 동영상은 항상 렌더링 (에러가 있을 때만 숨김) */}
@@ -264,7 +267,8 @@ function LoadingScreen({ fullscreen = true, darkMode = false, text = '로딩 중
           preload="auto"
           style={{
             opacity: videoReady ? 1 : 0,
-            transition: 'opacity 0.5s ease-in'
+            transition: 'opacity 0.5s ease-in',
+            transform: `translate(-50%, -50%) scale(${savedScale})`
           }}
         >
           <source src="/videos/책과포션.mp4" type="video/mp4" />
