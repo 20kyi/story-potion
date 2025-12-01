@@ -17,8 +17,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: transparent;
-  color: ${({ theme }) => theme.text};
+  background-color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   padding: 20px;
   margin-top: 60px;
   margin-bottom: 80px;
@@ -78,18 +78,18 @@ const FriendNickname = styled.div`
   font-size: 20px;
   font-weight: 700;
   text-align: center;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   margin-bottom: 8px;
 `;
 
 const FriendEmail = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.cardSubText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.cardSubText || '#888')};
   text-align: center;
 `;
 
 const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   font-size: 20px;
   font-weight: 700;
   text-align: center;
@@ -103,16 +103,63 @@ const NovelListWrapper = styled.div`
 `;
 
 const NovelItem = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 12px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '12px 16px 14px 13px' : '12px';
+  }};
   padding: 16px;
-  box-shadow: ${({ theme }) => theme.cardShadow};
-  border: 1px solid ${({ theme }) => theme.border};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : `1px solid ${theme.border || '#f0f0f0'}`;
+  }};
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: all 0.2s ease;
+  position: relative;
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
   &:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+      return '0 4px 16px rgba(0,0,0,0.10)';
+    }};
+    transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'translateY(-2px)';
+      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+      return 'translateY(-2px)';
+    }};
   }
+  
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const NovelCover = styled.img`
@@ -127,26 +174,34 @@ const NovelCover = styled.img`
 const NovelTitle = styled.div`
   font-size: 18px;
   font-weight: 600;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.primary;
+  }};
   margin-bottom: 6px;
 `;
 
 const NovelDate = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.cardSubText};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.cardSubText};
   margin-bottom: 6px;
 `;
 
 const NovelGenre = styled.div`
   font-size: 13px;
-  color: ${({ theme }) => theme.cardSubText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.cardSubText || '#888')};
   margin-bottom: 14px;
   font-weight: 500;
 `;
 
 const NovelContent = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.cardText};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.cardText;
+  }};
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
@@ -178,7 +233,11 @@ const LockOverlay = styled.div`
   pointer-events: auto;
   font-size: 16px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#333';
+  }};
   white-space: nowrap;
   text-align: center;
   cursor: pointer;
@@ -238,15 +297,37 @@ const FilterContainer = styled.div`
 
 const GenreSelect = styled.select`
   padding: 8px 12px;
-  background: ${({ theme }) => theme.card || '#fff'};
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+    return theme.mode === 'dark' ? '1px solid #444' : '1px solid #ddd';
+  }};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '20px';
+    return $isDiaryTheme ? '8px 12px 10px 9px' : '8px';
+  }};
   font-size: 14px;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.text || '#333';
+  }};
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
   outline: none;
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 1px 3px rgba(0, 0, 0, 0.05)';
+    return 'none';
+  }};
   
   &:hover {
     border-color: #cb6565;
@@ -254,12 +335,20 @@ const GenreSelect = styled.select`
   
   &:focus {
     border-color: #cb6565;
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return '0 0 0 3px rgba(203, 101, 101, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
+      if ($isDiaryTheme) return '0 0 0 2px rgba(203, 101, 101, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
+      return '0 0 0 2px rgba(203, 101, 101, 0.1)';
+    }};
   }
 `;
 
 function FriendNovelList({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { actualTheme } = theme;
+    const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     const { language } = useLanguage();
     const { t } = useTranslation();
     const [searchParams] = useSearchParams();
@@ -473,7 +562,7 @@ function FriendNovelList({ user }) {
     };
 
     return (
-        <Container theme={theme}>
+        <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
             <Header title={t('friend_novel_list_title')} />
             <ConfirmModal
                 open={confirmOpen}
@@ -490,9 +579,9 @@ function FriendNovelList({ user }) {
                 onClose={() => setAlertModal({ open: false, title: '', message: '' })}
             />
             {(!userId) ? (
-                <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
+                <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
             ) : isLoading ? (
-                <div style={{ textAlign: 'center', marginTop: 40 }}>{t('friend_novel_loading')}</div>
+                <div style={{ textAlign: 'center', color: isDiaryTheme ? '#5C4B37' : theme.text, marginTop: 40 }}>{t('friend_novel_loading')}</div>
             ) : (
                 <>
                     {/* 친구 프로필 섹션 */}
@@ -505,10 +594,10 @@ function FriendNovelList({ user }) {
                                     onError={(e) => handleImageError(e)}
                                 />
                             </ProfileContainer>
-                            <FriendNickname theme={theme}>
+                            <FriendNickname theme={theme} $isDiaryTheme={isDiaryTheme}>
                                 {t('friend_novel_owner_title', { name: friendInfo.displayName || 'User' })}
                             </FriendNickname>
-                            <FriendEmail theme={theme}>{friendInfo.email}</FriendEmail>
+                            <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>{friendInfo.email}</FriendEmail>
                         </FriendProfileSection>
                     )}
 
@@ -518,6 +607,8 @@ function FriendNovelList({ user }) {
                                 value={selectedGenre}
                                 onChange={(e) => setSelectedGenre(e.target.value)}
                                 theme={theme}
+                                $isDiaryTheme={isDiaryTheme}
+                                $isGlassTheme={isGlassTheme}
                             >
                                 <option value="all">
                                     {(() => {
@@ -542,13 +633,16 @@ function FriendNovelList({ user }) {
                     )}
                     <NovelListWrapper>
                         {filteredNovels.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#aaa', marginTop: 40 }}>
+                            <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>
                                 {novels.length === 0 ? t('friend_novel_empty') : (t('genre_no_novel') || '해당 장르의 소설이 없습니다.')}
                             </div>
                         ) : (
                             filteredNovels.map((novel) => (
                                 <NovelItem
                                     key={novel.id}
+                                    theme={theme}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
                                     onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`) : undefined}
                                     style={{
                                         display: 'flex',
@@ -562,8 +656,8 @@ function FriendNovelList({ user }) {
                                     <div style={{ display: 'flex', width: '100%', padding: 16 }}>
                                         <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
-                                            <NovelTitle>{novel.title}</NovelTitle>
-                                            <NovelDate>
+                                            <NovelTitle theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{novel.title}</NovelTitle>
+                                            <NovelDate theme={theme} $isDiaryTheme={isDiaryTheme}>
                                                 {language === 'en'
                                                     ? (() => {
                                                         const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
@@ -573,7 +667,7 @@ function FriendNovelList({ user }) {
                                                     : `${novel.month}월 ${novel.weekNum}주차 소설`}
                                             </NovelDate>
                                             {novel.genre && (
-                                                <NovelGenre>{getDisplayGenre(novel.genre)}</NovelGenre>
+                                                <NovelGenre theme={theme} $isDiaryTheme={isDiaryTheme}>{getDisplayGenre(novel.genre)}</NovelGenre>
                                             )}
                                             <NovelContentWrapper
                                                 $clickable={!purchased[novel.id]}
@@ -582,11 +676,11 @@ function FriendNovelList({ user }) {
                                                     handlePurchaseClick(novel);
                                                 } : undefined}
                                             >
-                                                <NovelContent $blurred={!purchased[novel.id]}>
+                                                <NovelContent $blurred={!purchased[novel.id]} theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                                     {novel.content}
                                                 </NovelContent>
                                                 {!purchased[novel.id] && (
-                                                    <LockOverlay>
+                                                    <LockOverlay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                                         <LockIcon>🔒</LockIcon>
                                                         <span>30P로 구매</span>
                                                     </LockOverlay>
