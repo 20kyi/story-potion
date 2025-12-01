@@ -1344,14 +1344,6 @@ const GlobalStyle = createGlobalStyle`
         font-family: ${props => props.fontFamily} !important;
     }
     
-    /* 폰트 크기 적용 - 모든 요소에 직접 적용 */
-    * {
-        font-size: ${props => props.fontSize}px !important;
-        -webkit-text-size-adjust: 100% !important;
-        -moz-text-size-adjust: 100% !important;
-        -ms-text-size-adjust: 100% !important;
-        text-size-adjust: 100% !important;
-    }
     
     /* 모든 요소가 시스템 폰트 크기 설정의 영향을 받지 않도록 강제 적용 */
     *, *::before, *::after {

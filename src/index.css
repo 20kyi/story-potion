@@ -6,7 +6,6 @@
 
 /* 시스템 폰트 크기 설정의 영향을 받지 않도록 설정 */
 html {
-    font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     -moz-text-size-adjust: 100% !important;
     -ms-text-size-adjust: 100% !important;
@@ -20,7 +19,6 @@ body {
     padding-right: env(safe-area-inset-right);
     box-sizing: border-box;
     font-family: inherit;
-    font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     -moz-text-size-adjust: 100% !important;
     -ms-text-size-adjust: 100% !important;
