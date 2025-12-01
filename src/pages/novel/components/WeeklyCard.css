@@ -176,6 +176,10 @@ body.dark .novel-date-range {
     min-width: auto;
 }
 
+.novel-create-button.glass-theme {
+    border-radius: 24px;
+}
+
 .novel-create-button.list-mode {
     width: 130px;
     min-width: 130px;
@@ -189,9 +193,12 @@ body.dark .novel-date-range {
     opacity: 0.6;
 }
 
-.novel-weekly-card.glass-theme .novel-create-button {
+.novel-create-button.glass-theme {
+    background: transparent !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: #000000 !important;
 }
 
 .novel-button-group {

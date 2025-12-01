@@ -47,9 +47,13 @@ const NovelCTACard = ({ isDiaryTheme, isGlassTheme, currentWeekDiariesForProgres
                     </div>
                     <div className={`novel-cta-progress-bar ${isGlassTheme ? 'glass-theme' : ''}`}>
                         <div
-                            className="novel-cta-progress-fill"
+                            className={`novel-cta-progress-fill ${isGlassTheme ? 'glass-theme' : ''} ${count === total && isGlassTheme ? 'completed' : ''}`}
                             style={{
-                                width: `${progress}%`
+                                width: `${progress}%`,
+                                ...(count === total && isGlassTheme ? {
+                                    background: '#d1c4e9',
+                                    border: '1px solid rgba(209, 196, 233, 0.6)'
+                                } : {})
                             }}
                         />
                     </div>

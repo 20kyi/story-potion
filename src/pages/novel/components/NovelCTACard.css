@@ -211,6 +211,20 @@ body.dark .novel-cta-progress-bar:not(.glass-theme) {
     background: linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%);
 }
 
-body.dark .novel-cta-progress-fill {
+body.dark .novel-cta-progress-fill:not(.glass-theme) {
     background: linear-gradient(90deg, #A67A7A 0%, #B88585 100%);
+}
+
+.novel-cta-progress-fill.glass-theme:not(.completed) {
+    background: linear-gradient(90deg, rgba(203, 101, 101, 0.4) 0%, rgba(212, 130, 130, 0.4) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(203, 101, 101, 0.3);
+}
+
+.novel-cta-progress-fill.glass-theme.completed {
+    background: #d1c4e9 !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(209, 196, 233, 0.6) !important;
 }

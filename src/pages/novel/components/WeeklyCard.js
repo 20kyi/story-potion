@@ -206,7 +206,7 @@ const WeeklyCard = ({
             <div style={isListMode ? { flexShrink: 0 } : {}}>
                 {firstNovel ? (
                     <button
-                        className={`novel-create-button ${isListMode ? 'list-mode' : ''}`}
+                        className={`novel-create-button ${isListMode ? 'list-mode' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
                         onClick={handleAddNovel}
                         disabled={allGenresCreated}
                         style={getCreateButtonStyle(
@@ -215,14 +215,15 @@ const WeeklyCard = ({
                             theme,
                             false,
                             allGenresCreated,
-                            isListMode
+                            isListMode,
+                            isGlassTheme
                         )}
                     >
                         {allGenresCreated ? "완성 ✨" : (!isPremium && novelsForWeek.length > 0 ? "👑 PREMIUM" : t('novel_create_other_genre'))}
                     </button>
                 ) : (
                     <button
-                        className={`novel-create-button ${isListMode ? 'list-mode' : ''}`}
+                        className={`novel-create-button ${isListMode ? 'list-mode' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
                         disabled={!isCompleted && (isFutureWeek || hasTodayDiary)}
                         onClick={handleButtonClick}
                         style={getCreateButtonStyle(

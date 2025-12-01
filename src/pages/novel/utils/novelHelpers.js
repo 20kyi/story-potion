@@ -34,6 +34,9 @@ export const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted
     }
     // 활성화된 진행도(hasDiary === true)는 불투명하게 유지
     if (isCompleted && hasDiary) {
+        if (isGlassTheme) {
+            return '#c4aded'; // 글래스 테마에서 완료 색상
+        }
         const gradient = 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
         return gradient; // 불투명 유지
     }
@@ -99,7 +102,7 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
         padding: isListMode ? '6px 12px' : '8px',
         fontSize: '14px',
         whiteSpace: 'nowrap',
-        borderRadius: '10px',
+        borderRadius: isGlassTheme ? '24px' : '10px',
         fontWeight: 700,
         fontFamily: 'inherit',
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -110,46 +113,94 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
     };
 
     if (disabled) {
-        const bg = theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
-        style.background = makeTransparent(bg);
-        style.color = theme.mode === 'dark' ? '#666666' : '#999999';
-        const borderColor = theme.mode === 'dark' ? '#3A3A3A' : '#CCCCCC';
-        style.border = `2px solid ${borderColor}`;
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const bg = theme.mode === 'dark' ? '#2A2A2A' : '#E5E5E5';
+            style.background = makeTransparent(bg);
+            style.color = theme.mode === 'dark' ? '#666666' : '#999999';
+            const borderColor = theme.mode === 'dark' ? '#3A3A3A' : '#CCCCCC';
+            style.border = `2px solid ${borderColor}`;
+        }
     } else if (isFree) {
-        style.background = 'transparent';
-        style.color = '#e4a30d';
-        style.border = `2px solid #e4a30d`;
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            style.background = 'transparent';
+            style.color = '#e4a30d';
+            style.border = `2px solid #e4a30d`;
+        }
     } else if (childrenStr.includes('PREMIUM')) {
-        const bg = theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)';
-        style.background = makeTransparent(bg);
-        style.color = theme.premiumBannerText || '#8B4513';
-        style.border = 'none';
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const bg = theme.premiumBannerBg || 'linear-gradient(135deg, #ffe29f 0%, #ffc371 100%)';
+            style.background = makeTransparent(bg);
+            style.color = theme.premiumBannerText || '#8B4513';
+            style.border = 'none';
+        }
     } else if (children === '일기 채우기' || children === 'Write diary') {
-        const bg = theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA';
-        style.background = isGlassTheme ? makeTransparent(bg) : bg;
-        style.color = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        const borderColor = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
-        style.border = `2px solid ${borderColor}`;
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const bg = theme.mode === 'dark' ? '#3A3A3A' : '#F5F6FA';
+            style.background = bg;
+            style.color = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
+            const borderColor = theme.mode === 'dark' ? '#BFBFBF' : '#868E96';
+            style.border = `2px solid ${borderColor}`;
+        }
     } else if (childrenStr.includes('다른 장르') || childrenStr.includes('Other Genre') || childrenStr.includes('other genre')) {
-        style.background = isGlassTheme ? 'rgba(201, 154, 154, 0.3)' : 'transparent';
-        style.color = '#C99A9A';
-        style.border = `2px solid #C99A9A`;
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            style.background = 'transparent';
+            style.color = '#C99A9A';
+            style.border = `2px solid #C99A9A`;
+        }
     } else if (children === 'AI 소설 쓰기' || children === 'Create novel' || children === '완성 ✨') {
-        const bg = theme.mode === 'dark' ? '#3A3A3A' : '#fdfdfd';
-        style.background = makeTransparent(bg);
-        style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-        const borderColor = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-        style.border = `2px solid ${borderColor}`;
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const bg = theme.mode === 'dark' ? '#3A3A3A' : '#fdfdfd';
+            style.background = makeTransparent(bg);
+            style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+            const borderColor = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+            style.border = `2px solid ${borderColor}`;
+        }
     } else if (children === '소설 보기') {
-        const primaryColor = theme.primary || '#cb6565';
-        style.background = makeTransparent(primaryColor);
-        style.color = '#fff';
-        style.border = 'none';
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const primaryColor = theme.primary || '#cb6565';
+            style.background = makeTransparent(primaryColor);
+            style.color = '#fff';
+            style.border = 'none';
+        }
     } else {
-        const primaryColor = theme.primary || '#cb6565';
-        style.background = makeTransparent(primaryColor);
-        style.color = '#fff';
-        style.border = 'none';
+        if (isGlassTheme) {
+            style.background = 'transparent';
+            style.color = '#000000';
+            style.border = `2px solid rgba(255, 255, 255, 0.5)`;
+        } else {
+            const primaryColor = theme.primary || '#cb6565';
+            style.background = makeTransparent(primaryColor);
+            style.color = '#fff';
+            style.border = 'none';
+        }
     }
 
     return style;
