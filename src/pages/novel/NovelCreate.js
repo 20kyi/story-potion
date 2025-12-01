@@ -958,8 +958,16 @@ function NovelCreate({ user }) {
                             '판타지': '/videos/판타지.mp4',
                         };
                         const videoSrc = genreVideoMap[selectedGenre];
-                        // 저장된 확대 비율 가져오기 (기본값: 1.2)
-                        const savedScale = parseFloat(localStorage.getItem('novelLoadingVideoScale') || '1.2');
+                        // 저장된 확대 비율 가져오기 (장르별)
+                        const savedScale = (() => {
+                            try {
+                                const { getNovelLoadingVideoScale } = require('../config/videoScaleConfig');
+                                return getNovelLoadingVideoScale(selectedGenre);
+                            } catch (e) {
+                                // 설정 파일이 없으면 기본값 사용
+                                return 1.2;
+                            }
+                        })();
                         return videoSrc ? (
                             <video
                                 autoPlay

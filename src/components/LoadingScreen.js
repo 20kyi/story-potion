@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { getStartLoadingVideoScale } from '../config/videoScaleConfig';
 
 // 로딩 애니메이션 정의
 const pulse = keyframes`
@@ -251,8 +252,8 @@ function LoadingScreen({ fullscreen = true, darkMode = false, text = '로딩 중
     };
   }, []);
 
-  // 저장된 확대 비율 가져오기 (기본값: 1.0)
-  const savedScale = parseFloat(localStorage.getItem('startLoadingVideoScale') || '1.0');
+  // 저장된 확대 비율 가져오기
+  const savedScale = getStartLoadingVideoScale();
 
   return (
     <LoadingContainer fullscreen={fullscreen} darkMode={darkMode}>

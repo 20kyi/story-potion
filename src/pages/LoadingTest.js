@@ -255,12 +255,21 @@ function LoadingTest({ user }) {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [fullscreenGenreIndex, setFullscreenGenreIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const getDeviceTypeForState = (width) => {
+    if (width <= 480) return 'mobile';
+    if (width <= 1024) return 'tablet';
+    return 'desktop';
+  };
+
   const [videoScale, setVideoScale] = useState(() => {
-    const saved = localStorage.getItem('novelLoadingVideoScale');
+    const deviceType = getDeviceTypeForState(window.innerWidth);
+    const saved = localStorage.getItem(`novelLoadingVideoScale_${deviceType}`);
     return saved ? parseFloat(saved) : 1.2;
   });
   const [startVideoScale, setStartVideoScale] = useState(() => {
-    const saved = localStorage.getItem('startLoadingVideoScale');
+    const deviceType = getDeviceTypeForState(window.innerWidth);
+    const saved = localStorage.getItem(`startLoadingVideoScale_${deviceType}`);
     return saved ? parseFloat(saved) : 1.0;
   });
   const [testWidth, setTestWidth] = useState(window.innerWidth);
@@ -385,15 +394,14 @@ function LoadingTest({ user }) {
     }
   };
 
-  const handleSaveNovelVideoScale = () => {
-    localStorage.setItem('novelLoadingVideoScale', videoScale.toString());
-    alert(`소설 생성 로딩 동영상 확대 비율이 ${videoScale.toFixed(1)}x로 저장되었습니다!`);
+  const getDeviceType = () => {
+    const width = testWidth;
+    if (width <= 480) return 'mobile';
+    if (width <= 1024) return 'tablet';
+    return 'desktop';
   };
 
-  const handleSaveStartVideoScale = () => {
-    localStorage.setItem('startLoadingVideoScale', startVideoScale.toString());
-    alert(`앱 시작 로딩 동영상 확대 비율이 ${startVideoScale.toFixed(1)}x로 저장되었습니다!`);
-  };
+
 
   // ESC 키로 닫기
   useEscapeKey(handleCloseFullscreenGenre, showFullscreenGenre);
@@ -741,13 +749,6 @@ function LoadingTest({ user }) {
                     onChange={(e) => setStartVideoScale(Number(e.target.value))}
                   />
                 </div>
-                <TestButton
-                  variant="primary"
-                  onClick={handleSaveStartVideoScale}
-                  style={{ marginTop: '12px', width: '100%' }}
-                >
-                  이 확대 비율 저장 (앱 시작 로딩 화면에 적용)
-                </TestButton>
               </SizeControl>
             </div>
 
@@ -935,13 +936,6 @@ function LoadingTest({ user }) {
                     onChange={(e) => setVideoScale(Number(e.target.value))}
                   />
                 </div>
-                <TestButton
-                  variant="primary"
-                  onClick={handleSaveNovelVideoScale}
-                  style={{ marginTop: '12px', width: '100%' }}
-                >
-                  이 확대 비율 저장 (소설 생성 로딩 화면에 적용)
-                </TestButton>
               </SizeControl>
             </div>
 
