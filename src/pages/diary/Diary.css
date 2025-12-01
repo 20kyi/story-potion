@@ -1026,6 +1026,7 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
     margin-bottom: 4px;
     gap: 6px;
     position: relative;
+    padding-left: 8px;
 }
 
 .diary-weekly-day-name {
