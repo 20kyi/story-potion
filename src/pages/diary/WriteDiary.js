@@ -702,13 +702,21 @@ const StickerButton = styled.button`
   right: 20px;
   width: 56px;
   height: 56px;
-  background: #cb6565;
-  border: none;
+  background: ${props => props.$isGlassTheme
+        ? 'rgba(255, 255, 255, 0.2)'
+        : '#cb6565'};
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${props => props.$isGlassTheme
+        ? '2px solid rgba(255, 255, 255, 0.5)'
+        : 'none'};
   border-radius: 50%;
-  color: white;
+  color: ${props => props.$isGlassTheme ? '#000000' : 'white'};
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(203, 101, 101, 0.3);
+  box-shadow: ${props => props.$isGlassTheme
+        ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
+        : '0 4px 12px rgba(203, 101, 101, 0.3)'};
   transition: all 0.2s ease;
   z-index: 100;
   display: flex;
@@ -716,9 +724,13 @@ const StickerButton = styled.button`
   justify-content: center;
   
   &:hover {
-    background: #a54a4a;
+    background: ${props => props.$isGlassTheme
+        ? 'rgba(255, 255, 255, 0.3)'
+        : '#a54a4a'};
     transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(203, 101, 101, 0.4);
+    box-shadow: ${props => props.$isGlassTheme
+        ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)'
+        : '0 6px 16px rgba(203, 101, 101, 0.4)'};
   }
   
   &:active {
@@ -858,20 +870,43 @@ const UploadLabel = styled.label`
   width: 100px;
   height: 100px;
   flex-shrink: 0;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd'};
-  color: ${({ theme }) => theme.mode === 'dark' ? '#ccc' : '#666'};
+  border-radius: ${props => props.$isGlassTheme ? '12px' : '8px'};
+  background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd';
+    }};
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        return theme.mode === 'dark' ? '#ccc' : '#666';
+    }};
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  border: 2px dashed ${({ theme }) => theme.mode === 'dark' ? '#4a4a4a' : '#ddd'};
-  box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.1)'};
-  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  border: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px dashed rgba(255, 255, 255, 0.5)';
+        return `2px dashed ${theme.mode === 'dark' ? '#4a4a4a' : '#ddd'}`;
+    }};
+  box-shadow: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        return theme.mode === 'dark' ? '0 2px 6px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.1)';
+    }};
+  transition: all 0.2s;
   font-family: inherit;
   &:hover {
-    background: ${({ theme }) => theme.mode === 'dark' ? '#3a3a3a' : '#e8e8e8'};
-    box-shadow: ${({ theme }) => theme.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.15)'};
-    border-color: ${({ theme }) => theme.mode === 'dark' ? '#5a5a5a' : '#bbb'};
+    background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        return theme.mode === 'dark' ? '#3a3a3a' : '#e8e8e8';
+    }};
+    box-shadow: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        return theme.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.15)';
+    }};
+    border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        return theme.mode === 'dark' ? '#5a5a5a' : '#bbb';
+    }};
   }
   & > .icon {
     font-size: 28px;
@@ -1973,17 +2008,26 @@ function WriteDiary({ user }) {
         },
         // 저장 버튼
         actionButton: {
-            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.7)' : 'rgba(190, 71, 71, 0.62)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '14px',
+            backgroundColor: isGlassTheme
+                ? 'rgba(255, 255, 255, 0.2)'
+                : isDiaryTheme
+                    ? 'rgba(139, 111, 71, 0.7)'
+                    : 'rgba(190, 71, 71, 0.62)',
+            backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+            WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+            color: isGlassTheme ? '#000000' : '#ffffff',
+            border: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
+            borderRadius: isGlassTheme ? '24px' : '14px',
             padding: '8px 15px',
             fontSize: '14px',
             fontFamily: 'Source Sans Pro',
             minHeight: '36px',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease'
+            transition: 'all 0.2s ease',
+            boxShadow: isGlassTheme
+                ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                : 'none'
         },
         // 삭제 버튼
         deleteButton: {
@@ -2667,7 +2711,7 @@ function WriteDiary({ user }) {
                         ))}
                         {/* 사진 추가 버튼 */}
                         {((isPremium || imageLimitExtended) && imagePreview.length < 4) || (!(isPremium || imageLimitExtended) && imagePreview.length < 1) ? (
-                            <UploadLabel htmlFor="image-upload">
+                            <UploadLabel htmlFor="image-upload" $isGlassTheme={isGlassTheme}>
                                 <span className="icon">📸</span>
                                 {t('image_add')}
                             </UploadLabel>
@@ -2894,24 +2938,36 @@ function WriteDiary({ user }) {
                                 alignItems: 'center',
                                 gap: '8px',
                                 padding: '10px 20px',
-                                backgroundColor: isDark ? '#3a3a3a' : '#fff',
-                                border: `1px solid ${isDark ? '#555' : '#ddd'}`,
-                                borderRadius: '8px',
-                                color: isDark ? '#fff' : '#222',
+                                backgroundColor: isGlassTheme
+                                    ? 'rgba(255, 255, 255, 0.2)'
+                                    : (isDark ? '#3a3a3a' : '#fff'),
+                                backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                                WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                                border: isGlassTheme
+                                    ? '2px solid rgba(255, 255, 255, 0.5)'
+                                    : `1px solid ${isDark ? '#555' : '#ddd'}`,
+                                borderRadius: isGlassTheme ? '24px' : '8px',
+                                color: isGlassTheme ? '#000000' : (isDark ? '#fff' : '#222'),
                                 fontSize: '14px',
                                 fontWeight: 500,
                                 cursor: (isEnhancing || isSubmitting) ? 'not-allowed' : 'pointer',
                                 opacity: (isEnhancing || isSubmitting) ? 0.6 : 1,
                                 transition: 'all 0.2s',
-                                boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)'
+                                boxShadow: isGlassTheme
+                                    ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                                    : (isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)')
                             }}
                             onMouseEnter={(e) => {
                                 if (!isEnhancing && !isSubmitting) {
-                                    e.target.style.backgroundColor = isDark ? '#4a4a4a' : '#fdfdfd';
+                                    e.target.style.backgroundColor = isGlassTheme
+                                        ? 'rgba(255, 255, 255, 0.3)'
+                                        : (isDark ? '#4a4a4a' : '#fdfdfd');
                                 }
                             }}
                             onMouseLeave={(e) => {
-                                e.target.style.backgroundColor = isDark ? '#3a3a3a' : '#fff';
+                                e.target.style.backgroundColor = isGlassTheme
+                                    ? 'rgba(255, 255, 255, 0.2)'
+                                    : (isDark ? '#3a3a3a' : '#fff');
                             }}
                         >
                             {isEnhancing ? (
@@ -2935,22 +2991,34 @@ function WriteDiary({ user }) {
                                 alignItems: 'center',
                                 gap: '8px',
                                 padding: '10px 20px',
-                                backgroundColor: isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)',
-                                border: `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(255, 209, 111, 0.3)'}`,
-                                borderRadius: '8px',
-                                color: isDark ? '#ff9f9f' : '#cb6565',
+                                backgroundColor: isGlassTheme
+                                    ? 'rgba(255, 255, 255, 0.2)'
+                                    : (isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)'),
+                                backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                                WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+                                border: isGlassTheme
+                                    ? '2px solid rgba(255, 255, 255, 0.5)'
+                                    : `1px solid ${isDark ? 'rgba(203, 101, 101, 0.3)' : 'rgba(255, 209, 111, 0.3)'}`,
+                                borderRadius: isGlassTheme ? '24px' : '8px',
+                                color: isGlassTheme ? '#000000' : (isDark ? '#ff9f9f' : '#cb6565'),
                                 fontSize: '14px',
                                 fontWeight: 500,
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
-                                boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)'
+                                boxShadow: isGlassTheme
+                                    ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                                    : (isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)')
                             }}
                             onMouseEnter={(e) => {
-                                e.target.style.backgroundColor = isDark ? 'rgba(203, 101, 101, 0.2)' : 'rgba(255, 209, 111, 0.2)';
+                                e.target.style.backgroundColor = isGlassTheme
+                                    ? 'rgba(255, 255, 255, 0.3)'
+                                    : (isDark ? 'rgba(203, 101, 101, 0.2)' : 'rgba(255, 209, 111, 0.2)');
                                 e.target.style.transform = 'translateY(-1px)';
                             }}
                             onMouseLeave={(e) => {
-                                e.target.style.backgroundColor = isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)';
+                                e.target.style.backgroundColor = isGlassTheme
+                                    ? 'rgba(255, 255, 255, 0.2)'
+                                    : (isDark ? 'rgba(203, 101, 101, 0.1)' : 'rgba(255, 209, 111, 0.1)');
                                 e.target.style.transform = 'translateY(0)';
                             }}
                         >
@@ -3022,14 +3090,17 @@ function WriteDiary({ user }) {
                 )}
 
                 {/* 플로팅 스티커 버튼 */}
-                <StickerButton onClick={() => {
-                    if (!isPremium) {
-                        toast.showToast(t('premium_required'), 'info');
-                        navigate('/my/premium');
-                        return;
-                    }
-                    setIsStickerPanelOpen(true);
-                }}>
+                <StickerButton
+                    $isGlassTheme={isGlassTheme}
+                    onClick={() => {
+                        if (!isPremium) {
+                            toast.showToast(t('premium_required'), 'info');
+                            navigate('/my/premium');
+                            return;
+                        }
+                        setIsStickerPanelOpen(true);
+                    }}
+                >
                     🎨
                 </StickerButton>
             </main>
