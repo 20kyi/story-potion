@@ -17,7 +17,7 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background-color: transparent;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   padding: 20px;
   margin-top: 60px;
   margin-bottom: 80px;
@@ -89,10 +89,16 @@ const ActionButtonsContainer = styled.div`
 
 const Select = styled.select`
   padding: 12px 16px;
-  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.card || '#fff'};
-  color: ${({ theme }) => theme.text || '#333'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid'};
+  border-color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.5)' : (theme.border || '#ddd')};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.card || '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : (theme.text || '#333')};
   font-size: 14px;
   cursor: pointer;
   flex: 1;
@@ -100,17 +106,18 @@ const Select = styled.select`
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  background-image: ${({ theme }) => {
-        const arrowColor = theme.mode === 'dark' ? '%23ccc' : '%23333';
+  background-image: ${({ theme, $isGlassTheme }) => {
+        const arrowColor = $isGlassTheme ? '%23000000' : (theme.mode === 'dark' ? '%23ccc' : '%23333');
         return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${arrowColor}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`;
     }};
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 12px;
   padding-right: 36px;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.primary || '#cb6565'};
+    border-color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.7)' : (theme.primary || '#cb6565')};
   }
 `;
 
@@ -121,76 +128,155 @@ const ViewToggleRight = styled.div`
   justify-content: flex-end;
 `;
 
-const ToggleButton = styled.button`
-  padding: 10px;
-  background: ${props => props.$active ? '#cb6565' : 'transparent'};
-  border: 1px solid ${props => props.$active ? '#cb6565' : '#ddd'};
-  border-radius: 8px;
+const ViewToggleButton = styled.button`
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 24px;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid'};
+  border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        return theme.primary || '#cb6565';
+    }};
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
+  transition: all 0.3s ease;
+  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  min-width: 90px;
+  height: 36px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  
+  @media (min-width: 480px) {
+    font-size: 13px;
+    min-width: 100px;
+    height: 36px;
+  }
+`;
+
+const ToggleOption = styled.span`
+  position: relative;
+  z-index: 2;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  touch-action: manipulation;
-  
-  &:hover {
-    background: ${props => props.$active ? '#cb6565' : '#fdfdfd'};
-    border-color: ${props => props.$active ? '#cb6565' : '#cb6565'};
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
+  padding: 4px 12px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
   
   svg {
-    stroke: ${props => props.$active ? '#fff' : '#888'};
-    transition: stroke 0.2s;
+    transition: stroke 0.3s ease;
+    stroke: ${({ $active, $isGlassTheme }) => {
+        if ($active && $isGlassTheme) return '#000000';
+        if ($active) return '#fff';
+        if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+        return '#888';
+    }};
   }
+`;
+
+const ToggleSlider = styled.span`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  z-index: 1;
+  transform: ${({ $isList }) => $isList ? 'translateX(100%)' : 'translateX(0)'};
+  background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        return 'rgba(203, 101, 101, 0.25)';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.4)' : 'none'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   
-  &:hover svg {
-    stroke: ${props => props.$active ? '#fff' : '#cb6565'};
+  ${ViewToggleButton}:hover & {
+    background: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        return 'rgba(203, 101, 101, 0.35)';
+    }};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 `;
 
 const NovelListWrapper = styled.div`
   display: ${props => props.$viewMode === 'card' ? 'grid' : 'flex'};
-  grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(2, 1fr)' : 'none'};
+  grid-template-columns: ${props => props.$viewMode === 'card' ? 'repeat(3, 1fr)' : 'none'};
   flex-direction: ${props => props.$viewMode === 'list' ? 'column' : 'row'};
-  gap: 20px;
+  gap: ${props => props.$viewMode === 'card' ? '10px' : '20px'};
   padding-bottom: 20px;
 `;
 
 const NovelItem = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 12px;
-  padding: ${props => props.$viewMode === 'card' ? '20px' : '16px'};
-  box-shadow: ${({ theme }) => theme.cardShadow};
-  border: 1px solid ${({ theme, $selected }) => $selected ? '#cb6565' : theme.border};
+  background: ${({ theme, $isGlassTheme, $viewMode }) => {
+        if ($viewMode === 'card') return 'transparent';
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.card;
+    }};
+  backdrop-filter: ${({ $isGlassTheme, $viewMode }) => ($isGlassTheme && $viewMode !== 'card') ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme, $viewMode }) => ($isGlassTheme && $viewMode !== 'card') ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isGlassTheme, $viewMode }) => {
+        if ($viewMode === 'card') return '0';
+        return $isGlassTheme ? '24px' : '12px';
+    }};
+  padding: ${props => props.$viewMode === 'card' ? '0' : '16px'};
+  box-shadow: ${({ theme, $isGlassTheme, $selected, $viewMode }) => {
+        if ($viewMode === 'card') return 'none';
+        if ($isGlassTheme) {
+            if ($selected) return '0 8px 24px rgba(203, 101, 101, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15)';
+            return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        }
+        return theme.cardShadow;
+    }};
+  border: ${({ theme, $selected, $isGlassTheme, $viewMode }) => {
+        if ($viewMode === 'card') return 'none';
+        if ($isGlassTheme) {
+            if ($selected) return '2px solid rgba(203, 101, 101, 0.8)';
+            return '2px solid rgba(255, 255, 255, 0.5)';
+        }
+        if ($selected) return '1px solid #cb6565';
+        return `1px solid ${theme.border}`;
+    }};
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: ${props => props.$viewMode === 'card' ? 'transform 0.15s' : 'box-shadow 0.15s'};
   display: flex;
   flex-direction: ${props => props.$viewMode === 'card' ? 'column' : 'row'};
   align-items: ${props => props.$viewMode === 'card' ? 'center' : 'center'};
-  gap: ${props => props.$viewMode === 'card' ? '12px' : '16px'};
+  gap: ${props => props.$viewMode === 'card' ? '8px' : '16px'};
   width: 100%;
   position: relative;
   &:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    ${props => {
+        if (props.$viewMode === 'card') {
+            return 'transform: scale(1.02);';
+        }
+        if (props.$isGlassTheme) {
+            return 'box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12);';
+        }
+        return 'box-shadow: 0 4px 16px rgba(0,0,0,0.10);';
+    }}
   }
 `;
 
 const NovelCover = styled.img`
   width: ${props => props.$viewMode === 'card' ? '100%' : '80px'};
-  max-width: ${props => props.$viewMode === 'card' ? '180px' : '80px'};
+  max-width: ${props => props.$viewMode === 'card' ? 'none' : '80px'};
   aspect-ratio: 2/3;
   height: ${props => props.$viewMode === 'card' ? 'auto' : '120px'};
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: ${props => props.$viewMode === 'card' ? '8px' : '12px'};
   background: #E5E5E5;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${props => props.$viewMode === 'card' ? 'none' : '0 2px 8px rgba(0,0,0,0.1)'};
   flex-shrink: 0;
 `;
 
@@ -199,34 +285,36 @@ const NovelInfo = styled.div`
   flex-direction: column;
   align-items: ${props => props.$viewMode === 'card' ? 'center' : 'flex-start'};
   justify-content: ${props => props.$viewMode === 'card' ? 'flex-start' : 'center'};
-  gap: 8px;
+  gap: ${props => props.$viewMode === 'card' ? '3px' : '8px'};
   flex: 1;
   width: 100%;
 `;
 
 const NovelTitle = styled.div`
-  font-size: 15px;
-  color: ${({ theme }) => theme.text};
+  font-size: ${props => props.$viewMode === 'card' ? '13px' : '15px'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: ${props => props.$viewMode === 'card' ? '0' : '4px'};
   text-align: ${props => props.$viewMode === 'card' ? 'center' : 'left'};
   word-break: keep-all;
   overflow-wrap: anywhere;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: ${props => props.$viewMode === 'card' ? '1' : '2'};
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
 `;
 
 const NovelMeta = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.cardSubText || '#666'};
+  font-size: ${props => props.$viewMode === 'card' ? '11px' : '12px'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#666')};
   display: flex;
   justify-content: ${props => props.$viewMode === 'card' ? 'center' : 'space-between'};
   align-items: center;
   width: 100%;
   gap: ${props => props.$viewMode === 'card' ? '8px' : '0'};
+  margin-bottom: ${props => props.$viewMode === 'card' ? '4px' : '0'};
 `;
 
 const PurchaseBadge = styled.span`
@@ -241,38 +329,93 @@ const PurchaseBadge = styled.span`
 const EmptyMessage = styled.div`
   text-align: center;
   padding: 60px 20px;
-  color: ${({ theme }) => theme.cardSubText || '#999'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#999')};
   font-size: 16px;
 `;
 
 const PublicToggleButton = styled.button`
-  width: 50px;
-  height: 28px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
   position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 24px;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid'};
+  border-color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        return theme.primary || '#cb6565';
+    }};
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.3s ease;
-  background-color: ${({ active }) => active ? '#cb6565' : '#ccc'};
+  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  min-width: 70px;
+  height: 28px;
+  overflow: hidden;
   flex-shrink: 0;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+`;
+
+const PublicToggleOption = styled.span`
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-size: 11px;
+  color: ${({ $active, $isGlassTheme, theme }) => {
+        if ($active && $isGlassTheme) return '#000000';
+        if ($active) return '#fff';
+        if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+        return theme.mode === 'dark' ? '#aaa' : '#888';
+    }};
+`;
+
+const PublicToggleSlider = styled.span`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  z-index: 1;
+  transform: ${({ $isPublic }) => $isPublic ? 'translateX(0)' : 'translateX(100%)'};
+  background: ${({ $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        const primary = theme.primary || '#cb6565';
+        const r = parseInt(primary.slice(1, 3), 16);
+        const g = parseInt(primary.slice(3, 5), 16);
+        const b = parseInt(primary.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, 0.25)`;
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.4)' : 'none'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   
-  &::after {
-    content: '';
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: white;
-    top: 2px;
-    left: ${({ active }) => active ? '24px' : '2px'};
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  ${PublicToggleButton}:hover & {
+    background: ${({ $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        const primary = theme.primary || '#cb6565';
+        const r = parseInt(primary.slice(1, 3), 16);
+        const g = parseInt(primary.slice(3, 5), 16);
+        const b = parseInt(primary.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, 0.35)`;
+    }};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 `;
 
 const PublicStatus = styled.div`
   font-size: 12px;
-  color: ${({ theme }) => theme.cardSubText || '#666'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#666')};
   display: flex;
   align-items: center;
   gap: 8px;
@@ -283,11 +426,22 @@ const BatchActionBar = styled.div`
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: ${({ theme }) => theme.card || '#fff'};
-  border-radius: 12px;
+  background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        return theme.card || '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '12px'};
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
+  box-shadow: ${({ $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        return '0 2px 8px rgba(0,0,0,0.08)';
+    }};
+  border: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        return `1px solid ${theme.border || '#f0f0f0'}`;
+    }};
 `;
 
 const BatchActionTop = styled.div`
@@ -316,7 +470,7 @@ const Checkbox = styled.input`
 
 const BatchActionText = styled.span`
   font-size: 15px;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : (theme.text || '#333')};
   font-weight: 500;
 `;
 
@@ -431,10 +585,31 @@ const PaginationContainer = styled.div`
 
 const PaginationButton = styled.button`
   padding: 10px 16px;
-  border: 1px solid ${({ theme }) => theme.border || '#ddd'};
-  border-radius: 8px;
-  background: ${({ theme, $active }) => $active ? '#cb6565' : theme.card || '#fff'};
-  color: ${({ $active }) => $active ? '#fff' : '#333'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid'};
+  border-color: ${({ theme, $isGlassTheme, $active }) => {
+        if ($isGlassTheme) {
+            if ($active) return 'rgba(203, 101, 101, 0.8)';
+            return 'rgba(255, 255, 255, 0.5)';
+        }
+        if ($active) return '#cb6565';
+        return theme.border || '#ddd';
+    }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ theme, $active, $isGlassTheme }) => {
+        if ($isGlassTheme) {
+            if ($active) return 'rgba(203, 101, 101, 0.8)';
+            return 'rgba(255, 255, 255, 0.2)';
+        }
+        if ($active) return '#cb6565';
+        return theme.card || '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ $active, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($active) return '#fff';
+        return '#333';
+    }};
   font-size: 14px;
   font-weight: ${({ $active }) => $active ? '600' : '500'};
   cursor: pointer;
@@ -442,10 +617,31 @@ const PaginationButton = styled.button`
   min-width: 44px;
   min-height: 44px;
   touch-action: manipulation;
+  box-shadow: ${({ $isGlassTheme, $active }) => {
+        if ($isGlassTheme && $active) return '0 4px 12px rgba(203, 101, 101, 0.3)';
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        return 'none';
+    }};
   
   &:hover:not(:disabled) {
-    background: ${({ theme, $active }) => $active ? '#cb6565' : '#fdfdfd'};
-    border-color: ${({ theme }) => theme.primary || '#cb6565'};
+    background: ${({ theme, $active, $isGlassTheme }) => {
+        if ($isGlassTheme) {
+            if ($active) return 'rgba(203, 101, 101, 0.9)';
+            return 'rgba(255, 255, 255, 0.3)';
+        }
+        if ($active) return '#cb6565';
+        return '#fdfdfd';
+    }};
+    border-color: ${({ theme, $isGlassTheme, $active }) => {
+        if ($isGlassTheme && $active) return 'rgba(203, 101, 101, 1)';
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        return theme.primary || '#cb6565';
+    }};
+    box-shadow: ${({ $isGlassTheme, $active }) => {
+        if ($isGlassTheme && $active) return '0 6px 16px rgba(203, 101, 101, 0.4)';
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        return 'none';
+    }};
   }
   
   &:disabled {
@@ -460,7 +656,7 @@ const PaginationButton = styled.button`
 
 const PaginationInfo = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.cardSubText || '#666'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#666')};
   margin: 0 8px;
   white-space: nowrap;
 `;
@@ -469,6 +665,8 @@ function CompletedNovels({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const theme = useTheme();
+    const { actualTheme } = theme;
+    const isGlassTheme = actualTheme === 'glass';
     const [novels, setNovels] = useState([]);
     const [filteredNovels, setFilteredNovels] = useState([]);
     const [selectedGenre, setSelectedGenre] = useState('all');
@@ -720,14 +918,14 @@ function CompletedNovels({ user }) {
     };
 
     return (
-        <Container theme={theme}>
+        <Container theme={theme} $isGlassTheme={isGlassTheme}>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title="완성된 소설" />
 
             <ViewToggle>
                 <TopBar>
                     <FilterRow>
                         <FilterContainer>
-                            <Select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} theme={theme} disabled={showCheckboxes}>
+                            <Select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} theme={theme} $isGlassTheme={isGlassTheme} disabled={showCheckboxes}>
                                 <option value="all">전체 장르</option>
                                 {availableGenres.filter(g => g !== 'all').map(genre => (
                                     <option key={genre} value={genre}>
@@ -735,7 +933,7 @@ function CompletedNovels({ user }) {
                                     </option>
                                 ))}
                             </Select>
-                            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} theme={theme} disabled={showCheckboxes}>
+                            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} theme={theme} $isGlassTheme={isGlassTheme} disabled={showCheckboxes}>
                                 <option value="latest">최신순</option>
                                 <option value="oldest">오래된순</option>
                                 <option value="popular">인기순</option>
@@ -765,34 +963,31 @@ function CompletedNovels({ user }) {
                             </QuickActionButtons>
                         )}
                         <ActionButtonsContainer>
-                            <ToggleButton
-                                $active={viewMode === 'card'}
+                            <ViewToggleButton
+                                $isGlassTheme={isGlassTheme}
                                 onClick={() => {
-                                    setViewMode('card');
-                                    localStorage.setItem('completedNovelsViewMode', 'card');
+                                    const newMode = viewMode === 'card' ? 'list' : 'card';
+                                    setViewMode(newMode);
+                                    localStorage.setItem('completedNovelsViewMode', newMode);
                                 }}
-                                title="그리드형"
+                                aria-label={viewMode === 'card' ? '목록형으로 전환' : '카드형으로 전환'}
                             >
-                                <GridIcon width={20} height={20} />
-                            </ToggleButton>
-                            <ToggleButton
-                                $active={viewMode === 'list'}
-                                onClick={() => {
-                                    setViewMode('list');
-                                    localStorage.setItem('completedNovelsViewMode', 'list');
-                                }}
-                                title="목록형"
-                            >
-                                <ListIcon width={20} height={20} />
-                            </ToggleButton>
+                                <ToggleOption $active={viewMode === 'card'} $isGlassTheme={isGlassTheme}>
+                                    <GridIcon width={16} height={16} />
+                                </ToggleOption>
+                                <ToggleOption $active={viewMode === 'list'} $isGlassTheme={isGlassTheme}>
+                                    <ListIcon width={16} height={16} />
+                                </ToggleOption>
+                                <ToggleSlider $isList={viewMode === 'list'} $isGlassTheme={isGlassTheme} />
+                            </ViewToggleButton>
                         </ActionButtonsContainer>
                     </BottomBar>
                 </TopBar>
             </ViewToggle>
 
             {showCheckboxes && selectedNovels.size > 0 && (
-                <BatchActionBar theme={theme}>
-                    <BatchActionText theme={theme}>
+                <BatchActionBar theme={theme} $isGlassTheme={isGlassTheme}>
+                    <BatchActionText theme={theme} $isGlassTheme={isGlassTheme}>
                         {selectedNovels.size}개 선택됨
                     </BatchActionText>
                 </BatchActionBar>
@@ -801,7 +996,7 @@ function CompletedNovels({ user }) {
             {novelsLoading ? (
                 <div style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{t('loading')}</div>
             ) : filteredNovels.length === 0 ? (
-                <EmptyMessage theme={theme}>완성된 소설이 없습니다.</EmptyMessage>
+                <EmptyMessage theme={theme} $isGlassTheme={isGlassTheme}>완성된 소설이 없습니다.</EmptyMessage>
             ) : (
                 <>
                     <NovelListWrapper $viewMode={viewMode}>
@@ -814,6 +1009,7 @@ function CompletedNovels({ user }) {
                                         key={novel.id}
                                         $viewMode={viewMode}
                                         $selected={selectedNovels.has(novel.id)}
+                                        $isGlassTheme={isGlassTheme}
                                         onClick={() => {
                                             if (!showCheckboxes) {
                                                 navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}`);
@@ -833,26 +1029,45 @@ function CompletedNovels({ user }) {
                                             $viewMode={viewMode}
                                         />
                                         <NovelInfo $viewMode={viewMode}>
-                                            <NovelTitle $viewMode={viewMode} theme={theme}>{novel.title}</NovelTitle>
-                                            <NovelMeta theme={theme} $viewMode={viewMode}>
-                                                <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
-                                                {novel.purchaseCount > 0 && (
-                                                    <PurchaseBadge theme={theme}>{novel.purchaseCount}</PurchaseBadge>
-                                                )}
-                                            </NovelMeta>
-                                            {!showCheckboxes && (
-                                                <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
-                                                    <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
-                                                    <PublicToggleButton
-                                                        active={novel.isPublic !== false}
-                                                        onClick={(e) => handleTogglePublic(novel, e)}
-                                                    />
-                                                </PublicStatus>
-                                            )}
-                                            {showCheckboxes && (
-                                                <PublicStatus theme={theme} style={{ marginTop: viewMode === 'card' ? '4px' : '0' }}>
-                                                    <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
-                                                </PublicStatus>
+                                            {viewMode === 'card' ? (
+                                                <>
+                                                    <NovelTitle $viewMode={viewMode} theme={theme} $isGlassTheme={isGlassTheme}>{novel.title}</NovelTitle>
+                                                    <NovelMeta theme={theme} $viewMode={viewMode} $isGlassTheme={isGlassTheme}>
+                                                        <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
+                                                    </NovelMeta>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <NovelMeta theme={theme} $viewMode={viewMode} $isGlassTheme={isGlassTheme}>
+                                                        <span>{genreKey ? t(`novel_genre_${genreKey}`) : novel.genre}</span>
+                                                        {novel.purchaseCount > 0 && (
+                                                            <PurchaseBadge theme={theme}>{novel.purchaseCount}</PurchaseBadge>
+                                                        )}
+                                                    </NovelMeta>
+                                                    <NovelTitle $viewMode={viewMode} theme={theme} $isGlassTheme={isGlassTheme}>{novel.title}</NovelTitle>
+                                                    {!showCheckboxes && (
+                                                        <PublicStatus theme={theme} $isGlassTheme={isGlassTheme}>
+                                                            <PublicToggleButton
+                                                                $isGlassTheme={isGlassTheme}
+                                                                theme={theme}
+                                                                onClick={(e) => handleTogglePublic(novel, e)}
+                                                            >
+                                                                <PublicToggleOption $active={novel.isPublic !== false} $isGlassTheme={isGlassTheme} theme={theme}>
+                                                                    공개
+                                                                </PublicToggleOption>
+                                                                <PublicToggleOption $active={novel.isPublic === false} $isGlassTheme={isGlassTheme} theme={theme}>
+                                                                    비공개
+                                                                </PublicToggleOption>
+                                                                <PublicToggleSlider $isPublic={novel.isPublic !== false} $isGlassTheme={isGlassTheme} theme={theme} />
+                                                            </PublicToggleButton>
+                                                        </PublicStatus>
+                                                    )}
+                                                    {showCheckboxes && (
+                                                        <PublicStatus theme={theme} $isGlassTheme={isGlassTheme}>
+                                                            <span>{novel.isPublic !== false ? '공개' : '비공개'}</span>
+                                                        </PublicStatus>
+                                                    )}
+                                                </>
                                             )}
                                         </NovelInfo>
                                     </NovelItem>
@@ -865,16 +1080,18 @@ function CompletedNovels({ user }) {
                         <PaginationContainer theme={theme}>
                             <PaginationButton
                                 theme={theme}
+                                $isGlassTheme={isGlassTheme}
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
                             >
                                 이전
                             </PaginationButton>
-                            <PaginationInfo theme={theme}>
+                            <PaginationInfo theme={theme} $isGlassTheme={isGlassTheme}>
                                 {currentPage} / {Math.ceil(filteredNovels.length / itemsPerPage)}
                             </PaginationInfo>
                             <PaginationButton
                                 theme={theme}
+                                $isGlassTheme={isGlassTheme}
                                 onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredNovels.length / itemsPerPage), prev + 1))}
                                 disabled={currentPage >= Math.ceil(filteredNovels.length / itemsPerPage)}
                             >
