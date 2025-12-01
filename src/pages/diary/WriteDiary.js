@@ -2465,7 +2465,7 @@ function WriteDiary({ user }) {
                                         justifyContent: 'flex-start',
                                         fontSize: 16,
                                         color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'),
-                                        fontWeight: 600,
+                                        fontWeight: 500,
                                         padding: '0 0'
                                     }}
                                 >
@@ -2501,7 +2501,7 @@ function WriteDiary({ user }) {
                                         justifyContent: 'flex-start',
                                         fontSize: 16,
                                         color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'),
-                                        fontWeight: 600,
+                                        fontWeight: 500,
                                         padding: '0 0'
                                     }}
                                 >
