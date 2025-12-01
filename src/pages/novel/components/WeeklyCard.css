@@ -149,6 +149,8 @@ body.dark .novel-date-range {
     border-radius: 3px;
     will-change: background;
     transition: none;
+    background: transparent;
+    /* 기본 배경을 투명으로 설정하여 깜빡임 방지 */
 }
 
 .novel-weekly-card.glass-theme .novel-day-indicator {

@@ -35,7 +35,7 @@ export const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted
     // 활성화된 진행도(hasDiary === true)는 불투명하게 유지
     if (isCompleted && hasDiary) {
         const gradient = 'linear-gradient(90deg, #C99A9A 0%, #D4A5A5 100%)';
-        return gradient; // 완료 색상은 원래대로
+        return gradient; // 완료 색상은 원래대로 유지
     }
     if (barColor === 'fill') {
         if (isGlassTheme) {
@@ -45,17 +45,36 @@ export const getDayIndicatorBackground = (hasDiary, barColor, theme, isCompleted
         return color; // 불투명 유지
     }
     if (barColor === 'create') {
-        const color = themeMode === 'dark' ? '#FFB3B3' : '#e07e7e';
+        if (isGlassTheme) {
+            return '#d1c4e9'; // 글래스 테마에서는 일기 작성 중 색상과 동일하게
+        }
+        const color = themeMode === 'dark' ? '#FFB3B3' : '#868E96';
         return color; // 불투명 유지
     }
     if (barColor === 'free') {
+        if (isGlassTheme) {
+            return hexToRgba('#e4a30d', 0.3); // 글래스 테마에서는 반투명
+        }
         return '#e4a30d'; // 불투명 유지
     }
     if (barColor === 'view') {
-        const primaryColor = theme?.primary || '#cb6565';
-        return primaryColor; // 불투명 유지
+        if (isGlassTheme) {
+            const primaryColor = theme?.primary || '#cb6565';
+            return hexToRgba(primaryColor, 0.3); // 글래스 테마에서는 반투명
+        }
+        // 다이어리/라이트/다크 테마에서는 회색 계열로
+        const color = themeMode === 'dark' ? '#BFBFBF' : '#868E96';
+        return color;
     }
-    const color = hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#e07e7e') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
+    // 마지막 fallback
+    if (isGlassTheme) {
+        if (hasDiary) {
+            return '#d1c4e9'; // 글래스 테마에서 일기 작성 중 색상과 동일하게
+        }
+        const color = themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5';
+        return hexToRgba(color, 0.3);
+    }
+    const color = hasDiary ? (themeMode === 'dark' ? '#FFB3B3' : '#868E96') : (themeMode === 'dark' ? '#3A3A3A' : '#E5E5E5');
     return color; // hasDiary가 true면 불투명 유지
 };
 
@@ -175,8 +194,8 @@ export const getCreateButtonStyle = (children, completed, theme, isFree, disable
         } else {
             const bg = theme.mode === 'dark' ? '#3A3A3A' : '#fdfdfd';
             style.background = makeTransparent(bg);
-            style.color = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
-            const borderColor = theme.mode === 'dark' ? '#FFB3B3' : '#e07e7e';
+            style.color = theme.mode === 'dark' ? '#FFB3B3' : '#868E96';
+            const borderColor = theme.mode === 'dark' ? '#FFB3B3' : '#868E96';
             style.border = `2px solid ${borderColor}`;
         }
     } else if (children === '소설 보기') {
