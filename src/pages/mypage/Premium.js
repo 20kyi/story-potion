@@ -28,10 +28,25 @@ const Container = styled.div`
 `;
 
 const PremiumSection = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.card;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return 'none';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '15px'};
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    return '0 2px 8px rgba(0,0,0,0.1)';
+  }};
   margin-bottom: 20px;
 `;
 
@@ -64,22 +79,48 @@ const FeatureItem = styled.li`
 `;
 
 const PremiumButton = styled.button`
-  background: linear-gradient(135deg, #e46262, #cb6565);
-  color: white;
-  border: none;
-  border-radius: 25px;
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.8)';
+    return 'linear-gradient(135deg, #e46262, #cb6565)';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return 'white';
+  }};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid #8B6F47';
+    return 'none';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '25px'};
   padding: 16px 32px;
   font-size: 18px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   width: 100%;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(228, 98, 98, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(139, 111, 71, 0.3)';
+    return '0 4px 12px rgba(228, 98, 98, 0.3)';
+  }};
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(228, 98, 98, 0.4);
+    background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
+      return 'linear-gradient(135deg, #e46262, #cb6565)';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
+      return '0 6px 16px rgba(228, 98, 98, 0.4)';
+    }};
   }
 
   &:disabled {
@@ -90,30 +131,61 @@ const PremiumButton = styled.button`
 
 const PremiumCard = styled.div`
   flex: 1;
-  background: ${({ theme }) => theme.card};
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.card;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '14px'};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08)';
+    return '0 2px 8px rgba(0,0,0,0.08)';
+  }};
   padding: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1.5px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1.5px solid rgba(139, 111, 71, 0.3)';
+    return `1.5px solid ${theme.border || '#e0e0e0'}`;
+  }};
   margin: 0;
   height: 220px;
   text-align: center;
 `;
 
 const YearlyPremiumCard = styled(PremiumCard)`
-  box-shadow: 0 4px 16px rgba(255,195,0,0.13);
-  border: 2.5px solid #FFC300;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme 
+    ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(255,195,0,0.2)'
+    : '0 4px 16px rgba(255,195,0,0.13)'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 195, 0, 0.8)' : '2.5px solid #FFC300'};
   position: relative;
 `;
 
 const SubscriptionSection = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.card;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return 'none';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '24px' : '15px'};
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08)';
+    return '0 2px 8px rgba(0,0,0,0.1)';
+  }};
   margin-bottom: 20px;
 `;
 
@@ -150,19 +222,38 @@ const SubscriptionDetail = styled.div`
 
 const CancelButton = styled.button`
   padding: 10px 20px;
-  background: transparent;
-  color: #e46262;
-  border: none;
-  border-radius: 8px;
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'transparent';
+    return 'transparent';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.mode === 'dark' ? '#ff6b6b' : '#e46262';
+  }};
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+    return 'none';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-top: 8px;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
 
   &:hover {
-    background: rgba(228, 98, 98, 0.1);
-    color: #e46262;
+    background: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+      return theme.mode === 'dark' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(228, 98, 98, 0.1)';
+    }};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 
   &:disabled {
@@ -186,6 +277,9 @@ function Premium({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const isGlassTheme = actualTheme === 'glass';
+  const isDiaryTheme = actualTheme === 'diary';
   const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [premiumStatus, setPremiumStatus] = useState({
@@ -519,7 +613,7 @@ function Premium({ user }) {
 
       {/* 구독 관리 섹션 - 프리미엄 회원에게만 표시 */}
       {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (
-        <SubscriptionSection theme={theme} style={{ marginTop: '0' }}>
+        <SubscriptionSection theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} style={{ marginTop: '0' }}>
           <SubscriptionTitle theme={theme}>
             {t('subscription_manage') || '구독 관리'}
           </SubscriptionTitle>
@@ -545,7 +639,7 @@ function Premium({ user }) {
         }}>
           {/* 월간 결제 카드 - 프리미엄이 아닌 사용자에게만 표시 */}
           {!premiumStatus.isMonthlyPremium && (
-            <PremiumCard>
+            <PremiumCard theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
               <div
                 style={{
                   color: '#e46262',
@@ -585,6 +679,8 @@ function Premium({ user }) {
                 </div>
               </div>
               <PremiumButton
+                $isGlassTheme={isGlassTheme}
+                $isDiaryTheme={isDiaryTheme}
                 style={{ width: '100%', fontSize: 13, marginTop: 6, padding: '10px 0' }}
                 onClick={handleMonthlyPremium}
                 disabled={isLoading}
@@ -595,7 +691,7 @@ function Premium({ user }) {
           )}
 
           {/* 연간 결제 카드 - 월간 프리미엄 회원도 연간으로 전환 가능 */}
-          <YearlyPremiumCard>
+          <YearlyPremiumCard theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
             <div
               style={{
                 position: 'absolute',
@@ -677,7 +773,18 @@ function Premium({ user }) {
               </div>
             </div>
             <PremiumButton
-              style={{ width: '100%', fontSize: 13, background: 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)', color: '#fff', fontWeight: 700, padding: '10px 0', boxShadow: '0 4px 12px rgba(255,195,0,0.18)' }}
+              $isGlassTheme={isGlassTheme}
+              $isDiaryTheme={isDiaryTheme}
+              style={{ 
+                width: '100%', 
+                fontSize: 13, 
+                background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : (isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)'), 
+                color: isGlassTheme ? '#000000' : '#fff', 
+                fontWeight: 700, 
+                padding: '10px 0', 
+                boxShadow: isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(255,195,0,0.2)' : '0 4px 12px rgba(255,195,0,0.18)',
+                border: isGlassTheme ? '2px solid rgba(255, 195, 0, 0.8)' : 'none'
+              }}
               onClick={handleYearlyPremium}
               disabled={isLoading}
             >
@@ -688,7 +795,7 @@ function Premium({ user }) {
       )}
 
       {/* 프리미엄 기능 섹션 - 모든 사용자에게 표시 (결제 카드 아래로 이동) */}
-      <PremiumSection theme={theme} style={{ marginTop: '0', marginBottom: '24px' }}>
+      <PremiumSection theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} style={{ marginTop: '0', marginBottom: '24px' }}>
         <PremiumTitle theme={theme}>
           <span style={{ color: '#e46262' }}>👑</span>
           {t('premium_benefits')}
@@ -709,6 +816,9 @@ function Premium({ user }) {
             Google Play Store에서 구독을 관리하실 수 있습니다.
           </SubscriptionDetail>
           <CancelButton
+            $isGlassTheme={isGlassTheme}
+            $isDiaryTheme={isDiaryTheme}
+            theme={theme}
             onClick={handleCancelPremium}
           >
             {t('premium_cancel_button') || '구독 관리'}
