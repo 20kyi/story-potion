@@ -32,6 +32,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { useTranslation } from '../../LanguageContext';
+import { useTheme } from '../../ThemeContext';
 
 /**
  * 알림 설정 페이지 컴포넌트
@@ -40,6 +41,7 @@ import { useTranslation } from '../../LanguageContext';
 function NotificationSettings({ user }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { actualTheme } = useTheme();
 
     // 알림 메시지 옵션
     const reminderMessages = [
@@ -367,7 +369,7 @@ function NotificationSettings({ user }) {
         <>
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('notification')} />
             <div className="notification-settings-container">
-                <div className="notification-card notification-section">
+                <div className="notification-section">
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
                             <span className="notification-label">일기 작성 리마인더</span>
@@ -401,7 +403,7 @@ function NotificationSettings({ user }) {
                                     value={settings.message}
                                     onChange={handleMessageChange}
                                     className="styled-input"
-                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                                    style={actualTheme === 'glass' ? { width: '100%', padding: '8px' } : { width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                                 >
                                     {reminderMessages.map((msg, index) => (
                                         <option key={index} value={msg.value}>
@@ -446,7 +448,7 @@ function NotificationSettings({ user }) {
                     </div>
                 </div>
 
-                <button className="notification-save-button" style={{ width: '100%', marginTop: 10, marginBottom: 60 }} onClick={handleSaveAll}>저장</button>
+                <button className="notification-save-button" style={{ width: '100%', marginTop: 10, marginBottom: 20 }} onClick={handleSaveAll}>저장</button>
                 <div className="notification-card notification-info">
                     <h3>알림 정보</h3>
                     <ul>

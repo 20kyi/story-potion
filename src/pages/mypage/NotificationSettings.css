@@ -74,8 +74,8 @@
 
 /* 알림 섹션 */
 .notification-section {
-    background: var(--bg-secondary);
-    border-radius: 12px;
+    background: transparent;
+    border-radius: 0;
     /* padding: 20px; */
     /* margin-bottom: 12px; */
     /* border: 1px solid var(--border-color); */
@@ -136,10 +136,12 @@
     background: #ccc;
     border-radius: 24px;
     transition: .3s;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .toggle-switch input:checked+.toggle-slider {
     background: #e46262;
+    border-color: #e46262;
 }
 
 .toggle-slider:before {
@@ -148,14 +150,47 @@
     height: 18px;
     width: 18px;
     left: 3px;
-    bottom: 3px;
+    top: 50%;
+    transform: translateY(-50%);
     background: #fff;
     border-radius: 50%;
     transition: .3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch input:checked+.toggle-slider:before {
-    transform: translateX(20px);
+    transform: translate(20px, -50%);
+}
+
+/* 다크 테마 - 토글 스위치 */
+body.dark .toggle-slider {
+    background: #555;
+    border-color: #666;
+}
+
+body.dark .toggle-switch input:checked+.toggle-slider {
+    background: #FFB3B3;
+    border-color: #FFB3B3;
+}
+
+body.dark .toggle-slider:before {
+    background: #fff;
+}
+
+/* 다이어리 테마 - 토글 스위치 */
+body.diary .toggle-slider {
+    background: rgba(139, 111, 71, 0.3);
+    border: 1.5px solid #8B6F47;
+}
+
+body.diary .toggle-switch input:checked+.toggle-slider {
+    background: #8B6F47;
+    border-color: #8B6F47;
+}
+
+body.diary .toggle-slider:before {
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(139, 111, 71, 0.3);
 }
 
 /* 알림 상세 설정 */
@@ -224,11 +259,15 @@ body.dark .notification-settings-container {
 }
 
 body.dark .notification-permission-status,
-body.dark .notification-section,
 body.dark .notification-details,
 body.dark .notification-info {
     background: var(--bg-secondary);
     border-color: var(--border-color);
+}
+
+body.dark .notification-section {
+    background: transparent;
+    border: none;
 }
 
 body.dark .time-input,
@@ -280,14 +319,154 @@ body.dark .message-input {
 }
 
 .notification-save-button {
-    background: #e46262;
-    color: #fff;
-    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: #000000;
+    border: 2px solid rgba(255, 255, 255, 0.5);
     border-radius: 12px;
     padding: 14px 0;
     font-size: 16px;
     font-weight: 400;
     width: 100%;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(228, 98, 98, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.notification-save-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 글래스 테마 스타일 */
+body.glass .notification-section {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+body.glass .notification-info {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: #000000;
+}
+
+body.glass .notification-info h3 {
+    color: #000000;
+}
+
+body.glass .notification-info li {
+    color: #333;
+}
+
+body.glass .notification-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.glass .notification-label {
+    color: #000000;
+}
+
+body.glass .notification-description {
+    color: #555;
+}
+
+/* 글래스 테마 - 토글 스위치 */
+body.glass .toggle-slider {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.glass .toggle-switch input:checked + .toggle-slider {
+    background: rgba(228, 98, 98, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(228, 98, 98, 0.3);
+}
+
+body.glass .toggle-slider:before {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* 글래스 테마 - 버튼 (일반 테마와 동일하게 적용) */
+body.glass .notification-save-button {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: #000000;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+body.glass .notification-save-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.glass .permission-request-btn {
+    background: rgba(59, 130, 246, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.glass .permission-request-btn:hover {
+    background: rgba(59, 130, 246, 0.9);
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 글래스 테마 - 입력 필드 및 드롭다운 */
+body.glass .time-input,
+body.glass .message-input,
+body.glass .styled-input {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 12px;
+    color: #000000 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.glass .time-input:focus,
+body.glass .message-input:focus,
+body.glass .styled-input:focus {
+    outline: none;
+    border-color: rgba(228, 98, 98, 0.8);
+    box-shadow: 0 0 0 3px rgba(228, 98, 98, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.glass .styled-input {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: #000000 !important;
+}
+
+body.glass select.styled-input {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: #000000 !important;
+}
+
+body.glass select.styled-input option {
+    background: rgba(255, 255, 255, 0.95);
+    color: #000000;
 }
