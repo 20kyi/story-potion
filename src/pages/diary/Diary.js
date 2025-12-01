@@ -740,23 +740,25 @@ function Diary({ user }) {
                     </div>
                     <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
-                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
-                    {viewMode === 'month' && (
-                        <thead>
-                            <tr>
-                                {(language === 'en'
-                                    ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                                    : ['일', '월', '화', '수', '목', '금', '토']
-                                ).map((day, index) => (
-                                    <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                    )}
-                    <tbody>
-                        {viewMode === 'week' ? renderWeeklyCalendar() : renderCalendar()}
-                    </tbody>
-                </table>
+                <div className={`diary-calendar-wrapper ${isGlassTheme ? 'glass-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
+                    <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
+                        {viewMode === 'month' && (
+                            <thead>
+                                <tr>
+                                    {(language === 'en'
+                                        ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                        : ['일', '월', '화', '수', '목', '금', '토']
+                                    ).map((day, index) => (
+                                        <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                        )}
+                        <tbody>
+                            {viewMode === 'week' ? renderWeeklyCalendar() : renderCalendar()}
+                        </tbody>
+                    </table>
+                </div>
 
                 {/* 월간/주간 토글 버튼 */}
                 <div className="diary-view-mode-toggle-container">
