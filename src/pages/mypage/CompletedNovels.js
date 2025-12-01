@@ -134,23 +134,36 @@ const ViewToggleButton = styled.button`
   align-items: center;
   padding: 4px;
   border-radius: 24px;
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid'};
-  border-color: ${({ theme, $isGlassTheme }) => {
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1.5px solid #8B6F47';
+        return '1.5px solid';
+    }};
+  border-color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '#8B6F47';
         return theme.primary || '#cb6565';
     }};
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'transparent';
+        return 'transparent';
+    }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   min-width: 90px;
   height: 36px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return 'none';
+        return 'none';
+    }};
   
   @media (min-width: 480px) {
     font-size: 13px;
@@ -172,10 +185,12 @@ const ToggleOption = styled.span`
   
   svg {
     transition: stroke 0.3s ease;
-    stroke: ${({ $active, $isGlassTheme }) => {
+    stroke: ${({ $active, $isGlassTheme, $isDiaryTheme }) => {
         if ($active && $isGlassTheme) return '#000000';
+        if ($active && $isDiaryTheme) return '#fff';
         if ($active) return '#fff';
         if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+        if ($isDiaryTheme) return '#8B6F47';
         return '#888';
     }};
   }
@@ -191,21 +206,35 @@ const ToggleSlider = styled.span`
   transition: all 0.3s ease;
   z-index: 1;
   transform: ${({ $isList }) => $isList ? 'translateX(100%)' : 'translateX(0)'};
-  background: ${({ $isGlassTheme }) => {
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.4)';
         return 'rgba(203, 101, 101, 0.25)';
     }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.4)' : 'none'};
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+        return 'none';
+    }};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 1px 4px rgba(139, 111, 71, 0.2)';
+        return 'none';
+    }};
   
   ${ViewToggleButton}:hover & {
-    background: ${({ $isGlassTheme }) => {
+    background: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.5)';
         return 'rgba(203, 101, 101, 0.35)';
     }};
-    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.25)';
+        return 'none';
+    }};
   }
 `;
 
@@ -339,23 +368,36 @@ const PublicToggleButton = styled.button`
   align-items: center;
   padding: 4px;
   border-radius: 24px;
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1.5px solid'};
-  border-color: ${({ theme, $isGlassTheme }) => {
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1.5px solid #8B6F47';
+        return '1.5px solid';
+    }};
+  border-color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '#8B6F47';
         return theme.primary || '#cb6565';
     }};
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'transparent';
+        return 'transparent';
+    }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   min-width: 70px;
   height: 28px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return 'none';
+        return 'none';
+    }};
 `;
 
 const PublicToggleOption = styled.span`
@@ -369,10 +411,12 @@ const PublicToggleOption = styled.span`
   transition: all 0.3s ease;
   white-space: nowrap;
   font-size: 11px;
-  color: ${({ $active, $isGlassTheme, theme }) => {
+  color: ${({ $active, $isGlassTheme, $isDiaryTheme, theme }) => {
         if ($active && $isGlassTheme) return '#000000';
+        if ($active && $isDiaryTheme) return '#fff';
         if ($active) return '#fff';
         if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+        if ($isDiaryTheme) return '#8B6F47';
         return theme.mode === 'dark' ? '#aaa' : '#888';
     }};
 `;
@@ -387,8 +431,11 @@ const PublicToggleSlider = styled.span`
   transition: all 0.3s ease;
   z-index: 1;
   transform: ${({ $isPublic }) => $isPublic ? 'translateX(0)' : 'translateX(100%)'};
-  background: ${({ $isGlassTheme, theme }) => {
+  background: ${({ $isGlassTheme, $isDiaryTheme, theme, $isPublic }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) {
+            return $isPublic ? '#8B6F47' : 'rgba(139, 111, 71, 0.4)';
+        }
         const primary = theme.primary || '#cb6565';
         const r = parseInt(primary.slice(1, 3), 16);
         const g = parseInt(primary.slice(3, 5), 16);
@@ -397,19 +444,34 @@ const PublicToggleSlider = styled.span`
     }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '1px solid rgba(255, 255, 255, 0.4)' : 'none'};
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+        return 'none';
+    }};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 1px 4px rgba(139, 111, 71, 0.2)';
+        return 'none';
+    }};
   
   ${PublicToggleButton}:hover & {
-    background: ${({ $isGlassTheme, theme }) => {
+    background: ${({ $isGlassTheme, $isDiaryTheme, theme, $isPublic }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) {
+            return $isPublic ? '#7A5F3D' : 'rgba(139, 111, 71, 0.5)';
+        }
         const primary = theme.primary || '#cb6565';
         const r = parseInt(primary.slice(1, 3), 16);
         const g = parseInt(primary.slice(3, 5), 16);
         const b = parseInt(primary.slice(5, 7), 16);
         return `rgba(${r}, ${g}, ${b}, 0.35)`;
     }};
-    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.25)';
+        return 'none';
+    }};
   }
 `;
 
@@ -667,6 +729,7 @@ function CompletedNovels({ user }) {
     const theme = useTheme();
     const { actualTheme } = theme;
     const isGlassTheme = actualTheme === 'glass';
+    const isDiaryTheme = actualTheme === 'diary';
     const [novels, setNovels] = useState([]);
     const [filteredNovels, setFilteredNovels] = useState([]);
     const [selectedGenre, setSelectedGenre] = useState('all');
@@ -965,6 +1028,8 @@ function CompletedNovels({ user }) {
                         <ActionButtonsContainer>
                             <ViewToggleButton
                                 $isGlassTheme={isGlassTheme}
+                                $isDiaryTheme={isDiaryTheme}
+                                theme={theme}
                                 onClick={() => {
                                     const newMode = viewMode === 'card' ? 'list' : 'card';
                                     setViewMode(newMode);
@@ -972,13 +1037,13 @@ function CompletedNovels({ user }) {
                                 }}
                                 aria-label={viewMode === 'card' ? '목록형으로 전환' : '카드형으로 전환'}
                             >
-                                <ToggleOption $active={viewMode === 'card'} $isGlassTheme={isGlassTheme}>
+                                <ToggleOption $active={viewMode === 'card'} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
                                     <GridIcon width={16} height={16} />
                                 </ToggleOption>
-                                <ToggleOption $active={viewMode === 'list'} $isGlassTheme={isGlassTheme}>
+                                <ToggleOption $active={viewMode === 'list'} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
                                     <ListIcon width={16} height={16} />
                                 </ToggleOption>
-                                <ToggleSlider $isList={viewMode === 'list'} $isGlassTheme={isGlassTheme} />
+                                <ToggleSlider $isList={viewMode === 'list'} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} />
                             </ViewToggleButton>
                         </ActionButtonsContainer>
                     </BottomBar>
@@ -1049,16 +1114,17 @@ function CompletedNovels({ user }) {
                                                         <PublicStatus theme={theme} $isGlassTheme={isGlassTheme}>
                                                             <PublicToggleButton
                                                                 $isGlassTheme={isGlassTheme}
+                                                                $isDiaryTheme={isDiaryTheme}
                                                                 theme={theme}
                                                                 onClick={(e) => handleTogglePublic(novel, e)}
                                                             >
-                                                                <PublicToggleOption $active={novel.isPublic !== false} $isGlassTheme={isGlassTheme} theme={theme}>
+                                                                <PublicToggleOption $active={novel.isPublic !== false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme}>
                                                                     공개
                                                                 </PublicToggleOption>
-                                                                <PublicToggleOption $active={novel.isPublic === false} $isGlassTheme={isGlassTheme} theme={theme}>
+                                                                <PublicToggleOption $active={novel.isPublic === false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme}>
                                                                     비공개
                                                                 </PublicToggleOption>
-                                                                <PublicToggleSlider $isPublic={novel.isPublic !== false} $isGlassTheme={isGlassTheme} theme={theme} />
+                                                                <PublicToggleSlider $isPublic={novel.isPublic !== false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme} />
                                                             </PublicToggleButton>
                                                         </PublicStatus>
                                                     )}

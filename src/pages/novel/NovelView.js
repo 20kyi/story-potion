@@ -145,28 +145,37 @@ const ActionButton = styled.button`
 `;
 
 const ReadingModeButton = styled(ActionButton)`
-  background: ${({ $isGlassTheme }) => {
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
         return '#cb6565';
     }};
-  color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#fff'};
-  border: ${({ $isGlassTheme }) => {
+  color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
+        return '#fff';
+    }};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.4)';
         return 'none';
     }};
-  box-shadow: ${({ $isGlassTheme }) => {
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.2)';
         return '0 4px 12px rgba(203, 101, 101, 0.3)';
     }};
   
   @media (min-width: 480px) {
     &:hover {
-      background: ${({ $isGlassTheme }) => {
+      background: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
         return '#cb6565';
     }};
-      box-shadow: ${({ $isGlassTheme }) => {
+      box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
         if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
+        if ($isDiaryTheme) return '0 4px 10px rgba(139, 111, 71, 0.3)';
         return '0 6px 16px rgba(203, 101, 101, 0.4)';
     }};
     }
@@ -174,47 +183,129 @@ const ReadingModeButton = styled(ActionButton)`
 `;
 
 const DeleteButton = styled(ActionButton)`
-  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
-  color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#e46262'};
-  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : '1px solid #e46262'};
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+        return 'transparent';
+    }};
+  color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
+        return '#e46262';
+    }};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+        return '1px solid #e46262';
+    }};
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   
   @media (min-width: 480px) {
     &:hover {
-      background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.25)' : 'rgba(228, 98, 98, 0.1)'};
-      border-color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.7)' : '#e46262'};
-      box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)' : '0 2px 8px rgba(228, 98, 98, 0.2)'};
+      background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
+        return 'rgba(228, 98, 98, 0.1)';
+    }};
+      border-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.7)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.4)';
+        return '#e46262';
+    }};
+      box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
+        if ($isDiaryTheme) return '0 4px 10px rgba(139, 111, 71, 0.2)';
+        return '0 2px 8px rgba(228, 98, 98, 0.2)';
+    }};
     }
   }
 `;
 
 const ToggleButton = styled.button`
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 24px;
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1.5px solid #8B6F47';
+        return '1.5px solid';
+    }};
+  border-color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '#8B6F47';
+        return theme.primary || '#cb6565';
+    }};
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'transparent';
+        return 'transparent';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   width: 50px;
   height: 28px;
-  border-radius: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return 'none';
+        return 'none';
+    }};
   
   &::after {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: white;
-    top: 50%;
-    transform: translateY(-50%);
-    left: ${({ active }) => active ? '26px' : '4px'};
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    border-radius: 20px;
+    top: 4px;
+    left: ${({ active }) => active ? 'calc(50%)' : '4px'};
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 1;
+    background: ${({ $isGlassTheme, $isDiaryTheme, theme, active }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) {
+            return active ? '#8B6F47' : 'rgba(139, 111, 71, 0.4)';
+        }
+        return active ? 'rgba(203, 101, 101, 0.35)' : 'rgba(203, 101, 101, 0.25)';
+    }};
+    backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+        return 'none';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 1px 4px rgba(139, 111, 71, 0.2)';
+        return 'none';
+    }};
+  }
+  
+  &:hover::after {
+    background: ${({ $isGlassTheme, $isDiaryTheme, theme, active }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) {
+            return active ? '#7A5F3D' : 'rgba(139, 111, 71, 0.4)';
+        }
+        return 'rgba(203, 101, 101, 0.35)';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 12px rgba(0, 0, 0, 0.15)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.25)';
+        return 'none';
+    }};
   }
 `;
 
@@ -798,6 +889,7 @@ function NovelView({ user }) {
     const theme = useTheme();
     const { actualTheme } = theme;
     const isGlassTheme = actualTheme === 'glass';
+    const isDiaryTheme = actualTheme === 'diary';
 
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
@@ -1928,6 +2020,9 @@ function NovelView({ user }) {
                                 <ToggleButton
                                     active={novel.isPublic !== false}
                                     onClick={handleTogglePublic}
+                                    $isGlassTheme={isGlassTheme}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    theme={theme}
                                 />
                             </SettingRow>
                         </NovelSettings>
@@ -1936,11 +2031,11 @@ function NovelView({ user }) {
             </NovelHeader>
             <ActionButtonsContainer>
                 {novel.id && novel.userId === user.uid && (
-                    <DeleteButton $isGlassTheme={isGlassTheme} onClick={handleDelete}>
+                    <DeleteButton $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={handleDelete}>
                         🗑️ 소설 삭제
                     </DeleteButton>
                 )}
-                <ReadingModeButton $isGlassTheme={isGlassTheme} theme={theme} onClick={() => setShowReadingModeCover(true)}>
+                <ReadingModeButton $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme} onClick={() => setShowReadingModeCover(true)}>
                     📖 읽기 모드
                 </ReadingModeButton>
             </ActionButtonsContainer>
