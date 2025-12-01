@@ -167,7 +167,7 @@ const DiaryMeta = styled.div`
   align-items: center;
   margin: 0;
   min-height: 28px;
-  font-size: 17px;
+  font-size: 16px;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
