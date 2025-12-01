@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaTimes } from 'react-icons/fa';
+import { useTheme } from '../ThemeContext';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -8,7 +9,11 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.25)';
+    return 'rgba(0, 0, 0, 0.5)';
+  }};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,19 +22,40 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: #fff;
-  border-radius: 20px;
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#faf8f3';
+    if (theme.mode === 'dark') return '#2a2a2a';
+    return '#fff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '24px';
+    if ($isDiaryTheme) return '20px';
+    return '20px';
+  }};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+    return 'none';
+  }};
+  box-shadow: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+    if (theme.mode === 'dark') return '0 4px 24px rgba(0, 0, 0, 0.4)';
+    return '0 4px 24px rgba(0, 0, 0, 0.18)';
+  }};
   width: 100%;
   max-width: 600px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
-  
-  body.dark & {
-    background-color: #2a2a2a;
-    color: #fff;
-  }
+  color: ${({ theme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if (theme.mode === 'dark') return '#fff';
+    return 'inherit';
+  }};
 `;
 
 const ModalHeader = styled.div`
@@ -287,19 +313,23 @@ storypotion.team@gmail.com`
 
 function TermsDetailModal({ termType, onClose }) {
   const term = termsContent[termType];
+  const { actualTheme } = useTheme();
+  const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
+  const theme = useTheme();
 
   if (!term) return null;
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>{term.title}</ModalTitle>
-          <CloseButton onClick={onClose}>
+    <ModalOverlay $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={onClose}>
+      <ModalContent theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={(e) => e.stopPropagation()}>
+        <ModalHeader theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
+          <ModalTitle theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>{term.title}</ModalTitle>
+          <CloseButton theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={onClose}>
             <FaTimes />
           </CloseButton>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
           <Section>
             <SectionContent>{term.content}</SectionContent>
           </Section>

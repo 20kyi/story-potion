@@ -12,7 +12,11 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.25)';
+    return 'rgba(0, 0, 0, 0.5)';
+  }};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -21,14 +25,34 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: ${({ theme }) => theme.card || '#fff'};
-  border-radius: 20px;
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#faf8f3';
+    return theme.card || '#fff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '24px';
+    if ($isDiaryTheme) return '20px';
+    return '20px';
+  }};
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+    return 'none';
+  }};
+  box-shadow: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+    if (theme.mode === 'dark') return '0 4px 24px rgba(0, 0, 0, 0.4)';
+    return '0 4px 24px rgba(0, 0, 0, 0.18)';
+  }};
   width: 100%;
   max-width: 500px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
 `;
 
 const ModalHeader = styled.div`
@@ -36,21 +60,33 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border-bottom: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+    return `1px solid ${theme.border || '#e0e0e0'}`;
+  }};
 `;
 
 const ModalTitle = styled.h2`
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text || '#333'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#333';
+  }};
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
   font-size: 24px;
-  color: ${({ theme }) => theme.text || '#666'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#666';
+  }};
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -62,7 +98,11 @@ const CloseButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
+    background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+    return theme.cardHover || '#fdfdfd';
+  }};
   }
 `;
 
@@ -75,10 +115,19 @@ const NotificationList = styled.div`
 const NotificationItem = styled.div`
   padding: 16px 24px;
   padding-left: ${props => props.$isRead ? '24px' : '20px'};
-  border-bottom: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
+  border-bottom: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.1)';
+    return `1px solid ${theme.border || '#f0f0f0'}`;
+  }};
   cursor: pointer;
   transition: all 0.2s;
-  background-color: ${props => props.$isRead ? 'transparent' : props.theme.cardHover || '#f9f9f9'};
+  background-color: ${({ $isRead, theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isRead) return 'transparent';
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.1)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.05)';
+    return theme.cardHover || '#f9f9f9';
+  }};
   position: relative;
   
   /* 읽지 않은 알림 왼쪽 색상 바 */
@@ -87,7 +136,11 @@ const NotificationItem = styled.div`
   `}
   
   &:hover {
-    background-color: ${({ theme }) => theme.cardHover || '#fdfdfd'};
+    background-color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.08)';
+    return theme.cardHover || '#fdfdfd';
+  }};
   }
   
   &:last-child {
@@ -117,33 +170,58 @@ const NotificationContent = styled.div`
 const NotificationTitle = styled.div`
   font-size: 16px;
   font-weight: ${props => props.$isRead ? '600' : '700'};
-  color: ${({ theme, $isRead }) => $isRead ? (theme.subText || '#666') : (theme.text || '#333')};
+  color: ${({ theme, $isRead, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isRead) {
+      if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+      if ($isDiaryTheme) return '#8B6F47';
+      return theme.subText || '#666';
+    }
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text || '#333';
+  }};
   margin-bottom: 6px;
 `;
 
 const NotificationMessage = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.7)';
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.subText || '#666';
+  }};
   margin-bottom: 8px;
   line-height: 1.5;
 `;
 
 const NotificationTime = styled.div`
   font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#999'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.6)';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.subText || '#999';
+  }};
 `;
 
 const EmptyState = styled.div`
   padding: 40px 24px;
   text-align: center;
-  color: ${({ theme }) => theme.subText || '#999'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(0, 0, 0, 0.7)';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.subText || '#999';
+  }};
   font-size: 14px;
 `;
 
 const MarkAllReadButton = styled.button`
   background: none;
   border: none;
-  color: ${({ theme }) => theme.primary || '#cb6565'};
+  color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.primary || '#cb6565';
+  }};
   font-size: 14px;
   cursor: pointer;
   padding: 8px 16px;
@@ -151,7 +229,11 @@ const MarkAllReadButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: ${({ theme }) => theme.cardHover || '#fdfdfd'};
+    background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+    return theme.cardHover || '#fdfdfd';
+  }};
   }
 `;
 
@@ -159,7 +241,11 @@ const ModalFooter = styled.div`
   display: flex;
   justify-content: flex-end;
   padding: 12px 24px;
-  border-top: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
+  border-top: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+    return `1px solid ${theme.border || '#e0e0e0'}`;
+  }};
 `;
 
 function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
@@ -167,8 +253,15 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { actualTheme } = useTheme();
-  const theme = actualTheme === 'dark' ? { card: '#2a2a2a', text: '#fff', subText: '#aaa', border: '#444', cardHover: '#333', primary: '#cb6565' } : { card: '#fff', text: '#333', subText: '#666', border: '#e0e0e0', cardHover: '#fdfdfd', primary: '#cb6565' };
+  const themeContext = useTheme();
+  const { actualTheme } = themeContext;
+  const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
+  const isDark = actualTheme === 'dark';
+
+  const theme = isDark
+    ? { card: '#2a2a2a', text: '#fff', subText: '#aaa', border: '#444', cardHover: '#333', primary: '#cb6565' }
+    : { card: '#fff', text: '#333', subText: '#666', border: '#e0e0e0', cardHover: '#fdfdfd', primary: '#cb6565' };
 
   useEffect(() => {
     if (isOpen && user) {
@@ -275,17 +368,17 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent theme={theme} onClick={(e) => e.stopPropagation()}>
-        <ModalHeader theme={theme}>
-          <ModalTitle theme={theme}>{t('notifications') || '알림'}</ModalTitle>
-          <CloseButton theme={theme} onClick={onClose}>×</CloseButton>
+    <ModalOverlay $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={onClose}>
+      <ModalContent theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={(e) => e.stopPropagation()}>
+        <ModalHeader theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
+          <ModalTitle theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>{t('notifications') || '알림'}</ModalTitle>
+          <CloseButton theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={onClose}>×</CloseButton>
         </ModalHeader>
         <NotificationList>
           {loading ? (
-            <EmptyState theme={theme}>로딩 중...</EmptyState>
+            <EmptyState theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>로딩 중...</EmptyState>
           ) : notifications.length === 0 ? (
-            <EmptyState theme={theme}>{t('no_notifications') || '알림이 없습니다.'}</EmptyState>
+            <EmptyState theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>{t('no_notifications') || '알림이 없습니다.'}</EmptyState>
           ) : (
             notifications.map(notification => {
               // 포인트 적립 알림인 경우 상세 내역 표시
@@ -297,23 +390,25 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
                   key={notification.id}
                   theme={theme}
                   $isRead={isRead}
+                  $isGlassTheme={isGlassTheme}
+                  $isDiaryTheme={isDiaryTheme}
                   onClick={() => markAsRead(notification.id, notification)}
                 >
                   <NotificationItemContent>
                     {!isRead && <UnreadIndicator theme={theme} />}
                     <NotificationContent>
-                      <NotificationTitle theme={theme} $isRead={isRead}>
+                      <NotificationTitle theme={theme} $isRead={isRead} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
                         {notification.title}
                       </NotificationTitle>
-                      <NotificationMessage theme={theme}>
+                      <NotificationMessage theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
                         {notification.message}
                         {showDetail && (
-                          <div style={{ marginTop: '4px', fontSize: '13px', color: theme.subText || '#888' }}>
+                          <div style={{ marginTop: '4px', fontSize: '13px', color: isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')) }}>
                             내역: {notification.data.reason}
                           </div>
                         )}
                       </NotificationMessage>
-                      <NotificationTime theme={theme}>{formatTime(notification.createdAt)}</NotificationTime>
+                      <NotificationTime theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>{formatTime(notification.createdAt)}</NotificationTime>
                     </NotificationContent>
                   </NotificationItemContent>
                 </NotificationItem>
@@ -322,8 +417,8 @@ function NotificationModal({ isOpen, onClose, user, onNotificationRead }) {
           )}
         </NotificationList>
         {unreadCount > 0 && (
-          <ModalFooter theme={theme}>
-            <MarkAllReadButton theme={theme} onClick={markAllAsRead}>
+          <ModalFooter theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme}>
+            <MarkAllReadButton theme={theme} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} onClick={markAllAsRead}>
               {t('mark_all_read') || '모두 읽음'}
             </MarkAllReadButton>
           </ModalFooter>
