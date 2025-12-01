@@ -520,7 +520,7 @@ function DiaryView({ user }) {
         },
         noDiary: {
             textAlign: 'center',
-            color: isDark ? '#aaa' : '#888',
+            color: isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (isDark ? '#aaa' : '#888'),
             fontSize: '16px',
             marginTop: '40px'
         }
@@ -565,8 +565,8 @@ function DiaryView({ user }) {
                 rightActions={
                     diary && (
                         <>
-                            <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>{t('diary_update')}</button>
                             <button style={{ ...styles.actionButton, ...styles.deleteButton }} onClick={handleDelete}>{t('delete')}</button>
+                            <button style={styles.actionButton} onClick={() => navigate(`/write?date=${date}`)}>{t('diary_update')}</button>
                         </>
                     )
                 }
