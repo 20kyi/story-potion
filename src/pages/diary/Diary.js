@@ -100,10 +100,21 @@ function Diary({ user }) {
 
         const fetchDiaries = async () => {
             setIsLoading(true);
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
+
+            let firstDay, lastDay;
+
+            if (viewMode === 'week') {
+                // 주간 뷰일 때는 현재 주의 시작일과 종료일을 기준으로 데이터 가져오기
+                const { weekStart, weekEnd } = getCurrentWeek();
+                firstDay = weekStart;
+                lastDay = weekEnd;
+            } else {
+                // 월간 뷰일 때는 현재 월의 첫날과 마지막날을 기준으로 데이터 가져오기
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                firstDay = new Date(year, month, 1);
+                lastDay = new Date(year, month + 1, 0);
+            }
 
             const diariesRef = collection(db, 'diaries');
             const q = query(diariesRef,
@@ -135,7 +146,7 @@ function Diary({ user }) {
             }
         };
         fetchWeeklyStatus();
-    }, [user, currentDate]);
+    }, [user, currentDate, viewMode, currentWeekStart]);
 
 
 
