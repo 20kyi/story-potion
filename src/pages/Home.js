@@ -169,7 +169,7 @@ const MainButtonText = styled.div`
     }
     return $isDiaryTheme ? '#8B6F47' : '#fff';
   }};
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   text-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
@@ -178,7 +178,7 @@ const MainButtonText = styled.div`
     return $isDiaryTheme ? 'none' : '0 1px 6px rgba(0,0,0,0.08)';
   }};
   // @media (min-width: 768px) {
-  //   font-size: 20px;
+  //   font-size: 14px;
   // }
 `;
 /* 일기 최근 미리보기 */
@@ -224,12 +224,12 @@ const DiaryPreviewImagePlaceholder = styled.div`
 `;
 
 const DiaryPreviewImagePlaceholderIcon = styled.div`
-  font-size: 32px;
+  font-size: 14px;
   opacity: 0.6;
 `;
 
 const DiaryPreviewImagePlaceholderText = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   color: ${({ theme }) => theme.cardSubText || theme.text};
   opacity: 0.7;
   text-align: center;
@@ -246,7 +246,7 @@ const DiaryPreviewTextContainer = styled.div`
 `;
 /* 일기 최근 미리보기 날짜 */
 const DiaryPreviewDate = styled.div`
-  font-size: 11px;
+  font-size: 14px;
   opacity: 0.8;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -260,7 +260,7 @@ const DiaryPreviewDate = styled.div`
 `;
 /* 일기 최근 미리보기 제목 */
 const DiaryPreviewTitle = styled.div`
-  font-size: 15px;
+  font-size: 16px !important;
   font-weight: 600;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -281,7 +281,7 @@ const DiaryPreviewTitle = styled.div`
 `;
 /* 일기 최근 미리보기 내용 */
 const DiaryPreviewContent = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
     return theme.cardSubText || theme.diaryContent || theme.text;
@@ -301,7 +301,7 @@ const DiaryPreviewContent = styled.div`
   min-height: 0;
   text-align: ${props => props.$isEmpty ? 'center' : 'left'};
   // @media (min-width: 768px) {
-  //   font-size: 16px;
+  //   font-size: 14px;
   // }
 `;
 /* 일기 쓰기 버튼 텍스트 */
@@ -337,7 +337,7 @@ const ContentGrid = styled.div`
 // `;
 /* 일기 최근 미리보기 영역 */
 const SectionLabel = styled.div`
-  font-size: 20px;
+  font-size: 16px !important;
   font-weight: 600;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -348,7 +348,7 @@ const SectionLabel = styled.div`
   margin-top: 10px;
   padding-left: 10px;
   // @media (min-width: 768px) {
-  //   font-size: 24px;
+  //   font-size: 14px;
   // }
 `;
 
@@ -482,7 +482,7 @@ const PotionCount = styled.div`
 `;
 
 const PotionName = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -541,7 +541,7 @@ const EmptyPotionCard = styled.div`
 `;
 
 const EmptyPotionText = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.subText || '#888'};
   text-align: center;
 `;
@@ -558,13 +558,13 @@ const EmptyStateContainer = styled.div`
 `;
 
 const EmptyStateIcon = styled.div`
-  font-size: 36px;
+  font-size: 14px;
   opacity: 0.6;
   margin-bottom: 4px;
 `;
 
 const EmptyStateTitle = styled.div`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme, $isDiaryTheme }) =>
     $isDiaryTheme ? '#8B6F47' : theme.text};
@@ -597,7 +597,7 @@ const MoreButton = styled.button`
   background-color: transparent;
   color: ${({ theme }) => theme.primary || '#cb6565'};
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -617,13 +617,13 @@ const MoreButton = styled.button`
 
 const MyNovelTitle = styled.div`
   // margin-top: 10px;
-  font-size: 15px;
+  font-size: 14px;
   color: #cb6565;
   font-weight: 600;
   text-align: center;
   word-break: keep-all;
   // @media (min-width: 768px) {
-  //   font-size: 18px;
+  //   font-size: 14px;
   // }
 `;
 
@@ -678,7 +678,7 @@ const TutorialCover = styled.img`
 `;
 
 const TutorialTitle = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -710,7 +710,7 @@ const TutorialCoverOld = styled.div`
 `;
 
 const TutorialCoverTitle = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #cb6565;
   text-align: center;
@@ -856,7 +856,7 @@ const PotionShopContent = styled.div`
 `;
 
 const PotionShopIcon = styled.div`
-  font-size: 32px;
+  font-size: 14px;
 `;
 
 const PotionShopText = styled.div`
@@ -866,7 +866,7 @@ const PotionShopText = styled.div`
     }
     return $isDiaryTheme ? '#8B6F47' : '#fff';
   }};
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   text-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
@@ -877,7 +877,7 @@ const PotionShopText = styled.div`
 `;
 /* 일기 최근 미리보기 영역 */
 const TopicTitle = styled.p`
-  font-size: 14px;
+  font-size: 16px !important;
   font-weight: 600;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -887,7 +887,7 @@ const TopicTitle = styled.p`
 `;
 /* 일기 최근 미리보기 영역 */
 const RecommendationIntro = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
     return theme.cardSubText;
@@ -898,7 +898,7 @@ const RecommendationIntro = styled.p`
 `;
 
 const RecommendationTopic = styled.p`
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) return '#000000';
@@ -935,7 +935,7 @@ const CarouselContainer = styled.div`
         &:before {
           color: ${({ $isGlassTheme }) => $isGlassTheme ? 'transparent' : '#fdd2d2'};
           opacity: ${({ $isGlassTheme }) => $isGlassTheme ? '0' : '0.5'};
-          font-size: 8px;
+          font-size: 14px;
         }
       }
       &.slick-active button {
@@ -1060,7 +1060,7 @@ const PremiumBannerLeft = styled.div`
 `;
 
 const PremiumBannerTitle = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   margin-bottom: 6px;
   display: flex;
@@ -1075,7 +1075,7 @@ const PremiumBannerTitle = styled.div`
   }};
   
   @media (max-width: 480px) {
-    font-size: 16px;
+    font-size: 16px !important;
     gap: 4px;
     margin-bottom: 4px;
   }
@@ -1113,7 +1113,7 @@ const PremiumBannerButton = styled.div`
   padding: 12px 40px;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   white-space: nowrap;
   box-shadow: ${({ theme, $isGlassTheme }) => {
     if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
@@ -1246,7 +1246,7 @@ const AICreateContent = styled.div`
 `;
 
 const AICreateIcon = styled.div`
-  font-size: 40px;
+  font-size: 14px;
   flex-shrink: 0;
   filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'none' : 'drop-shadow(0 2px 4px rgba(139, 62, 46, 0.2))'};
   color: ${({ theme, $isGlassTheme }) => {
@@ -1261,7 +1261,7 @@ const AICreateText = styled.div`
 `;
 
 const AICreateTitle = styled.div`
-  font-size: 32px !important;
+  font-size: 16px !important;
   font-weight: 700;
   margin-bottom: 6px;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
@@ -1280,7 +1280,7 @@ const AICreateTitle = styled.div`
   gap: 12px;
   
   @media (max-width: 480px) {
-    font-size: 30px !important;
+    font-size: 16px !important;
   }
 `;
 
@@ -1298,12 +1298,12 @@ const AICreateDesc = styled.div`
   white-space: pre-line;
   
   @media (max-width: 480px) {
-    font-size: 13px;
+    font-size: 14px;
   }
 `;
 
 const AICreateArrow = styled.div`
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
   color: ${({ theme, $isGlassTheme }) => {
@@ -1353,7 +1353,7 @@ const TabButton = styled.button`
   border: none;
   border-bottom: 3px solid ${props => props.$active ? '#cb6565' : 'transparent'};
   color: ${props => props.$active ? '#cb6565' : '#888'};
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -1683,7 +1683,7 @@ function Home({ user }) {
             <AICreateText>
               <AICreateTitle $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                 <span>{t('home_ai_create_title')}</span>
-                <span style={{ fontSize: '32px', fontWeight: '700' }}>→</span>
+                <span style={{ fontSize: '14px', fontWeight: '700' }}>→</span>
               </AICreateTitle>
               <AICreateDesc $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('home_ai_create_desc')}</AICreateDesc>
             </AICreateText>
