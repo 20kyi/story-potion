@@ -187,6 +187,16 @@ body.dark .diary-today-button:not(.diary-theme):not(.glass-theme) {
     border-collapse: collapse;
 }
 
+.diary-calendar.glass-theme:not(.weekly-view) {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
 .diary-day-header {
     padding: 10px;
     padding-bottom: 20px;
@@ -223,6 +233,16 @@ body.dark .diary-day-header.sunday {
     height: 0.5px;
     background: rgba(0, 0, 0, 0.1);
     filter: blur(0.3px);
+}
+
+.diary-day-header.glass-theme {
+    color: #000000;
+    font-weight: 600;
+}
+
+.diary-day-header.glass-theme.sunday {
+    color: #000000;
+    opacity: 0.7;
 }
 
 .diary-date-cell {
@@ -311,6 +331,22 @@ body.dark .diary-day-header.sunday {
     transform: translateY(0.2px);
 }
 
+.diary-date-cell.glass-theme {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-cell.glass-theme {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-cell.glass-theme:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) tr:not(:last-child) .diary-date-cell.glass-theme {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .diary-date-button {
     width: 100%;
     height: 100%;
@@ -325,6 +361,15 @@ body.dark .diary-day-header.sunday {
     justify-content: center;
     flex-direction: column;
     font-size: 12px !important;
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-button {
+    color: #000000;
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
 }
 
 body.dark .diary-date-button {
@@ -342,10 +387,19 @@ body.dark .diary-date-button {
     z-index: 1;
 }
 
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-button.today {
+    color: #000000;
+    font-weight: 700;
+}
+
 .diary-date-button.future {
     color: #ccc;
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-button.future {
+    color: rgba(0, 0, 0, 0.3);
 }
 
 body.dark .diary-date-button.future {
@@ -356,6 +410,10 @@ body.dark .diary-date-button.future {
     color: #ccc;
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+.diary-calendar.glass-theme:not(.weekly-view) .diary-date-button.prev-month {
+    color: rgba(0, 0, 0, 0.3);
 }
 
 body.dark .diary-date-button.prev-month {
@@ -821,9 +879,31 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
     margin-bottom: 20px;
 }
 
+.diary-calendar.weekly-view.glass-theme {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
 .diary-calendar.weekly-view .diary-date-cell.weekly-cell {
     height: 120px;
     vertical-align: top;
+}
+
+.diary-calendar.weekly-view.glass-theme .diary-date-cell.weekly-cell.glass-theme {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.diary-calendar.weekly-view.glass-theme .diary-date-cell.weekly-cell.glass-theme:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.diary-calendar.weekly-view.glass-theme tr:not(:last-child) .diary-date-cell.weekly-cell.glass-theme {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .diary-calendar.weekly-view tr:first-child .diary-date-cell.weekly-cell {
@@ -833,6 +913,11 @@ body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-t
 .diary-calendar.weekly-view tr:first-child .diary-date-cell.weekly-cell.empty-cell {
     background: transparent;
     border: none;
+}
+
+.diary-calendar.weekly-view.glass-theme tr:first-child .diary-date-cell.weekly-cell.empty-cell.glass-theme {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .diary-calendar.weekly-view tr:last-child .diary-date-cell.weekly-cell {

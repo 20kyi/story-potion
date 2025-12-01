@@ -419,7 +419,7 @@ function Diary({ user }) {
             const isSunday = date.getDay() === 0;
 
             days.push(
-                <td key={`prev-${prevMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <td key={`prev-${prevMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                     <button
                         className="diary-date-button prev-month"
                         onClick={() => handleDateClick(date)}
@@ -462,7 +462,7 @@ function Diary({ user }) {
             }
 
             days.push(
-                <td key={`current-${day}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <td key={`current-${day}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                     <button
                         className={`diary-date-button ${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
@@ -512,7 +512,7 @@ function Diary({ user }) {
             const isSunday = date.getDay() === 0;
 
             days.push(
-                <td key={`next-${nextMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <td key={`next-${nextMonthDay}`} className={`diary-date-cell ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                     <button
                         className="diary-date-button prev-month"
                         onClick={() => handleDateClick(date)}
@@ -576,7 +576,7 @@ function Diary({ user }) {
             const diaryPreview = diary && diary.content ? diary.content.replace(/\n/g, ' ').substring(0, 50) + (diary.content.length > 50 ? '...' : '') : '';
 
             return (
-                <td key={`week-${i}`} className={`diary-date-cell weekly-cell ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                <td key={`week-${i}`} className={`diary-date-cell weekly-cell ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                     <button
                         className={`diary-date-button ${isToday ? 'today' : ''} ${future ? 'future' : ''}`}
                         onClick={() => !future && handleDateClick(date)}
@@ -622,7 +622,7 @@ function Diary({ user }) {
 
         // 첫 번째 줄: 빈칸, 월, 화, 수
         // weekStart는 월요일이므로, i=0: 월, i=1: 화, i=2: 수
-        firstRowDays.push(<td key="empty" className={`diary-date-cell weekly-cell empty-cell ${isDiaryTheme ? 'diary-theme' : ''}`}></td>);
+        firstRowDays.push(<td key="empty" className={`diary-date-cell weekly-cell empty-cell ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}></td>);
         for (let i = 0; i < 3; i++) { // 월(0), 화(1), 수(2)
             firstRowDays.push(renderDayCell(i));
         }
@@ -736,7 +736,7 @@ function Diary({ user }) {
                     </div>
                     <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
-                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
+                <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
                     {viewMode === 'month' && (
                         <thead>
                             <tr>
@@ -744,7 +744,7 @@ function Diary({ user }) {
                                     ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                                     : ['일', '월', '화', '수', '목', '금', '토']
                                 ).map((day, index) => (
-                                    <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
+                                    <th key={day} className={`diary-day-header ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''} ${index === 0 ? 'sunday' : ''}`}>{day}</th>
                                 ))}
                             </tr>
                         </thead>
