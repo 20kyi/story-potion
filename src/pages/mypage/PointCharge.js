@@ -23,18 +23,58 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: transparent;
-  color: ${({ theme }) => theme.text};
+  background: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   position: relative;
 `;
 
 const PointDisplay = styled.div`
   text-align: center;
   margin-bottom: 30px;
-  padding: 20px;
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 24px 20px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '16px 20px 18px 17px' : '16px';
+  }};
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  position: relative;
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(0.2deg)' : 'none'};
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const PointAmount = styled.div`
@@ -52,7 +92,7 @@ const PointAmount = styled.div`
 const PointLabel = styled.div`
   font-size: 14px;
   font-family: inherit;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
 `;
 
 const PackageGrid = styled.div`
@@ -63,20 +103,94 @@ const PackageGrid = styled.div`
 `;
 
 const PackageCard = styled.div`
-  background: ${({ theme, selected }) => selected ? (theme.cardActive || theme.primary || '#3498f3') : theme.card};
-  color: ${({ theme, selected }) => selected ? (theme.cardActiveText || 'white') : theme.text};
-  border: 2px solid ${({ theme, selected }) => selected ? (theme.cardActiveBorder || theme.primary || '#3498f3') : (theme.border || '#e0e0e0')};
-  border-radius: 15px;
+  background: ${({ theme, selected, $isDiaryTheme, $isGlassTheme }) => {
+    if (selected) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.1)';
+      return theme.cardActive || theme.primary || '#3498f3';
+    }
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ theme, selected, $isDiaryTheme, $isGlassTheme }) => {
+    if (selected) {
+      if ($isGlassTheme) return '#000000';
+      if ($isDiaryTheme) return '#8B6F47';
+      return theme.cardActiveText || 'white';
+    }
+    if ($isDiaryTheme) return '#5C4B37';
+    return theme.text;
+  }};
+  border: 2px solid ${({ theme, selected, $isDiaryTheme, $isGlassTheme }) => {
+    if (selected) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.6)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.4)';
+      return theme.cardActiveBorder || theme.primary || '#3498f3';
+    }
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
+    return theme.border || '#e0e0e0';
+  }};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '15px 19px 17px 16px' : '15px';
+  }};
   padding: 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme, selected }) => {
+    if ($isGlassTheme) return selected ? '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)' : '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return selected
+        ? '0 4px 12px rgba(228, 98, 98, 0.2), 0 2px 4px rgba(228, 98, 98, 0.15)'
+        : '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return selected
+      ? '0 4px 12px rgba(52, 152, 243, 0.3)'
+      : theme.mode === 'dark'
+        ? '0 2px 8px rgba(0,0,0,0.18)'
+        : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  position: relative;
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'translateY(-2px)';
+      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+      return 'translateY(-2px)';
+    }};
+    box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme, selected }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) {
+        return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+      }
+      return selected
+        ? '0 6px 16px rgba(52, 152, 243, 0.4)'
+        : theme.mode === 'dark'
+          ? '0 4px 12px rgba(0,0,0,0.25)'
+          : '0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
+    }};
   }
+  
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const PackagePoints = styled.div`
@@ -100,34 +214,132 @@ const PackageBonus = styled.div`
 `;
 
 const PurchaseButton = styled.button`
-  background: #e46262;
-  color: white;
-  border: none;
-  border-radius: 25px;
+  background: ${({ disabled, $isGlassTheme, $isDiaryTheme }) => {
+    if (disabled) {
+      if ($isGlassTheme) return 'rgba(204, 204, 204, 0.3)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.3)';
+      return '#ccc';
+    }
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.8)';
+    return '#e46262';
+  }};
+  backdrop-filter: ${({ $isGlassTheme, disabled }) => ($isGlassTheme && !disabled) ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme, disabled }) => ($isGlassTheme && !disabled) ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme, $isDiaryTheme, disabled }) => {
+    if (disabled) return '#999';
+    if ($isGlassTheme) return '#000000';
+    return 'white';
+  }};
+  border: ${({ $isGlassTheme, $isDiaryTheme, disabled }) => {
+    if (disabled) return 'none';
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(228, 98, 98, 0.5)';
+    return 'none';
+  }};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '25px 29px 27px 26px' : '25px';
+  }};
   padding: 16px 32px;
   font-size: 18px;
   font-weight: 600;
   font-family: inherit;
-  cursor: pointer;
+  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   width: 100%;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: ${({ disabled, $isGlassTheme, $isDiaryTheme }) => {
+    if (disabled) return 'none';
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(228, 98, 98, 0.3)';
+    return '0 4px 12px rgba(228, 98, 98, 0.3)';
+  }};
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
 
-  &:hover {
-    background: #d45555;
+  &:hover:not(:disabled) {
+    background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+      return '#d45555';
+    }};
+    transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'translateY(-2px)';
+      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+      return 'translateY(-2px)';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 4px 12px rgba(228, 98, 98, 0.4)';
+      return '0 6px 16px rgba(228, 98, 98, 0.4)';
+    }};
   }
 
   &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+    opacity: 0.6;
   }
+  
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
+    &::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(228, 98, 98, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const InfoSection = styled.div`
-  background: ${({ theme }) => theme.card};
-  border-radius: 15px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '24px';
+    return $isDiaryTheme ? '16px 20px 18px 17px' : '16px';
+  }};
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  position: relative;
+  transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  
+  ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(139, 111, 71, 0.08) 0%, transparent 50%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+  `}
 `;
 
 const InfoTitle = styled.h3`
@@ -135,14 +347,14 @@ const InfoTitle = styled.h3`
   font-weight: 600;
   font-family: inherit;
   margin-bottom: 12px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
 `;
 
 const InfoText = styled.p`
   font-size: 14px;
   line-height: 1.6;
   font-family: inherit;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   margin-bottom: 8px;
 `;
 
@@ -154,18 +366,52 @@ const TabContainer = styled.div`
 
 const TabHeader = styled.div`
   display: flex;
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   border-radius: 15px 15px 0 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  border-bottom: none;
 `;
 
 const TabButton = styled.button`
   flex: 1;
   padding: 16px;
   border: none;
-  background: ${({ active, theme }) => active ? '#e46262' : 'transparent'};
-  color: ${({ active, theme }) => active ? 'white' : theme.text};
+  background: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+    if (active) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.8)';
+      return '#e46262';
+    }
+    return 'transparent';
+  }};
+  color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+    if (active) {
+      if ($isGlassTheme) return '#000000';
+      return 'white';
+    }
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -173,16 +419,51 @@ const TabButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${({ active, theme }) => active ? '#d45555' : 'rgba(228, 98, 98, 0.1)'};
-    color: ${({ active, theme }) => active ? 'white' : theme.text};
+    background: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+      if (active) {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+        return '#d45555';
+      }
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.1)';
+      return 'rgba(228, 98, 98, 0.1)';
+    }};
+    color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+      if (active) {
+        if ($isGlassTheme) return '#000000';
+        return 'white';
+      }
+      if ($isDiaryTheme) return '#8B6F47';
+      return theme.text;
+    }};
   }
 `;
 
 const TabContent = styled.div`
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   border-radius: 0 0 15px 15px;
   padding: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  border-top: none;
   min-height: 300px;
 `;
 
@@ -197,8 +478,19 @@ const HistoryItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: ${({ theme }) => theme.background};
-  border-radius: 12px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return 'rgba(255, 254, 249, 0.8)';
+    return theme.background;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '12px 16px 14px 13px' : '12px'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.1)';
+    return 'none';
+  }};
 `;
 
 const HistoryInfo = styled.div`
@@ -209,14 +501,14 @@ const HistoryTitle = styled.div`
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   margin-bottom: 4px;
 `;
 
 const HistoryDate = styled.div`
   font-size: 12px;
   font-family: inherit;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
 `;
 
 const HistoryAmount = styled.div`
@@ -233,7 +525,7 @@ const HistoryAmount = styled.div`
 const EmptyState = styled.div`
   text-align: center;
   padding: 40px 20px;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
 `;
 
 const EmptyIcon = styled.div`
@@ -299,7 +591,7 @@ const PageButton = styled.button`
 const PageInfo = styled.div`
   font-size: 14px;
   font-family: inherit;
-  color: ${({ theme }) => theme.subText || '#888'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#888')};
   margin: 0 16px;
 `;
 
@@ -314,6 +606,9 @@ function PointCharge({ user }) {
   const navigate = useNavigate();
   const toast = useToast();
   const theme = useTheme();
+  const { actualTheme } = useAppTheme();
+  const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
   const { t } = useTranslation();
   const [currentPoints, setCurrentPoints] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -556,7 +851,7 @@ function PointCharge({ user }) {
   const renderHistoryList = (historyList) => {
     if (historyList.length === 0) {
       return (
-        <EmptyState theme={theme}>
+        <EmptyState theme={theme} $isDiaryTheme={isDiaryTheme}>
           <EmptyIcon>📊</EmptyIcon>
           <EmptyText>{t('no_history')}</EmptyText>
           <EmptySubText>
@@ -579,12 +874,12 @@ function PointCharge({ user }) {
       <>
         <HistoryList>
           {currentItems.map((item) => (
-            <HistoryItem key={item.id} theme={theme} type={item.type}>
+            <HistoryItem key={item.id} theme={theme} type={item.type} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
               <HistoryInfo theme={theme}>
-                <HistoryTitle theme={theme}>
+                <HistoryTitle theme={theme} $isDiaryTheme={isDiaryTheme}>
                   {formatHistoryTitle(item)}
                 </HistoryTitle>
-                <HistoryDate theme={theme}>{formatDate(item.createdAt)}</HistoryDate>
+                <HistoryDate theme={theme} $isDiaryTheme={isDiaryTheme}>{formatDate(item.createdAt)}</HistoryDate>
               </HistoryInfo>
               <HistoryAmount type={item.type} theme={theme}>
                 {item.type === 'use' ? '-' : '+'}
@@ -607,7 +902,7 @@ function PointCharge({ user }) {
               </svg>
             </PageButton>
 
-            <PageInfo theme={theme}>
+            <PageInfo theme={theme} $isDiaryTheme={isDiaryTheme}>
               {currentPage} / {totalPages}
             </PageInfo>
 
@@ -627,23 +922,23 @@ function PointCharge({ user }) {
   };
 
   return (
-    <Container theme={theme}>
+    <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
       <Header user={user} title={t('point_charge')} />
 
-      <PointDisplay theme={theme}>
+      <PointDisplay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
         <PointAmount>
           <PointIcon width={32} height={32} color="#3498f3" />
           {currentPoints.toLocaleString()}p
         </PointAmount>
-        <PointLabel theme={theme}>{t('current_points')}</PointLabel>
+        <PointLabel theme={theme} $isDiaryTheme={isDiaryTheme}>{t('current_points')}</PointLabel>
       </PointDisplay>
 
-      <InfoSection theme={theme}>
-        <InfoTitle theme={theme}>{t('point_usage_guide')}</InfoTitle>
-        <InfoText theme={theme}>{t('point_usage_guide_item1')}</InfoText>
-        <InfoText theme={theme}>{t('point_usage_guide_item2')}</InfoText>
-        <InfoText theme={theme}>{t('point_usage_guide_item3')}</InfoText>
-        <InfoText theme={theme}>{t('point_usage_guide_item4')}</InfoText>
+      <InfoSection theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+        <InfoTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_usage_guide')}</InfoTitle>
+        <InfoText theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_usage_guide_item1')}</InfoText>
+        <InfoText theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_usage_guide_item2')}</InfoText>
+        <InfoText theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_usage_guide_item3')}</InfoText>
+        <InfoText theme={theme} $isDiaryTheme={isDiaryTheme}>{t('point_usage_guide_item4')}</InfoText>
       </InfoSection>
 
       <PackageGrid>
@@ -653,6 +948,8 @@ function PointCharge({ user }) {
             selected={selectedPackage === pkg.id}
             onClick={() => setSelectedPackage(pkg.id)}
             theme={theme}
+            $isDiaryTheme={isDiaryTheme}
+            $isGlassTheme={isGlassTheme}
           >
             <PackagePoints>{pkg.points}p</PackagePoints>
             <PackagePrice>{pkg.price}</PackagePrice>
@@ -668,6 +965,8 @@ function PointCharge({ user }) {
       <PurchaseButton
         onClick={handlePurchase}
         disabled={!selectedPackage || isLoading}
+        $isDiaryTheme={isDiaryTheme}
+        $isGlassTheme={isGlassTheme}
       >
         {isLoading ? t('point_charging') : t('point_charge_do')}
       </PurchaseButton>
@@ -696,7 +995,7 @@ function PointCharge({ user }) {
 
       {/* 포인트 내역 탭 */}
       <TabContainer>
-        <TabHeader theme={theme}>
+        <TabHeader theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
           <TabButton
             active={activeTab === 'all'}
             onClick={() => {
@@ -704,6 +1003,8 @@ function PointCharge({ user }) {
               setCurrentPage(1);
             }}
             theme={theme}
+            $isDiaryTheme={isDiaryTheme}
+            $isGlassTheme={isGlassTheme}
           >
             {t('tab_all')}
           </TabButton>
@@ -714,6 +1015,8 @@ function PointCharge({ user }) {
               setCurrentPage(1);
             }}
             theme={theme}
+            $isDiaryTheme={isDiaryTheme}
+            $isGlassTheme={isGlassTheme}
           >
             {t('tab_use')}
           </TabButton>
@@ -724,6 +1027,8 @@ function PointCharge({ user }) {
               setCurrentPage(1);
             }}
             theme={theme}
+            $isDiaryTheme={isDiaryTheme}
+            $isGlassTheme={isGlassTheme}
           >
             {t('tab_earn')}
           </TabButton>
@@ -734,11 +1039,13 @@ function PointCharge({ user }) {
               setCurrentPage(1);
             }}
             theme={theme}
+            $isDiaryTheme={isDiaryTheme}
+            $isGlassTheme={isGlassTheme}
           >
             {t('tab_charge')}
           </TabButton>
         </TabHeader>
-        <TabContent theme={theme}>
+        <TabContent theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
           {renderHistoryList(historyData[activeTab])}
         </TabContent>
       </TabContainer>
