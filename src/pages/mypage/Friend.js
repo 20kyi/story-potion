@@ -36,8 +36,8 @@ const Container = styled.div`
   margin-left: auto;
   margin-right: auto;
   max-width: 600px;
-  background: transparent;
-  color: ${({ theme }) => theme.text};
+  background: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   position: relative;
 `;
 
@@ -47,10 +47,30 @@ const TabContainer = styled.div`
 
 const TabHeader = styled.div`
   display: flex;
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   border-radius: 12px 12px 0 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  border-bottom: none;
 `;
 
 const Tab = styled.button.attrs({
@@ -59,8 +79,22 @@ const Tab = styled.button.attrs({
   flex: 1;
   padding: 14px 12px;
   border: none;
-  background: ${({ active, theme }) => active ? '#e46262' : 'transparent'};
-  color: ${({ active, theme }) => active ? 'white' : (theme.mode === 'dark' ? '#fff' : theme.text)};
+  background: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+    if (active) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.8)';
+      return '#e46262';
+    }
+    return 'transparent';
+  }};
+  color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+    if (active) {
+      if ($isGlassTheme) return '#000000';
+      return 'white';
+    }
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.mode === 'dark' ? '#fff' : theme.text;
+  }};
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -70,13 +104,45 @@ const Tab = styled.button.attrs({
   align-items: center;
   justify-content: center;
   gap: 8px;
+
+  &:hover {
+    background: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
+      if (active) {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+        if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+        return '#d45555';
+      }
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.1)';
+      return 'rgba(228, 98, 98, 0.1)';
+    }};
+  }
 `;
 
 const TabContent = styled.div`
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.mode === 'dark' ? theme.card : '#ffffff';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   border-radius: 0 0 12px 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) {
+      return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    }
+    return theme.mode === 'dark'
+      ? '0 2px 8px rgba(0,0,0,0.18)'
+      : '0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)';
+  }};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.2)';
+    return theme.mode === 'dark' ? 'none' : '1px solid #f0f0f0';
+  }};
+  border-top: none;
   min-height: 500px;
 `;
 
@@ -90,7 +156,7 @@ const SearchTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
 `;
 
 const SearchInputContainer = styled.div`
@@ -106,27 +172,62 @@ const SearchInput = styled.input.attrs({
   width: 100%;
   padding: 14px 16px;
   padding-right: 50px;
-  border: 1px solid ${({ theme }) => theme.border || '#e0e0e0'};
-  border-radius: 10px;
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+    return `1px solid ${theme.border || '#e0e0e0'}`;
+  }};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '20px';
+    return $isDiaryTheme ? '10px 14px 12px 11px' : '10px';
+  }};
   font-size: 16px;
-  background-color: ${({ theme }) => theme.background} !important;
-  color: ${({ theme }) => theme.text} !important;
+  background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2) !important';
+    if ($isDiaryTheme) return '#fffef9 !important';
+    return `${theme.background} !important`;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ theme, $isDiaryTheme }) => {
+    if ($isDiaryTheme) return '#5C4B37 !important';
+    return `${theme.text} !important`;
+  }};
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 1px 3px rgba(0, 0, 0, 0.05)';
+    return 'none';
+  }};
 
   &::placeholder {
-    color: ${({ theme }) => theme.subText || '#666'} !important;
+    color: ${({ theme, $isDiaryTheme }) => {
+      if ($isDiaryTheme) return '#8B6F47 !important';
+      return `${theme.subText || '#666'} !important`;
+    }};
     opacity: 1;
   }
 
   &:focus {
     border-color: #e46262;
-    box-shadow: 0 0 0 2px rgba(228, 98, 98, 0.1);
-    background-color: ${({ theme }) => theme.background} !important;
-    color: ${({ theme }) => theme.text} !important;
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
+      if ($isDiaryTheme) return '0 0 0 2px rgba(228, 98, 98, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
+      return '0 0 0 2px rgba(228, 98, 98, 0.1)';
+    }};
+    background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
+      if ($isDiaryTheme) return '#fffef9 !important';
+      return `${theme.background} !important`;
+    }};
+    color: ${({ theme, $isDiaryTheme }) => {
+      if ($isDiaryTheme) return '#5C4B37 !important';
+      return `${theme.text} !important`;
+    }};
   }
 
   /* 다크모드에서 자동완성 배경색 방지 */
@@ -134,9 +235,20 @@ const SearchInput = styled.input.attrs({
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus,
   &:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px ${({ theme }) => theme.background} inset !important;
-    -webkit-text-fill-color: ${({ theme }) => theme.text} !important;
-    background-color: ${({ theme }) => theme.background} !important;
+    -webkit-box-shadow: 0 0 0 30px ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+      if ($isDiaryTheme) return '#fffef9';
+      return theme.background;
+    }} inset !important;
+    -webkit-text-fill-color: ${({ theme, $isDiaryTheme }) => {
+      if ($isDiaryTheme) return '#5C4B37 !important';
+      return `${theme.text} !important`;
+    }};
+    background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+      if ($isDiaryTheme) return '#fffef9';
+      return theme.background;
+    }} !important;
   }
 
   /* 모든 상태에서 배경색 강제 적용 */
@@ -144,8 +256,15 @@ const SearchInput = styled.input.attrs({
   &:active,
   &:focus,
   &:visited {
-    background-color: ${({ theme }) => theme.background} !important;
-    color: ${({ theme }) => theme.text} !important;
+    background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
+      if ($isDiaryTheme) return '#fffef9 !important';
+      return `${theme.background} !important`;
+    }};
+    color: ${({ theme, $isDiaryTheme }) => {
+      if ($isDiaryTheme) return '#5C4B37 !important';
+      return `${theme.text} !important`;
+    }};
   }
 `;
 
@@ -200,18 +319,36 @@ const SearchButton = styled.button`
 `;
 /* 유저카드 */
 const UserCard = styled(motion.div)`
-  background: ${({ theme }) => theme.background};
-  border-radius: 12px;
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.15)';
+    if ($isDiaryTheme) return 'rgba(255, 254, 249, 0.8)';
+    return theme.background;
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '12px 16px 14px 13px' : '12px'};
   padding: 16px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 1px 4px rgba(0, 0, 0, 0.06)';
+    return '0 2px 6px rgba(0,0,0,0.08)';
+  }};
   display: flex;
   flex-direction: column;
-  border: 1px solid ${({ theme }) => theme.border || '#f0f0f0'};
+  border: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+    if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.1)';
+    return `1px solid ${theme.border || '#f0f0f0'}`;
+  }};
   transition: all 0.2s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+      if ($isGlassTheme) return '0 4px 16px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08)';
+      return '0 4px 12px rgba(0,0,0,0.12)';
+    }};
   }
 `;
 
@@ -242,7 +379,7 @@ const UserDetails = styled.div`
 const UserName = styled.div`
   font-size: 16px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -251,7 +388,7 @@ const UserName = styled.div`
 
 const UserEmail = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#666')};
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -371,7 +508,7 @@ const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : theme.text};
   display: flex;
   align-items: center;
   gap: 8px;
@@ -380,7 +517,7 @@ const SectionTitle = styled.h3`
 const EmptyState = styled.div`
   text-align: center;
   padding: 40px 20px;
-  color: ${({ theme }) => theme.subText || '#666'};
+  color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#8B6F47' : (theme.subText || '#666')};
 `;
 
 const EmptyIcon = styled.div`
@@ -487,6 +624,9 @@ const TrashIconButton = styled.button`
 function Friend({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { actualTheme } = useTheme();
+    const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     const toast = useToast();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('friends');  // 기본 탭을 친구로 변경
@@ -761,7 +901,7 @@ function Friend({ user }) {
     const renderFriendsTab = () => (
         <div>
             <SearchSection theme={theme}>
-                <SearchTitle theme={theme}>{t('friend_search_title')}</SearchTitle>
+                <SearchTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('friend_search_title')}</SearchTitle>
                 <SearchInputContainer>
                     <SearchInput
                         type="text"
@@ -770,10 +910,8 @@ function Friend({ user }) {
                         onChange={handleSearchInputChange}
                         onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
                         theme={theme}
-                        style={{
-                            backgroundColor: theme.background,
-                            color: theme.text
-                        }}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                     />
                     <SearchButton
                         onClick={handleManualSearch}
@@ -785,7 +923,7 @@ function Friend({ user }) {
 
                 {searchResults.length > 0 && (
                     <div style={{ marginTop: '20px' }}>
-                        <SectionTitle theme={theme}>
+                        <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme}>
                             {t('friend_search_results', { count: searchResults.length })}
                         </SectionTitle>
                         {searchResults.map((user) => {
@@ -798,6 +936,8 @@ function Friend({ user }) {
                                 <UserCard
                                     key={user.uid}
                                     theme={theme}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.99 }}
                                 >
@@ -808,9 +948,10 @@ function Friend({ user }) {
                                             onError={(e) => handleImageError(e)}
                                         />
                                         <UserDetails>
-                                            <UserName theme={theme}>{user.displayName || t('default_user_name')}</UserName>
+                                            <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>{user.displayName || t('default_user_name')}</UserName>
                                             <UserEmail
                                                 theme={theme}
+                                                $isDiaryTheme={isDiaryTheme}
                                                 title={user.email}
                                             >
                                                 {user.email}
@@ -879,7 +1020,7 @@ function Friend({ user }) {
 
                 {!isSearching && searchQuery.trim() && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
                     <div style={{ marginTop: '20px' }}>
-                        <EmptyState theme={theme}>
+                        <EmptyState theme={theme} $isDiaryTheme={isDiaryTheme}>
                             <EmptyIcon>🔍</EmptyIcon>
                             <EmptyText>{t('friend_search_no_results')}</EmptyText>
                             <EmptySubtext>{t('friend_search_no_results_sub')}</EmptySubtext>
@@ -896,13 +1037,13 @@ function Friend({ user }) {
                 )}
             </SearchSection>
 
-            <SectionTitle theme={theme}>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme}>
                 <FaUsers />
                 {t('friend_list_title', { count: friends.length })}
             </SectionTitle>
 
             {friends.length === 0 ? (
-                <EmptyState theme={theme}>
+                <EmptyState theme={theme} $isDiaryTheme={isDiaryTheme}>
                     <EmptyIcon>👥</EmptyIcon>
                     <EmptyText>{t('friend_list_empty')}</EmptyText>
                     <EmptySubtext>{t('friend_list_empty_sub')}</EmptySubtext>
@@ -912,6 +1053,8 @@ function Friend({ user }) {
                     <UserCard
                         key={friend.id}
                         theme={theme}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         style={{ position: 'relative' }}
@@ -926,11 +1069,12 @@ function Friend({ user }) {
                                 onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
-                                <UserName theme={theme}>
+                                <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>
                                     {friend.user.displayName || t('default_user_name')}
                                 </UserName>
                                 <UserEmail
                                     theme={theme}
+                                    $isDiaryTheme={isDiaryTheme}
                                     title={friend.user.email}
                                 >
                                     {friend.user.email}
@@ -956,7 +1100,7 @@ function Friend({ user }) {
 
     const renderRequestsTab = () => (
         <div>
-            <SectionTitle theme={theme}>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme}>
                 {t('friend_received_requests')}
                 {receivedRequests.length > 0 && (
                     <RequestCount>{receivedRequests.length}</RequestCount>
@@ -964,7 +1108,7 @@ function Friend({ user }) {
             </SectionTitle>
 
             {receivedRequests.length === 0 ? (
-                <EmptyState theme={theme}>
+                <EmptyState theme={theme} $isDiaryTheme={isDiaryTheme}>
                     <EmptyIcon>📭</EmptyIcon>
                     <EmptyText>{t('friend_received_empty')}</EmptyText>
                     <EmptySubtext>{t('friend_received_empty_sub')}</EmptySubtext>
@@ -974,6 +1118,8 @@ function Friend({ user }) {
                     <UserCard
                         key={request.id}
                         theme={theme}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                     >
@@ -984,11 +1130,12 @@ function Friend({ user }) {
                                 onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
-                                <UserName theme={theme}>
+                                <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>
                                     {request.fromUser?.displayName || t('default_user_name')}
                                 </UserName>
                                 <UserEmail
                                     theme={theme}
+                                    $isDiaryTheme={isDiaryTheme}
                                     title={request.fromUser?.email || ''}
                                 >
                                     {request.fromUser?.email || ''}
@@ -1015,9 +1162,9 @@ function Friend({ user }) {
                 ))
             )}
 
-            <SectionTitle theme={theme}>{t('friend_sent_requests')}</SectionTitle>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme}>{t('friend_sent_requests')}</SectionTitle>
             {sentRequests.length === 0 ? (
-                <EmptyState theme={theme}>
+                <EmptyState theme={theme} $isDiaryTheme={isDiaryTheme}>
                     <EmptyIcon>📤</EmptyIcon>
                     <EmptyText>{t('friend_sent_empty')}</EmptyText>
                     <EmptySubtext>{t('friend_sent_empty_sub')}</EmptySubtext>
@@ -1027,6 +1174,8 @@ function Friend({ user }) {
                     <UserCard
                         key={request.id}
                         theme={theme}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                     >
@@ -1037,11 +1186,12 @@ function Friend({ user }) {
                                 onError={(e) => handleImageError(e)}
                             />
                             <UserDetails>
-                                <UserName theme={theme}>
+                                <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>
                                     {request.toUser?.displayName || t('default_user_name')}
                                 </UserName>
                                 <UserEmail
                                     theme={theme}
+                                    $isDiaryTheme={isDiaryTheme}
                                     title={request.toUser?.email || ''}
                                 >
                                     {request.toUser?.email || ''}
@@ -1063,16 +1213,18 @@ function Friend({ user }) {
     );
 
     return (
-        <Container theme={theme}>
+        <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
             <GlobalStyle theme={theme} />
             <Header user={user} title={t('friends')} />
 
             <TabContainer>
-                <TabHeader theme={theme}>
+                <TabHeader theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                     <Tab
                         active={activeTab === 'friends'}
                         onClick={() => setActiveTab('friends')}
                         theme={theme}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                     >
                         {t('friends')}
                     </Tab>
@@ -1080,6 +1232,8 @@ function Friend({ user }) {
                         active={activeTab === 'requests'}
                         onClick={() => setActiveTab('requests')}
                         theme={theme}
+                        $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                     >
                         {t('friend_requests_tab')}
                         {receivedRequests.length > 0 && (
@@ -1087,7 +1241,7 @@ function Friend({ user }) {
                         )}
                     </Tab>
                 </TabHeader>
-                <TabContent theme={theme}>
+                <TabContent theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                     {activeTab === 'friends' && renderFriendsTab()}
                     {activeTab === 'requests' && renderRequestsTab()}
                 </TabContent>
