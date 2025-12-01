@@ -430,7 +430,7 @@ const PublicToggleSlider = styled.span`
   border-radius: 20px;
   transition: all 0.3s ease;
   z-index: 1;
-  transform: ${({ $isPublic }) => $isPublic ? 'translateX(0)' : 'translateX(100%)'};
+  transform: ${({ $isPublic }) => $isPublic ? 'translateX(100%)' : 'translateX(0)'};
   background: ${({ $isGlassTheme, $isDiaryTheme, theme, $isPublic }) => {
         if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
         if ($isDiaryTheme) {
@@ -1118,11 +1118,11 @@ function CompletedNovels({ user }) {
                                                                 theme={theme}
                                                                 onClick={(e) => handleTogglePublic(novel, e)}
                                                             >
-                                                                <PublicToggleOption $active={novel.isPublic !== false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme}>
-                                                                    공개
-                                                                </PublicToggleOption>
                                                                 <PublicToggleOption $active={novel.isPublic === false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme}>
                                                                     비공개
+                                                                </PublicToggleOption>
+                                                                <PublicToggleOption $active={novel.isPublic !== false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme}>
+                                                                    공개
                                                                 </PublicToggleOption>
                                                                 <PublicToggleSlider $isPublic={novel.isPublic !== false} $isGlassTheme={isGlassTheme} $isDiaryTheme={isDiaryTheme} theme={theme} />
                                                             </PublicToggleButton>
