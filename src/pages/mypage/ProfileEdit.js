@@ -91,15 +91,35 @@ const EditInputWrap = styled.div`
 const EditInput = styled.input`
   width: 100%;
   padding: 10px 15px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 8px;
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1.5px solid rgba(139, 111, 71, 0.3)';
+    return theme.mode === 'dark' ? '1.5px solid #444' : '1.5px solid #e0e0e0';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
-  background: ${({ theme }) => theme.inputBackground || '#fff'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
+  background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.inputBackground || (theme.mode === 'dark' ? '#2a2a2a' : '#fff');
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   &:focus {
-    border-color: #e46262;
+    border-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return 'rgba(228, 98, 98, 0.8)';
+      if ($isDiaryTheme) return '#8B6F47';
+      return '#e46262';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 0 0 2px rgba(139, 111, 71, 0.1)';
+      return '0 0 0 2px rgba(228,98,98,0.08)';
+    }};
   }
 `;
 
@@ -134,42 +154,92 @@ const EditButtonRow = styled.div`
 const EditCancelTextButton = styled.button`
   flex: 1;
   padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: transparent;
-  color: #666;
+  border: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+    return theme.mode === 'dark' ? '1px solid #555' : '1px solid #ddd';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'transparent';
+    return 'transparent';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+    if ($isGlassTheme) return '#000000';
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.mode === 'dark' ? '#ccc' : '#666';
+  }};
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   &:hover {
-    background: #fdfdfd;
+    background: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+      return theme.mode === 'dark' ? '#333' : '#fdfdfd';
+    }};
+    box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 `;
 
 const EditSaveButton = styled.button`
   flex: 1;
   padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ff8a8a 0%, #e46262 100%);
-  color: white;
+  border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+    if ($isDiaryTheme) return '1px solid #8B6F47';
+    return 'none';
+  }};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.8)';
+    return 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)';
+  }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  color: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '#000000';
+    return 'white';
+  }};
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(139, 111, 71, 0.3)';
+    return 'none';
+  }};
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
   &:hover:not(:disabled) {
-    box-shadow: 0 4px 15px rgba(228, 98, 98, 0.4);
+    background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
+      return 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)';
+    }};
+    box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
+      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+      if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
+      return '0 4px 15px rgba(228, 98, 98, 0.4)';
+    }};
   }
 `;
 
 function ProfileEdit({ user }) {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const isGlassTheme = actualTheme === 'glass';
+  const isDiaryTheme = actualTheme === 'diary';
   const { t } = useTranslation();
 
   // 프로필 편집 관련 상태
@@ -528,6 +598,9 @@ function ProfileEdit({ user }) {
             id="edit-nickname"
             type="text"
             value={newDisplayName}
+            $isGlassTheme={isGlassTheme}
+            $isDiaryTheme={isDiaryTheme}
+            theme={theme}
             onChange={(e) => {
               setNewDisplayName(e.target.value);
               // 닉네임 변경 시 이전 에러/성공 메시지 초기화
@@ -566,6 +639,9 @@ function ProfileEdit({ user }) {
             id="edit-phone"
             type="tel"
             value={newPhoneNumber}
+            $isGlassTheme={isGlassTheme}
+            $isDiaryTheme={isDiaryTheme}
+            theme={theme}
             onChange={(e) => setNewPhoneNumber(e.target.value)}
             placeholder="휴대전화 번호 (예: 01012345678)"
             autoComplete="off"
@@ -583,6 +659,9 @@ function ProfileEdit({ user }) {
                   id="current-password"
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
+                  $isGlassTheme={isGlassTheme}
+                  $isDiaryTheme={isDiaryTheme}
+                  theme={theme}
                   onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="현재 비밀번호 입력"
                   autoComplete="current-password"
@@ -601,6 +680,9 @@ function ProfileEdit({ user }) {
                   id="new-password"
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
+                  $isGlassTheme={isGlassTheme}
+                  $isDiaryTheme={isDiaryTheme}
+                  theme={theme}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="새 비밀번호 입력"
                   autoComplete="new-password"
@@ -619,6 +701,9 @@ function ProfileEdit({ user }) {
                   id="confirm-password"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
+                  $isGlassTheme={isGlassTheme}
+                  $isDiaryTheme={isDiaryTheme}
+                  theme={theme}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="새 비밀번호 확인"
                   autoComplete="new-password"
@@ -635,8 +720,17 @@ function ProfileEdit({ user }) {
         )}
 
         <EditButtonRow>
-          <EditCancelTextButton onClick={() => navigate('/my')}>{t('cancel') || '취소'}</EditCancelTextButton>
+          <EditCancelTextButton 
+            $isGlassTheme={isGlassTheme}
+            $isDiaryTheme={isDiaryTheme}
+            theme={theme}
+            onClick={() => navigate('/my')}
+          >
+            {t('cancel') || '취소'}
+          </EditCancelTextButton>
           <EditSaveButton
+            $isGlassTheme={isGlassTheme}
+            $isDiaryTheme={isDiaryTheme}
             onClick={handleSave}
             disabled={pwChangeLoading || isNicknameDuplicate || isNicknameChecking}
           >
