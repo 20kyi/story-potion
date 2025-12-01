@@ -1047,6 +1047,7 @@ const Novel = ({ user }) => {
                 icon="📚"
                 novels={myNovels}
                 isDiaryTheme={isDiaryTheme}
+                isGlassTheme={isGlassTheme}
                 moreLinkPath="/my/completed-novels"
                 emptyMessage="아직 작성한 소설이 없습니다.<br />일기를 작성하고 소설을 만들어보세요!"
             />
@@ -1057,6 +1058,7 @@ const Novel = ({ user }) => {
                 icon="🛍️"
                 novels={purchasedNovels}
                 isDiaryTheme={isDiaryTheme}
+                isGlassTheme={isGlassTheme}
                 moreLinkPath="/purchased-novels"
                 emptyMessage="아직 구매한 소설이 없습니다.<br />다른 사람의 소설을 구매해보세요!"
             />
