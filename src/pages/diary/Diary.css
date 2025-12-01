@@ -164,7 +164,7 @@ body.dark .diary-month-button:not(.diary-theme):not(.glass-theme):hover {
     transition: all 0.2s ease;
     white-space: nowrap;
     min-width: 36px;
-    margin: 0 8px;
+    margin: 0;
 }
 
 .diary-today-button.diary-theme {
@@ -185,6 +185,7 @@ body.dark .diary-month-button:not(.diary-theme):not(.glass-theme):hover {
     padding: 0;
     border-radius: 50%;
     min-width: 32px;
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
