@@ -20,7 +20,7 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background-color: transparent;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   padding: 20px;
 //   padding-top: 40px;
 //   padding-bottom: 100px;
@@ -73,7 +73,7 @@ const NovelTitle = styled.h1`
 
 const NovelDate = styled.div`
   font-size: 14px;
-  color: #999;
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : '#999'};
   font-family: inherit;
 `;
 
@@ -89,13 +89,21 @@ const SettingRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9'};
-  border-radius: 8px;
+  background: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if (theme.mode === 'dark') return 'rgba(255,255,255,0.05)';
+        return '#f9f9f9';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  border-radius: ${({ $isGlassTheme }) => $isGlassTheme ? '12px' : '8px'};
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
 `;
 
 const SettingLabel = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.text};
   font-weight: 500;
 `;
 
@@ -135,27 +143,56 @@ const ActionButton = styled.button`
 `;
 
 const ReadingModeButton = styled(ActionButton)`
-  background: #cb6565;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(203, 101, 101, 0.3);
+  background: ${({ $isGlassTheme, theme }) => {
+        if ($isGlassTheme) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, 0.8)`;
+        }
+        return '#cb6565';
+    }};
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? '#000000' : '#fff'};
+  box-shadow: ${({ $isGlassTheme, theme }) => {
+        if ($isGlassTheme) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`;
+        }
+        return '0 4px 12px rgba(203, 101, 101, 0.3)';
+    }};
   
   @media (min-width: 480px) {
     &:hover {
-      box-shadow: 0 6px 16px rgba(203, 101, 101, 0.4);
+      box-shadow: ${({ $isGlassTheme, theme }) => {
+        if ($isGlassTheme) {
+            const primary = theme.primary || '#cb6565';
+            const r = parseInt(primary.slice(1, 3), 16);
+            const g = parseInt(primary.slice(3, 5), 16);
+            const b = parseInt(primary.slice(5, 7), 16);
+            return `0 6px 16px rgba(${r}, ${g}, ${b}, 0.4)`;
+        }
+        return '0 6px 16px rgba(203, 101, 101, 0.4)';
+    }};
     }
   }
 `;
 
 const DeleteButton = styled(ActionButton)`
-  background: transparent;
+  background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
   color: #e46262;
-  border: 1px solid #e46262;
-  box-shadow: none;
+  border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(228, 98, 98, 0.7)' : '1px solid #e46262'};
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   
   @media (min-width: 480px) {
     &:hover {
-      background: rgba(228, 98, 98, 0.1);
-      box-shadow: 0 2px 8px rgba(228, 98, 98, 0.2);
+      background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.25)' : 'rgba(228, 98, 98, 0.1)'};
+      box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(228, 98, 98, 0.3)' : '0 2px 8px rgba(228, 98, 98, 0.2)'};
     }
   }
 `;
@@ -164,21 +201,25 @@ const ToggleButton = styled.button`
   width: 50px;
   height: 28px;
   border-radius: 14px;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
   position: relative;
   transition: all 0.3s ease;
-  background-color: ${({ active }) => active ? '#cb6565' : '#ccc'};
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
   
   &::after {
     content: '';
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background-color: white;
-    top: 2px;
-    left: ${({ active }) => active ? '24px' : '2px'};
+    top: 50%;
+    transform: translateY(-50%);
+    left: ${({ active }) => active ? '26px' : '4px'};
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
@@ -186,7 +227,7 @@ const ToggleButton = styled.button`
 
 const PurchaseCount = styled.div`
   font-size: 13px;
-  color: #666;
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : '#666'};
   margin-top: 4px;
 `;
 
@@ -295,7 +336,7 @@ const TutorialLargeCoverTitle = styled.div`
 
 const CoverTitle = styled.h2`
   font-size: 16px !important;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? '#000000' : theme.primary};
   margin-top: 24px;
   margin-bottom: 8px;
   font-weight: 600 !important;
@@ -305,7 +346,7 @@ const CoverTitle = styled.h2`
 
 const CoverAuthor = styled.div`
   font-size: 16px;
-  color: ${({ theme }) => theme.cardSubText || '#888'};
+  color: ${({ theme, $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : (theme.cardSubText || '#888')};
   margin-top: 8px;
   margin-bottom: 0;
   text-align: center;
@@ -323,7 +364,7 @@ const CoverHint = styled.div`
 
 const PurchaseNotice = styled.div`
   font-size: 11px;
-  color: #999;
+  color: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(0, 0, 0, 0.7)' : '#999'};
   text-align: center;
   margin-top: 16px;
   padding: 0 20px;
@@ -744,6 +785,8 @@ function NovelView({ user }) {
     const { language } = useLanguage();
     const { t } = useTranslation();
     const theme = useTheme();
+    const { actualTheme } = theme;
+    const isGlassTheme = actualTheme === 'glass';
 
     // 읽기 모드 관련 상태
     const [isReadingMode, setIsReadingMode] = useState(false);
@@ -1377,9 +1420,9 @@ function NovelView({ user }) {
 
     if (loading) {
         return (
-            <Container>
+            <Container $isGlassTheme={isGlassTheme} theme={theme}>
                 <Header user={user} />
-                <div>{t('novel_loading')}</div>
+                <div style={{ color: isGlassTheme ? '#000000' : 'inherit' }}>{t('novel_loading')}</div>
                 <Navigation />
             </Container>
         );
@@ -1387,9 +1430,9 @@ function NovelView({ user }) {
 
     if (!novel || (!accessGranted && error)) {
         return (
-            <Container>
+            <Container $isGlassTheme={isGlassTheme} theme={theme}>
                 <Header user={user} />
-                <div>{error || t('novel_not_found_or_forbidden')}</div>
+                <div style={{ color: isGlassTheme ? '#000000' : 'inherit' }}>{error || t('novel_not_found_or_forbidden')}</div>
                 <Navigation />
             </Container>
         );
@@ -1399,7 +1442,7 @@ function NovelView({ user }) {
     if (showReadingModeCover) {
         const isTutorial = isTutorialNovel(novel);
         return (
-            <Container>
+            <Container $isGlassTheme={isGlassTheme} theme={theme}>
                 <Header user={user} />
                 <CoverViewContainer onClick={() => {
                     setShowReadingModeCover(false);
@@ -1409,11 +1452,11 @@ function NovelView({ user }) {
                         src={novel.imageUrl || (isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : '/novel_banner/default.png')}
                         alt={novel.title}
                     />
-                    <CoverTitle>{novel.title}</CoverTitle>
+                    <CoverTitle $isGlassTheme={isGlassTheme} theme={theme}>{novel.title}</CoverTitle>
                     {ownerName && (
-                        <CoverAuthor theme={theme}>by {ownerName}</CoverAuthor>
+                        <CoverAuthor theme={theme} $isGlassTheme={isGlassTheme}>by {ownerName}</CoverAuthor>
                     )}
-                    <CoverHint>표지를 터치하거나 클릭하여 읽기 모드로 들어가세요</CoverHint>
+                    <CoverHint $isGlassTheme={isGlassTheme}>표지를 터치하거나 클릭하여 읽기 모드로 들어가세요</CoverHint>
                 </CoverViewContainer>
                 <Navigation />
             </Container>
@@ -1424,21 +1467,21 @@ function NovelView({ user }) {
     if (showCoverView) {
         const isTutorial = isTutorialNovel(novel);
         return (
-            <Container>
+            <Container $isGlassTheme={isGlassTheme} theme={theme}>
                 <Header user={user} />
                 <CoverViewContainer onClick={() => setShowCoverView(false)}>
                     <LargeCover
                         src={novel.imageUrl || (isTutorial ? (process.env.PUBLIC_URL + '/bookcover.png') : '/novel_banner/default.png')}
                         alt={novel.title}
                     />
-                    <CoverTitle>{novel.title}</CoverTitle>
+                    <CoverTitle $isGlassTheme={isGlassTheme} theme={theme}>{novel.title}</CoverTitle>
                     {ownerName && (
-                        <CoverAuthor theme={theme}>by {ownerName}</CoverAuthor>
+                        <CoverAuthor theme={theme} $isGlassTheme={isGlassTheme}>by {ownerName}</CoverAuthor>
                     )}
                     {/* <CoverHint>표지를 터치하거나 클릭하여 소설을 읽으세요</CoverHint> */}
                     {/* 구매 전 안내 문구 (본인 소설이 아니고 접근 권한이 없을 때만) */}
                     {novel.userId !== user.uid && !accessGranted && (
-                        <PurchaseNotice>{t('novel_purchase_notice')}</PurchaseNotice>
+                        <PurchaseNotice $isGlassTheme={isGlassTheme}>{t('novel_purchase_notice')}</PurchaseNotice>
                     )}
                 </CoverViewContainer>
                 <Navigation />
@@ -1831,7 +1874,7 @@ function NovelView({ user }) {
 
     // 내용 보기 모드
     return (
-        <Container>
+        <Container $isGlassTheme={isGlassTheme} theme={theme}>
             <Header user={user} />
             <ConfirmModal
                 open={deleteConfirmOpen}
@@ -1858,15 +1901,15 @@ function NovelView({ user }) {
             <NovelHeader>
                 <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
                 <NovelInfo>
-                    <NovelTitle>{novel.title}</NovelTitle>
-                    <NovelDate>{formatWeekInfo(novel) || formatDate(novel.createdAt)}</NovelDate>
+                    <NovelTitle $isGlassTheme={isGlassTheme} theme={theme}>{novel.title}</NovelTitle>
+                    <NovelDate $isGlassTheme={isGlassTheme}>{formatWeekInfo(novel) || formatDate(novel.createdAt)}</NovelDate>
                     {/* 소설 설정 (소설 주인만) */}
                     {novel.id && novel.userId === user.uid && (
                         <NovelSettings>
-                            <SettingRow>
+                            <SettingRow $isGlassTheme={isGlassTheme} theme={theme}>
                                 <div>
-                                    <SettingLabel>공개 설정</SettingLabel>
-                                    <PurchaseCount>
+                                    <SettingLabel $isGlassTheme={isGlassTheme} theme={theme}>공개 설정</SettingLabel>
+                                    <PurchaseCount $isGlassTheme={isGlassTheme}>
                                         {novel.isPublic !== false ? '공개' : '비공개'}
                                         {novel.isPublic !== false && ` · 구매 ${purchaseCount}명`}
                                     </PurchaseCount>
@@ -1882,11 +1925,11 @@ function NovelView({ user }) {
             </NovelHeader>
             <ActionButtonsContainer>
                 {novel.id && novel.userId === user.uid && (
-                    <DeleteButton onClick={handleDelete}>
+                    <DeleteButton $isGlassTheme={isGlassTheme} onClick={handleDelete}>
                         🗑️ 소설 삭제
                     </DeleteButton>
                 )}
-                <ReadingModeButton onClick={() => setShowReadingModeCover(true)}>
+                <ReadingModeButton $isGlassTheme={isGlassTheme} theme={theme} onClick={() => setShowReadingModeCover(true)}>
                     📖 읽기 모드
                 </ReadingModeButton>
             </ActionButtonsContainer>
