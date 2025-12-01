@@ -90,10 +90,12 @@ const Container = styled.div`
   padding-bottom: ${() => window.innerWidth <= 768 ? '200px' : '180px'};
   overflow-x: hidden;
   box-sizing: border-box;
-  background: ${({ theme, $isDiaryTheme }) =>
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isDiaryTheme
             ? '#faf8f3'
-            : 'transparent'};
+            : $isGlassTheme
+                ? 'transparent'
+                : 'transparent'};
   ${props => props.$isDiaryTheme && `
     background-image: 
       repeating-linear-gradient(
@@ -115,23 +117,28 @@ const Container = styled.div`
 
 const Card = styled.div`
   background: ${props => {
+        if (props.$isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
         if (props.$isDiaryTheme) return '#faf8f3';
         if (props.$isDark) return '#2d2d2d';
         return '#fff';
     }};
-  border-radius: 12px;
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${props => props.$isGlassTheme ? '24px' : '12px'};
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: ${props => props.$isDiaryTheme
-        ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
-        : props.$isDark
-            ? '0 2px 8px rgba(0, 0, 0, 0.18)'
-            : '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)'};
-  border: ${props => props.$isDiaryTheme
-        ? '1px solid rgba(139, 111, 71, 0.15)'
-        : props.$isDark
-            ? 'none'
-            : '1px solid rgba(0, 0, 0, 0.06)'};
+  box-shadow: ${props => {
+        if (props.$isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if (props.$isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+        if (props.$isDark) return '0 2px 8px rgba(0, 0, 0, 0.18)';
+        return '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)';
+    }};
+  border: ${props => {
+        if (props.$isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if (props.$isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        if (props.$isDark) return 'none';
+        return '1px solid rgba(0, 0, 0, 0.06)';
+    }};
 `;
 
 const DiaryDate = styled.div`
@@ -143,11 +150,11 @@ const DiaryDate = styled.div`
   align-items: center;
   gap: 4px;
   font-family: inherit;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   .date-number, .date-unit {
-    color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+    color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
     font-family: inherit;
     font-size: 18px;
     font-weight: 500;
@@ -161,8 +168,8 @@ const DiaryMeta = styled.div`
   margin: 0;
   min-height: 28px;
   font-size: 17px;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
   width: 100%;
   
@@ -177,8 +184,8 @@ const MetaLabel = styled.span`
   display: flex;
   align-items: center;
   font-size: 16px;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
   min-width: 140px;
   min-height: 44px;
@@ -197,16 +204,30 @@ const ImagePreviewBox = styled.div`
   position: relative;
   width: 100px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: ${props => props.$isGlassTheme ? '12px' : '8px'};
   overflow: hidden;
-  border: 2px solid ${({ theme, isDragging, isDragOver, $isDiaryTheme }) => {
-        if (isDragging) return $isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : (theme.mode === 'dark' ? '#cb6565' : '#cb6565');
-        if (isDragOver) return $isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : (theme.mode === 'dark' ? '#cb6565' : '#cb6565');
+  border: 2px solid ${({ theme, isDragging, isDragOver, $isDiaryTheme, $isGlassTheme }) => {
+        if (isDragging) {
+            if ($isGlassTheme) return 'rgba(255, 255, 255, 0.8)';
+            if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.8)';
+            return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
+        }
+        if (isDragOver) {
+            if ($isGlassTheme) return 'rgba(255, 255, 255, 0.8)';
+            if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.8)';
+            return theme.mode === 'dark' ? '#cb6565' : '#cb6565';
+        }
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
         if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
         return theme.mode === 'dark' ? '#4a4a4a' : '#fdd2d2';
     }};
-  background: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#fdfdfd' : (theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd')};
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '#fdfdfd';
+        return theme.mode === 'dark' ? '#2a2a2a' : '#fdfdfd';
+    }};
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(10px)' : 'none'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,8 +236,13 @@ const ImagePreviewBox = styled.div`
   opacity: ${props => props.isDragging ? 0.5 : 1};
   transform: ${props => props.isDragOver ? 'scale(1.05)' : 'scale(1)'};
   box-shadow: ${props => {
-        if (!props.isDragOver) return 'none';
-        return props.$isDiaryTheme ? '0 4px 12px rgba(139, 111, 71, 0.3)' : '0 4px 12px rgba(203, 101, 101, 0.3)';
+        if (!props.isDragOver) {
+            if (props.$isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+            return 'none';
+        }
+        if (props.$isGlassTheme) return '0 4px 12px rgba(255, 255, 255, 0.3)';
+        if (props.$isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.3)';
+        return '0 4px 12px rgba(203, 101, 101, 0.3)';
     }};
 `;
 const PreviewImg = styled.img`
@@ -858,8 +884,8 @@ const TitleInput = styled.input`
   font-size: 20px !important;
   font-weight: 700 !important;
   margin: 0;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
   border: none;
   background: transparent;
   width: 100%;
@@ -870,8 +896,8 @@ const ContentTextarea = styled.textarea`
   font-size: 16px;
   line-height: 1.8;
   letter-spacing: 0.02em;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
   border: none;
   background: transparent;
   width: 100%;
@@ -940,6 +966,7 @@ function WriteDiary({ user }) {
     const theme = useTheme();
     const isDark = theme.actualTheme === 'dark';
     const isDiaryTheme = theme.actualTheme === 'diary';
+    const isGlassTheme = theme.actualTheme === 'glass';
     const labelColor = isDark ? '#fff' : '#222';
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
@@ -2359,7 +2386,7 @@ function WriteDiary({ user }) {
     };
 
     return (
-        <Container ref={containerRef} $isDiaryTheme={isDiaryTheme}>
+        <Container ref={containerRef} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
             <Header
                 user={user}
                 rightActions={
@@ -2373,12 +2400,12 @@ function WriteDiary({ user }) {
                 }
             />
             <main style={{ ...styles.mainContent, paddingBottom: keyboardHeight }}>
-                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
-                    <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                    <DiaryDate $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{formatDate(diary.date)}</DiaryDate>
                 </Card>
 
-                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
-                    <DiaryMeta $isDiaryTheme={isDiaryTheme}>
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                    <DiaryMeta $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                         <MetaLabel>
                             {!diary.weather ? (
                                 <Button
@@ -2393,7 +2420,7 @@ function WriteDiary({ user }) {
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
                                         fontSize: 16,
-                                        color: isDark ? '#ffffff' : '#222',
+                                        color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'),
                                         fontWeight: 600,
                                         padding: '0 0'
                                     }}
@@ -2401,7 +2428,7 @@ function WriteDiary({ user }) {
                                     {t('today_weather')}
                                 </Button>
                             ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
                                     {t('today_weather')}
                                     <img
                                         src={weatherImageMap[diary.weather]}
@@ -2429,7 +2456,7 @@ function WriteDiary({ user }) {
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
                                         fontSize: 16,
-                                        color: isDark ? '#ffffff' : '#222',
+                                        color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'),
                                         fontWeight: 600,
                                         padding: '0 0'
                                     }}
@@ -2437,7 +2464,7 @@ function WriteDiary({ user }) {
                                     {t('today_mood')}
                                 </Button>
                             ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isDark ? '#ffffff' : '#222', fontWeight: 500, padding: 0 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 44, minWidth: 140, fontSize: 16, color: isGlassTheme ? '#000000' : (isDark ? '#ffffff' : '#222'), fontWeight: 500, padding: 0 }}>
                                     {t('today_mood')}
                                     <img
                                         src={emotionImageMap[diary.emotion]}
@@ -2598,6 +2625,7 @@ function WriteDiary({ user }) {
                                 isDragging={draggedImageIndex === index}
                                 isDragOver={dragOverImageIndex === index}
                                 $isDiaryTheme={isDiaryTheme}
+                                $isGlassTheme={isGlassTheme}
                                 onDragStart={(e) => handleImageDragStart(e, index)}
                                 onDragOver={(e) => handleImageDragOver(e, index)}
                                 onDragLeave={handleImageDragLeave}
@@ -2733,7 +2761,7 @@ function WriteDiary({ user }) {
                     )}
                 </div>
 
-                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
                     <TitleInput
                         type="text"
                         name="title"
@@ -2742,14 +2770,16 @@ function WriteDiary({ user }) {
                         onChange={handleChange}
                         required
                         $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                     />
                 </Card>
 
                 {/* 일기 내용 작성 영역 (스티커 포함) */}
-                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
                     <ContentContainer
                         data-content-container
                         $isDiaryTheme={isDiaryTheme}
+                        $isGlassTheme={isGlassTheme}
                         style={{ height: contentHeight }}
                         onClick={(e) => {
                             if (!draggedSticker) {
@@ -2768,6 +2798,7 @@ function WriteDiary({ user }) {
                             }}
                             required
                             $isDiaryTheme={isDiaryTheme}
+                            $isGlassTheme={isGlassTheme}
                         />
 
                         {/* 스티커들 */}
