@@ -609,7 +609,7 @@ function Premium({ user }) {
 
   return (
     <Container theme={theme}>
-      <Header user={user} title={t('premium') || '프리미엄'} />
+      <Header user={user} title={language === 'en' ? 'PREMIUM' : '프리미엄'} />
 
       {/* 구독 관리 섹션 - 프리미엄 회원에게만 표시 */}
       {(premiumStatus.isMonthlyPremium || premiumStatus.isYearlyPremium) && (

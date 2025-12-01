@@ -51,7 +51,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { isAdmin } from '../../utils/adminAuth';
 import { getFriendsList, subscribeToFriendRequests } from '../../utils/friendSystem';
-import { useTranslation } from '../../LanguageContext';
+import { useTranslation, useLanguage } from '../../LanguageContext';
 import { inAppPurchaseService } from '../../utils/inAppPurchase';
 
 // 관리자 아이콘 추가
@@ -568,6 +568,7 @@ function MyPage({ user }) {
   const themeContext = useThemeContext();
   const theme = useTheme();
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const isDiaryTheme = themeContext.actualTheme === 'diary';
 
   // 비밀번호 변경 관련 상태
@@ -1365,7 +1366,7 @@ function MyPage({ user }) {
                 <MenuIcon as="div">
                   <CrownIcon color={isDiaryTheme ? '#8B6F47' : (theme.mode === 'dark' ? theme.menuText : '#222')} />
                 </MenuIcon>
-                <MenuLabel $isDiaryTheme={isDiaryTheme}>{t('premium') || '프리미엄'}</MenuLabel>
+                <MenuLabel $isDiaryTheme={isDiaryTheme}>{language === 'en' ? 'PREMIUM' : '프리미엄'}</MenuLabel>
               </MenuButton>
               <MenuButton onClick={() => navigate('/my/support')}>
                 <MenuIcon as="div">
