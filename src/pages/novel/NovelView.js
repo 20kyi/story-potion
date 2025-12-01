@@ -227,48 +227,66 @@ const PurchaseCount = styled.div`
 const NovelContent = styled.div`
   font-size: ${({ fontSize }) => fontSize || 16}px;
   line-height: ${({ lineHeight }) => lineHeight || 1.8};
-  color: ${({ readTheme, theme, isReadingMode }) => {
+  color: ${({ readTheme, theme, isReadingMode, $isGlassTheme }) => {
         if (isReadingMode) {
             if (readTheme === 'sepia') return '#5c4b37';
             if (readTheme === 'dark') return '#e8e8e8';
             return '#333';
         }
+        if ($isGlassTheme) return '#000000';
         return theme.cardText;
     }};
   white-space: pre-line;
-  padding: ${({ isReadingMode }) => isReadingMode ? '40px 24px' : '0px'};   // 소설 컨텐츠
-  background: ${({ readTheme, theme, isReadingMode }) => {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  padding: ${({ isReadingMode, $isGlassTheme }) => {
+        if (isReadingMode) return '40px 24px';
+        if ($isGlassTheme) return '10px';
+        return '0px';
+    }};
+  background: ${({ readTheme, theme, isReadingMode, $isGlassTheme }) => {
         if (isReadingMode) {
             if (readTheme === 'sepia') return '#f4e8d7';
             if (readTheme === 'dark') return '#1a1a1a';
             return '#fefefe';
         }
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
         return theme.card;
     }};
-  border-radius: ${({ isReadingMode }) => isReadingMode ? '0' : '15px'};
+  backdrop-filter: ${({ $isGlassTheme, isReadingMode }) => ($isGlassTheme && !isReadingMode) ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme, isReadingMode }) => ($isGlassTheme && !isReadingMode) ? 'blur(10px)' : 'none'};
+  border: ${({ $isGlassTheme, isReadingMode }) => ($isGlassTheme && !isReadingMode) ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+  border-radius: ${({ isReadingMode, $isGlassTheme }) => {
+        if (isReadingMode) return '0';
+        if ($isGlassTheme) return '12px';
+        return '15px';
+    }};
   font-family: ${({ isReadingMode }) => isReadingMode ? '"Noto Serif KR", "Nanum Myeongjo", serif' : 'inherit'};
   text-align: ${({ textAlign, isReadingMode }) => isReadingMode ? (textAlign || 'left') : 'left'};
   max-width: ${({ isReadingMode }) => isReadingMode ? '680px' : '100%'};
   margin: ${({ isReadingMode }) => isReadingMode ? '0 auto' : '0'};
   min-height: ${({ isReadingMode }) => isReadingMode ? 'calc(100vh - 80px)' : 'auto'};
   transition: all 0.3s ease;
+  box-shadow: ${({ $isGlassTheme, isReadingMode }) => ($isGlassTheme && !isReadingMode) ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
 
   /* 다크모드 대응 */
   body.dark & {
-    color: ${({ readTheme, isReadingMode }) => {
+    color: ${({ readTheme, isReadingMode, $isGlassTheme }) => {
         if (isReadingMode) {
             if (readTheme === 'sepia') return '#5c4b37';
             if (readTheme === 'dark') return '#e8e8e8';
             return '#333';
         }
+        if ($isGlassTheme) return '#000000';
         return '#f1f1f1';
     }};
-    background: ${({ readTheme, isReadingMode }) => {
+    background: ${({ readTheme, isReadingMode, $isGlassTheme }) => {
         if (isReadingMode) {
             if (readTheme === 'sepia') return '#f4e8d7';
             if (readTheme === 'dark') return '#1a1a1a';
             return '#fefefe';
         }
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
         return '#232323';
     }};
   }
@@ -1928,6 +1946,8 @@ function NovelView({ user }) {
             </ActionButtonsContainer>
             <NovelContent
                 isReadingMode={false}
+                $isGlassTheme={isGlassTheme}
+                theme={theme}
             >
                 {novel.content || `이 소설은 ${formatDate(novel.createdAt)}에 작성되었습니다. 
 아직 내용이 준비되지 않았습니다.`}
