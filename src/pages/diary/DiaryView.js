@@ -24,10 +24,12 @@ const Container = styled.div`
   max-width: 600px;
   width: 100%;
   box-sizing: border-box;
-  background: ${({ theme, $isDiaryTheme }) =>
+  background: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isDiaryTheme
             ? '#faf8f3'
-            : 'transparent'};
+            : $isGlassTheme
+                ? 'transparent'
+                : 'transparent'};
   ${props => props.$isDiaryTheme && `
     background-image: 
       repeating-linear-gradient(
@@ -53,8 +55,8 @@ const DiaryTitle = styled.h2`
   font-size: 20px !important;
   font-weight: 700 !important;
   margin: 0;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.diaryText} !important;
 `;
 
 const DiaryContent = styled.p`
@@ -65,8 +67,8 @@ const DiaryContent = styled.p`
   word-break: keep-all;
   overflow-wrap: break-word;
 //   text-align: justify;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#5C4B37' : theme.diaryContent};
 `;
 
 const ContentContainer = styled.div`
@@ -94,31 +96,36 @@ const StickerImage = styled.img`
 
 const Card = styled.div`
   background: ${props => {
+        if (props.$isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
         if (props.$isDiaryTheme) return '#faf8f3';
         if (props.$isDark) return '#2d2d2d';
         return '#fff';
     }};
-  border-radius: 12px;
+  backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${props => props.$isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${props => props.$isGlassTheme ? '24px' : '12px'};
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: ${props => props.$isDiaryTheme
-        ? '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
-        : props.$isDark
-            ? '0 2px 8px rgba(0, 0, 0, 0.18)'
-            : '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)'};
-  border: ${props => props.$isDiaryTheme
-        ? '1px solid rgba(139, 111, 71, 0.15)'
-        : props.$isDark
-            ? 'none'
-            : '1px solid rgba(0, 0, 0, 0.06)'};
+  box-shadow: ${props => {
+        if (props.$isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if (props.$isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+        if (props.$isDark) return '0 2px 8px rgba(0, 0, 0, 0.18)';
+        return '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)';
+    }};
+  border: ${props => {
+        if (props.$isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if (props.$isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        if (props.$isDark) return 'none';
+        return '1px solid rgba(0, 0, 0, 0.06)';
+    }};
   display: flex;
   align-items: center;
 `;
 
 const DiaryDate = styled.div`
   font-size: 16px;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
   margin: 0;
 `;
@@ -130,8 +137,8 @@ const DiaryMeta = styled.div`
   margin: 0;
   min-height: 28px;
   font-size: 16px;
-  color: ${({ theme, $isDiaryTheme }) =>
-        $isDiaryTheme ? '#8B6F47' : theme.text};
+  color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
+        $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
   width: 100%;
   
@@ -244,6 +251,7 @@ function DiaryView({ user }) {
     const { actualTheme } = useTheme();
     const isDark = actualTheme === 'dark';
     const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     const { language } = useLanguage();
     const { t } = useTranslation();
 
@@ -453,20 +461,29 @@ function DiaryView({ user }) {
             right: '20px'
         },
         actionButton: {
-            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.7)' : 'rgba(190, 71, 71, 0.62)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '14px',
+            backgroundColor: isGlassTheme
+                ? 'rgba(255, 255, 255, 0.2)'
+                : isDiaryTheme ? 'rgba(139, 111, 71, 0.7)' : 'rgba(190, 71, 71, 0.62)',
+            backdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+            WebkitBackdropFilter: isGlassTheme ? 'blur(15px)' : 'none',
+            color: isGlassTheme ? '#000000' : '#ffffff',
+            border: isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
+            borderRadius: isGlassTheme ? '24px' : '14px',
             padding: '8px 15px',
             fontSize: '14px',
             fontFamily: 'Source Sans Pro',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'background-color 0.2s ease',
-            minHeight: '36px'
+            minHeight: '36px',
+            boxShadow: isGlassTheme
+                ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                : 'none'
         },
         deleteButton: {
-            backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.5)' : 'rgba(190, 71, 71, 0.4)'
+            backgroundColor: isGlassTheme
+                ? 'rgba(255, 255, 255, 0.15)'
+                : isDiaryTheme ? 'rgba(139, 111, 71, 0.5)' : 'rgba(190, 71, 71, 0.4)'
         },
         diaryDate: {
             fontSize: '16px',
@@ -498,8 +515,8 @@ function DiaryView({ user }) {
             width: '100%',
             height: '150px',
             objectFit: 'cover',
-            borderRadius: '8px',
-            border: `1px solid ${isDiaryTheme ? 'rgba(139, 111, 71, 0.2)' : isDark ? '#4a4a4a' : '#fdd2d2'}`
+            borderRadius: isGlassTheme ? '12px' : '8px',
+            border: `1px solid ${isGlassTheme ? 'rgba(255, 255, 255, 0.5)' : isDiaryTheme ? 'rgba(139, 111, 71, 0.2)' : isDark ? '#4a4a4a' : '#fdd2d2'}`
         },
         noDiary: {
             textAlign: 'center',
@@ -542,7 +559,7 @@ function DiaryView({ user }) {
     };
 
     return (
-        <Container {...handlers} $isDiaryTheme={isDiaryTheme}>
+        <Container {...handlers} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
             <Header
                 user={user}
                 rightActions={
@@ -565,12 +582,12 @@ function DiaryView({ user }) {
                         </div>
                     ) : diary ? (
                         <>
-                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
-                                <DiaryDate $isDiaryTheme={isDiaryTheme}>{formatDate(diary.date)}</DiaryDate>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                                <DiaryDate $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{formatDate(diary.date)}</DiaryDate>
                             </Card>
 
-                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
-                                <DiaryMeta $isDiaryTheme={isDiaryTheme}>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                                <DiaryMeta $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
                                     <span>
                                         {t('today_weather')}
                                         {diary.weather && weatherImageMap[diary.weather] && (
@@ -600,14 +617,14 @@ function DiaryView({ user }) {
                                 </div>
                             )}
 
-                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
-                                <DiaryTitle $isDiaryTheme={isDiaryTheme}>{diary.title}</DiaryTitle>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
+                                <DiaryTitle $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{diary.title}</DiaryTitle>
                             </Card>
 
                             {/* 일기 내용 영역 (스티커 포함) */}
-                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark}>
+                            <Card $isDiaryTheme={isDiaryTheme} $isDark={isDark} $isGlassTheme={isGlassTheme}>
                                 <ContentContainer data-content-container $isDiaryTheme={isDiaryTheme}>
-                                    <DiaryContent $isDiaryTheme={isDiaryTheme}>{diary.content}</DiaryContent>
+                                    <DiaryContent $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{diary.content}</DiaryContent>
 
                                     {/* 스티커들 */}
                                     {!isLoading && !noMoreFuture && diary && diary.stickers && diary.stickers.length > 0 && (
