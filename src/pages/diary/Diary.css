@@ -1075,10 +1075,10 @@ body.dark .diary-weekly-date {
 
 .diary-weekly-header .diary-today-circle.weekly-highlighter {
     position: absolute;
-    left: -2px;
+    left: -4px;
     top: 50%;
     transform: translateY(-50%);
-    width: calc(100% + 4px);
+    width: calc(100% + 8px);
     height: 20px;
     border-radius: 6px 8px 7px 6px;
     z-index: 1;
