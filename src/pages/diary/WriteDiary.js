@@ -142,7 +142,7 @@ const Card = styled.div`
 `;
 
 const DiaryDate = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   margin-top: 0;
   cursor: default;
@@ -156,7 +156,7 @@ const DiaryDate = styled.div`
     color: ${({ theme, $isDiaryTheme, $isGlassTheme }) =>
         $isGlassTheme ? '#000000' : $isDiaryTheme ? '#8B6F47' : theme.text};
     font-family: inherit;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
   }
 `;

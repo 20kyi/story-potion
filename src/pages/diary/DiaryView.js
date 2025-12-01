@@ -116,7 +116,7 @@ const Card = styled.div`
 `;
 
 const DiaryDate = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   color: ${({ theme, $isDiaryTheme }) =>
         $isDiaryTheme ? '#8B6F47' : theme.text};
   font-weight: 500;
@@ -469,7 +469,7 @@ function DiaryView({ user }) {
             backgroundColor: isDiaryTheme ? 'rgba(139, 111, 71, 0.5)' : 'rgba(190, 71, 71, 0.4)'
         },
         diaryDate: {
-            fontSize: '18px',
+            fontSize: '16px',
             color: '#e46262',
             marginBottom: '20px',
             fontWeight: '500',
