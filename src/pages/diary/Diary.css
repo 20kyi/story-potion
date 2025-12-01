@@ -66,11 +66,16 @@ body.glass .diary-container:not(.diary-theme) {
     color: #8B6F47;
 }
 
-.diary-month-text:not(.diary-theme) {
+.diary-month-text.glass-theme {
+    color: #000000;
+    font-weight: 600;
+}
+
+.diary-month-text:not(.diary-theme):not(.glass-theme) {
     color: #e46262;
 }
 
-body.dark .diary-month-text:not(.diary-theme) {
+body.dark .diary-month-text:not(.diary-theme):not(.glass-theme) {
     color: #FFB3B3;
 }
 
@@ -93,11 +98,15 @@ body.dark .diary-month-text:not(.diary-theme) {
     color: #A0826D;
 }
 
-.diary-month-button:not(.diary-theme) {
+.diary-month-button.glass-theme {
+    color: #000000;
+}
+
+.diary-month-button:not(.diary-theme):not(.glass-theme) {
     color: #df9696;
 }
 
-body.dark .diary-month-button:not(.diary-theme) {
+body.dark .diary-month-button:not(.diary-theme):not(.glass-theme) {
     color: #FFB3B3;
 }
 
@@ -105,12 +114,16 @@ body.dark .diary-month-button:not(.diary-theme) {
     background-color: rgba(223, 150, 150, 0.1);
 }
 
-body.dark .diary-month-button:not(.diary-theme):hover {
+body.dark .diary-month-button:not(.diary-theme):not(.glass-theme):hover {
     background-color: rgba(255, 179, 179, 0.15);
 }
 
 .diary-month-button.diary-theme:hover {
     background-color: rgba(139, 111, 71, 0.15);
+}
+
+.diary-month-button.glass-theme:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .diary-today-button {
@@ -131,13 +144,19 @@ body.dark .diary-month-button:not(.diary-theme):hover {
     color: #8B6F47;
 }
 
-.diary-today-button:not(.diary-theme) {
+.diary-today-button.glass-theme {
+    background: transparent;
+    border: none;
+    color: #000000;
+}
+
+.diary-today-button:not(.diary-theme):not(.glass-theme) {
     background: transparent;
     border: 1.5px solid #e46262;
     color: #e46262;
 }
 
-body.dark .diary-today-button:not(.diary-theme) {
+body.dark .diary-today-button:not(.diary-theme):not(.glass-theme) {
     border: 1.5px solid #FFB3B3;
     color: #FFB3B3;
 }
@@ -150,7 +169,11 @@ body.dark .diary-today-button:not(.diary-theme) {
     background: rgba(139, 111, 71, 0.2);
 }
 
-.diary-today-button:not(.diary-theme):hover {
+.diary-today-button.glass-theme:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.diary-today-button:not(.diary-theme):not(.glass-theme):hover {
     background: rgba(228, 98, 98, 0.1);
 }
 
@@ -681,11 +704,19 @@ body.dark .diary-preview-close-button {
     border-color: #8B6F47;
 }
 
-.diary-view-mode-toggle-button:not(.diary-theme) {
+.diary-view-mode-toggle-button.glass-theme {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.diary-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) {
     border-color: #e46262;
 }
 
-body.dark .diary-view-mode-toggle-button:not(.diary-theme) {
+body.dark .diary-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) {
     border-color: #FFB3B3;
 }
 
@@ -713,11 +744,19 @@ body.dark .diary-view-mode-toggle-button:not(.diary-theme) {
     color: #8B6F47;
 }
 
-.diary-view-mode-toggle-button:not(.diary-theme) .diary-toggle-option:not(.active) {
+.diary-view-mode-toggle-button.glass-theme .diary-toggle-option.active {
+    color: #000000;
+}
+
+.diary-view-mode-toggle-button.glass-theme .diary-toggle-option:not(.active) {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.diary-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) .diary-toggle-option:not(.active) {
     color: #e46262;
 }
 
-body.dark .diary-view-mode-toggle-button:not(.diary-theme) .diary-toggle-option:not(.active) {
+body.dark .diary-view-mode-toggle-button:not(.diary-theme):not(.glass-theme) .diary-toggle-option:not(.active) {
     color: #FFB3B3;
 }
 
@@ -744,11 +783,19 @@ body.dark .diary-view-mode-toggle-button:not(.diary-theme) .diary-toggle-option:
     background: rgba(139, 111, 71, 0.25);
 }
 
-.diary-toggle-slider:not(.diary-theme) {
+.diary-toggle-slider.glass-theme {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.diary-toggle-slider:not(.diary-theme):not(.glass-theme) {
     background: rgba(228, 98, 98, 0.25);
 }
 
-body.dark .diary-toggle-slider:not(.diary-theme) {
+body.dark .diary-toggle-slider:not(.diary-theme):not(.glass-theme) {
     background: rgba(255, 179, 179, 0.25);
 }
 
@@ -756,11 +803,16 @@ body.dark .diary-toggle-slider:not(.diary-theme) {
     background: rgba(139, 111, 71, 0.35);
 }
 
-.diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme) {
+.diary-view-mode-toggle-button:hover .diary-toggle-slider.glass-theme {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme):not(.glass-theme) {
     background: rgba(228, 98, 98, 0.35);
 }
 
-body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme) {
+body.dark .diary-view-mode-toggle-button:hover .diary-toggle-slider:not(.diary-theme):not(.glass-theme) {
     background: rgba(255, 179, 179, 0.35);
 }
 

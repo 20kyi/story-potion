@@ -674,17 +674,17 @@ function Diary({ user }) {
             <Header leftAction={() => navigate(-1)} leftIconType="back" title={t('diary_title')} />
             <div className="diary-content">
                 <div className="diary-calendar-header">
-                    <div className="diary-month-section">
+                    <div className={`diary-month-section ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                         {viewMode === 'month' ? (
                             <>
-                                <button onClick={handlePrevMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
-                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>{formatMonth(currentDate)}</span>
-                                <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                                <button onClick={handlePrevMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>&lt;</button>
+                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>{formatMonth(currentDate)}</span>
+                                <button onClick={handleNextMonth} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>&gt;</button>
                             </>
                         ) : (
                             <>
-                                <button onClick={handlePrevWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&lt;</button>
-                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''}`}>
+                                <button onClick={handlePrevWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>&lt;</button>
+                                <span className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
                                     {(() => {
                                         const { weekStart, weekEnd } = getCurrentWeek();
                                         if (language === 'en') {
@@ -693,7 +693,7 @@ function Diary({ user }) {
                                         return `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
                                     })()}
                                 </span>
-                                <button onClick={handleNextWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}>&gt;</button>
+                                <button onClick={handleNextWeek} className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>&gt;</button>
                             </>
                         )}
                     </div>
@@ -734,7 +734,7 @@ function Diary({ user }) {
                             );
                         })()}
                     </div>
-                    <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''}`}>{getTodayDate()}</button>
+                    <button onClick={handleToday} className={`diary-today-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>{getTodayDate()}</button>
                 </div>
                 <table className={`diary-calendar ${isDiaryTheme ? 'diary-theme' : ''} ${viewMode === 'week' ? 'weekly-view' : ''}`}>
                     {viewMode === 'month' && (
