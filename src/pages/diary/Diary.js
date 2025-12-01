@@ -815,7 +815,7 @@ function Diary({ user }) {
                         })() : getTopMessage()}
                     </div>
                     {/* 막대 */}
-                    <div className="diary-emotion-bar">
+                    <div className={`diary-emotion-bar ${isGlassTheme ? 'glass-theme' : ''}`}>
                         {Object.entries(viewMode === 'week' ? getWeeklyEmotionBarData().percent : emotionBarData.percent).map(([emotion, value], idx, arr) => {
                             if (isNaN(value) || value === 0) return null; // 0%는 렌더링하지 않음
                             const emotionKeys = Object.keys(emotionBarData.percent).filter(
@@ -826,10 +826,20 @@ function Diary({ user }) {
                             return (
                                 <div
                                     key={emotion}
-                                    className="diary-emotion-segment"
+                                    className={`diary-emotion-segment ${isGlassTheme ? 'glass-theme' : ''}`}
                                     style={{
                                         flex: `${value} 0 0`,
-                                        background: emotionBarColors[emotion],
+                                        background: isGlassTheme ? (() => {
+                                            // 색상을 rgba로 변환하여 투명도 적용
+                                            const color = emotionBarColors[emotion];
+                                            if (color.startsWith('#')) {
+                                                const r = parseInt(color.slice(1, 3), 16);
+                                                const g = parseInt(color.slice(3, 5), 16);
+                                                const b = parseInt(color.slice(5, 7), 16);
+                                                return `rgba(${r}, ${g}, ${b}, 0.3)`;
+                                            }
+                                            return color;
+                                        })() : emotionBarColors[emotion],
                                         borderTopLeftRadius: isFirst ? '22px' : '0',
                                         borderBottomLeftRadius: isFirst ? '22px' : '0',
                                         borderTopRightRadius: isLast ? '22px' : '0',
@@ -853,7 +863,19 @@ function Diary({ user }) {
                                     className="diary-percent-item"
                                     style={{
                                         flex: `${value} 0 0`,
-                                        color: emotionBarColors[emotion]
+                                        color: isGlassTheme ? (() => {
+                                            // 글래스 테마일 때는 색상을 더 진하게
+                                            const color = emotionBarColors[emotion];
+                                            if (color.startsWith('#')) {
+                                                const r = parseInt(color.slice(1, 3), 16);
+                                                const g = parseInt(color.slice(3, 5), 16);
+                                                const b = parseInt(color.slice(5, 7), 16);
+                                                // 더 진한 색상으로 변환 (투명도 없이)
+                                                return `rgb(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)})`;
+                                            }
+                                            return color;
+                                        })() : emotionBarColors[emotion],
+                                        fontWeight: '700'
                                     }}
                                 >
                                     {value}%

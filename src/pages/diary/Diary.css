@@ -662,7 +662,7 @@ body:not(.dark) .diary-color-palette {
 }
 
 .diary-emotion-stats-container {
-    margin: 32px 0 20px 0;
+    margin: 20px 0 20px 0;
     width: 100%;
     max-width: 540px;
     min-height: 40px;
@@ -676,13 +676,13 @@ body:not(.dark) .diary-color-palette {
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 18px;
-    color: #7c6f6f;
+    color: #000;
     letter-spacing: -1px;
     font-family: inherit;
 }
 
 body.dark .diary-top-message {
-    color: #999;
+    color: #000;
 }
 
 .diary-emotion-bar {
@@ -701,11 +701,28 @@ body.dark .diary-emotion-bar {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.diary-emotion-bar.glass-theme {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .diary-emotion-bar.glass-theme {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .diary-emotion-segment {
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+}
+
+.diary-emotion-segment.glass-theme {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .diary-emotion-icon {
@@ -723,13 +740,14 @@ body.dark .diary-emotion-bar {
 
 .diary-percent-item {
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 17px;
-    opacity: 0.6;
+    opacity: 1;
 }
 
 body.dark .diary-percent-item {
     color: #E0E0E0;
+    opacity: 1;
 }
 
 .diary-preview-popup {
