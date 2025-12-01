@@ -113,24 +113,96 @@
     transform: scale(1.1);
 }
 
-.novel-current-month {
-    font-size: 16px !important;
-    font-family: inherit;
-    font-weight: 600 !important;
-    margin: 0;
+/* 일기 페이지 스타일 적용 */
+.diary-month-button {
+    background: none;
+    border: none;
+    font-size: 20px;
     cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin: 0 8px;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
-.novel-current-month.diary-theme {
+.diary-month-button.diary-theme {
+    color: #A0826D;
+}
+
+.diary-month-button.glass-theme {
+    color: #000000;
+}
+
+.diary-month-button:not(.diary-theme):not(.glass-theme) {
+    color: #df9696;
+}
+
+body.dark .diary-month-button:not(.diary-theme):not(.glass-theme) {
+    color: #FFB3B3;
+}
+
+.diary-month-button:hover {
+    background-color: rgba(223, 150, 150, 0.1);
+}
+
+body.dark .diary-month-button:not(.diary-theme):not(.glass-theme):hover {
+    background-color: rgba(255, 179, 179, 0.15);
+}
+
+.diary-month-button.diary-theme:hover {
+    background-color: rgba(139, 111, 71, 0.15);
+}
+
+.diary-month-button.glass-theme:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.diary-month-section.glass-theme .diary-month-button.glass-theme {
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+}
+
+.diary-month-section.glass-theme .diary-month-button.glass-theme:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+}
+
+/* 일기 페이지 텍스트 스타일 적용 */
+.diary-month-text {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.diary-month-text.diary-theme {
     color: #8B6F47;
 }
 
-.novel-current-month:not(.diary-theme) {
-    color: #cb6565;
+.diary-month-text.glass-theme {
+    color: #000000;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.diary-month-section.glass-theme .diary-month-text.glass-theme {
+    color: #000000;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.diary-month-text:not(.diary-theme):not(.glass-theme) {
+    color: #e46262;
+}
+
+body.dark .diary-month-text:not(.diary-theme):not(.glass-theme) {
+    color: #FFB3B3;
 }
 
 

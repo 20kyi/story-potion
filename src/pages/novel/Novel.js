@@ -29,6 +29,7 @@ const Novel = ({ user }) => {
     const theme = useTheme();
     const { actualTheme } = useTheme();
     const isDiaryTheme = actualTheme === 'diary';
+    const isGlassTheme = actualTheme === 'glass';
     const [currentDate, setCurrentDate] = useState(new Date());
     const [weeks, setWeeks] = useState([]);
     const [weeklyProgress, setWeeklyProgress] = useState({});
@@ -1063,27 +1064,30 @@ const Novel = ({ user }) => {
 
 
             <div className="novel-weekly-section" ref={progressSectionRef}>
-                <div className="novel-month-selector">
-                    <button
-                        className={`novel-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}
-                        onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-                    >
-                        ‹
-                    </button>
-                    <h2
-                        className={`novel-current-month ${isDiaryTheme ? 'diary-theme' : ''}`}
-                        onClick={() => setIsPickerOpen(true)}
-                    >
-                        {language === 'en'
-                            ? currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-                            : `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}
-                    </h2>
-                    <button
-                        className={`novel-month-button ${isDiaryTheme ? 'diary-theme' : ''}`}
-                        onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-                    >
-                        ›
-                    </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div className={`diary-month-section ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}>
+                        <button
+                            className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+                            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                        >
+                            ‹
+                        </button>
+                        <span
+                            className={`diary-month-text ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+                            onClick={() => setIsPickerOpen(true)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {language === 'en'
+                                ? currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                                : `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}
+                        </span>
+                        <button
+                            className={`diary-month-button ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+                            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                        >
+                            ›
+                        </button>
+                    </div>
                     <div className="novel-view-toggle-container">
                         <button
                             className={`novel-view-toggle-button ${weeklyViewMode === 'card' ? 'active' : ''}`}
