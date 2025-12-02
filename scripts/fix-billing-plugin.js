@@ -18,17 +18,39 @@ const hasBillingPlugin = pluginsJson.some(
   plugin => plugin.pkg === 'Billing' && plugin.classpath === 'com.storypotion.app.BillingPlugin'
 );
 
+// PermissionsPlugin이 이미 있는지 확인
+const hasPermissionsPlugin = pluginsJson.some(
+  plugin => plugin.pkg === 'Permissions' && plugin.classpath === 'com.storypotion.app.PermissionsPlugin'
+);
+
+let updated = false;
+
 if (!hasBillingPlugin) {
   // BillingPlugin 추가
   pluginsJson.push({
     pkg: 'Billing',
     classpath: 'com.storypotion.app.BillingPlugin'
   });
-
-  // 파일에 쓰기
-  fs.writeFileSync(pluginsJsonPath, JSON.stringify(pluginsJson, null, '\t') + '\n', 'utf8');
+  updated = true;
   console.log('✅ BillingPlugin이 capacitor.plugins.json에 추가되었습니다.');
 } else {
   console.log('ℹ️  BillingPlugin이 이미 capacitor.plugins.json에 있습니다.');
+}
+
+if (!hasPermissionsPlugin) {
+  // PermissionsPlugin 추가
+  pluginsJson.push({
+    pkg: 'Permissions',
+    classpath: 'com.storypotion.app.PermissionsPlugin'
+  });
+  updated = true;
+  console.log('✅ PermissionsPlugin이 capacitor.plugins.json에 추가되었습니다.');
+} else {
+  console.log('ℹ️  PermissionsPlugin이 이미 capacitor.plugins.json에 있습니다.');
+}
+
+if (updated) {
+  // 파일에 쓰기
+  fs.writeFileSync(pluginsJsonPath, JSON.stringify(pluginsJson, null, '\t') + '\n', 'utf8');
 }
 
