@@ -3,7 +3,7 @@
  * 포인트 적립, 소설 구매 등의 알림을 생성하고 관리합니다.
  */
 
-import { db } from '../firebase';
+import { db, app } from '../firebase';
 import { collection, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import pushNotificationManager from './pushNotification';
 import { Capacitor } from '@capacitor/core';
@@ -114,7 +114,7 @@ export const createNovelPurchaseNotification = async (authorId, buyerId, novelId
 const sendPushNotificationToUser = async (userId, title, message, data = {}) => {
     try {
         // Firebase Functions를 통해 FCM 푸시 알림 전송
-        const functions = getFunctions(undefined, 'us-central1');
+        const functions = getFunctions(app, 'us-central1');
         const sendPushNotification = httpsCallable(functions, 'sendPushNotificationToUser');
         
         const result = await sendPushNotification({

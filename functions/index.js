@@ -3,6 +3,7 @@ const admin = require("firebase-admin");
 const { OpenAI } = require("openai");
 const { DateTime } = require('luxon');
 const nodemailer = require("nodemailer");
+const cors = require("cors")({ origin: true });
 
 admin.initializeApp();
 
@@ -2557,8 +2558,9 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
     }
 });
 
-// 개별 사용자에게 푸시 알림 전송 함수
+// 개별 사용자에게 푸시 알림 전송 함수 (onCall 방식 - CORS 자동 처리)
 exports.sendPushNotificationToUser = functions.https.onCall(async (data, context) => {
+    // CORS는 onCall이 자동으로 처리하므로 별도 설정 불필요
     try {
         const { userId, title, message, data: notificationData } = data;
 

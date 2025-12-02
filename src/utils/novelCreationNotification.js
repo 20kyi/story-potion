@@ -3,7 +3,7 @@
  * 소설을 생성할 수 있는 주가 있는지 확인하고 푸시 알림을 보냅니다.
  */
 
-import { db } from '../firebase';
+import { db, app } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import pushNotificationManager from './pushNotification';
 import { Capacitor } from '@capacitor/core';
@@ -208,7 +208,7 @@ export const sendNovelCreationNotification = async (userId, weekInfo) => {
 
         // Firebase Functions를 통해 FCM 푸시 알림 전송
         try {
-            const functions = getFunctions(undefined, 'us-central1');
+            const functions = getFunctions(app, 'us-central1');
             const sendPushNotification = httpsCallable(functions, 'sendPushNotificationToUser');
 
             const result = await sendPushNotification({

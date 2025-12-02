@@ -4,7 +4,7 @@
  * 친구 요청을 받았을 때 푸시 알림을 보내는 기능
  */
 
-import { db } from '../firebase';
+import { db, app } from '../firebase';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import pushNotificationManager from './pushNotification';
 import { Capacitor } from '@capacitor/core';
@@ -173,9 +173,9 @@ export const sendFriendRemovedNotification = async (fromUserId, toUserId) => {
 const sendPushNotificationToUser = async (userId, title, message, data = {}) => {
     try {
         // Firebase Functions를 통해 FCM 푸시 알림 전송
-        const functions = getFunctions(undefined, 'us-central1');
+        const functions = getFunctions(app, 'us-central1');
         const sendPushNotification = httpsCallable(functions, 'sendPushNotificationToUser');
-        
+
         const result = await sendPushNotification({
             userId,
             title,
@@ -197,7 +197,7 @@ const sendPushNotificationToUser = async (userId, title, message, data = {}) => 
         console.error('푸시 알림 전송 실패:', error);
         // Fallback: 웹 환경에서는 로컬 알림 시도
         if (Capacitor.getPlatform() === 'web') {
-            if (pushNotificationManager.isPushSupported() && 
+            if (pushNotificationManager.isPushSupported() &&
                 pushNotificationManager.getPermissionStatus() === 'granted') {
                 try {
                     await pushNotificationManager.showLocalNotification(title, {
