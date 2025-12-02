@@ -74,6 +74,7 @@ import { convertKakaoImageUrlToHttps } from './utils/profileImageUtils';
 import LoadingScreen from './components/LoadingScreen';
 import LoadingTest from './pages/LoadingTest';
 import PointAnimationTest from './pages/test/PointAnimationTest';
+import { scheduleNovelCreationNotification } from './utils/novelCreationNotification';
 
 const AppLayout = ({ user, isLoading }) => {
     const location = useLocation();
@@ -549,13 +550,27 @@ function App() {
             setUser(user);
             setAuthReady(true);
 
-            // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
-            if (user?.uid) {
-                try {
-                    await checkAndRenewMonthlyPremium(user.uid);
-                } catch (error) {
-                    console.error('프리미엄 갱신 확인 중 오류:', error);
-                }
+                // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
+                if (user?.uid) {
+                    try {
+                        await checkAndRenewMonthlyPremium(user.uid);
+                    } catch (error) {
+                        console.error('프리미엄 갱신 확인 중 오류:', error);
+                    }
+
+                    // 소설 생성 알림 스케줄링
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            if (userData.novelCreationEnabled) {
+                                const notificationTime = userData.reminderTime || '21:00';
+                                await scheduleNovelCreationNotification(user.uid, notificationTime);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('소설 생성 알림 스케줄링 실패:', error);
+                    }
 
                 // 구독 상태 동기화 (Google Play와 Firebase 동기화)
                 try {

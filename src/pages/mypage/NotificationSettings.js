@@ -65,8 +65,9 @@ function NotificationSettings({ user }) {
     const [isPushSupported, setIsPushSupported] = useState(false); // 푸시 알림 지원 여부
 
     // 추가 알림 설정
-    const [eventEnabled, setEventEnabled] = useState(false); // 이벤트 알림
     const [marketingEnabled, setMarketingEnabled] = useState(false); // 마케팅 알림
+    const [friendEnabled, setFriendEnabled] = useState(false); // 친구 관련 알림
+    const [novelCreationEnabled, setNovelCreationEnabled] = useState(false); // 소설 생성 알림
 
     // 사용자의 알림 설정 불러오기
     useEffect(() => {
@@ -86,8 +87,10 @@ function NotificationSettings({ user }) {
                         time: data.reminderTime || '21:00',
                         message: isValidMessage ? savedMessage : reminderMessages[0].value
                     });
-                    setEventEnabled(!!data.eventEnabled);
-                    setMarketingEnabled(!!data.marketingEnabled);
+                    // 기존 eventEnabled나 promotionEnabled가 있으면 marketingEnabled로 통합
+                    setMarketingEnabled(!!(data.marketingEnabled || data.eventEnabled || data.promotionEnabled));
+                    setFriendEnabled(!!data.friendEnabled);
+                    setNovelCreationEnabled(!!data.novelCreationEnabled);
 
                     // 모바일 앱에서 FCM 토큰 확인 및 현재 사용자로 동기화
                     if (Capacitor.getPlatform() !== 'web') {
@@ -207,8 +210,9 @@ function NotificationSettings({ user }) {
                 reminderEnabled: newSettings.enabled ?? false,
                 reminderTime: newSettings.time ?? '',
                 message: newSettings.message ?? reminderMessages[0].value,
-                eventEnabled: newSettings.eventEnabled ?? false,
                 marketingEnabled: newSettings.marketingEnabled ?? false,
+                friendEnabled: newSettings.friendEnabled ?? false,
+                novelCreationEnabled: newSettings.novelCreationEnabled ?? false,
                 reminderTimezone: newSettings.reminderTimezone ?? 'Asia/Seoul',
             };
             await setDoc(doc(db, "users", uid), data, { merge: true });
@@ -227,8 +231,9 @@ function NotificationSettings({ user }) {
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const safeSettings = {
                 ...newSettings,
-                eventEnabled: newSettings.eventEnabled ?? false,
                 marketingEnabled: newSettings.marketingEnabled ?? false,
+                friendEnabled: newSettings.friendEnabled ?? false,
+                novelCreationEnabled: newSettings.novelCreationEnabled ?? false,
                 reminderTimezone: timezone,
             };
             const success = await storageManager.setItem(`notificationSettings_${user.uid}`, safeSettings);
@@ -308,8 +313,9 @@ function NotificationSettings({ user }) {
         saveSettings(newSettings);
     };
 
-    const handleEventToggle = () => setEventEnabled((prev) => !prev);
     const handleMarketingToggle = () => setMarketingEnabled((prev) => !prev);
+    const handleFriendToggle = () => setFriendEnabled((prev) => !prev);
+    const handleNovelCreationToggle = () => setNovelCreationEnabled((prev) => !prev);
 
     // 저장 버튼 핸들러 추가
     const handleSaveAll = async () => {
@@ -320,8 +326,9 @@ function NotificationSettings({ user }) {
         }
         const newSettings = {
             ...settings,
-            eventEnabled,
-            marketingEnabled
+            marketingEnabled,
+            friendEnabled,
+            novelCreationEnabled
         };
         try {
             const success = await storageManager.setItem(`notificationSettings_${user.uid}`, newSettings);
@@ -388,22 +395,23 @@ function NotificationSettings({ user }) {
                     </div>
                     {settings.enabled && (
                         <>
-                            <div className="notification-item notification-row">
-                                <span className="notification-label">{t('notification_time')}</span>
+                            <div className="notification-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                                <span className="notification-label" style={{ marginBottom: '8px' }}>{t('notification_time')}</span>
                                 <input
                                     type="time"
                                     value={settings.time}
                                     onChange={handleTimeChange}
                                     className="time-input styled-input"
+                                    style={{ width: '100%' }}
                                 />
                             </div>
-                            <div className="notification-item notification-row">
-                                <span className="notification-label">{t('notification_message')}</span>
+                            <div className="notification-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                                <span className="notification-label" style={{ marginBottom: '8px' }}>{t('notification_message')}</span>
                                 <select
                                     value={settings.message}
                                     onChange={handleMessageChange}
                                     className="styled-input"
-                                    style={actualTheme === 'glass' ? { width: '100%', padding: '8px' } : { width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                                    style={{ width: '100%', padding: '8px' }}
                                 >
                                     {reminderMessages.map((msg, index) => (
                                         <option key={index} value={msg.value}>
@@ -414,27 +422,46 @@ function NotificationSettings({ user }) {
                             </div>
                         </>
                     )}
+                    {/* 친구 알림 */}
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">{t('event_notification')}</span>
+                            <span className="notification-label">친구 알림</span>
                             <span className="notification-description">
-                                {t('event_notification_desc')}
+                                친구 요청과 소설 구매 소식을 알려드려요
                             </span>
                         </div>
                         <label className="toggle-switch">
                             <input
                                 type="checkbox"
-                                checked={eventEnabled}
-                                onChange={handleEventToggle}
+                                checked={friendEnabled}
+                                onChange={handleFriendToggle}
                             />
                             <span className="toggle-slider"></span>
                         </label>
                     </div>
+                    {/* 소설 생성 알림 */}
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">{t('marketing_notification')}</span>
+                            <span className="notification-label">소설 생성 알림</span>
                             <span className="notification-description">
-                                {t('marketing_notification_desc')}
+                                소설을 만들 수 있는 주가 되면 놓치지 않도록 알려드려요
+                            </span>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={novelCreationEnabled}
+                                onChange={handleNovelCreationToggle}
+                            />
+                            <span className="toggle-slider"></span>
+                        </label>
+                    </div>
+                    {/* 마케팅 알림 */}
+                    <div className="notification-item notification-toggle-row">
+                        <div className="notification-item-content">
+                            <span className="notification-label">마케팅 알림</span>
+                            <span className="notification-description">
+                                특별한 이벤트와 프로모션 소식을 가장 먼저 전해드려요
                             </span>
                         </div>
                         <label className="toggle-switch">
@@ -452,10 +479,10 @@ function NotificationSettings({ user }) {
                 <div className="notification-card notification-info">
                     <h3>{t('notification_info')}</h3>
                     <ul>
-                        <li>{t('notification_info_1')}</li>
-                        <li>{t('notification_info_2')}</li>
-                        <li>{t('notification_info_3')}</li>
-                        <li>{t('notification_info_4')}</li>
+                        <li>매일 설정된 시간에 알림이 표시됩니다</li>
+                        <li>이미 일기를 작성한 날에는 알림이 표시되지 않습니다</li>
+                        <li>알림을 끄면 더 이상 알림을 받지 않습니다</li>
+                        <li>브라우저/앱 알림 권한이 필요합니다</li>
                     </ul>
                 </div>
             </div>

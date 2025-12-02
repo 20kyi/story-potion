@@ -8,6 +8,9 @@ import './Settings.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useLanguage } from '../../LanguageContext';
 import CustomDropdown from '../../components/ui/CustomDropdown';
+import pushNotificationManager from '../../utils/pushNotification';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 
 function Settings() {
@@ -20,6 +23,7 @@ function Settings() {
         language: false,
     });
     const [logoutModal, setLogoutModal] = useState(false);
+    const [notificationPermission, setNotificationPermission] = useState('default');
 
     // 언어에 따라 폰트 옵션 생성
     const FONT_OPTIONS = [
@@ -41,6 +45,25 @@ function Settings() {
     ];
 
 
+
+    // 알림 권한 상태 확인
+    useEffect(() => {
+        const checkNotificationPermission = async () => {
+            if (Capacitor.getPlatform() !== 'web') {
+                try {
+                    const permStatus = await PushNotifications.checkPermissions();
+                    setNotificationPermission(permStatus.receive || 'default');
+                } catch (error) {
+                    console.error('알림 권한 확인 실패:', error);
+                    setNotificationPermission('default');
+                }
+            } else {
+                const permission = pushNotificationManager.getPermissionStatus();
+                setNotificationPermission(permission);
+            }
+        };
+        checkNotificationPermission();
+    }, []);
 
     const handleAccordion = (key) => {
         setOpen(prev => ({ ...prev, [key]: !prev[key] }));
@@ -72,6 +95,13 @@ function Settings() {
                     <li className="settings-item" style={{ flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', paddingBottom: 18 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => navigate('/my/notification-settings')}>
                             <span>{t('notification_settings')}</span>
+                            <span style={{
+                                fontSize: '14px',
+                                color: notificationPermission === 'granted' ? '#4CAF50' : '#999',
+                                marginRight: '8px'
+                            }}>
+                                {notificationPermission === 'granted' ? '권한 허용' : '권한 비허용'}
+                            </span>
                         </div>
                     </li>
 

@@ -5,6 +5,10 @@
 
 import { db } from '../firebase';
 import { collection, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
+import pushNotificationManager from './pushNotification';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 /**
  * 알림 생성
@@ -68,15 +72,77 @@ export const createNovelPurchaseNotification = async (authorId, buyerId, novelId
             ? (buyerDoc.data().displayName || buyerDoc.data().nickname || buyerDoc.data().nick || '알 수 없는 사용자')
             : '알 수 없는 사용자';
 
-        return await createNotification(
+        const title = '소설 구매 알림';
+        const message = `${buyerName}님이 "${novelTitle}"을(를) 구매했습니다.`;
+
+        const result = await createNotification(
             authorId,
             'novel_purchase',
-            '소설 구매 알림',
-            `${buyerName}님이 "${novelTitle}"을(를) 구매했습니다.`,
+            title,
+            message,
             { buyerId, buyerName, novelId, novelTitle }
         );
+
+        // 푸시 알림 전송 (사용자 설정 확인)
+        const authorDoc = await getDoc(doc(db, 'users', authorId));
+        if (authorDoc.exists() && authorDoc.data().friendEnabled) {
+            await sendPushNotificationToUser(authorId, title, message);
+        }
+
+        return result;
     } catch (error) {
         console.error('소설 구매 알림 생성 실패:', error);
+        return false;
+    }
+};
+
+/**
+ * 사용자에게 푸시 알림을 보냅니다
+ * @param {string} userId - 알림을 받을 사용자 ID
+ * @param {string} title - 알림 제목
+ * @param {string} message - 알림 메시지
+ * @returns {Promise<boolean>} 알림 전송 성공 여부
+ */
+const sendPushNotificationToUser = async (userId, title, message) => {
+    try {
+        // 웹 환경
+        if (Capacitor.getPlatform() === 'web') {
+            if (pushNotificationManager.isPushSupported() && 
+                pushNotificationManager.getPermissionStatus() === 'granted') {
+                await pushNotificationManager.showLocalNotification(title, {
+                    body: message,
+                    icon: '/app_logo/logo.png',
+                    badge: '/app_logo/logo.png',
+                    tag: 'novel-purchase-notification',
+                    requireInteraction: false
+                });
+                return true;
+            }
+        } else {
+            // 모바일 환경
+            try {
+                const permStatus = await PushNotifications.checkPermissions();
+                if (permStatus.receive === 'granted') {
+                    await LocalNotifications.schedule({
+                        notifications: [{
+                            title,
+                            body: message,
+                            id: Date.now(),
+                            schedule: { at: new Date() },
+                            sound: 'default',
+                            attachments: undefined
+                        }]
+                    });
+                    return true;
+                }
+            } catch (error) {
+                console.error('모바일 알림 전송 실패:', error);
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('푸시 알림 전송 실패:', error);
         return false;
     }
 };

@@ -6,6 +6,10 @@
 
 import { db } from '../firebase';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
+import pushNotificationManager from './pushNotification';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 /**
  * 친구 요청 알림 보내기
@@ -42,6 +46,12 @@ export const sendFriendRequestNotification = async (fromUserId, toUserId) => {
 
         // 알림 저장 (users/{userId}/notifications 서브컬렉션에 저장)
         await addDoc(collection(db, 'users', toUserId, 'notifications'), notificationData);
+
+        // 푸시 알림 전송 (사용자 설정 확인)
+        const toUserDoc = await getDoc(doc(db, 'users', toUserId));
+        if (toUserDoc.exists() && toUserDoc.data().friendEnabled) {
+            await sendPushNotificationToUser(toUserId, notificationData.title, notificationData.message);
+        }
 
         console.log('친구 요청 알림 전송 완료:', notificationData);
         return true;
@@ -87,6 +97,12 @@ export const sendFriendRequestAcceptedNotification = async (fromUserId, toUserId
 
         // 알림 저장 (users/{userId}/notifications 서브컬렉션에 저장)
         await addDoc(collection(db, 'users', toUserId, 'notifications'), notificationData);
+
+        // 푸시 알림 전송 (사용자 설정 확인)
+        const toUserDoc = await getDoc(doc(db, 'users', toUserId));
+        if (toUserDoc.exists() && toUserDoc.data().friendEnabled) {
+            await sendPushNotificationToUser(toUserId, notificationData.title, notificationData.message);
+        }
 
         console.log('친구 요청 수락 알림 전송 완료:', notificationData);
         return true;
@@ -138,6 +154,57 @@ export const sendFriendRemovedNotification = async (fromUserId, toUserId) => {
 
     } catch (error) {
         console.error('친구 삭제 알림 전송 실패:', error);
+        return false;
+    }
+};
+
+/**
+ * 사용자에게 푸시 알림을 보냅니다
+ * @param {string} userId - 알림을 받을 사용자 ID
+ * @param {string} title - 알림 제목
+ * @param {string} message - 알림 메시지
+ * @returns {Promise<boolean>} 알림 전송 성공 여부
+ */
+const sendPushNotificationToUser = async (userId, title, message) => {
+    try {
+        // 웹 환경
+        if (Capacitor.getPlatform() === 'web') {
+            if (pushNotificationManager.isPushSupported() && 
+                pushNotificationManager.getPermissionStatus() === 'granted') {
+                await pushNotificationManager.showLocalNotification(title, {
+                    body: message,
+                    icon: '/app_logo/logo.png',
+                    badge: '/app_logo/logo.png',
+                    tag: 'friend-notification',
+                    requireInteraction: false
+                });
+                return true;
+            }
+        } else {
+            // 모바일 환경
+            try {
+                const permStatus = await PushNotifications.checkPermissions();
+                if (permStatus.receive === 'granted') {
+                    await LocalNotifications.schedule({
+                        notifications: [{
+                            title,
+                            body: message,
+                            id: Date.now(),
+                            schedule: { at: new Date() },
+                            sound: 'default',
+                            attachments: undefined
+                        }]
+                    });
+                    return true;
+                }
+            } catch (error) {
+                console.error('모바일 알림 전송 실패:', error);
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('푸시 알림 전송 실패:', error);
         return false;
     }
 }; 

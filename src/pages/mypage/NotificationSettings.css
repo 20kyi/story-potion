@@ -98,10 +98,13 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
+    padding-right: 16px;
+    min-width: 0;
 }
 
 .notification-label {
-    font-size: 1.1rem;
+    font-size: 16px;
     font-weight: 400;
     margin-bottom: 4px;
 }
@@ -271,10 +274,60 @@ body.dark .notification-section {
 }
 
 body.dark .time-input,
-body.dark .message-input {
+body.dark .message-input,
+body.dark .styled-input {
     background: var(--bg-primary);
     border-color: var(--border-color);
     color: var(--text-primary);
+}
+
+body.dark .time-input:focus,
+body.dark .message-input:focus,
+body.dark .styled-input:focus {
+    outline: none;
+    border-color: #e46262;
+    box-shadow: 0 0 0 2px rgba(228, 98, 98, 0.2);
+}
+
+body.dark select.styled-input {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark select.styled-input option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* 다이어리 테마 - 입력 필드 및 드롭다운 */
+body.diary .time-input,
+body.diary .message-input,
+body.diary .styled-input {
+    background: #fffef9;
+    border: 1.5px solid rgba(139, 111, 71, 0.3);
+    border-radius: 8px;
+    color: #5C4B37;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+body.diary .time-input:focus,
+body.diary .message-input:focus,
+body.diary .styled-input:focus {
+    outline: none;
+    border-color: #8B6F47;
+    box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+body.diary select.styled-input {
+    background: #fffef9;
+    border: 1.5px solid rgba(139, 111, 71, 0.3);
+    color: #5C4B37;
+}
+
+body.diary select.styled-input option {
+    background: #fffef9;
+    color: #5C4B37;
 }
 
 /* 다크 테마 - 저장 버튼 */
@@ -409,7 +462,7 @@ body.glass .toggle-slider {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-body.glass .toggle-switch input:checked + .toggle-slider {
+body.glass .toggle-switch input:checked+.toggle-slider {
     background: rgba(228, 98, 98, 0.6);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
