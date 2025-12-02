@@ -4,13 +4,13 @@
     "description": "당신의 이야기를 담는 마법의 포션",
     "icons": [
         {
-            "src": "/app_logo/logo3_1.png",
+            "src": "/app_logo/logo_image.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "/app_logo/logo3_1.png",
+            "src": "/app_logo/logo_image.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"

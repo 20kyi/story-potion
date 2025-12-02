@@ -665,7 +665,7 @@ function Login() {
       <Container>
         <ContentWrapper>
           <LogoSection>
-            <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
+            <Logo src="/app_logo/logo.png" alt="Story Potion Logo" />
           </LogoSection>
           <FormSection>
             <Form onSubmit={handleSubmit}>

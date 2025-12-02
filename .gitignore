@@ -31,3 +31,7 @@ firebase-debug.log
 *.swp
 *.swo
 *~
+
+# Cursor IDE workspace storage files
+assets/c__Users_*
+assets/*workspaceStorage*

@@ -1251,7 +1251,7 @@ function Signup() {
       <Container>
         <ContentWrapper>
           <LogoSection>
-            <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
+            <Logo src="/app_logo/logo.png" alt="Story Potion Logo" />
           </LogoSection>
           <FormSection>
             {currentStep === 1 && renderStep1()}

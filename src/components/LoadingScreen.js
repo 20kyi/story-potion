@@ -286,7 +286,7 @@ function LoadingScreen({ fullscreen = true, darkMode = false, text = '로딩 중
           }}
         >
           <LogoImage
-            src={darkMode ? "/app_logo/logo5.png" : "/app_logo/logo3.png"}
+            src={darkMode ? "/app_logo/logo5.png" : "/app_logo/logo.png"}
             alt="로딩"
             darkMode={darkMode}
           />

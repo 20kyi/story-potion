@@ -2,7 +2,7 @@
  * 안드로이드 아이콘 자동 생성 스크립트
  * 
  * 사용법:
- * 1. public/app_logo/logo3.png 또는 원하는 로고 이미지 준비
+ * 1. public/app_logo/logo_image.png 또는 원하는 로고 이미지 준비
  * 2. node scripts/generate-android-icons.js 실행
  * 
  * 주의: sharp 패키지가 필요합니다. 없으면 npm install sharp 설치
@@ -31,13 +31,13 @@ try {
 }
 
 async function generateIcons(sharp) {
-  const sourceImage = path.join(__dirname, '../public/app_logo/logo3_1.png');
+  const sourceImage = path.join(__dirname, '../public/app_logo/logo_image.png');
   const resDir = path.join(__dirname, '../android/app/src/main/res');
 
   // 소스 이미지 확인
   if (!fs.existsSync(sourceImage)) {
     console.error(`❌ 소스 이미지를 찾을 수 없습니다: ${sourceImage}`);
-    console.log('💡 public/app_logo/logo3.png 파일이 있는지 확인하세요.');
+    console.log('💡 public/app_logo/logo_image.png 파일이 있는지 확인하세요.');
     return;
   }
 
@@ -79,13 +79,28 @@ async function generateIcons(sharp) {
         })
         .toFile(roundPath);
 
-      // Foreground 아이콘 생성 (Adaptive Icon용 - 더 큰 크기)
-      const foregroundSize = Math.floor(density.size * 4.5); // Adaptive Icon 안전 영역 고려
+      // Foreground 아이콘 생성 (Adaptive Icon용)
+      // Android Adaptive Icon safe zone: 전체 크기의 66% (중앙 영역만 보장됨)
+      // 108dp 전체 크기에서 safe zone은 약 72dp이므로, foreground는 108dp 크기로 만들되
+      // 로고는 중앙 66% 영역 안에 들어가도록 패딩을 추가해야 함
+      const foregroundSize = density.size * 2; // 108dp 기준으로 2배 크기
+      const safeZoneRatio = 0.66; // Safe zone은 전체의 66%
+      const logoSize = Math.floor(foregroundSize * safeZoneRatio); // Safe zone 안에 들어갈 로고 크기
+      
       const foregroundPath = path.join(folderPath, 'ic_launcher_foreground.png');
+      
+      // 로고를 safe zone 크기로 리사이즈하고, 투명 배경에 중앙 배치
       await sharp(sourceImage)
-        .resize(foregroundSize, foregroundSize, {
+        .resize(logoSize, logoSize, {
           fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 } // 투명 배경
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
+        })
+        .extend({
+          top: Math.floor((foregroundSize - logoSize) / 2),
+          bottom: Math.floor((foregroundSize - logoSize) / 2),
+          left: Math.floor((foregroundSize - logoSize) / 2),
+          right: Math.floor((foregroundSize - logoSize) / 2),
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
         })
         .toFile(foregroundPath);
 

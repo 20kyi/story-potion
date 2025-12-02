@@ -310,7 +310,7 @@ function TermsAgreement() {
             </CloseButton>
             <ContentWrapper>
                 <LogoSection>
-                    <Logo src="/app_logo/logo3.png" alt="Story Potion Logo" />
+                    <Logo src="/app_logo/logo.png" alt="Story Potion Logo" />
                 </LogoSection>
                 <Title>약관 동의</Title>
                 <AgreementSection>

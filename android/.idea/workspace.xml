@@ -10,8 +10,48 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19bf4b53-a466-4813-836f-be877b915fcf" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/app_logo/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/app_logo/logo.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/app_logo/logo3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/app_logo/logo3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/app_logo/logo3_text.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../assets/c__Users_20kyi_AppData_Roaming_Cursor_User_workspaceStorage_e5ff7050d1fcb34b53a7aef78662b547_images_Gemini_Generated_Image_esys16esys16esys-38418f01-0c8a-4c6f-ab97-f423b6057d55.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../assets/c__Users_20kyi_AppData_Roaming_Cursor_User_workspaceStorage_e5ff7050d1fcb34b53a7aef78662b547_images_image-1e6c63eb-076a-434a-b4a0-73d72025aeb2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../assets/c__Users_20kyi_AppData_Roaming_Cursor_User_workspaceStorage_e5ff7050d1fcb34b53a7aef78662b547_images_image-d603fe68-a0d3-47df-af30-49c80fbd8be4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/app_logo/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/../public/app_logo/logo.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/app_logo/logo3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/app_logo/logo3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/app_logo/logo3_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/app_logo/logo3_text.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/../public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/../public/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../scripts/generate-android-icons.js" beforeDir="false" afterPath="$PROJECT_DIR$/../scripts/generate-android-icons.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/components/LoadingScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/components/LoadingScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/pages/Login.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/pages/Login.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/pages/Signup.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/pages/Signup.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/pages/TermsAgreement.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/pages/TermsAgreement.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../그래픽 이미지.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,26 +87,28 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 5
-}</component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 5
+}]]></component>
   <component name="ProjectId" id="2zF3kGeG08yAfn12zVyUNe791PM" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.app.executor": "Run",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/story-potion/android"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
       <module name="android.app" />
@@ -178,12 +220,12 @@
         </entry>
         <entry key="com.storypotion.app">
           <value>
-            <CheckInfo lastCheckTimestamp="1764355627264" />
+            <CheckInfo lastCheckTimestamp="1764684309190" />
           </value>
         </entry>
         <entry key="com.storypotion.app.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1764355627240" />
+            <CheckInfo lastCheckTimestamp="1764684309190" />
           </value>
         </entry>
       </map>
