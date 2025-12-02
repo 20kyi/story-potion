@@ -25,8 +25,6 @@ function Settings() {
     const FONT_OPTIONS = [
         { label: t('font_system_default'), value: 'system-ui, sans-serif' },
         { label: t('font_seoul_hangang'), value: "SeoulHangang, sans-serif" },
-        { label: t('font_cinema'), value: "Cinema, sans-serif" },
-        { label: t('font_mom_letter'), value: "MomLetter, sans-serif" },
         { label: t('font_nanum_gothic'), value: 'NanumGothic, sans-serif' },
         { label: t('font_human_beomseok_neo'), value: 'HumanBeomseokNeo, sans-serif' },
         { label: t('font_adult_kid'), value: 'Adultkid, sans-serif' },
