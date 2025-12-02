@@ -29,7 +29,7 @@ const LibrarySection = ({
                         className={`novel-more-link ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
                         onClick={() => navigate(moreLinkPath)}
                     >
-                        더보기 →
+                        {t('home_see_more')} →
                     </button>
                 )}
             </div>

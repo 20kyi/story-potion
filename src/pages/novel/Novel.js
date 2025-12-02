@@ -1049,7 +1049,7 @@ const Novel = ({ user }) => {
                 isDiaryTheme={isDiaryTheme}
                 isGlassTheme={isGlassTheme}
                 moreLinkPath="/my/completed-novels"
-                emptyMessage="아직 작성한 소설이 없습니다. 일기를 작성하고 소설을 만들어보세요!"
+                emptyMessage={t('novel_my_novels_empty')}
             />
 
             {/* 내 서재 섹션 */}
@@ -1060,7 +1060,7 @@ const Novel = ({ user }) => {
                 isDiaryTheme={isDiaryTheme}
                 isGlassTheme={isGlassTheme}
                 moreLinkPath="/purchased-novels"
-                emptyMessage="아직 구매한 소설이 없습니다. 다른 사람의 소설을 구매해보세요!"
+                emptyMessage={t('novel_purchased_novels_empty')}
             />
 
             <div className="novel-divider" />

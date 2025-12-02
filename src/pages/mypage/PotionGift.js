@@ -132,7 +132,7 @@ const SearchInputContainer = styled.div`
 `;
 
 const SearchInput = styled.input.attrs({
-    className: 'potion-gift-search-input'
+  className: 'potion-gift-search-input'
 })`
   width: 100%;
   padding: 14px 16px;
@@ -171,28 +171,28 @@ const SearchInput = styled.input.attrs({
 
   &::placeholder {
     color: ${({ theme, $isDiaryTheme }) => {
-      if ($isDiaryTheme) return '#8B6F47 !important';
-      return `${theme.subText || '#666'} !important`;
-    }};
+    if ($isDiaryTheme) return '#8B6F47 !important';
+    return `${theme.subText || '#666'} !important`;
+  }};
     opacity: 1;
   }
 
   &:focus {
     border-color: #e46262;
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
-      if ($isDiaryTheme) return '0 0 0 2px rgba(228, 98, 98, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
-      return '0 0 0 2px rgba(228, 98, 98, 0.1)';
-    }};
+    if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 0 0 2px rgba(228, 98, 98, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    return '0 0 0 2px rgba(228, 98, 98, 0.1)';
+  }};
     background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
-      if ($isDiaryTheme) return '#fffef9 !important';
-      return `${theme.background} !important`;
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
+    if ($isDiaryTheme) return '#fffef9 !important';
+    return `${theme.background} !important`;
+  }};
     color: ${({ theme, $isDiaryTheme }) => {
-      if ($isDiaryTheme) return '#5C4B37 !important';
-      return `${theme.text} !important`;
-    }};
+    if ($isDiaryTheme) return '#5C4B37 !important';
+    return `${theme.text} !important`;
+  }};
   }
 
   &:-webkit-autofill,
@@ -200,19 +200,19 @@ const SearchInput = styled.input.attrs({
   &:-webkit-autofill:focus,
   &:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
-      if ($isDiaryTheme) return '#fffef9';
-      return theme.background;
-    }} inset !important;
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+    if ($isDiaryTheme) return '#fffef9';
+    return theme.background;
+  }} inset !important;
     -webkit-text-fill-color: ${({ theme, $isDiaryTheme }) => {
-      if ($isDiaryTheme) return '#5C4B37 !important';
-      return `${theme.text} !important`;
-    }};
+    if ($isDiaryTheme) return '#5C4B37 !important';
+    return `${theme.text} !important`;
+  }};
     background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2) !important';
-      if ($isDiaryTheme) return '#fffef9 !important';
-      return `${theme.background} !important`;
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2) !important';
+    if ($isDiaryTheme) return '#fffef9 !important';
+    return `${theme.background} !important`;
+  }};
   }
 
   &:hover,
@@ -220,14 +220,14 @@ const SearchInput = styled.input.attrs({
   &:focus,
   &:visited {
     background-color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
-      if ($isDiaryTheme) return '#fffef9 !important';
-      return `${theme.background} !important`;
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.25) !important';
+    if ($isDiaryTheme) return '#fffef9 !important';
+    return `${theme.background} !important`;
+  }};
     color: ${({ theme, $isDiaryTheme }) => {
-      if ($isDiaryTheme) return '#5C4B37 !important';
-      return `${theme.text} !important`;
-    }};
+    if ($isDiaryTheme) return '#5C4B37 !important';
+    return `${theme.text} !important`;
+  }};
   }
 `;
 
@@ -370,15 +370,15 @@ const FriendCard = styled(motion.div)`
   &:hover {
     transform: translateY(-2px);
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08)';
-      return '0 4px 12px rgba(0,0,0,0.1)';
-    }};
+    if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08)';
+    return '0 4px 12px rgba(0,0,0,0.1)';
+  }};
   }
   
   ${({ selected, $isGlassTheme, $isDiaryTheme }) => selected && `
     background: linear-gradient(135deg, rgba(228, 98, 98, 0.1) 0%, rgba(212, 85, 85, 0.1) 100%);
-    box-shadow: ${$isGlassTheme 
+    box-shadow: ${$isGlassTheme
       ? '0 6px 24px rgba(228, 98, 98, 0.25)'
       : $isDiaryTheme
         ? '0 4px 12px rgba(228, 98, 98, 0.2)'
@@ -466,23 +466,23 @@ const PotionItem = styled(motion.div)`
   &:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: ${({ disabled, $isGlassTheme, $isDiaryTheme }) => {
-      if (disabled) return 'none';
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
-      return '0 6px 20px rgba(228, 98, 98, 0.3)';
-    }};
+    if (disabled) return 'none';
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+    return '0 6px 20px rgba(228, 98, 98, 0.3)';
+  }};
     border-color: ${({ disabled, theme, $isDiaryTheme, $isGlassTheme }) => {
-      if (disabled) {
-        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
-        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
-        return theme.border || '#e0e0e0';
-      }
-      return '#e46262';
-    }};
+    if (disabled) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.5)';
+      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
+      return theme.border || '#e0e0e0';
+    }
+    return '#e46262';
+  }};
   }
   
   ${({ selected, $isGlassTheme, $isDiaryTheme }) => selected && `
-    box-shadow: ${$isGlassTheme 
+    box-shadow: ${$isGlassTheme
       ? '0 6px 24px rgba(228, 98, 98, 0.25), 0 4px 12px rgba(228, 98, 98, 0.2)'
       : $isDiaryTheme
         ? '0 4px 12px rgba(228, 98, 98, 0.2), 0 2px 4px rgba(228, 98, 98, 0.15)'
@@ -595,25 +595,25 @@ const GiftButton = styled.button`
   
   &:hover:not(:disabled) {
     background: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
-      return 'linear-gradient(135deg, #d45555 0%, #c44a4a 100%)';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+    return 'linear-gradient(135deg, #d45555 0%, #c44a4a 100%)';
+  }};
     transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'translateY(-2px)';
-      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
-      return 'translateY(-2px)';
-    }};
+    if ($isGlassTheme) return 'translateY(-2px)';
+    if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+    return 'translateY(-2px)';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(228, 98, 98, 0.4)';
-      return '0 6px 16px rgba(228, 98, 98, 0.4)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(228, 98, 98, 0.4)';
+    return '0 6px 16px rgba(228, 98, 98, 0.4)';
+  }};
     border-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.6)';
-      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.6)';
-      return 'none';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.6)';
+    if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.6)';
+    return 'none';
+  }};
     
     &::before {
       left: 100%;
@@ -622,15 +622,15 @@ const GiftButton = styled.button`
   
   &:active:not(:disabled) {
     transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'scale(0.97)';
-      if ($isDiaryTheme) return 'rotate(-0.1deg) scale(0.95)';
-      return 'translateY(0)';
-    }};
+    if ($isGlassTheme) return 'scale(0.97)';
+    if ($isDiaryTheme) return 'rotate(-0.1deg) scale(0.95)';
+    return 'translateY(0)';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
-      if ($isDiaryTheme) return '0 2px 6px rgba(228, 98, 98, 0.3)';
-      return '0 2px 8px rgba(228, 98, 98, 0.3)';
-    }};
+    if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 2px 6px rgba(228, 98, 98, 0.3)';
+    return '0 2px 8px rgba(228, 98, 98, 0.3)';
+  }};
   }
   
   &:disabled {
@@ -700,462 +700,464 @@ const LoadingSpinner = styled.div`
 `;
 
 function PotionGift({ user }) {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const theme = useTheme();
-    const { actualTheme } = useTheme();
-    const isDiaryTheme = actualTheme === 'diary';
-    const isGlassTheme = actualTheme === 'glass';
-    const toast = useToast();
-    const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const theme = useTheme();
+  const { actualTheme } = useTheme();
+  const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
+  const toast = useToast();
+  const { t } = useTranslation();
 
-    const [friends, setFriends] = useState([]);
-    const [selectedFriend, setSelectedFriend] = useState(null);
-    const [selectedPotion, setSelectedPotion] = useState(null);
-    const [ownedPotions, setOwnedPotions] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
-    const [isLoadingFriends, setIsLoadingFriends] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [searchTimeout, setSearchTimeout] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [selectedPotion, setSelectedPotion] = useState(null);
+  const [ownedPotions, setOwnedPotions] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
-    // 포션 데이터
-    const potions = [
-        { id: 'romance', name: '로맨스', image: '/potion/romance.png' },
-        { id: 'historical', name: '역사', image: '/potion/historical.png' },
-        { id: 'mystery', name: '추리', image: '/potion/mystery.png' },
-        { id: 'horror', name: '공포', image: '/potion/horror.png' },
-        { id: 'fairytale', name: '동화', image: '/potion/fairytale.png' },
-        { id: 'fantasy', name: '판타지', image: '/potion/fantasy.png' },
-    ];
+  // 포션 데이터
+  const potions = [
+    { id: 'romance', nameKey: 'novel_genre_romance', image: '/potion/romance.png' },
+    { id: 'historical', nameKey: 'novel_genre_historical', image: '/potion/historical.png' },
+    { id: 'mystery', nameKey: 'novel_genre_mystery', image: '/potion/mystery.png' },
+    { id: 'horror', nameKey: 'novel_genre_horror', image: '/potion/horror.png' },
+    { id: 'fairytale', nameKey: 'novel_genre_fairytale', image: '/potion/fairytale.png' },
+    { id: 'fantasy', nameKey: 'novel_genre_fantasy', image: '/potion/fantasy.png' },
+  ];
 
-    // URL 파라미터에서 친구 ID 가져오기
-    const friendIdFromUrl = searchParams.get('friendId');
+  // URL 파라미터에서 친구 ID 가져오기
+  const friendIdFromUrl = searchParams.get('friendId');
 
-    useEffect(() => {
-        if (user?.uid) {
-            loadFriends();
-            loadOwnedPotions();
-        }
-    }, [user, friendIdFromUrl]);
+  useEffect(() => {
+    if (user?.uid) {
+      loadFriends();
+      loadOwnedPotions();
+    }
+  }, [user, friendIdFromUrl]);
 
-    // 친구 목록 로드
-    const loadFriends = async () => {
-        if (!user?.uid) return;
-        setIsLoadingFriends(true);
-        try {
-            const friendsList = await getFriendsList(user.uid);
-            setFriends(friendsList);
+  // 친구 목록 로드
+  const loadFriends = async () => {
+    if (!user?.uid) return;
+    setIsLoadingFriends(true);
+    try {
+      const friendsList = await getFriendsList(user.uid);
+      setFriends(friendsList);
 
-            // URL 파라미터에 friendId가 있으면 해당 친구 선택
-            if (friendIdFromUrl) {
-                const friend = friendsList.find(f => f.user.uid === friendIdFromUrl);
-                if (friend) {
-                    setSelectedFriend(friend);
-                }
-            }
-        } catch (error) {
-            console.error('친구 목록 로드 실패:', error);
-            toast.showToast('친구 목록을 불러오는데 실패했습니다.', 'error');
-        } finally {
-            setIsLoadingFriends(false);
-        }
-    };
-
-    // 보유 포션 조회
-    const loadOwnedPotions = async () => {
-        if (!user?.uid) return;
-        try {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setOwnedPotions(userData.potions || {});
-            }
-        } catch (error) {
-            console.error('보유 포션 조회 실패:', error);
-        }
-    };
-
-    // 디바운싱된 검색 함수
-    const debouncedSearch = useCallback(async (query) => {
-        if (!query.trim() || query.trim().length < 2) {
-            setSearchResults([]);
-            setIsSearching(false);
-            return;
-        }
-
-        setIsSearching(true);
-        try {
-            // 친구 목록이 아직 로드되지 않았다면 먼저 로드
-            let friendsList = friends;
-            if (friendsList.length === 0) {
-                friendsList = await getFriendsList(user.uid);
-                setFriends(friendsList);
-            }
-
-            const results = await searchUsers(query, user.uid);
-
-            // 친구만 필터링
-            const friendIds = friendsList.map(f => f.user.uid);
-            const friendResults = results.filter(user => friendIds.includes(user.uid));
-
-            setSearchResults(friendResults);
-        } catch (error) {
-            console.error('친구 검색 실패:', error);
-            toast.showToast('친구 검색에 실패했습니다.', 'error');
-            setSearchResults([]);
-        } finally {
-            setIsSearching(false);
-        }
-    }, [user.uid, friends, toast]);
-
-    // 검색어 변경 핸들러
-    const handleSearchInputChange = (e) => {
-        const value = e.target.value;
-        setSearchQuery(value);
-
-        // 이전 타이머 클리어
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-
-        // 새로운 타이머 설정 (500ms 후 검색 실행)
-        const newTimeout = setTimeout(() => {
-            debouncedSearch(value);
-        }, 500);
-
-        setSearchTimeout(newTimeout);
-    };
-
-    // 수동 검색 함수 (검색 버튼 클릭 시)
-    const handleSearch = async () => {
-        // 타이머 클리어
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-
-        await debouncedSearch(searchQuery);
-    };
-
-    // 컴포넌트 언마운트 시 타이머 클리어
-    useEffect(() => {
-        return () => {
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-        };
-    }, [searchTimeout]);
-
-    // 검색 결과에서 친구 선택
-    const handleSelectSearchResult = (user) => {
-        // friends 배열에서 해당 친구 찾기
-        const friend = friends.find(f => f.user.uid === user.uid);
+      // URL 파라미터에 friendId가 있으면 해당 친구 선택
+      if (friendIdFromUrl) {
+        const friend = friendsList.find(f => f.user.uid === friendIdFromUrl);
         if (friend) {
-            setSelectedFriend(friend);
-            setSearchQuery('');
-            setSearchResults([]);
+          setSelectedFriend(friend);
         }
+      }
+    } catch (error) {
+      console.error('친구 목록 로드 실패:', error);
+      toast.showToast(t('potion_gift_friend_list_failed'), 'error');
+    } finally {
+      setIsLoadingFriends(false);
+    }
+  };
+
+  // 보유 포션 조회
+  const loadOwnedPotions = async () => {
+    if (!user?.uid) return;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setOwnedPotions(userData.potions || {});
+      }
+    } catch (error) {
+      console.error('보유 포션 조회 실패:', error);
+    }
+  };
+
+  // 디바운싱된 검색 함수
+  const debouncedSearch = useCallback(async (query) => {
+    if (!query.trim() || query.trim().length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // 친구 목록이 아직 로드되지 않았다면 먼저 로드
+      let friendsList = friends;
+      if (friendsList.length === 0) {
+        friendsList = await getFriendsList(user.uid);
+        setFriends(friendsList);
+      }
+
+      const results = await searchUsers(query, user.uid);
+
+      // 친구만 필터링
+      const friendIds = friendsList.map(f => f.user.uid);
+      const friendResults = results.filter(user => friendIds.includes(user.uid));
+
+      setSearchResults(friendResults);
+    } catch (error) {
+      console.error('친구 검색 실패:', error);
+      toast.showToast(t('potion_gift_search_failed'), 'error');
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [user.uid, friends, toast]);
+
+  // 검색어 변경 핸들러
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // 이전 타이머 클리어
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // 새로운 타이머 설정 (500ms 후 검색 실행)
+    const newTimeout = setTimeout(() => {
+      debouncedSearch(value);
+    }, 500);
+
+    setSearchTimeout(newTimeout);
+  };
+
+  // 수동 검색 함수 (검색 버튼 클릭 시)
+  const handleSearch = async () => {
+    // 타이머 클리어
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    await debouncedSearch(searchQuery);
+  };
+
+  // 컴포넌트 언마운트 시 타이머 클리어
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
     };
+  }, [searchTimeout]);
 
-    // 검색어 초기화
-    const handleClearSearch = () => {
-        setSearchQuery('');
-        setSearchResults([]);
-    };
+  // 검색 결과에서 친구 선택
+  const handleSelectSearchResult = (user) => {
+    // friends 배열에서 해당 친구 찾기
+    const friend = friends.find(f => f.user.uid === user.uid);
+    if (friend) {
+      setSelectedFriend(friend);
+      setSearchQuery('');
+      setSearchResults([]);
+    }
+  };
 
-    // 검색어가 비어있을 때 검색 결과 초기화
-    useEffect(() => {
-        if (!searchQuery.trim() || searchQuery.trim().length < 2) {
-            setSearchResults([]);
-        }
-    }, [searchQuery]);
+  // 검색어 초기화
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
 
-    // 포션 선물하기
-    const handleGiftPotion = async () => {
-        if (!selectedFriend || !selectedPotion) {
-            toast.showToast(t('potion_gift_select'), 'error');
-            return;
-        }
+  // 검색어가 비어있을 때 검색 결과 초기화
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
 
-        const potion = potions.find(p => p.id === selectedPotion);
-        if (!potion) return;
+  // 포션 선물하기
+  const handleGiftPotion = async () => {
+    if (!selectedFriend || !selectedPotion) {
+      toast.showToast(t('potion_gift_select'), 'error');
+      return;
+    }
 
-        // 보유 포션 확인
-        const potionCount = ownedPotions[selectedPotion] || 0;
-        if (potionCount <= 0) {
-            toast.showToast(t('potion_gift_no_potion', { name: potion.name }), 'error');
-            return;
-        }
+    const potion = potions.find(p => p.id === selectedPotion);
+    if (!potion) return;
 
-        setIsLoading(true);
-        try {
-            const result = await giftPotionToFriend(
-                user.uid,
-                selectedFriend.user.uid,
-                selectedPotion,
-                potion.name
-            );
+    const potionName = t(potion.nameKey);
 
-            if (result.success) {
-                toast.showToast(t('potion_gift_success', { name: potion.name }), 'success');
-                await loadOwnedPotions(); // 보유 포션 새로고침
-                // 성공 후 친구 페이지로 이동
-                setTimeout(() => {
-                    navigate('/my/friend');
-                }, 1000);
-            } else {
-                toast.showToast(result.error || t('potion_gift_failed'), 'error');
-            }
-        } catch (error) {
-            console.error('포션 선물 실패:', error);
-            toast.showToast(t('potion_gift_failed'), 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // 보유 포션 확인
+    const potionCount = ownedPotions[selectedPotion] || 0;
+    if (potionCount <= 0) {
+      toast.showToast(t('potion_gift_no_potion', { name: potionName }), 'error');
+      return;
+    }
 
-    return (
-        <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
-            <Header user={user} title={t('potion_gift_title')} />
+    setIsLoading(true);
+    try {
+      const result = await giftPotionToFriend(
+        user.uid,
+        selectedFriend.user.uid,
+        selectedPotion,
+        potionName
+      );
 
-            {!selectedFriend ? (
-                <>
-                    <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                        <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={false}>
-                            선물할 친구 선택
-                        </SectionTitle>
+      if (result.success) {
+        toast.showToast(t('potion_gift_success', { name: potionName }), 'success');
+        await loadOwnedPotions(); // 보유 포션 새로고침
+        // 성공 후 친구 페이지로 이동
+        setTimeout(() => {
+          navigate('/my/friend');
+        }, 1000);
+      } else {
+        toast.showToast(result.error || t('potion_gift_failed'), 'error');
+      }
+    } catch (error) {
+      console.error('포션 선물 실패:', error);
+      toast.showToast(t('potion_gift_failed'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                        <SearchInputContainer>
-                            <SearchInput
-                                type="text"
-                                placeholder={t('friend_search_placeholder') || '친구 이름이나 이메일로 검색'}
-                                value={searchQuery}
-                                onChange={handleSearchInputChange}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                theme={theme}
-                                $isDiaryTheme={isDiaryTheme}
-                                $isGlassTheme={isGlassTheme}
-                                hasClearButton={searchQuery.trim().length > 0}
-                            />
-                            {searchQuery.trim().length > 0 && (
-                                <ClearButton
-                                    onClick={handleClearSearch}
-                                    theme={theme}
-                                >
-                                    <FaTimes />
-                                </ClearButton>
-                            )}
-                            <SearchButton
-                                onClick={handleSearch}
-                                disabled={isSearching || !searchQuery.trim() || searchQuery.trim().length < 2}
-                                hasClearButton={searchQuery.trim().length > 0}
-                            >
-                                <FaSearch />
-                            </SearchButton>
-                        </SearchInputContainer>
+  return (
+    <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
+      <Header user={user} title={t('potion_gift_title')} />
 
-                        {isSearching && (
-                            <div style={{ textAlign: 'center', padding: '20px', color: theme.subText || '#666' }}>
-                                검색 중...
-                            </div>
-                        )}
+      {!selectedFriend ? (
+        <>
+          <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={false}>
+              {t('potion_gift_select_friend')}
+            </SectionTitle>
 
-                        {!isSearching && searchQuery.trim() && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '20px', color: theme.subText || '#666' }}>
-                                검색 결과가 없습니다.
-                            </div>
-                        )}
+            <SearchInputContainer>
+              <SearchInput
+                type="text"
+                placeholder={t('friend_search_placeholder') || '친구 이름이나 이메일로 검색'}
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                theme={theme}
+                $isDiaryTheme={isDiaryTheme}
+                $isGlassTheme={isGlassTheme}
+                hasClearButton={searchQuery.trim().length > 0}
+              />
+              {searchQuery.trim().length > 0 && (
+                <ClearButton
+                  onClick={handleClearSearch}
+                  theme={theme}
+                >
+                  <FaTimes />
+                </ClearButton>
+              )}
+              <SearchButton
+                onClick={handleSearch}
+                disabled={isSearching || !searchQuery.trim() || searchQuery.trim().length < 2}
+                hasClearButton={searchQuery.trim().length > 0}
+              >
+                <FaSearch />
+              </SearchButton>
+            </SearchInputContainer>
 
-                        {/* 검색어가 없을 때만 친구 목록 표시 */}
-                        {!searchQuery.trim() || searchQuery.trim().length < 2 ? (
-                            <>
-                                {isLoadingFriends ? (
-                                    <LoadingSpinner theme={theme} />
-                                ) : friends.length === 0 ? (
-                                    <EmptyState theme={theme}>
-                                        <EmptyIcon>👥</EmptyIcon>
-                                        <EmptyText>친구가 없습니다</EmptyText>
-                                        <EmptySubtext>친구를 추가한 후 포션을 선물할 수 있습니다.</EmptySubtext>
-                                    </EmptyState>
-                                ) : (
-                                    friends.map((friend) => (
-                                        <FriendCard
-                                            key={friend.id}
-                                            theme={theme}
-                                            $isDiaryTheme={isDiaryTheme}
-                                            $isGlassTheme={isGlassTheme}
-                                            selected={false}
-                                            onClick={() => setSelectedFriend(friend)}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                        >
-                                            <FriendAvatar
-                                                src={getSafeProfileImageUrl(friend.user.photoURL)}
-                                                alt={friend.user.displayName}
-                                                onError={(e) => handleImageError(e)}
-                                                theme={theme}
-                                            />
-                                            <FriendInfo>
-                                                <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                    {friend.user.displayName || t('friend_default_name')}
-                                                </FriendName>
-                                                <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                    {friend.user.email}
-                                                </FriendEmail>
-                                            </FriendInfo>
-                                            <FaGift style={{ color: '#e46262', fontSize: '20px' }} />
-                                        </FriendCard>
-                                    ))
-                                )}
-                            </>
-                        ) : null}
-                    </Section>
-
-                    {/* 검색 결과를 별도 섹션에 표시 */}
-                    {searchResults.length > 0 && (
-                        <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={false}>
-                                검색 결과
-                            </SectionTitle>
-                            <SearchResultsContainer>
-                                {searchResults.map((user) => (
-                                    <SearchResultCard
-                                        key={user.uid}
-                                        theme={theme}
-                                        onClick={() => handleSelectSearchResult(user)}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        <SearchResultAvatar
-                                            src={getSafeProfileImageUrl(user.photoURL)}
-                                            alt={user.displayName}
-                                            onError={(e) => handleImageError(e)}
-                                            theme={theme}
-                                        />
-                                        <SearchResultInfo>
-                                            <SearchResultName theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                {user.displayName || t('friend_default_name')}
-                                            </SearchResultName>
-                                            <SearchResultEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                {user.email}
-                                            </SearchResultEmail>
-                                        </SearchResultInfo>
-                                        <FaGift style={{ color: '#e46262', fontSize: '18px' }} />
-                                    </SearchResultCard>
-                                ))}
-                            </SearchResultsContainer>
-                        </Section>
-                    )}
-                </>
-            ) : (
-                <>
-                    <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                        <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={true}>선물할 친구</SectionTitle>
-                        <SelectedFriendDisplay>
-                            <FriendAvatar
-                                src={getSafeProfileImageUrl(selectedFriend.user.photoURL)}
-                                alt={selectedFriend.user.displayName}
-                                onError={(e) => handleImageError(e)}
-                                theme={theme}
-                            />
-                                            <FriendInfo>
-                                                <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                    {selectedFriend.user.displayName || t('friend_default_name')}
-                                                </FriendName>
-                                                <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                    {selectedFriend.user.email}
-                                                </FriendEmail>
-                                            </FriendInfo>
-                            <button
-                                onClick={() => setSelectedFriend(null)}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: theme.text,
-                                    cursor: 'pointer',
-                                    padding: '8px',
-                                    fontSize: '18px'
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </SelectedFriendDisplay>
-                    </Section>
-
-                    <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                        <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={true}>선물할 포션 선택</SectionTitle>
-
-                        <PotionGrid>
-                            {potions.map((potion) => {
-                                const count = ownedPotions[potion.id] || 0;
-                                const hasPotion = count > 0;
-
-                                return (
-                                    <PotionItem
-                                        key={potion.id}
-                                        selected={selectedPotion === potion.id}
-                                        disabled={!hasPotion}
-                                        onClick={() => hasPotion && setSelectedPotion(potion.id)}
-                                        theme={theme}
-                                        $isDiaryTheme={isDiaryTheme}
-                                        $isGlassTheme={isGlassTheme}
-                                        whileHover={hasPotion ? { scale: 1.05 } : {}}
-                                        whileTap={hasPotion ? { scale: 0.95 } : {}}
-                                    >
-                                        <PotionImage src={potion.image} alt={potion.name} disabled={!hasPotion} />
-                                        <PotionName theme={theme} $isDiaryTheme={isDiaryTheme}>{potion.name}</PotionName>
-                                        <PotionCount disabled={!hasPotion} $isDiaryTheme={isDiaryTheme}>{count}</PotionCount>
-                                    </PotionItem>
-                                );
-                            })}
-                        </PotionGrid>
-
-                        <GiftButton
-                            onClick={handleGiftPotion}
-                            disabled={!selectedPotion || isLoading}
-                            $isDiaryTheme={isDiaryTheme}
-                            $isGlassTheme={isGlassTheme}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <span style={{
-                                        display: 'inline-block',
-                                        width: '16px',
-                                        height: '16px',
-                                        border: '2px solid rgba(255, 255, 255, 0.3)',
-                                        borderTop: '2px solid white',
-                                        borderRadius: '50%',
-                                        animation: 'spin 0.8s linear infinite'
-                                    }} />
-                                    선물 중...
-                                </>
-                            ) : selectedPotion ? (
-                                <>
-                                    <FaGift style={{ fontSize: '18px' }} />
-                                    {potions.find(p => p.id === selectedPotion)?.name || ''} 포션 선물하기
-                                </>
-                            ) : (
-                                <>
-                                    <FaGift style={{ fontSize: '18px', opacity: 0.7 }} />
-                                    {t('potion_gift_select')}
-                                </>
-                            )}
-                        </GiftButton>
-                    </Section>
-                </>
+            {isSearching && (
+              <div style={{ textAlign: 'center', padding: '20px', color: theme.subText || '#666' }}>
+                {t('potion_gift_searching')}
+              </div>
             )}
 
-            <Navigation />
+            {!isSearching && searchQuery.trim() && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '20px', color: theme.subText || '#666' }}>
+                {t('potion_gift_no_search_results')}
+              </div>
+            )}
 
-            <style>{`
+            {/* 검색어가 없을 때만 친구 목록 표시 */}
+            {!searchQuery.trim() || searchQuery.trim().length < 2 ? (
+              <>
+                {isLoadingFriends ? (
+                  <LoadingSpinner theme={theme} />
+                ) : friends.length === 0 ? (
+                  <EmptyState theme={theme}>
+                    <EmptyIcon>👥</EmptyIcon>
+                    <EmptyText>{t('potion_gift_no_friends')}</EmptyText>
+                    <EmptySubtext>{t('potion_gift_no_friends_desc')}</EmptySubtext>
+                  </EmptyState>
+                ) : (
+                  friends.map((friend) => (
+                    <FriendCard
+                      key={friend.id}
+                      theme={theme}
+                      $isDiaryTheme={isDiaryTheme}
+                      $isGlassTheme={isGlassTheme}
+                      selected={false}
+                      onClick={() => setSelectedFriend(friend)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <FriendAvatar
+                        src={getSafeProfileImageUrl(friend.user.photoURL)}
+                        alt={friend.user.displayName}
+                        onError={(e) => handleImageError(e)}
+                        theme={theme}
+                      />
+                      <FriendInfo>
+                        <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>
+                          {friend.user.displayName || t('friend_default_name')}
+                        </FriendName>
+                        <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
+                          {friend.user.email}
+                        </FriendEmail>
+                      </FriendInfo>
+                      <FaGift style={{ color: '#e46262', fontSize: '20px' }} />
+                    </FriendCard>
+                  ))
+                )}
+              </>
+            ) : null}
+          </Section>
+
+          {/* 검색 결과를 별도 섹션에 표시 */}
+          {searchResults.length > 0 && (
+            <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+              <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={false}>
+                {t('potion_gift_search_results')}
+              </SectionTitle>
+              <SearchResultsContainer>
+                {searchResults.map((user) => (
+                  <SearchResultCard
+                    key={user.uid}
+                    theme={theme}
+                    onClick={() => handleSelectSearchResult(user)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <SearchResultAvatar
+                      src={getSafeProfileImageUrl(user.photoURL)}
+                      alt={user.displayName}
+                      onError={(e) => handleImageError(e)}
+                      theme={theme}
+                    />
+                    <SearchResultInfo>
+                      <SearchResultName theme={theme} $isDiaryTheme={isDiaryTheme}>
+                        {user.displayName || t('friend_default_name')}
+                      </SearchResultName>
+                      <SearchResultEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
+                        {user.email}
+                      </SearchResultEmail>
+                    </SearchResultInfo>
+                    <FaGift style={{ color: '#e46262', fontSize: '18px' }} />
+                  </SearchResultCard>
+                ))}
+              </SearchResultsContainer>
+            </Section>
+          )}
+        </>
+      ) : (
+        <>
+          <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={true}>{t('potion_gift_selected_friend')}</SectionTitle>
+            <SelectedFriendDisplay>
+              <FriendAvatar
+                src={getSafeProfileImageUrl(selectedFriend.user.photoURL)}
+                alt={selectedFriend.user.displayName}
+                onError={(e) => handleImageError(e)}
+                theme={theme}
+              />
+              <FriendInfo>
+                <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>
+                  {selectedFriend.user.displayName || t('friend_default_name')}
+                </FriendName>
+                <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>
+                  {selectedFriend.user.email}
+                </FriendEmail>
+              </FriendInfo>
+              <button
+                onClick={() => setSelectedFriend(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  padding: '8px',
+                  fontSize: '18px'
+                }}
+              >
+                ✕
+              </button>
+            </SelectedFriendDisplay>
+          </Section>
+
+          <Section theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+            <SectionTitle theme={theme} $isDiaryTheme={isDiaryTheme} showGiftIcon={true}>{t('potion_gift_select_potion')}</SectionTitle>
+
+            <PotionGrid>
+              {potions.map((potion) => {
+                const count = ownedPotions[potion.id] || 0;
+                const hasPotion = count > 0;
+
+                return (
+                  <PotionItem
+                    key={potion.id}
+                    selected={selectedPotion === potion.id}
+                    disabled={!hasPotion}
+                    onClick={() => hasPotion && setSelectedPotion(potion.id)}
+                    theme={theme}
+                    $isDiaryTheme={isDiaryTheme}
+                    $isGlassTheme={isGlassTheme}
+                    whileHover={hasPotion ? { scale: 1.05 } : {}}
+                    whileTap={hasPotion ? { scale: 0.95 } : {}}
+                  >
+                    <PotionImage src={potion.image} alt={t(potion.nameKey)} disabled={!hasPotion} />
+                    <PotionName theme={theme} $isDiaryTheme={isDiaryTheme}>{t(potion.nameKey)}</PotionName>
+                    <PotionCount disabled={!hasPotion} $isDiaryTheme={isDiaryTheme}>{count}</PotionCount>
+                  </PotionItem>
+                );
+              })}
+            </PotionGrid>
+
+            <GiftButton
+              onClick={handleGiftPotion}
+              disabled={!selectedPotion || isLoading}
+              $isDiaryTheme={isDiaryTheme}
+              $isGlassTheme={isGlassTheme}
+            >
+              {isLoading ? (
+                <>
+                  <span style={{
+                    display: 'inline-block',
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderTop: '2px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite'
+                  }} />
+                  {t('potion_gift_gifting')}
+                </>
+              ) : selectedPotion ? (
+                <>
+                  <FaGift style={{ fontSize: '18px' }} />
+                  {t('potion_gift_button', { name: t(potions.find(p => p.id === selectedPotion)?.nameKey || '') })}
+                </>
+              ) : (
+                <>
+                  <FaGift style={{ fontSize: '18px', opacity: 0.7 }} />
+                  {t('potion_gift_select')}
+                </>
+              )}
+            </GiftButton>
+          </Section>
+        </>
+      )}
+
+      <Navigation />
+
+      <style>{`
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
             `}</style>
-        </Container>
-    );
+    </Container>
+  );
 }
 
 export default PotionGift;
