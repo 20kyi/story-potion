@@ -7,6 +7,7 @@ import { useTheme } from '../../ThemeContext';
 import './Settings.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useLanguage } from '../../LanguageContext';
+import CustomDropdown from '../../components/ui/CustomDropdown';
 
 const FONT_OPTIONS = [
     { label: '시스템 기본', value: 'system-ui, sans-serif' },
@@ -37,61 +38,6 @@ function Settings() {
         language: false,
     });
     const [logoutModal, setLogoutModal] = useState(false);
-
-    // 테마별 드롭다운 스타일 함수
-    const getDropdownStyles = () => {
-        if (actualTheme === 'diary') {
-            return {
-                backgroundColor: '#fff',
-                color: '#8B6F47',
-                border: '1px solid rgba(139, 111, 71, 0.3)'
-            };
-        } else if (actualTheme === 'glass') {
-            return {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                color: '#000000',
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)'
-            };
-        } else if (actualTheme === 'dark') {
-            return {
-                backgroundColor: '#232323',
-                color: '#f1f1f1',
-                border: '1px solid #333333'
-            };
-        } else {
-            return {
-                backgroundColor: '#fff',
-                color: '#222',
-                border: '1px solid #e0e0e0'
-            };
-        }
-    };
-
-    const getOptionStyles = () => {
-        if (actualTheme === 'diary') {
-            return {
-                backgroundColor: '#fff',
-                color: '#8B6F47'
-            };
-        } else if (actualTheme === 'glass') {
-            return {
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                color: '#000000'
-            };
-        } else if (actualTheme === 'dark') {
-            return {
-                backgroundColor: '#232323',
-                color: '#f1f1f1'
-            };
-        } else {
-            return {
-                backgroundColor: '#fff',
-                color: '#222'
-            };
-        }
-    };
 
 
 
@@ -131,102 +77,62 @@ function Settings() {
                     {/* 테마 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
                         <span>{t('theme')}</span>
-                        <select
-                            className="settings-select"
+                        <CustomDropdown
                             value={theme}
-                            onChange={e => setThemeMode(e.target.value)}
-                            style={{
-                                marginLeft: 'auto',
-                                width: 160,
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                cursor: 'pointer',
-                                ...getDropdownStyles()
-                            }}
-                        >
-                            <option value="light" style={getOptionStyles()}>{t('theme_light') || '라이트 모드'}</option>
-                            <option value="dark" style={getOptionStyles()}>{t('theme_dark') || '다크 모드'}</option>
-                            <option value="diary" style={getOptionStyles()}>{t('theme_diary') || '다이어리'}</option>
-                            <option value="glass" style={getOptionStyles()}>{t('theme_glass') || '포션'}</option>
-                        </select>
+                            onChange={setThemeMode}
+                            options={[
+                                { label: t('theme_light') || '라이트 모드', value: 'light' },
+                                { label: t('theme_dark') || '다크 모드', value: 'dark' },
+                                { label: t('theme_diary') || '다이어리', value: 'diary' },
+                                { label: t('theme_glass') || '포션', value: 'glass' }
+                            ]}
+                            width="160px"
+                            padding="8px 12px"
+                            fontSize="14px"
+                            borderRadius="6px"
+                        />
                     </li>
                     {/* 언어 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
                         <span>{t('language')}</span>
-                        <select
-                            className="settings-select"
+                        <CustomDropdown
                             value={language}
-                            onChange={e => setLanguage(e.target.value)}
-                            style={{
-                                marginLeft: 'auto',
-                                width: 160,
-                                fontSize: '14px',
-                                padding: '6px 12px',
-                                borderRadius: 8,
-                                cursor: 'pointer',
-                                ...getDropdownStyles()
-                            }}
-                        >
-                            <option value="ko" style={getOptionStyles()}>한국어</option>
-                            <option value="en" style={getOptionStyles()}>English</option>
-                        </select>
+                            onChange={setLanguage}
+                            options={[
+                                { label: '한국어', value: 'ko' },
+                                { label: 'English', value: 'en' }
+                            ]}
+                            width="160px"
+                            padding="6px 12px"
+                            fontSize="14px"
+                            borderRadius="8px"
+                        />
                     </li>
                     {/* 폰트 선택 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
                         <span>{t('font')}</span>
-                        <select
-                            className="settings-select"
+                        <CustomDropdown
                             value={fontFamily}
-                            onChange={e => setFontFamily(e.target.value)}
-                            style={{
-                                marginLeft: 'auto',
-                                width: 200,
-                                fontSize: '14px',
-                                padding: '6px 12px',
-                                borderRadius: 8,
-                                cursor: 'pointer',
-                                ...getDropdownStyles()
-                            }}
-                        >
-                            {FONT_OPTIONS.map(opt => (
-                                <option
-                                    key={opt.value}
-                                    value={opt.value}
-                                    style={getOptionStyles()}
-                                >
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setFontFamily}
+                            options={FONT_OPTIONS}
+                            width="200px"
+                            padding="6px 12px"
+                            fontSize="14px"
+                            borderRadius="8px"
+                        />
                     </li>
                     {/* 폰트 크기 선택 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
                         <span>{t('font_size')}</span>
-                        <select
-                            className="settings-select"
+                        <CustomDropdown
                             value={fontSize}
-                            onChange={e => setFontSize(e.target.value)}
-                            style={{
-                                marginLeft: 'auto',
-                                width: 160,
-                                fontSize: '14px',
-                                padding: '6px 12px',
-                                borderRadius: 8,
-                                cursor: 'pointer',
-                                ...getDropdownStyles()
-                            }}
-                        >
-                            {FONT_SIZE_OPTIONS.map(opt => (
-                                <option
-                                    key={opt.value}
-                                    value={opt.value}
-                                    style={getOptionStyles()}
-                                >
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setFontSize}
+                            options={FONT_SIZE_OPTIONS}
+                            width="160px"
+                            padding="6px 12px"
+                            fontSize="14px"
+                            borderRadius="8px"
+                        />
                     </li>
 
 
