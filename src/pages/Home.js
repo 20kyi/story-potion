@@ -922,9 +922,11 @@ const CarouselContainer = styled.div`
     bottom: -35px;
     li {
       margin: 0 4px;
+      width: 10px;
+      height: 10px;
       button {
-        width: ${({ $isGlassTheme }) => $isGlassTheme ? '10px' : 'auto'};
-        height: ${({ $isGlassTheme }) => $isGlassTheme ? '10px' : 'auto'};
+        width: 10px;
+        height: 10px;
         padding: 0;
         background: ${({ $isGlassTheme }) => $isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
         backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
@@ -935,7 +937,8 @@ const CarouselContainer = styled.div`
         &:before {
           color: ${({ $isGlassTheme }) => $isGlassTheme ? 'transparent' : '#fdd2d2'};
           opacity: ${({ $isGlassTheme }) => $isGlassTheme ? '0' : '0.5'};
-          font-size: 14px;
+          font-size: 10px;
+          line-height: 10px;
         }
       }
       &.slick-active button {
@@ -945,6 +948,8 @@ const CarouselContainer = styled.div`
         &:before {
           color: ${({ $isGlassTheme }) => $isGlassTheme ? 'transparent' : '#cb6565'};
           opacity: ${({ $isGlassTheme }) => $isGlassTheme ? '0' : '1'};
+          font-size: 10px;
+          line-height: 10px;
         }
       }
     }
