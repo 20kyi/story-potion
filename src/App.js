@@ -603,7 +603,44 @@ function App() {
                                 });
                             }
                         } else {
-                            console.log('푸시 알림 권한이 없습니다. 사용자가 알림 설정에서 권한을 허용해야 합니다.');
+                            // 권한이 없으면 무조건 권한 요청 다이얼로그 띄우기
+                            console.log('푸시 알림 권한이 없습니다. 권한을 요청합니다.');
+                            try {
+                                const requestResult = await PushNotifications.requestPermissions();
+                                if (requestResult.receive === 'granted') {
+                                    console.log('푸시 알림 권한이 허용되었습니다.');
+                                    // 권한 허용 후 등록
+                                    const registration = await PushNotifications.register();
+                                    console.log('푸시 알림 등록:', registration);
+
+                                    // 토큰 등록 리스너 (한 번만 등록)
+                                    if (!window.__pushRegListenerAdded) {
+                                        window.__pushRegListenerAdded = true;
+                                        PushNotifications.addListener('registration', async (token) => {
+                                            console.log('FCM 토큰 발급:', token.value);
+                                            const currentUser = auth.currentUser;
+                                            if (currentUser && token.value) {
+                                                try {
+                                                    await setDoc(doc(db, "users", currentUser.uid), {
+                                                        fcmToken: token.value
+                                                    }, { merge: true });
+                                                    console.log('앱 FCM 토큰 Firestore 저장 완료:', token.value);
+                                                } catch (error) {
+                                                    console.error('FCM 토큰 Firestore 저장 실패:', error);
+                                                }
+                                            }
+                                        });
+
+                                        PushNotifications.addListener('registrationError', (error) => {
+                                            console.error('FCM 토큰 등록 오류:', error);
+                                        });
+                                    }
+                                } else {
+                                    console.log('푸시 알림 권한이 거부되었습니다.');
+                                }
+                            } catch (error) {
+                                console.error('알림 권한 요청 실패:', error);
+                            }
                         }
                     } catch (error) {
                         console.error('FCM 토큰 등록 중 오류:', error);
