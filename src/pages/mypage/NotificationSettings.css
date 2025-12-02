@@ -277,6 +277,31 @@ body.dark .message-input {
     color: var(--text-primary);
 }
 
+/* 다크 테마 - 저장 버튼 */
+body.dark .notification-save-button {
+    background: linear-gradient(135deg, #ff8a8a 0%, #e46262 100%);
+    color: white;
+}
+
+body.dark .notification-save-button:hover {
+    background: linear-gradient(135deg, #ff9a9a 0%, #f47272 100%);
+    box-shadow: 0 4px 15px rgba(228, 98, 98, 0.4);
+}
+
+/* 다이어리 테마 - 저장 버튼 */
+body.diary .notification-save-button {
+    background: rgba(139, 111, 71, 0.8);
+    color: white;
+    border: 1px solid #8B6F47;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(139, 111, 71, 0.3);
+}
+
+body.diary .notification-save-button:hover {
+    background: rgba(139, 111, 71, 0.9);
+    box-shadow: 0 4px 12px rgba(139, 111, 71, 0.4);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 600px) {
     .notification-card {
@@ -319,24 +344,21 @@ body.dark .message-input {
 }
 
 .notification-save-button {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    color: #000000;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    border-radius: 12px;
+    background: linear-gradient(135deg, #ff8a8a 0%, #e46262 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
     padding: 14px 0;
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 600;
     width: 100%;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
 
 .notification-save-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ff9a9a 0%, #f47272 100%);
+    box-shadow: 0 4px 15px rgba(228, 98, 98, 0.4);
 }
 
 /* 글래스 테마 스타일 */

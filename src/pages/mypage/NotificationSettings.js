@@ -372,9 +372,9 @@ function NotificationSettings({ user }) {
                 <div className="notification-section">
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">일기 작성 리마인더</span>
+                            <span className="notification-label">{t('diary_reminder')}</span>
                             <span className="notification-description">
-                                매일 설정된 시간에 일기 작성을 알려드립니다
+                                {t('diary_reminder_desc')}
                             </span>
                         </div>
                         <label className="toggle-switch">
@@ -389,7 +389,7 @@ function NotificationSettings({ user }) {
                     {settings.enabled && (
                         <>
                             <div className="notification-item notification-row">
-                                <span className="notification-label">알림 시간</span>
+                                <span className="notification-label">{t('notification_time')}</span>
                                 <input
                                     type="time"
                                     value={settings.time}
@@ -398,7 +398,7 @@ function NotificationSettings({ user }) {
                                 />
                             </div>
                             <div className="notification-item notification-row">
-                                <span className="notification-label">알림 메시지</span>
+                                <span className="notification-label">{t('notification_message')}</span>
                                 <select
                                     value={settings.message}
                                     onChange={handleMessageChange}
@@ -416,9 +416,9 @@ function NotificationSettings({ user }) {
                     )}
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">이벤트/공지 알림</span>
+                            <span className="notification-label">{t('event_notification')}</span>
                             <span className="notification-description">
-                                중요 공지, 이벤트, 업데이트 소식을 받아보세요
+                                {t('event_notification_desc')}
                             </span>
                         </div>
                         <label className="toggle-switch">
@@ -432,9 +432,9 @@ function NotificationSettings({ user }) {
                     </div>
                     <div className="notification-item notification-toggle-row">
                         <div className="notification-item-content">
-                            <span className="notification-label">마케팅/프로모션 알림</span>
+                            <span className="notification-label">{t('marketing_notification')}</span>
                             <span className="notification-description">
-                                광고성 정보, 프로모션, 할인 소식을 받아보세요
+                                {t('marketing_notification_desc')}
                             </span>
                         </div>
                         <label className="toggle-switch">
@@ -448,14 +448,14 @@ function NotificationSettings({ user }) {
                     </div>
                 </div>
 
-                <button className="notification-save-button" style={{ width: '100%', marginTop: 10, marginBottom: 20 }} onClick={handleSaveAll}>저장</button>
+                <button className="notification-save-button" style={{ width: '100%', marginTop: 10, marginBottom: 20 }} onClick={handleSaveAll}>{t('save')}</button>
                 <div className="notification-card notification-info">
-                    <h3>알림 정보</h3>
+                    <h3>{t('notification_info')}</h3>
                     <ul>
-                        <li>매일 설정된 시간에 알림이 표시됩니다</li>
-                        <li>이미 일기를 작성한 날에는 알림이 표시되지 않습니다</li>
-                        <li>알림을 끄면 더 이상 알림을 받지 않습니다</li>
-                        <li>브라우저 알림 권한이 필요합니다</li>
+                        <li>{t('notification_info_1')}</li>
+                        <li>{t('notification_info_2')}</li>
+                        <li>{t('notification_info_3')}</li>
+                        <li>{t('notification_info_4')}</li>
                     </ul>
                 </div>
             </div>
