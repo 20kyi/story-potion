@@ -2556,3 +2556,77 @@ exports.kakaoAuth = functions.https.onCall(async (data, context) => {
         );
     }
 });
+
+// 개별 사용자에게 푸시 알림 전송 함수
+exports.sendPushNotificationToUser = functions.https.onCall(async (data, context) => {
+    try {
+        const { userId, title, message, data: notificationData } = data;
+
+        if (!userId || !title || !message) {
+            throw new functions.https.HttpsError(
+                'invalid-argument',
+                'userId, title, message는 필수입니다.'
+            );
+        }
+
+        // 사용자 정보 조회
+        const userDoc = await admin.firestore().collection('users').doc(userId).get();
+        
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                '사용자를 찾을 수 없습니다.'
+            );
+        }
+
+        const user = userDoc.data();
+        const fcmToken = user.fcmToken;
+
+        if (!fcmToken) {
+            console.log(`사용자 ${userId}: FCM 토큰 없음`);
+            return { success: false, message: 'FCM 토큰이 없습니다.' };
+        }
+
+        // FCM 메시지 생성
+        const fcmMessage = {
+            token: fcmToken,
+            notification: {
+                title: title,
+                body: message,
+            },
+            data: {
+                type: notificationData?.type || 'general',
+                title: title,
+                message: message,
+                ...(notificationData || {})
+            },
+            android: {
+                priority: 'high',
+                notification: {
+                    sound: 'default',
+                    channelId: 'default'
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        sound: 'default',
+                        badge: 1
+                    }
+                }
+            }
+        };
+
+        // FCM 메시지 전송
+        const result = await admin.messaging().send(fcmMessage);
+        console.log(`사용자 ${userId}에게 푸시 알림 전송 완료:`, result);
+
+        return { success: true, messageId: result };
+    } catch (error) {
+        console.error('개별 사용자 푸시 알림 전송 실패:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            '푸시 알림 전송 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류')
+        );
+    }
+});

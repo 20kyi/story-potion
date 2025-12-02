@@ -6,10 +6,10 @@
 import { db } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import pushNotificationManager from './pushNotification';
-import { getFcmToken, sendPushNotification } from '../firebase';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 /**
  * 한 달의 주차 정보를 가져옵니다
@@ -184,7 +184,7 @@ export const checkNovelCreationAvailable = async (userId) => {
 };
 
 /**
- * 소설 생성 알림을 보냅니다
+ * 소설 생성 알림을 보냅니다 (FCM을 통한 실제 푸시 알림)
  */
 export const sendNovelCreationNotification = async (userId, weekInfo) => {
     try {
@@ -206,38 +206,47 @@ export const sendNovelCreationNotification = async (userId, weekInfo) => {
         const title = '소설을 생성할 수 있어요! 📖';
         const message = `${weekInfo.week}에 소설을 만들어보세요!`;
 
-        // 웹 환경
-        if (Capacitor.getPlatform() === 'web') {
-            if (pushNotificationManager.isPushSupported() &&
-                pushNotificationManager.getPermissionStatus() === 'granted') {
-                await pushNotificationManager.showLocalNotification(title, {
-                    body: message,
-                    icon: '/app_logo/logo.png',
-                    badge: '/app_logo/logo.png',
-                    tag: 'novel-creation-notification',
-                    requireInteraction: false
-                });
+        // Firebase Functions를 통해 FCM 푸시 알림 전송
+        try {
+            const functions = getFunctions(undefined, 'us-central1');
+            const sendPushNotification = httpsCallable(functions, 'sendPushNotificationToUser');
+
+            const result = await sendPushNotification({
+                userId,
+                title,
+                message,
+                data: {
+                    type: 'novel_creation',
+                    week: weekInfo.week,
+                    weekNum: weekInfo.weekNum,
+                    year: weekInfo.year,
+                    month: weekInfo.month,
+                    timestamp: Date.now().toString()
+                }
+            });
+
+            if (result.data.success) {
+                console.log('소설 생성 FCM 푸시 알림 전송 성공:', result.data);
                 return true;
+            } else {
+                console.error('소설 생성 FCM 푸시 알림 전송 실패:', result.data);
             }
-        } else {
-            // 모바일 환경
-            try {
-                const permStatus = await PushNotifications.checkPermissions();
-                if (permStatus.receive === 'granted') {
-                    await LocalNotifications.schedule({
-                        notifications: [{
-                            title,
-                            body: message,
-                            id: Date.now(),
-                            schedule: { at: new Date() },
-                            sound: 'default',
-                            attachments: undefined
-                        }]
+        } catch (fcmError) {
+            console.error('FCM 푸시 알림 전송 실패, fallback 시도:', fcmError);
+
+            // Fallback: 웹 환경에서는 로컬 알림 시도
+            if (Capacitor.getPlatform() === 'web') {
+                if (pushNotificationManager.isPushSupported() &&
+                    pushNotificationManager.getPermissionStatus() === 'granted') {
+                    await pushNotificationManager.showLocalNotification(title, {
+                        body: message,
+                        icon: '/app_logo/logo.png',
+                        badge: '/app_logo/logo.png',
+                        tag: 'novel-creation-notification',
+                        requireInteraction: false
                     });
                     return true;
                 }
-            } catch (error) {
-                console.error('모바일 알림 전송 실패:', error);
             }
         }
 

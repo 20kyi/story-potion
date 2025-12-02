@@ -10,6 +10,7 @@ import pushNotificationManager from './pushNotification';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 /**
  * 친구 요청 알림 보내기
@@ -101,7 +102,10 @@ export const sendFriendRequestAcceptedNotification = async (fromUserId, toUserId
         // 푸시 알림 전송 (사용자 설정 확인)
         const toUserDoc = await getDoc(doc(db, 'users', toUserId));
         if (toUserDoc.exists() && toUserDoc.data().friendEnabled) {
-            await sendPushNotificationToUser(toUserId, notificationData.title, notificationData.message);
+            await sendPushNotificationToUser(toUserId, notificationData.title, notificationData.message, {
+                type: 'friend_accepted',
+                ...notificationData.data
+            });
         }
 
         console.log('친구 요청 수락 알림 전송 완료:', notificationData);
@@ -159,52 +163,56 @@ export const sendFriendRemovedNotification = async (fromUserId, toUserId) => {
 };
 
 /**
- * 사용자에게 푸시 알림을 보냅니다
+ * 사용자에게 푸시 알림을 보냅니다 (FCM을 통한 실제 푸시 알림)
  * @param {string} userId - 알림을 받을 사용자 ID
  * @param {string} title - 알림 제목
  * @param {string} message - 알림 메시지
+ * @param {Object} data - 추가 데이터
  * @returns {Promise<boolean>} 알림 전송 성공 여부
  */
-const sendPushNotificationToUser = async (userId, title, message) => {
+const sendPushNotificationToUser = async (userId, title, message, data = {}) => {
     try {
-        // 웹 환경
+        // Firebase Functions를 통해 FCM 푸시 알림 전송
+        const functions = getFunctions(undefined, 'us-central1');
+        const sendPushNotification = httpsCallable(functions, 'sendPushNotificationToUser');
+        
+        const result = await sendPushNotification({
+            userId,
+            title,
+            message,
+            data: {
+                ...data,
+                timestamp: Date.now().toString()
+            }
+        });
+
+        if (result.data.success) {
+            console.log('FCM 푸시 알림 전송 성공:', result.data);
+            return true;
+        } else {
+            console.error('FCM 푸시 알림 전송 실패:', result.data);
+            return false;
+        }
+    } catch (error) {
+        console.error('푸시 알림 전송 실패:', error);
+        // Fallback: 웹 환경에서는 로컬 알림 시도
         if (Capacitor.getPlatform() === 'web') {
             if (pushNotificationManager.isPushSupported() && 
                 pushNotificationManager.getPermissionStatus() === 'granted') {
-                await pushNotificationManager.showLocalNotification(title, {
-                    body: message,
-                    icon: '/app_logo/logo.png',
-                    badge: '/app_logo/logo.png',
-                    tag: 'friend-notification',
-                    requireInteraction: false
-                });
-                return true;
-            }
-        } else {
-            // 모바일 환경
-            try {
-                const permStatus = await PushNotifications.checkPermissions();
-                if (permStatus.receive === 'granted') {
-                    await LocalNotifications.schedule({
-                        notifications: [{
-                            title,
-                            body: message,
-                            id: Date.now(),
-                            schedule: { at: new Date() },
-                            sound: 'default',
-                            attachments: undefined
-                        }]
+                try {
+                    await pushNotificationManager.showLocalNotification(title, {
+                        body: message,
+                        icon: '/app_logo/logo.png',
+                        badge: '/app_logo/logo.png',
+                        tag: 'friend-notification',
+                        requireInteraction: false
                     });
                     return true;
+                } catch (fallbackError) {
+                    console.error('로컬 알림 fallback 실패:', fallbackError);
                 }
-            } catch (error) {
-                console.error('모바일 알림 전송 실패:', error);
             }
         }
-        
-        return false;
-    } catch (error) {
-        console.error('푸시 알림 전송 실패:', error);
         return false;
     }
 }; 

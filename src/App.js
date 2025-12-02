@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 // import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
-import { auth, db } from './firebase';
+import { auth, db, onFcmMessage } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Capacitor } from '@capacitor/core';
@@ -12,6 +12,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { checkPhotoPermission, requestPhotoPermission } from './utils/permissions';
+import pushNotificationManager from './utils/pushNotification';
 
 // 페이지 및 컴포넌트 임포트 생략 (기존 그대로)
 import Home from './pages/Home';
@@ -1279,11 +1280,44 @@ function App() {
             };
         }
 
-        // FCM 푸시 알림 수신 리스너 등록 (모바일 환경에서만)
+        // FCM 푸시 알림 수신 리스너 등록
         let pushReceivedListener = null;
         let pushActionListener = null;
         let localNotificationListener = null;
+        let fcmMessageUnsubscribe = null;
 
+        // 웹 환경: Firebase Messaging 포그라운드 메시지 수신
+        if (Capacitor.getPlatform() === 'web') {
+            if (!window.__fcmMessageListenerAdded) {
+                window.__fcmMessageListenerAdded = true;
+                try {
+                    fcmMessageUnsubscribe = onFcmMessage((payload) => {
+                        console.log('포그라운드 FCM 메시지 수신:', payload);
+                        
+                        const title = payload.notification?.title || payload.data?.title || 'Story Potion';
+                        const body = payload.notification?.body || payload.data?.body || payload.data?.message || '새로운 알림이 있습니다!';
+                        
+                        // 브라우저 알림 표시
+                        if (pushNotificationManager.isPushSupported() && 
+                            pushNotificationManager.getPermissionStatus() === 'granted') {
+                            pushNotificationManager.showLocalNotification(title, {
+                                body: body,
+                                icon: '/app_logo/logo.png',
+                                badge: '/app_logo/logo.png',
+                                tag: 'fcm-notification',
+                                requireInteraction: false,
+                                data: payload.data || {}
+                            });
+                        }
+                    });
+                    console.log('웹 포그라운드 FCM 메시지 리스너 등록 완료');
+                } catch (error) {
+                    console.error('FCM 메시지 리스너 등록 실패:', error);
+                }
+            }
+        }
+
+        // 모바일 환경: Capacitor PushNotifications
         if (Capacitor.getPlatform() !== 'web') {
             // 포그라운드에서 푸시 알림 수신 시 처리 (한 번만 등록)
             if (!window.__pushReceivedListenerAdded) {
@@ -1378,6 +1412,9 @@ function App() {
             }
             if (localNotificationListener) {
                 localNotificationListener.remove();
+            }
+            if (fcmMessageUnsubscribe) {
+                fcmMessageUnsubscribe();
             }
         };
     }, []);

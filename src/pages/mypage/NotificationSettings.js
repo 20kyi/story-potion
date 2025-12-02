@@ -287,16 +287,40 @@ function NotificationSettings({ user }) {
     const handleToggle = async () => {
         const newSettings = { ...settings, enabled: !settings.enabled };
 
-        // 알림을 켤 때 푸시 권한 확인
-        if (newSettings.enabled && pushPermission !== 'granted') {
-            const shouldRequest = window.confirm(
-                '푸시 알림을 받으려면 브라우저 알림 권한이 필요합니다. 권한을 요청하시겠습니까?'
-            );
+        // 알림을 켤 때 푸시 권한 확인 (실제 권한 상태를 다시 확인)
+        if (newSettings.enabled) {
+            let currentPermission = pushPermission;
 
-            if (shouldRequest) {
-                await requestPushPermission();
+            // 실제 권한 상태를 다시 확인
+            if (Capacitor.getPlatform() !== 'web') {
+                try {
+                    const permStatus = await PushNotifications.checkPermissions();
+                    currentPermission = permStatus.receive === 'granted' ? 'granted' : 'denied';
+                } catch (error) {
+                    console.error('권한 확인 실패:', error);
+                }
             } else {
-                return; // 권한 요청을 거부하면 알림을 켜지 않음
+                currentPermission = pushNotificationManager.getPermissionStatus();
+            }
+
+            // 권한이 없을 때만 요청
+            if (currentPermission !== 'granted') {
+                const shouldRequest = window.confirm(
+                    '푸시 알림을 받으려면 브라우저 알림 권한이 필요합니다. 권한을 요청하시겠습니까?'
+                );
+
+                if (shouldRequest) {
+                    await requestPushPermission();
+                    // 권한 요청 후 상태 업데이트
+                    if (Capacitor.getPlatform() !== 'web') {
+                        const permStatus = await PushNotifications.checkPermissions();
+                        setPushPermission(permStatus.receive === 'granted' ? 'granted' : 'denied');
+                    } else {
+                        setPushPermission(pushNotificationManager.getPermissionStatus());
+                    }
+                } else {
+                    return; // 권한 요청을 거부하면 알림을 켜지 않음
+                }
             }
         }
 
@@ -395,14 +419,13 @@ function NotificationSettings({ user }) {
                     </div>
                     {settings.enabled && (
                         <>
-                            <div className="notification-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                                <span className="notification-label" style={{ marginBottom: '8px' }}>{t('notification_time')}</span>
+                            <div className="notification-item notification-row">
+                                <span className="notification-label">{t('notification_time')}</span>
                                 <input
                                     type="time"
                                     value={settings.time}
                                     onChange={handleTimeChange}
                                     className="time-input styled-input"
-                                    style={{ width: '100%' }}
                                 />
                             </div>
                             <div className="notification-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
@@ -444,7 +467,7 @@ function NotificationSettings({ user }) {
                         <div className="notification-item-content">
                             <span className="notification-label">소설 생성 알림</span>
                             <span className="notification-description">
-                                소설을 만들 수 있는 주가 되면 놓치지 않도록 알려드려요
+                                소설을 만들 수 있을 때 놓치지 않도록 알려드려요
                             </span>
                         </div>
                         <label className="toggle-switch">
@@ -461,7 +484,7 @@ function NotificationSettings({ user }) {
                         <div className="notification-item-content">
                             <span className="notification-label">마케팅 알림</span>
                             <span className="notification-description">
-                                특별한 이벤트와 프로모션 소식을 가장 먼저 전해드려요
+                                특별한 이벤트와 프로모션을 가장 먼저 전해드려요
                             </span>
                         </div>
                         <label className="toggle-switch">

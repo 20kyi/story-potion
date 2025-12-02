@@ -206,7 +206,8 @@ body.diary .toggle-slider:before {
 }
 
 .time-input,
-.message-input {
+.message-input,
+select.styled-input {
     padding: 10px 12px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -214,6 +215,16 @@ body.diary .toggle-slider:before {
     background: var(--bg-primary);
     color: var(--text-primary);
     width: 200px;
+}
+
+select.styled-input {
+    width: 100%;
+    cursor: pointer;
+}
+
+select.styled-input option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .time-input:focus,
@@ -357,9 +368,6 @@ body.diary .notification-save-button:hover {
 
 /* 반응형 디자인 */
 @media (max-width: 600px) {
-    .notification-card {
-        /* padding: 14px 8px; */
-    }
 
     .notification-settings-title {
         font-size: 1.1rem;

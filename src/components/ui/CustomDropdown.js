@@ -306,31 +306,49 @@ function CustomDropdown({
             if (buttonRef.current && buttonRef.current.contains(event.target)) {
                 return;
             }
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            // 드롭다운 리스트 내부 클릭도 제외
+            if (dropdownRef.current && dropdownRef.current.contains(event.target)) {
+                return;
+            }
+            if (isOpen) {
                 setIsOpen(false);
             }
         };
 
         if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.addEventListener('touchstart', handleClickOutside);
-        }
+            // 버튼 클릭 이벤트가 먼저 처리되도록 짧은 지연
+            const timeoutId = setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+                document.addEventListener('touchend', handleClickOutside, { passive: true });
+            }, 100);
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('touchstart', handleClickOutside);
-        };
+            return () => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('touchend', handleClickOutside);
+            };
+        }
     }, [isOpen]);
 
     // 드롭다운 열기/닫기
-    const toggleDropdown = () => {
-        setIsOpen(!isOpen);
+    const toggleDropdown = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        setIsOpen(prev => !prev);
     };
 
     // 터치 이벤트 처리 (중복 방지)
     const handleTouchStart = (e) => {
-        e.preventDefault(); // 클릭 이벤트와 중복 방지
-        toggleDropdown();
+        e.preventDefault(); // 기본 동작 방지
+        e.stopPropagation(); // 이벤트 전파 방지
+    };
+
+    const handleTouchEnd = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleDropdown(e);
     };
 
     // 옵션 선택
@@ -342,12 +360,23 @@ function CustomDropdown({
 
     return (
         <>
-            <Overlay $isOpen={isOpen} onClick={() => setIsOpen(false)} />
+            <Overlay 
+                $isOpen={isOpen} 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                }}
+                onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                }}
+            />
             <DropdownContainer ref={dropdownRef} width={width}>
                 <DropdownButton
                     ref={buttonRef}
                     onClick={toggleDropdown}
                     onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
                     $actualTheme={actualTheme}
                     padding={padding}
                     fontSize={fontSize}
@@ -362,6 +391,8 @@ function CustomDropdown({
                     $isOpen={isOpen}
                     $actualTheme={actualTheme}
                     $borderRadius={borderRadius}
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                 >
                     {options.map((option, index) => {
                         const optionValue = typeof option === 'object' ? option.value : option;
@@ -373,7 +404,13 @@ function CustomDropdown({
                         return (
                             <DropdownItem
                                 key={index}
-                                onClick={() => handleSelect(option)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelect(option);
+                                }}
+                                onTouchStart={(e) => {
+                                    e.stopPropagation();
+                                }}
                                 $isSelected={isSelected}
                                 $actualTheme={actualTheme}
                                 $padding={padding}
