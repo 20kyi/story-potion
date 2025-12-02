@@ -147,9 +147,8 @@ function Settings() {
                         >
                             <option value="light" style={getOptionStyles()}>{t('theme_light') || '라이트 모드'}</option>
                             <option value="dark" style={getOptionStyles()}>{t('theme_dark') || '다크 모드'}</option>
-                            <option value="diary" style={getOptionStyles()}>다이어리 테마</option>
-                            <option value="glass" style={getOptionStyles()}>글래스모피즘 테마</option>
-                            <option value="system" style={getOptionStyles()}>{t('theme_system') || '시스템 설정'}</option>
+                            <option value="diary" style={getOptionStyles()}>{t('theme_diary') || '다이어리'}</option>
+                            <option value="glass" style={getOptionStyles()}>{t('theme_glass') || '포션'}</option>
                         </select>
                     </li>
                     {/* 언어 */}
