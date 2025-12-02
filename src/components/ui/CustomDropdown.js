@@ -175,7 +175,7 @@ const DropdownList = styled.div`
 `;
 
 const DropdownItem = styled.div`
-    padding: ${props => props.$padding || '10px 12px'};
+    padding: ${props => props.$padding || '12px 16px'};
     cursor: pointer;
     font-size: ${props => props.$fontSize || '14px'};
     font-family: ${props => props.$fontFamily || 'inherit'};
@@ -299,9 +299,13 @@ function CustomDropdown({
     // 폰트 드롭다운인 경우 현재 선택된 폰트 패밀리 가져오기
     const currentFontFamily = isFontDropdown && value ? formatFontFamily(value) : undefined;
 
-    // 외부 클릭 시 드롭다운 닫기
+    // 외부 클릭 시 드롭다운 닫기 (버튼 클릭은 제외)
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // 버튼 클릭은 제외 (버튼 클릭은 toggleDropdown에서 처리)
+            if (buttonRef.current && buttonRef.current.contains(event.target)) {
+                return;
+            }
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
@@ -323,6 +327,12 @@ function CustomDropdown({
         setIsOpen(!isOpen);
     };
 
+    // 터치 이벤트 처리 (중복 방지)
+    const handleTouchStart = (e) => {
+        e.preventDefault(); // 클릭 이벤트와 중복 방지
+        toggleDropdown();
+    };
+
     // 옵션 선택
     const handleSelect = (option) => {
         const optionValue = typeof option === 'object' ? option.value : option;
@@ -337,6 +347,7 @@ function CustomDropdown({
                 <DropdownButton
                     ref={buttonRef}
                     onClick={toggleDropdown}
+                    onTouchStart={handleTouchStart}
                     $actualTheme={actualTheme}
                     padding={padding}
                     fontSize={fontSize}
