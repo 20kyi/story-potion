@@ -18,7 +18,7 @@ const DropdownButton = styled.button`
     align-items: center;
     justify-content: space-between;
     transition: all 0.2s ease;
-    font-family: inherit;
+    font-family: ${props => props.$fontFamily || 'inherit'};
     outline: none;
     border: ${props => {
         if (props.$actualTheme === 'diary') {
@@ -178,6 +178,7 @@ const DropdownItem = styled.div`
     padding: ${props => props.$padding || '10px 12px'};
     cursor: pointer;
     font-size: ${props => props.$fontSize || '14px'};
+    font-family: ${props => props.$fontFamily || 'inherit'};
     color: ${props => {
         if (props.$actualTheme === 'diary') {
             return '#8B6F47';
@@ -252,12 +253,36 @@ function CustomDropdown({
     padding,
     fontSize,
     borderRadius,
-    placeholder
+    placeholder,
+    isFontDropdown = false
 }) {
     const { actualTheme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const buttonRef = useRef(null);
+
+    // 폰트 패밀리 문자열을 CSS에 맞게 변환 (첫 번째 폰트 이름에 따옴표 추가)
+    const formatFontFamily = (fontFamilyStr) => {
+        if (!fontFamilyStr) return undefined;
+        // 이미 따옴표가 있거나 system-ui인 경우 그대로 반환
+        if (fontFamilyStr.includes("'") || fontFamilyStr.startsWith('system-ui')) {
+            return fontFamilyStr;
+        }
+        // 첫 번째 폰트 이름을 찾아서 따옴표로 감싸기
+        const parts = fontFamilyStr.split(',').map(part => part.trim());
+        if (parts.length > 0) {
+            const firstFont = parts[0];
+            // 공백이나 특수문자가 있으면 따옴표로 감싸기
+            if (firstFont.includes(' ') || firstFont.includes('-')) {
+                parts[0] = `'${firstFont}'`;
+            } else {
+                // 공백이 없어도 안전하게 따옴표 추가
+                parts[0] = `'${firstFont}'`;
+            }
+            return parts.join(', ');
+        }
+        return fontFamilyStr;
+    };
 
     // 현재 선택된 옵션의 라벨 찾기
     const selectedOption = options.find(opt => {
@@ -270,6 +295,9 @@ function CustomDropdown({
     const displayText = selectedOption
         ? (typeof selectedOption === 'object' ? selectedOption.label : selectedOption)
         : (placeholder || '선택하세요');
+
+    // 폰트 드롭다운인 경우 현재 선택된 폰트 패밀리 가져오기
+    const currentFontFamily = isFontDropdown && value ? formatFontFamily(value) : undefined;
 
     // 외부 클릭 시 드롭다운 닫기
     useEffect(() => {
@@ -313,6 +341,7 @@ function CustomDropdown({
                     padding={padding}
                     fontSize={fontSize}
                     borderRadius={borderRadius}
+                    $fontFamily={currentFontFamily}
                     type="button"
                 >
                     <span>{displayText}</span>
@@ -327,6 +356,8 @@ function CustomDropdown({
                         const optionValue = typeof option === 'object' ? option.value : option;
                         const optionLabel = typeof option === 'object' ? option.label : option;
                         const isSelected = optionValue === value;
+                        // 폰트 드롭다운인 경우 각 옵션의 value를 폰트 패밀리로 적용
+                        const itemFontFamily = isFontDropdown ? formatFontFamily(optionValue) : undefined;
 
                         return (
                             <DropdownItem
@@ -337,6 +368,7 @@ function CustomDropdown({
                                 $padding={padding}
                                 $fontSize={fontSize}
                                 $borderRadius={borderRadius}
+                                $fontFamily={itemFontFamily}
                             >
                                 {optionLabel}
                             </DropdownItem>

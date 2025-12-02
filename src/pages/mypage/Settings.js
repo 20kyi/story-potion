@@ -9,24 +9,6 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useLanguage } from '../../LanguageContext';
 import CustomDropdown from '../../components/ui/CustomDropdown';
 
-const FONT_OPTIONS = [
-    { label: '시스템 기본', value: 'system-ui, sans-serif' },
-    { label: '서울한강체', value: "'SeoulHangang', sans-serif" },
-    { label: '시네마', value: "'Cinema', sans-serif" },
-    { label: '엄마의편지', value: "'MomLetter', sans-serif" },
-    { label: '나눔고딕', value: 'NanumGothic, sans-serif' },
-    { label: '휴먼범석네오', value: 'HumanBeomseokNeo, sans-serif' },
-    { label: '어른아이', value: 'Adultkid, sans-serif' },
-    { label: '사각사각', value: 'Sagak-sagak, sans-serif' },
-];
-
-const FONT_SIZE_OPTIONS = [
-    { label: '작게', value: '12' },
-    { label: '작음', value: '14' },
-    { label: '기본', value: '16' },
-    { label: '큼', value: '18' },
-    { label: '크게', value: '20' },
-];
 
 function Settings() {
     const navigate = useNavigate();
@@ -38,6 +20,27 @@ function Settings() {
         language: false,
     });
     const [logoutModal, setLogoutModal] = useState(false);
+
+    // 언어에 따라 폰트 옵션 생성
+    const FONT_OPTIONS = [
+        { label: t('font_system_default'), value: 'system-ui, sans-serif' },
+        { label: t('font_seoul_hangang'), value: "SeoulHangang, sans-serif" },
+        { label: t('font_cinema'), value: "Cinema, sans-serif" },
+        { label: t('font_mom_letter'), value: "MomLetter, sans-serif" },
+        { label: t('font_nanum_gothic'), value: 'NanumGothic, sans-serif' },
+        { label: t('font_human_beomseok_neo'), value: 'HumanBeomseokNeo, sans-serif' },
+        { label: t('font_adult_kid'), value: 'Adultkid, sans-serif' },
+        { label: t('font_sagak'), value: 'Sagak-sagak, sans-serif' },
+    ];
+
+    // 언어에 따라 폰트 크기 옵션 생성
+    const FONT_SIZE_OPTIONS = [
+        { label: t('font_size_small'), value: '12' },
+        { label: t('font_size_smaller'), value: '14' },
+        { label: t('font_size_default'), value: '16' },
+        { label: t('font_size_larger'), value: '18' },
+        { label: t('font_size_large'), value: '20' },
+    ];
 
 
 
@@ -119,6 +122,7 @@ function Settings() {
                             padding="6px 12px"
                             fontSize="14px"
                             borderRadius="8px"
+                            isFontDropdown={true}
                         />
                     </li>
                     {/* 폰트 크기 선택 */}
