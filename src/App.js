@@ -11,6 +11,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { checkPhotoPermission, requestPhotoPermission } from './utils/permissions';
 
 // 페이지 및 컴포넌트 임포트 생략 (기존 그대로)
 import Home from './pages/Home';
@@ -566,10 +567,10 @@ function App() {
                     console.error('구독 상태 동기화 실패:', error);
                 }
 
-                // 앱 환경에서 FCM 토큰 자동 등록
+                // 앱 환경에서 권한 요청 및 FCM 토큰 자동 등록
                 if (Capacitor.getPlatform() !== 'web') {
                     try {
-                        // 권한 확인
+                        // 1. 알림 권한 확인 및 요청
                         const permStatus = await PushNotifications.checkPermissions();
                         if (permStatus.receive === 'granted') {
                             // 이미 등록되어 있는지 확인
@@ -642,8 +643,26 @@ function App() {
                                 console.error('알림 권한 요청 실패:', error);
                             }
                         }
+
+                        // 2. 사진 액세스 권한 확인 및 요청
+                        try {
+                            const photoPermission = await checkPhotoPermission();
+                            if (!photoPermission.granted) {
+                                console.log('사진 액세스 권한이 없습니다. 권한을 요청합니다.');
+                                const photoRequestResult = await requestPhotoPermission();
+                                if (photoRequestResult.granted) {
+                                    console.log('사진 액세스 권한이 허용되었습니다.');
+                                } else {
+                                    console.log('사진 액세스 권한이 거부되었습니다.');
+                                }
+                            } else {
+                                console.log('사진 액세스 권한이 이미 허용되어 있습니다.');
+                            }
+                        } catch (error) {
+                            console.error('사진 권한 확인/요청 실패:', error);
+                        }
                     } catch (error) {
-                        console.error('FCM 토큰 등록 중 오류:', error);
+                        console.error('권한 요청 중 오류:', error);
                     }
                 }
             }
