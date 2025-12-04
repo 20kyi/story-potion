@@ -48,7 +48,7 @@ const DashboardGrid = styled.div`
   gap: 20px;
   
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
   }
 `;
@@ -840,243 +840,234 @@ function AdminDashboard({ user }) {
 
     return (
         <AdminLayout user={user} title="📊 대시보드">
-            <Section theme={theme}>
-                {error && (
-                    <div style={{ padding: '10px', background: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '20px' }}>
-                        ⚠️ {error}
-                    </div>
-                )}
-                <SectionContent theme={theme} isOpen={true}>
-                    <DashboardGrid>
-                        {/* 오늘의 매출 */}
-                        <StatCard theme={theme}>
-                            <StatTitle theme={theme}>💰 오늘의 매출</StatTitle>
-                            <StatValue theme={theme}>{formatCurrencyWithWon(todayRevenue.amount)}</StatValue>
-                            <StatSubValue theme={theme}>
-                                (구독 {todayRevenue.subscriptionCount}건, 포인트 {todayRevenue.pointCount}건)
-                            </StatSubValue>
-                        </StatCard>
+            {error && (
+                <div style={{ padding: '10px', background: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '20px' }}>
+                    ⚠️ {error}
+                </div>
+            )}
+            <DashboardGrid>
+                {/* 오늘의 매출 */}
+                <StatCard theme={theme}>
+                    <StatTitle theme={theme}>💰 오늘의 매출</StatTitle>
+                    <StatValue theme={theme}>{formatCurrencyWithWon(todayRevenue.amount)}</StatValue>
+                    <StatSubValue theme={theme}>
+                        (구독 {todayRevenue.subscriptionCount}건, 포인트 {todayRevenue.pointCount}건)
+                    </StatSubValue>
+                </StatCard>
 
-                        {/* 예상 API 비용 */}
-                        <StatCard theme={theme}>
-                            <StatTitle theme={theme}>💎 예상 API 비용</StatTitle>
-                            <StatSubValue theme={theme} style={{ marginBottom: '8px' }}>
-                                (GPT-4o + DALL-E)
-                            </StatSubValue>
-                            <StatValue theme={theme}>
-                                {formatCurrencyWithWon(-todayCost.amount)}
-                                {costPercentage > 0 && (
-                                    <span style={{ fontSize: '18px', fontWeight: 'normal', marginLeft: '8px' }}>
-                                        ({costPercentage}%)
-                                    </span>
-                                )}
-                            </StatValue>
-                            <StatSubValue theme={theme} style={{ marginTop: '8px' }}>
-                                (일기 {todayCost.diaryCount}건, 소설 {todayCost.novelCount}건, 표지 {todayCost.coverCount}장)
-                            </StatSubValue>
-                        </StatCard>
+                {/* 예상 API 비용 */}
+                <StatCard theme={theme}>
+                    <StatTitle theme={theme}>💎 예상 API 비용</StatTitle>
+                    <StatSubValue theme={theme} style={{ marginBottom: '8px' }}>
+                        (GPT-4o + DALL-E)
+                    </StatSubValue>
+                    <StatValue theme={theme}>
+                        {formatCurrencyWithWon(-todayCost.amount)}
+                        {costPercentage > 0 && (
+                            <span style={{ fontSize: '18px', fontWeight: 'normal', marginLeft: '8px' }}>
+                                ({costPercentage}%)
+                            </span>
+                        )}
+                    </StatValue>
+                    <StatSubValue theme={theme} style={{ marginTop: '8px' }}>
+                        (일기 {todayCost.diaryCount}, 소설 {todayCost.novelCount}, 표지 {todayCost.coverCount})
+                    </StatSubValue>
+                </StatCard>
 
-                        {/* DAU */}
-                        <StatCard theme={theme}>
-                            <StatTitle theme={theme}>👥 오늘의 방문자(DAU)</StatTitle>
-                            <StatValue theme={theme}>{todayDAU.toLocaleString()}명</StatValue>
-                            <StatChange positive={dauGrowth >= 0}>
-                                (어제 대비 {dauGrowth >= 0 ? '+' : ''}{dauGrowth}%)
-                            </StatChange>
-                        </StatCard>
+                {/* DAU */}
+                <StatCard theme={theme}>
+                    <StatTitle theme={theme}>👥 오늘의 방문자(DAU)</StatTitle>
+                    <StatValue theme={theme}>{todayDAU.toLocaleString()}명</StatValue>
+                    <StatChange positive={dauGrowth >= 0}>
+                        (어제 대비 {dauGrowth >= 0 ? '+' : ''}{dauGrowth}%)
+                    </StatChange>
+                </StatCard>
 
-                        {/* 신규 가입자 */}
-                        <StatCard theme={theme}>
-                            <StatTitle theme={theme}>✨ 신규 가입자</StatTitle>
-                            <StatValue theme={theme}>{todayNewUsers.toLocaleString()}명</StatValue>
-                            <StatChange positive={newUsersGrowth >= 0}>
-                                (어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%)
-                            </StatChange>
-                            {yesterdayNewUsers > 0 && (
-                                <StatChange positive={newUsersGrowth >= 0}>
-                                    어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%
-                                </StatChange>
-                            )}
-                        </StatCard>
-                    </DashboardGrid>
-                </SectionContent>
-            </Section>
+                {/* 신규 가입자 */}
+                <StatCard theme={theme}>
+                    <StatTitle theme={theme}>✨ 신규 가입자</StatTitle>
+                    <StatValue theme={theme}>{todayNewUsers.toLocaleString()}명</StatValue>
+                    <StatChange positive={newUsersGrowth >= 0}>
+                        (어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%)
+                    </StatChange>
+                    {yesterdayNewUsers > 0 && (
+                        <StatChange positive={newUsersGrowth >= 0}>
+                            어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%
+                        </StatChange>
+                    )}
+                </StatCard>
+            </DashboardGrid>
 
             {/* 활동 그래프 */}
-            <Section theme={theme}>
-                <SectionTitle theme={theme}>📈 활동 그래프 (Trend)</SectionTitle>
-                <SectionContent theme={theme} isOpen={true}>
-                    <ChartContainer>
-                        {/* 매출 vs 비용 그래프 */}
-                        <ChartCard theme={theme}>
-                            <ChartTitle theme={theme}>매출(💙) vs 비용(🩷) 추이</ChartTitle>
-                            <ChartWrapper>
-                                <Line
-                                    data={{
-                                        labels: trendData.labels,
-                                        datasets: [
-                                            {
-                                                label: '💙 매출',
-                                                data: trendData.revenue.map(val => val / 100), // 백원 단위로 변환
-                                                borderColor: '#3498f3',
-                                                backgroundColor: 'rgba(52, 152, 243, 0.1)',
-                                                tension: 0.4,
-                                                fill: false,
-                                                pointStyle: false
-                                            },
-                                            {
-                                                label: '🩷 비용',
-                                                data: trendData.cost.map(val => val / 100), // 백원 단위로 변환
-                                                borderColor: '#ff69b4',
-                                                backgroundColor: 'rgba(255, 105, 180, 0.1)',
-                                                tension: 0.4,
-                                                fill: false,
-                                                pointStyle: false
-                                            }
-                                        ]
-                                    }}
-                                    options={{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        layout: {
-                                            padding: {
-                                                top: 5,
-                                                bottom: 5,
-                                                left: 0,
-                                                right: 5
-                                            }
-                                        },
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            title: {
-                                                display: false
-                                            },
-                                            tooltip: {
-                                                callbacks: {
-                                                    label: function (context) {
-                                                        const value = context.parsed.y;
-                                                        return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(value * 100));
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                ticks: {
-                                                    stepSize: 2,
-                                                    padding: 0
-                                                },
-                                                grid: {
-                                                    drawBorder: false
-                                                }
-                                            },
-                                            x: {
-                                                title: {
-                                                    display: false
-                                                },
-                                                ticks: {
-                                                    padding: 0
-                                                },
-                                                grid: {
-                                                    drawBorder: false
-                                                }
-                                            }
-                                        },
-                                        elements: {
-                                            point: {
-                                                radius: 0
+            <ChartContainer>
+                {/* 매출 vs 비용 그래프 */}
+                <ChartCard theme={theme}>
+                    <ChartTitle theme={theme}>매출(💙) vs 비용(🩷) 추이</ChartTitle>
+                    <ChartWrapper>
+                        <Line
+                            data={{
+                                labels: trendData.labels,
+                                datasets: [
+                                    {
+                                        label: '💙 매출',
+                                        data: trendData.revenue.map(val => val / 100), // 백원 단위로 변환
+                                        borderColor: '#3498f3',
+                                        backgroundColor: 'rgba(52, 152, 243, 0.1)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        pointStyle: false
+                                    },
+                                    {
+                                        label: '🩷 비용',
+                                        data: trendData.cost.map(val => val / 100), // 백원 단위로 변환
+                                        borderColor: '#ff69b4',
+                                        backgroundColor: 'rgba(255, 105, 180, 0.1)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        pointStyle: false
+                                    }
+                                ]
+                            }}
+                            options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                layout: {
+                                    padding: {
+                                        top: 5,
+                                        bottom: 5,
+                                        left: 0,
+                                        right: 5
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    title: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                const value = context.parsed.y;
+                                                return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(value * 100));
                                             }
                                         }
-                                    }}
-                                />
-                            </ChartWrapper>
-                        </ChartCard>
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            stepSize: 2,
+                                            padding: 0
+                                        },
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            padding: 0
+                                        },
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    }
+                                },
+                                elements: {
+                                    point: {
+                                        radius: 0
+                                    }
+                                }
+                            }}
+                        />
+                    </ChartWrapper>
+                </ChartCard>
 
-                        {/* 일기 작성 vs 소설 생성 그래프 */}
-                        <ChartCard theme={theme}>
-                            <ChartTitle theme={theme}>일기작성(💚) vs 소설생성(💜)</ChartTitle>
-                            <ChartWrapper>
-                                <Line
-                                    data={{
-                                        labels: trendData.labels,
-                                        datasets: [
-                                            {
-                                                label: '💜 일기 작성',
-                                                data: trendData.diaries,
-                                                borderColor: '#27ae60',
-                                                backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                                                tension: 0.4,
-                                                fill: false,
-                                                pointStyle: false
-                                            },
-                                            {
-                                                label: '💚 소설 생성',
-                                                data: trendData.novels,
-                                                borderColor: '#9b59b6',
-                                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                                                tension: 0.4,
-                                                fill: false,
-                                                pointStyle: false
-                                            }
-                                        ]
-                                    }}
-                                    options={{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        layout: {
-                                            padding: {
-                                                top: 5,
-                                                bottom: 5,
-                                                left: 0,
-                                                right: 5
-                                            }
+                {/* 일기 작성 vs 소설 생성 그래프 */}
+                <ChartCard theme={theme}>
+                    <ChartTitle theme={theme}>일기작성(💚) vs 소설생성(💜)</ChartTitle>
+                    <ChartWrapper>
+                        <Line
+                            data={{
+                                labels: trendData.labels,
+                                datasets: [
+                                    {
+                                        label: '💜 일기 작성',
+                                        data: trendData.diaries,
+                                        borderColor: '#27ae60',
+                                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        pointStyle: false
+                                    },
+                                    {
+                                        label: '💚 소설 생성',
+                                        data: trendData.novels,
+                                        borderColor: '#9b59b6',
+                                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        pointStyle: false
+                                    }
+                                ]
+                            }}
+                            options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                layout: {
+                                    padding: {
+                                        top: 5,
+                                        bottom: 5,
+                                        left: 0,
+                                        right: 5
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    title: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            stepSize: 1,
+                                            padding: 0
                                         },
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            title: {
-                                                display: false
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                ticks: {
-                                                    stepSize: 1,
-                                                    padding: 0
-                                                },
-                                                grid: {
-                                                    drawBorder: false
-                                                }
-                                            },
-                                            x: {
-                                                title: {
-                                                    display: false
-                                                },
-                                                ticks: {
-                                                    padding: 0
-                                                },
-                                                grid: {
-                                                    drawBorder: false
-                                                }
-                                            }
-                                        },
-                                        elements: {
-                                            point: {
-                                                radius: 0
-                                            }
+                                        grid: {
+                                            drawBorder: false
                                         }
-                                    }}
-                                />
-                            </ChartWrapper>
-                        </ChartCard>
-                    </ChartContainer>
-                </SectionContent>
-            </Section>
+                                    },
+                                    x: {
+                                        title: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            padding: 0
+                                        },
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    }
+                                },
+                                elements: {
+                                    point: {
+                                        radius: 0
+                                    }
+                                }
+                            }}
+                        />
+                    </ChartWrapper>
+                </ChartCard>
+            </ChartContainer>
         </AdminLayout>
     );
 }
