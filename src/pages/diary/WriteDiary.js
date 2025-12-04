@@ -2254,7 +2254,11 @@ function WriteDiary({ user }) {
 
                     // 당일에 작성한 일기인 경우에만 포인트 지급
                     if (selectedDateStr === todayStr) {
-                        const earnPoint = await getPointPolicy('diary_write_earn', 10);
+                        let earnPoint = await getPointPolicy('diary_write_earn', 10);
+                        // 프리미엄 회원은 일기 작성 포인트 2배
+                        if (isPremium) {
+                            earnPoint = earnPoint * 2;
+                        }
                         await updateDoc(doc(db, "users", user.uid), {
                             point: increment(earnPoint)
                         });

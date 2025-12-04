@@ -253,6 +253,7 @@ const premiumFeatures = [
   },
   { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
   { id: 'premium-theme', titleKey: 'premium_feature_theme_title', descKey: 'premium_feature_theme_desc' },
+  { id: 'diary-point', titleKey: 'premium_feature_diary_point_title', descKey: 'premium_feature_diary_point_desc' },
 ];
 
 function Premium({ user }) {
