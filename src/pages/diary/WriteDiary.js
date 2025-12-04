@@ -374,17 +374,21 @@ const EnhanceModal = styled.div`
 `;
 
 const EnhanceModalContent = styled.div`
-  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-        if ($isDiaryTheme) return '#fffef9';
-        return isDark ? '#2a2a2a' : '#fff';
+  background: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '#faf8f3';
+        return isDark ? '#2a2a2a' : (theme?.card || '#fff');
     }};
   backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
   -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
-  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '18px 22px 20px 19px' : '16px'};
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '24px';
+        if ($isDiaryTheme) return '20px';
+        return '20px';
+    }};
   border: ${({ $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.3)';
-        if ($isDiaryTheme) return '2px solid rgba(139, 111, 71, 0.25)';
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
         return 'none';
     }};
   width: 100%;
@@ -393,20 +397,20 @@ const EnhanceModalContent = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
-        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-        return '0 8px 32px rgba(0, 0, 0, 0.3)';
+  box-shadow: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+        if (isDark) return '0 4px 24px rgba(0, 0, 0, 0.4)';
+        return '0 4px 24px rgba(0, 0, 0, 0.18)';
     }};
-  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
 `;
 
 const EnhanceModalHeader = styled.div`
-  padding: 20px;
-  border-bottom: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+  padding: 20px 24px;
+  border-bottom: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
         if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
-        return isDark ? '#444' : '#eee';
+        return isDark ? '#444' : (theme?.border || '#e0e0e0');
     }};
   display: flex;
   justify-content: space-between;
@@ -417,10 +421,10 @@ const EnhanceModalTitle = styled.h2`
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '#2d2418';
-        if ($isDiaryTheme) return '#5a4a3a';
-        return isDark ? '#fff' : '#222';
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
+        return isDark ? '#fff' : (theme?.text || '#333');
     }};
 `;
 
@@ -469,9 +473,9 @@ const EnhanceSection = styled.div`
 const EnhanceLabel = styled.label`
   font-size: 14px;
   font-weight: 600;
-  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '#3d2f1f';
-        if ($isDiaryTheme) return '#8b6f47';
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
         return isDark ? '#aaa' : '#666';
     }};
 `;
@@ -495,8 +499,8 @@ const EnhanceText = styled.div`
   white-space: pre-wrap;
   word-wrap: break-word;
   line-height: 1.6;
-  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '#2d2418';
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return '#000000';
         if ($isDiaryTheme) return '#5a4a3a';
         return isDark ? '#fff' : '#222';
     }};
@@ -521,8 +525,8 @@ const EnhanceTitleText = styled.div`
   white-space: pre-wrap;
   word-wrap: break-word;
   line-height: 1.6;
-  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return '#2d2418';
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return '#000000';
         if ($isDiaryTheme) return '#5a4a3a';
         return isDark ? '#fff' : '#222';
     }};
@@ -531,10 +535,10 @@ const EnhanceTitleText = styled.div`
 
 const EnhanceModalFooter = styled.div`
   padding: 20px;
-  border-top: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
-        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+  border-top: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme, theme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
         if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
-        return isDark ? '#444' : '#eee';
+        return isDark ? '#444' : (theme?.border || '#e0e0e0');
     }};
   display: flex;
   gap: 12px;
@@ -640,98 +644,174 @@ const EnhanceCancelButton = styled(EnhanceButton)`
   }
 `;
 
-// 임시저장 모달 스타일
-const TempSaveModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
+// 임시저장 모달 스타일 (ConfirmModal과 동일한 구조)
+const TempSaveModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(0, 0, 0, 0.3)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.25)';
+        return 'rgba(0, 0, 0, 0.35)';
+    }};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 80px 20px 120px 20px;
+    animation: fadeIn 0.2s;
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
 `;
 
-const TempSaveModalContent = styled.div`
-  background-color: ${props => props.isDark ? '#2a2a2a' : '#fff'};
-  border-radius: 16px;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+const TempSaveModalContainer = styled.div`
+    background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '#faf8f3';
+        if (theme.mode === 'dark') return '#2a2a2a';
+        return '#fff';
+    }};
+    backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+    -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+    border-radius: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '24px';
+        if ($isDiaryTheme) return '20px';
+        return '18px';
+    }};
+    box-shadow: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+        if (theme.mode === 'dark') return '0 4px 24px rgba(0, 0, 0, 0.4)';
+        return '0 4px 24px rgba(0, 0, 0, 0.18)';
+    }};
+    border: ${({ $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
+    padding: 28px 22px 18px 22px;
+    min-width: 270px;
+    max-width: 90vw;
+    text-align: center;
+    animation: modalPop 0.22s cubic-bezier(.4, 1.6, .6, 1);
+    color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if (theme.mode === 'dark') return '#fff';
+        return 'inherit';
+    }};
+    
+    @keyframes modalPop {
+        from {
+            transform: translateY(40px) scale(0.96);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+    }
 `;
 
-const TempSaveModalHeader = styled.div`
-  padding: 20px;
-  border-bottom: 1px solid ${props => props.isDark ? '#444' : '#eee'};
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const TempSaveModalTitle = styled.h3`
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
+        if (theme.mode === 'dark') return '#fff';
+        return '#333';
+    }};
 `;
 
-const TempSaveModalTitle = styled.h2`
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: ${props => props.isDark ? '#fff' : '#222'};
+const TempSaveModalDesc = styled.p`
+    margin: 0 0 22px 0;
+    font-size: 13px;
+    color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(0, 0, 0, 0.7)';
+        if ($isDiaryTheme) return '#5C4B37';
+        if (theme.mode === 'dark') return '#ccc';
+        return '#444';
+    }};
 `;
 
-const TempSaveModalBody = styled.div`
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const TempSaveModalMessage = styled.p`
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.6;
-  color: ${props => props.isDark ? '#ccc' : '#666'};
-  text-align: center;
-`;
-
-const TempSaveModalFooter = styled.div`
-  padding: 20px;
-  border-top: 1px solid ${props => props.isDark ? '#444' : '#eee'};
-  display: flex;
-  gap: 12px;
-  justify-content: center;
+const TempSaveModalActions = styled.div`
+    display: flex;
+    gap: 12px;
+    justify-content: center;
 `;
 
 const TempSaveModalButton = styled.button`
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex: 1;
-  max-width: 150px;
+    flex: 1 1 0;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
 `;
 
-const TempSaveLoadButton = styled(TempSaveModalButton)`
-  background-color: #cb6565;
-  color: white;
-  
-  &:hover {
-    background-color: #b85555;
-  }
+const TempSaveCancelButton = styled(TempSaveModalButton)`
+    background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+        if (theme.mode === 'dark') return '#3a3a3a';
+        return '#f2f2f2';
+    }};
+    backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+    color: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if ($isDiaryTheme) return '#8B6F47';
+        if (theme.mode === 'dark') return '#ccc';
+        return '#555';
+    }};
+    
+    &:hover {
+        background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
+        if (theme.mode === 'dark') return '#4a4a4a';
+        return '#e0e0e0';
+    }};
+    }
 `;
 
-const TempSaveNewButton = styled(TempSaveModalButton)`
-  background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
-  color: ${props => props.isDark ? '#fff' : '#222'};
-  
-  &:hover {
-    background-color: ${props => props.isDark ? '#555' : '#e0e0e0'};
-  }
+const TempSaveConfirmButton = styled(TempSaveModalButton)`
+    background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(219, 83, 85, 0.2)';
+        if (theme.mode === 'dark') return '#db5355';
+        return '#db5355';
+    }};
+    backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+    border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'};
+    color: ${({ theme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#000000';
+        if (theme.mode === 'dark') return '#fff';
+        return '#fff';
+    }};
+    
+    &:hover {
+        background: ${({ theme, $isGlassTheme, $isDiaryTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return 'rgba(219, 83, 85, 0.3)';
+        if (theme.mode === 'dark') return '#c52f32';
+        return '#c52f32';
+    }};
+    }
 `;
 
 // 스티커 관련 스타일 컴포넌트들
@@ -1170,6 +1250,11 @@ function WriteDiary({ user }) {
     const isDiaryTheme = theme.actualTheme === 'diary';
     const isGlassTheme = theme.actualTheme === 'glass';
     const labelColor = isDark ? '#fff' : '#222';
+    const themeObj = isDiaryTheme
+        ? { text: '#8B6F47', card: '#faf8f3', border: 'rgba(139, 111, 71, 0.15)' }
+        : isDark
+            ? { text: '#fff', card: '#2a2a2a', border: '#444' }
+            : { text: '#333', card: '#fff', border: '#e0e0e0' };
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const containerRef = useRef();
     const [isPremium, setIsPremium] = useState(false);
@@ -3433,11 +3518,13 @@ function WriteDiary({ user }) {
                                 isDark={isDark}
                                 $isDiaryTheme={isDiaryTheme}
                                 $isGlassTheme={isGlassTheme}
+                                theme={themeObj}
                             >
                                 <EnhanceModalTitle
                                     isDark={isDark}
                                     $isDiaryTheme={isDiaryTheme}
                                     $isGlassTheme={isGlassTheme}
+                                    theme={themeObj}
                                 >
                                     ✨ AI로 생성한 일기
                                 </EnhanceModalTitle>
@@ -3459,6 +3546,7 @@ function WriteDiary({ user }) {
                                             isDark={isDark}
                                             $isDiaryTheme={isDiaryTheme}
                                             $isGlassTheme={isGlassTheme}
+                                            theme={themeObj}
                                         >
                                             AI로 생성한 제목
                                         </EnhanceLabel>
@@ -3466,6 +3554,7 @@ function WriteDiary({ user }) {
                                             isDark={isDark}
                                             $isDiaryTheme={isDiaryTheme}
                                             $isGlassTheme={isGlassTheme}
+                                            theme={themeObj}
                                             style={{ fontWeight: 'bold', fontSize: '18px' }}
                                         >
                                             {enhancedTitle}
@@ -3477,6 +3566,7 @@ function WriteDiary({ user }) {
                                         isDark={isDark}
                                         $isDiaryTheme={isDiaryTheme}
                                         $isGlassTheme={isGlassTheme}
+                                        theme={themeObj}
                                     >
                                         원본 일기
                                     </EnhanceLabel>
@@ -3484,6 +3574,7 @@ function WriteDiary({ user }) {
                                         isDark={isDark}
                                         $isDiaryTheme={isDiaryTheme}
                                         $isGlassTheme={isGlassTheme}
+                                        theme={themeObj}
                                     >
                                         {diary.content}
                                     </EnhanceText>
@@ -3493,6 +3584,7 @@ function WriteDiary({ user }) {
                                         isDark={isDark}
                                         $isDiaryTheme={isDiaryTheme}
                                         $isGlassTheme={isGlassTheme}
+                                        theme={themeObj}
                                     >
                                         AI로 생성한 일기
                                     </EnhanceLabel>
@@ -3500,6 +3592,7 @@ function WriteDiary({ user }) {
                                         isDark={isDark}
                                         $isDiaryTheme={isDiaryTheme}
                                         $isGlassTheme={isGlassTheme}
+                                        theme={themeObj}
                                     >
                                         {enhancedContent}
                                     </EnhanceText>
@@ -3509,6 +3602,7 @@ function WriteDiary({ user }) {
                                 isDark={isDark}
                                 $isDiaryTheme={isDiaryTheme}
                                 $isGlassTheme={isGlassTheme}
+                                theme={themeObj}
                             >
                                 <EnhanceCancelButton
                                     isDark={isDark}
@@ -3543,27 +3637,47 @@ function WriteDiary({ user }) {
 
                 {/* 임시저장 모달 */}
                 {isTempSaveModalOpen && (
-                    <TempSaveModal onClick={() => setIsTempSaveModalOpen(false)}>
-                        <TempSaveModalContent isDark={isDark} onClick={(e) => e.stopPropagation()}>
-                            <TempSaveModalHeader isDark={isDark}>
-                                <TempSaveModalTitle isDark={isDark}>임시저장된 내용이 있습니다</TempSaveModalTitle>
-                            </TempSaveModalHeader>
-                            <TempSaveModalBody>
-                                <TempSaveModalMessage isDark={isDark}>
-                                    이전에 작성하던 일기가 임시저장되어 있습니다.<br />
-                                    불러오시겠습니까?
-                                </TempSaveModalMessage>
-                            </TempSaveModalBody>
-                            <TempSaveModalFooter isDark={isDark}>
-                                <TempSaveNewButton isDark={isDark} onClick={handleStartNew}>
+                    <TempSaveModalOverlay
+                        $isGlassTheme={isGlassTheme}
+                        $isDiaryTheme={isDiaryTheme}
+                        onClick={() => setIsTempSaveModalOpen(false)}
+                    >
+                        <TempSaveModalContainer
+                            $isGlassTheme={isGlassTheme}
+                            $isDiaryTheme={isDiaryTheme}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <TempSaveModalTitle
+                                $isGlassTheme={isGlassTheme}
+                                $isDiaryTheme={isDiaryTheme}
+                            >
+                                임시저장된 내용이 있습니다
+                            </TempSaveModalTitle>
+                            <TempSaveModalDesc
+                                $isGlassTheme={isGlassTheme}
+                                $isDiaryTheme={isDiaryTheme}
+                            >
+                                이전에 작성하던 일기가 임시저장되어 있습니다.<br />
+                                불러오시겠습니까?
+                            </TempSaveModalDesc>
+                            <TempSaveModalActions>
+                                <TempSaveCancelButton
+                                    $isGlassTheme={isGlassTheme}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    onClick={handleStartNew}
+                                >
                                     새로 작성
-                                </TempSaveNewButton>
-                                <TempSaveLoadButton onClick={handleLoadTempSave}>
+                                </TempSaveCancelButton>
+                                <TempSaveConfirmButton
+                                    $isGlassTheme={isGlassTheme}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    onClick={handleLoadTempSave}
+                                >
                                     불러오기
-                                </TempSaveLoadButton>
-                            </TempSaveModalFooter>
-                        </TempSaveModalContent>
-                    </TempSaveModal>
+                                </TempSaveConfirmButton>
+                            </TempSaveModalActions>
+                        </TempSaveModalContainer>
+                    </TempSaveModalOverlay>
                 )}
 
                 <Navigation />
