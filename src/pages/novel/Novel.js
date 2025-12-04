@@ -1037,7 +1037,6 @@ const Novel = ({ user }) => {
                 isGlassTheme={isGlassTheme}
                 currentWeekDiariesForProgress={currentWeekDiariesForProgress}
                 onClick={openCurrentWeekDiaryModal}
-                user={user}
             />
 
             {/* 내 소설 섹션 */}

@@ -1060,6 +1060,8 @@ function WriteDiary({ user }) {
     const [showPointAnimation, setShowPointAnimation] = useState(false);
     const [earnedPoints, setEarnedPoints] = useState(0);
     const [shouldDelayNavigation, setShouldDelayNavigation] = useState(false);
+    const [showBonusAnimation, setShowBonusAnimation] = useState(false);
+    const [bonusPoints, setBonusPoints] = useState(0);
 
     // 임시저장 관련 state
     const [isTempSaveModalOpen, setIsTempSaveModalOpen] = useState(false);
@@ -2229,6 +2231,7 @@ function WriteDiary({ user }) {
             let diaryRef;
             let earnedPointValue = 0; // 포인트 지급 여부 추적
             let shouldShowAnimation = false; // 애니메이션 표시 여부
+            let bonusGranted = false; // 보너스 지급 여부 추적
 
             if (isEditMode && existingDiaryId) {
                 diaryRef = doc(db, 'diaries', existingDiaryId);
@@ -2276,7 +2279,65 @@ function WriteDiary({ user }) {
                         console.log('포인트 애니메이션 표시:', earnPoint);
 
                         // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
-                        await checkWeeklyBonus(user.uid, today);
+                        const bonusResult = await checkWeeklyBonus(user.uid, today);
+                        
+                        // 보너스가 지급되었으면 보너스 포인트 애니메이션을 순차적으로 표시
+                        if (bonusResult && bonusResult.granted) {
+                            bonusGranted = true;
+                            // 일기 작성 포인트 애니메이션이 끝난 후 보너스 애니메이션 표시
+                            setTimeout(() => {
+                                setShowPointAnimation(false);
+                                setBonusPoints(bonusResult.amount);
+                                setShowBonusAnimation(true);
+                                
+                                // 보너스 애니메이션이 끝난 후 이미지 업로드 및 페이지 이동
+                                setTimeout(async () => {
+                                    setShowBonusAnimation(false);
+                                    
+                                    // 이미지 업로드 진행
+                                    const existingUrlCount = (diary.imageUrls || []).length;
+                                    const existingUrls = diary.imageUrls || [];
+
+                                    // 새 파일 업로드
+                                    let uploadedUrls = [];
+                                    if (imageFiles.length > 0) {
+                                        const uploadPromises = imageFiles.map((file, fileIndex) => {
+                                            const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
+                                            return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                                        });
+                                        uploadedUrls = await Promise.all(uploadPromises);
+                                    }
+
+                                    // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+                                    const finalImageUrlsResult = [];
+                                    for (let i = 0; i < imagePreview.length; i++) {
+                                        const preview = imagePreview[i];
+                                        if (preview.startsWith('blob:')) {
+                                            const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                                            const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+                                            if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                                                finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                                            }
+                                        } else {
+                                            finalImageUrlsResult.push(preview);
+                                        }
+                                    }
+
+                                    // 이미지 URL 업데이트
+                                    const imageUpdateData = {
+                                        imageUrls: finalImageUrlsResult,
+                                        updatedAt: new Date(),
+                                    };
+                                    if (finalImageUrlsResult.length >= 4) {
+                                        imageUpdateData.imageLimitExtended = true;
+                                    }
+                                    await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
+
+                                    setShouldDelayNavigation(false);
+                                    navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                                }, 2000);
+                            }, 2000);
+                        }
                     } else {
                         // 과거 날짜에 작성한 경우 안내 메시지
                         toast.showToast(t('diary_point_not_today'), 'info');
@@ -2289,7 +2350,8 @@ function WriteDiary({ user }) {
 
             // 2. 이미지 업로드는 Firestore 저장 후 비동기로 진행
             // 포인트 애니메이션이 표시 중이면 이미지 업로드를 기다리지 않고 먼저 애니메이션 표시
-            if (shouldShowAnimation) {
+            // (보너스가 지급된 경우는 위에서 처리되므로 여기서는 보너스가 지급되지 않은 경우만 처리)
+            if (shouldShowAnimation && !bonusGranted) {
                 // 애니메이션이 충분히 보이도록 1.5초 대기 후 이미지 업로드 및 페이지 이동
                 setTimeout(async () => {
                     // 이미지 업로드 진행
@@ -3266,6 +3328,20 @@ function WriteDiary({ user }) {
                             +{earnedPoints}p
                         </PointEarnAmount>
                         <PointEarnDesc>{t('today_diary')}</PointEarnDesc>
+                    </PointEarnAnimation>
+                </PointEarnOverlay>
+            )}
+
+            {/* 보너스 포인트 지급 애니메이션 */}
+            {showBonusAnimation && (
+                <PointEarnOverlay>
+                    <PointEarnAnimation>
+                        <PointEarnIcon>🪙</PointEarnIcon>
+                        <PointEarnText>{t('point_earned')}</PointEarnText>
+                        <PointEarnAmount>
+                            +{bonusPoints}p
+                        </PointEarnAmount>
+                        <PointEarnDesc>일주일 일기 연속 작성 보너스</PointEarnDesc>
                     </PointEarnAnimation>
                 </PointEarnOverlay>
             )}

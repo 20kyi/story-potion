@@ -20,6 +20,7 @@ import { motion } from 'framer-motion';
 import { getAppTutorialNovel, getNovelCreationTutorialNovel } from '../utils/tutorialNovel';
 import { inAppPurchaseService } from '../utils/inAppPurchase';
 import { useTheme } from '../ThemeContext';
+import WeeklyBonusCard from '../components/WeeklyBonusCard';
 import './Home.css';
 
 
@@ -1642,6 +1643,10 @@ function Home({ user }) {
             ))}
           </Slider>
         </CarouselContainer>
+
+        {/* 일주일 연속 일기 작성 보너스 카드 */}
+        <SectionLabel $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} style={{ marginTop: '0', marginBottom: '10px' }}>🔥 일주일 연속 일기 작성 보너스</SectionLabel>
+        <WeeklyBonusCard user={user} />
 
         {/* 튜토리얼 책 섹션 - 소설 1개 미만 생성한 사용자에게만 표시 */}
         {userCreatedAt && totalNovelCount !== null && totalNovelCount < 1 && (

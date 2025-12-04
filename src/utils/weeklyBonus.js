@@ -43,22 +43,26 @@ const getWeekDates = (monday) => {
 };
 
 // 일주일 연속 일기 작성 보너스 체크 및 지급
+// 일요일에 일기를 저장했을 때, 7일 모두 당일에 작성했는지 확인하고 자동으로 보너스 지급
 export const checkWeeklyBonus = async (userId, currentDate) => {
     try {
         // 현재 날짜가 일요일인지 확인
         if (currentDate.getDay() !== 0) {
-            return; // 일요일이 아니면 보너스 지급하지 않음
+            return { granted: false }; // 일요일이 아니면 보너스 지급하지 않음
         }
 
         const { monday, sunday } = getWeekRange(currentDate);
         const weekDates = getWeekDates(monday);
+        const mondayStr = formatDateToString(monday);
+        const sundayStr = formatDateToString(sunday);
 
-        // 해당 주의 일기들을 조회
+        // 해당 주의 일기들을 조회 (범위 쿼리 사용)
         const diariesRef = collection(db, 'diaries');
         const weekQuery = query(
             diariesRef,
             where('userId', '==', userId),
-            where('date', 'in', weekDates)
+            where('date', '>=', mondayStr),
+            where('date', '<=', sundayStr)
         );
 
         const querySnapshot = await getDocs(weekQuery);
@@ -66,13 +70,18 @@ export const checkWeeklyBonus = async (userId, currentDate) => {
 
         querySnapshot.forEach(doc => {
             const diary = doc.data();
-            // 당일 작성된 일기만 카운트 (createdAt이 해당 날짜인지 확인)
-            const createdAt = diary.createdAt?.toDate?.() || new Date(diary.createdAt);
-            const diaryDate = new Date(diary.date);
-
-            // 날짜가 같고, 작성일이 해당 날짜인 경우만 카운트
-            if (formatDateToString(createdAt) === diary.date) {
-                writtenDates.add(diary.date);
+            const diaryDate = diary.date;
+            
+            // 해당 주의 날짜 범위에 포함되는지 확인
+            if (weekDates.includes(diaryDate)) {
+                // 당일 작성된 일기만 카운트 (createdAt이 해당 날짜인지 확인)
+                const createdAt = diary.createdAt?.toDate?.() || new Date(diary.createdAt);
+                const createdAtStr = formatDateToString(createdAt);
+                
+                // createdAt이 해당 날짜와 일치하는 경우만 카운트
+                if (createdAtStr === diaryDate) {
+                    writtenDates.add(diaryDate);
+                }
             }
         });
 
@@ -80,16 +89,26 @@ export const checkWeeklyBonus = async (userId, currentDate) => {
         if (writtenDates.size === 7) {
             // 이미 보너스를 받았는지 확인 (중복 지급 방지)
             const bonusHistoryRef = collection(db, 'users', userId, 'pointHistory');
+            // desc만으로 먼저 필터링하고, 클라이언트에서 날짜 범위 확인
             const bonusQuery = query(
                 bonusHistoryRef,
-                where('desc', '==', '일주일 연속 일기 작성 보너스'),
-                where('createdAt', '>=', monday),
-                where('createdAt', '<=', sunday)
+                where('desc', '==', '일주일 일기 연속 작성 보너스')
             );
 
             const bonusSnapshot = await getDocs(bonusQuery);
-            if (!bonusSnapshot.empty) {
-                return; // 이미 보너스를 받았음
+            
+            // 클라이언트에서 날짜 범위 확인
+            let hasReceived = false;
+            bonusSnapshot.forEach(doc => {
+                const history = doc.data();
+                const historyDate = history.createdAt?.toDate?.() || new Date(history.createdAt);
+                if (historyDate >= monday && historyDate <= sunday) {
+                    hasReceived = true;
+                }
+            });
+            
+            if (hasReceived) {
+                return { granted: false }; // 이미 보너스를 받았음
             }
 
             // 보너스 지급
@@ -100,16 +119,20 @@ export const checkWeeklyBonus = async (userId, currentDate) => {
             await addDoc(collection(db, 'users', userId, 'pointHistory'), {
                 type: 'earn',
                 amount: 10,
-                desc: '일주일 연속 일기 작성 보너스',
+                desc: '일주일 일기 연속 작성 보너스',
                 createdAt: new Date()
             });
             // 포인트 적립 알림 생성
-            await createPointEarnNotification(userId, 10, '일주일 연속 일기 작성 보너스');
+            await createPointEarnNotification(userId, 10, '일주일 일기 연속 작성 보너스');
 
             console.log('일주일 연속 일기 작성 보너스 지급 완료');
+            return { granted: true, amount: 10 };
         }
+        
+        return { granted: false };
     } catch (error) {
         console.error('일주일 연속 일기 작성 보너스 체크 실패:', error);
+        return { granted: false };
     }
 };
 
@@ -169,7 +192,7 @@ export const hasReceivedWeeklyBonus = async (userId, currentDate) => {
         const bonusHistoryRef = collection(db, 'users', userId, 'pointHistory');
         const bonusQuery = query(
             bonusHistoryRef,
-            where('desc', '==', '일주일 연속 일기 작성 보너스'),
+            where('desc', '==', '일주일 일기 연속 작성 보너스'),
             where('createdAt', '>=', monday),
             where('createdAt', '<=', sunday)
         );
@@ -252,7 +275,7 @@ export const checkWeekBonusStatus = async (userId, targetDate) => {
             // desc만으로 먼저 필터링하고, 클라이언트에서 날짜 범위 확인
             const bonusQuery = query(
                 bonusHistoryRef,
-                where('desc', '==', '일주일 연속 일기 작성 보너스')
+                where('desc', '==', '일주일 일기 연속 작성 보너스')
             );
 
             const bonusSnapshot = await getDocs(bonusQuery);
@@ -370,7 +393,7 @@ export const claimWeeklyBonus = async (userId, targetDate) => {
         const bonusHistoryRef = collection(db, 'users', userId, 'pointHistory');
         const bonusQuery = query(
             bonusHistoryRef,
-            where('desc', '==', '일주일 연속 일기 작성 보너스'),
+            where('desc', '==', '일주일 일기 연속 작성 보너스'),
             where('createdAt', '>=', monday),
             where('createdAt', '<=', sunday)
         );
@@ -388,12 +411,12 @@ export const claimWeeklyBonus = async (userId, targetDate) => {
         await addDoc(collection(db, 'users', userId, 'pointHistory'), {
             type: 'earn',
             amount: 10,
-            desc: '일주일 연속 일기 작성 보너스',
+            desc: '일주일 일기 연속 작성 보너스',
             createdAt: new Date()
         });
         
         // 포인트 적립 알림 생성
-        await createPointEarnNotification(userId, 10, '일주일 연속 일기 작성 보너스');
+        await createPointEarnNotification(userId, 10, '일주일 일기 연속 작성 보너스');
 
         console.log('일주일 연속 일기 작성 보너스 지급 완료');
         return { success: true, amount: 10 };
