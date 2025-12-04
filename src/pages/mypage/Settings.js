@@ -256,13 +256,13 @@ function Settings({ user }) {
                                 { label: t('theme_light') || '라이트 모드', value: 'light' },
                                 { label: t('theme_dark') || '다크 모드', value: 'dark' },
                                 { 
-                                    label: t('theme_diary') || '다이어리', 
+                                    label: `✨ ${t('theme_diary') || '다이어리'}`, 
                                     value: 'diary',
                                     disabled: !isPremium,
                                     icon: !isPremium ? <span>👑</span> : null
                                 },
                                 { 
-                                    label: t('theme_glass') || '포션', 
+                                    label: `✨ ${t('theme_glass') || '포션'}`, 
                                     value: 'glass',
                                     disabled: !isPremium,
                                     icon: !isPremium ? <span>👑</span> : null
