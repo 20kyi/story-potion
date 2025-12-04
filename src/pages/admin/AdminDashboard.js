@@ -23,7 +23,6 @@ const DashboardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
-  margin-top: 20px;
   
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -171,33 +170,65 @@ function AdminDashboard({ user }) {
             const yesterdayStartTs = Timestamp.fromDate(yesterdayStart);
             const yesterdayEndTs = Timestamp.fromDate(yesterdayEnd);
 
-            // 1. 오늘의 매출 (인앱 결제)
-            const todayRevenueData = await fetchTodayRevenue(todayStartTs, todayEndTs);
-            setTodayRevenue(todayRevenueData);
+            console.log('대시보드 데이터 조회 시작');
 
-            // 2. 어제의 매출
-            const yesterdayRevenueData = await fetchTodayRevenue(yesterdayStartTs, yesterdayEndTs);
-            setYesterdayRevenue(yesterdayRevenueData);
+            // 각 데이터를 개별적으로 조회하고 에러가 발생해도 계속 진행
+            try {
+                const todayRevenueData = await fetchTodayRevenue(todayStartTs, todayEndTs);
+                setTodayRevenue(todayRevenueData);
+                console.log('오늘의 매출:', todayRevenueData);
+            } catch (err) {
+                console.error('매출 조회 실패:', err);
+                setTodayRevenue({ amount: 0, count: 0 });
+            }
 
-            // 3. 오늘의 비용 (AI 소설 생성)
-            const todayCostData = await fetchTodayCost(todayStartTs, todayEndTs);
-            setTodayCost(todayCostData);
+            try {
+                const yesterdayRevenueData = await fetchTodayRevenue(yesterdayStartTs, yesterdayEndTs);
+                setYesterdayRevenue(yesterdayRevenueData);
+            } catch (err) {
+                console.error('어제 매출 조회 실패:', err);
+                setYesterdayRevenue({ amount: 0, count: 0 });
+            }
 
-            // 4. DAU (오늘 접속한 유저 수)
-            const dau = await fetchDAU(todayStartTs, todayEndTs);
-            setTodayDAU(dau);
+            try {
+                const todayCostData = await fetchTodayCost(todayStartTs, todayEndTs);
+                setTodayCost(todayCostData);
+                console.log('오늘의 비용:', todayCostData);
+            } catch (err) {
+                console.error('비용 조회 실패:', err);
+                setTodayCost({ amount: 0, count: 0 });
+            }
 
-            // 5. 오늘의 신규 가입자
-            const newUsers = await fetchNewUsers(todayStartTs, todayEndTs);
-            setTodayNewUsers(newUsers);
+            try {
+                const dau = await fetchDAU(todayStartTs, todayEndTs);
+                setTodayDAU(dau);
+                console.log('DAU:', dau);
+            } catch (err) {
+                console.error('DAU 조회 실패:', err);
+                setTodayDAU(0);
+            }
 
-            // 6. 어제의 신규 가입자
-            const yesterdayNewUsers = await fetchNewUsers(yesterdayStartTs, yesterdayEndTs);
-            setYesterdayNewUsers(yesterdayNewUsers);
+            try {
+                const newUsers = await fetchNewUsers(todayStartTs, todayEndTs);
+                setTodayNewUsers(newUsers);
+                console.log('오늘의 신규 가입자:', newUsers);
+            } catch (err) {
+                console.error('신규 가입자 조회 실패:', err);
+                setTodayNewUsers(0);
+            }
 
+            try {
+                const yesterdayNewUsers = await fetchNewUsers(yesterdayStartTs, yesterdayEndTs);
+                setYesterdayNewUsers(yesterdayNewUsers);
+            } catch (err) {
+                console.error('어제 신규 가입자 조회 실패:', err);
+                setYesterdayNewUsers(0);
+            }
+
+            console.log('대시보드 데이터 조회 완료');
         } catch (err) {
             console.error('대시보드 데이터 조회 실패:', err);
-            setError('데이터를 불러오는 중 오류가 발생했습니다.');
+            setError('데이터를 불러오는 중 오류가 발생했습니다: ' + err.message);
         } finally {
             setLoading(false);
         }
@@ -413,15 +444,11 @@ function AdminDashboard({ user }) {
     if (loading) {
         return (
             <AdminLayout user={user} title="📊 대시보드">
-                <LoadingText theme={theme}>데이터를 불러오는 중...</LoadingText>
-            </AdminLayout>
-        );
-    }
-
-    if (error) {
-        return (
-            <AdminLayout user={user} title="📊 대시보드">
-                <ErrorText>{error}</ErrorText>
+                <Section theme={theme}>
+                    <SectionContent theme={theme} isOpen={true}>
+                        <LoadingText theme={theme}>데이터를 불러오는 중...</LoadingText>
+                    </SectionContent>
+                </Section>
             </AdminLayout>
         );
     }
@@ -432,8 +459,12 @@ function AdminDashboard({ user }) {
     return (
         <AdminLayout user={user} title="📊 대시보드">
             <Section theme={theme}>
-                <SectionTitle theme={theme}>오늘의 통계</SectionTitle>
-                <SectionContent theme={theme}>
+                {error && (
+                    <div style={{ padding: '10px', background: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '20px' }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+                <SectionContent theme={theme} isOpen={true}>
                     <DashboardGrid>
                         {/* 오늘의 매출 */}
                         <StatCard theme={theme}>

@@ -8,13 +8,11 @@ export const Section = styled.div`
   background: ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : 'white'};
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.3' : '0.1'});
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
   
   @media (max-width: 768px) {
     padding: 15px;
-    margin-bottom: 15px;
     border-radius: 6px;
   }
 `;
