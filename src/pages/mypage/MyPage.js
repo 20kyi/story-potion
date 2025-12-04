@@ -1303,6 +1303,8 @@ function MyPage({ user }) {
                     <span>한 주에 여러 장르 소설 생성</span>
                     <span>·</span>
                     <span>AI 일기 생성</span>
+                    <span>·</span>
+                    <span>다이어리 테마 & 포션 테마</span>
                   </div>
                   <div style={{
                     background: theme.premiumUpgradeCardButtonBg || 'white',

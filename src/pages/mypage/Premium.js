@@ -252,6 +252,7 @@ const premiumFeatures = [
     descKey: 'premium_feature_free_potion_desc',
   },
   { id: 'ai-diary', titleKey: 'premium_feature_ai_diary_title', descKey: 'premium_feature_ai_diary_desc' },
+  { id: 'premium-theme', titleKey: 'premium_feature_theme_title', descKey: 'premium_feature_theme_desc' },
 ];
 
 function Premium({ user }) {

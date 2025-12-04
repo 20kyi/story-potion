@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { useTheme } from '../../ThemeContext';
 import './Settings.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -12,6 +12,7 @@ import CustomDropdown from '../../components/ui/CustomDropdown';
 import pushNotificationManager from '../../utils/pushNotification';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const FontSizeSlider = styled.input`
     flex: 1;
@@ -115,7 +116,7 @@ const FontSizeContainer = styled.div`
     margin-left: auto;
 `;
 
-function Settings() {
+function Settings({ user }) {
     const navigate = useNavigate();
     const { theme, setThemeMode, toggleTheme, fontFamily, setFontFamily, fontSize, setFontSize, actualTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
@@ -126,6 +127,7 @@ function Settings() {
     });
     const [logoutModal, setLogoutModal] = useState(false);
     const [notificationPermission, setNotificationPermission] = useState('default');
+    const [isPremium, setIsPremium] = useState(false);
 
     // 언어에 따라 폰트 옵션 생성
     const FONT_OPTIONS = [
@@ -164,6 +166,26 @@ function Settings() {
     };
 
 
+
+    // 프리미엄 회원 상태 확인
+    useEffect(() => {
+        if (user?.uid) {
+            const userRef = doc(db, 'users', user.uid);
+            const unsubscribe = onSnapshot(userRef, (userDoc) => {
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    setIsPremium(data.isMonthlyPremium || data.isYearlyPremium || false);
+                } else {
+                    setIsPremium(false);
+                }
+            }, (error) => {
+                console.error('프리미엄 상태 조회 실패:', error);
+                setIsPremium(false);
+            });
+
+            return () => unsubscribe();
+        }
+    }, [user]);
 
     // 알림 권한 상태 확인
     useEffect(() => {
@@ -233,8 +255,18 @@ function Settings() {
                             options={[
                                 { label: t('theme_light') || '라이트 모드', value: 'light' },
                                 { label: t('theme_dark') || '다크 모드', value: 'dark' },
-                                { label: t('theme_diary') || '다이어리', value: 'diary' },
-                                { label: t('theme_glass') || '포션', value: 'glass' }
+                                { 
+                                    label: t('theme_diary') || '다이어리', 
+                                    value: 'diary',
+                                    disabled: !isPremium,
+                                    icon: !isPremium ? <span>👑</span> : null
+                                },
+                                { 
+                                    label: t('theme_glass') || '포션', 
+                                    value: 'glass',
+                                    disabled: !isPremium,
+                                    icon: !isPremium ? <span>👑</span> : null
+                                }
                             ]}
                             width="160px"
                             padding="8px 12px"

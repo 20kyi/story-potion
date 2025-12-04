@@ -176,9 +176,13 @@ const DropdownList = styled.div`
 
 const DropdownItem = styled.div`
     padding: ${props => props.$padding || '12px 16px'};
-    cursor: pointer;
+    cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
     font-size: ${props => props.$fontSize || '14px'};
     font-family: ${props => props.$fontFamily || 'inherit'};
+    opacity: ${props => props.$disabled ? '0.5' : '1'};
+    display: flex;
+    align-items: center;
+    gap: 8px;
     color: ${props => {
         if (props.$actualTheme === 'diary') {
             return '#8B6F47';
@@ -199,6 +203,7 @@ const DropdownItem = styled.div`
     
     &:hover {
         background: ${props => {
+        if (props.$disabled) return 'transparent';
         if (props.$actualTheme === 'glass') {
             return 'rgba(255, 255, 255, 0.2)';
         } else if (props.$actualTheme === 'dark') {
@@ -207,11 +212,12 @@ const DropdownItem = styled.div`
             return 'rgba(203, 101, 101, 0.1)';
         }
     }};
-        border-left: ${props => props.$actualTheme === 'glass' ? '3px solid rgba(255, 255, 255, 0.6)' : '3px solid transparent'};
+        border-left: ${props => props.$disabled ? '3px solid transparent' : (props.$actualTheme === 'glass' ? '3px solid rgba(255, 255, 255, 0.6)' : '3px solid transparent')};
     }
     
     &:active {
         background: ${props => {
+        if (props.$disabled) return 'transparent';
         if (props.$actualTheme === 'glass') {
             return 'rgba(255, 255, 255, 0.35)';
         } else if (props.$actualTheme === 'dark') {
@@ -220,7 +226,7 @@ const DropdownItem = styled.div`
             return 'rgba(203, 101, 101, 0.15)';
         }
     }};
-        border-left: ${props => props.$actualTheme === 'glass' ? '3px solid rgba(255, 255, 255, 1)' : '3px solid transparent'};
+        border-left: ${props => props.$disabled ? '3px solid transparent' : (props.$actualTheme === 'glass' ? '3px solid rgba(255, 255, 255, 1)' : '3px solid transparent')};
     }
     
     &:first-child {
@@ -232,6 +238,13 @@ const DropdownItem = styled.div`
         border-bottom-left-radius: ${props => props.$borderRadius || '8px'};
         border-bottom-right-radius: ${props => props.$borderRadius || '8px'};
     }
+`;
+
+const IconWrapper = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 `;
 
 const Overlay = styled.div`
@@ -354,6 +367,10 @@ function CustomDropdown({
     // 옵션 선택
     const handleSelect = (option) => {
         const optionValue = typeof option === 'object' ? option.value : option;
+        const isDisabled = typeof option === 'object' ? option.disabled : false;
+        if (isDisabled) {
+            return; // disabled 옵션은 선택 불가
+        }
         onChange(optionValue);
         setIsOpen(false);
     };
@@ -397,6 +414,8 @@ function CustomDropdown({
                     {options.map((option, index) => {
                         const optionValue = typeof option === 'object' ? option.value : option;
                         const optionLabel = typeof option === 'object' ? option.label : option;
+                        const isDisabled = typeof option === 'object' ? option.disabled : false;
+                        const optionIcon = typeof option === 'object' ? option.icon : null;
                         const isSelected = optionValue === value;
                         // 폰트 드롭다운인 경우 각 옵션의 value를 폰트 패밀리로 적용
                         const itemFontFamily = isFontDropdown ? formatFontFamily(optionValue) : undefined;
@@ -406,18 +425,26 @@ function CustomDropdown({
                                 key={index}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSelect(option);
+                                    if (!isDisabled) {
+                                        handleSelect(option);
+                                    }
                                 }}
                                 onTouchStart={(e) => {
                                     e.stopPropagation();
                                 }}
                                 $isSelected={isSelected}
+                                $disabled={isDisabled}
                                 $actualTheme={actualTheme}
                                 $padding={padding}
                                 $fontSize={fontSize}
                                 $borderRadius={borderRadius}
                                 $fontFamily={itemFontFamily}
                             >
+                                {optionIcon && (
+                                    <IconWrapper>
+                                        {optionIcon}
+                                    </IconWrapper>
+                                )}
                                 {optionLabel}
                             </DropdownItem>
                         );
