@@ -18,10 +18,33 @@ import {
     getDocs,
     Timestamp
 } from 'firebase/firestore';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+);
 
 const DashboardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   
   @media (max-width: 768px) {
@@ -33,29 +56,18 @@ const DashboardGrid = styled.div`
 const StatCard = styled.div`
   background: ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : 'white'};
   border-radius: 12px;
-  padding: 24px;
+  padding: 10px;
   box-shadow: 0 4px 6px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.3' : '0.1'});
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
-    padding: 20px;
-  }
-`;
-
-const StatCardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-`;
-
-const StatIcon = styled.div`
-  font-size: 32px;
-  
-  @media (max-width: 768px) {
-    font-size: 28px;
+    padding: 10px;
   }
 `;
 
@@ -63,7 +75,10 @@ const StatTitle = styled.h3`
   color: ${({ theme }) => theme.text};
   font-size: 18px;
   font-weight: bold;
-  margin: 0;
+  margin: 0 0 16px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
     font-size: 16px;
@@ -85,6 +100,9 @@ const StatSubValue = styled.div`
   color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
   font-size: 14px;
   margin-bottom: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -116,6 +134,47 @@ const ErrorText = styled.div`
   padding: 20px;
 `;
 
+const ChartContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 20px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+`;
+
+const ChartCard = styled.div`
+  background: ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : 'white'};
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.3' : '0.1'});
+  border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
+  height: 300px;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-width: 0;
+  
+  @media (max-width: 768px) {
+    height: 250px;
+    padding: 15px;
+  }
+`;
+
+const ChartTitle = styled.h3`
+  color: ${({ theme }) => theme.text};
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+`;
+
 function AdminDashboard({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
@@ -123,14 +182,24 @@ function AdminDashboard({ user }) {
     const [error, setError] = useState(null);
 
     // 오늘의 통계
-    const [todayRevenue, setTodayRevenue] = useState({ amount: 0, count: 0 });
-    const [todayCost, setTodayCost] = useState({ amount: 0, count: 0 });
+    const [todayRevenue, setTodayRevenue] = useState({ amount: 0, subscriptionCount: 0, pointCount: 0 });
+    const [todayCost, setTodayCost] = useState({ amount: 0, novelCount: 0, coverCount: 0 });
     const [todayDAU, setTodayDAU] = useState(0);
     const [todayNewUsers, setTodayNewUsers] = useState(0);
 
     // 어제의 통계 (비교용)
-    const [yesterdayRevenue, setYesterdayRevenue] = useState({ amount: 0, count: 0 });
+    const [yesterdayRevenue, setYesterdayRevenue] = useState({ amount: 0, subscriptionCount: 0, pointCount: 0 });
+    const [yesterdayDAU, setYesterdayDAU] = useState(0);
     const [yesterdayNewUsers, setYesterdayNewUsers] = useState(0);
+
+    // 지난 7일간의 트렌드 데이터
+    const [trendData, setTrendData] = useState({
+        revenue: [],
+        cost: [],
+        diaries: [],
+        novels: [],
+        labels: []
+    });
 
     useEffect(() => {
         if (!requireAdmin(user, navigate)) {
@@ -179,7 +248,7 @@ function AdminDashboard({ user }) {
                 console.log('오늘의 매출:', todayRevenueData);
             } catch (err) {
                 console.error('매출 조회 실패:', err);
-                setTodayRevenue({ amount: 0, count: 0 });
+                setTodayRevenue({ amount: 0, subscriptionCount: 0, pointCount: 0 });
             }
 
             try {
@@ -187,7 +256,7 @@ function AdminDashboard({ user }) {
                 setYesterdayRevenue(yesterdayRevenueData);
             } catch (err) {
                 console.error('어제 매출 조회 실패:', err);
-                setYesterdayRevenue({ amount: 0, count: 0 });
+                setYesterdayRevenue({ amount: 0, subscriptionCount: 0, pointCount: 0 });
             }
 
             try {
@@ -196,7 +265,7 @@ function AdminDashboard({ user }) {
                 console.log('오늘의 비용:', todayCostData);
             } catch (err) {
                 console.error('비용 조회 실패:', err);
-                setTodayCost({ amount: 0, count: 0 });
+                setTodayCost({ amount: 0, novelCount: 0, coverCount: 0 });
             }
 
             try {
@@ -206,6 +275,14 @@ function AdminDashboard({ user }) {
             } catch (err) {
                 console.error('DAU 조회 실패:', err);
                 setTodayDAU(0);
+            }
+
+            try {
+                const yesterdayDAU = await fetchDAU(yesterdayStartTs, yesterdayEndTs);
+                setYesterdayDAU(yesterdayDAU);
+            } catch (err) {
+                console.error('어제 DAU 조회 실패:', err);
+                setYesterdayDAU(0);
             }
 
             try {
@@ -226,6 +303,15 @@ function AdminDashboard({ user }) {
             }
 
             console.log('대시보드 데이터 조회 완료');
+
+            // 지난 7일간의 트렌드 데이터 조회
+            try {
+                const trend = await fetchTrendData();
+                setTrendData(trend);
+                console.log('트렌드 데이터:', trend);
+            } catch (err) {
+                console.error('트렌드 데이터 조회 실패:', err);
+            }
         } catch (err) {
             console.error('대시보드 데이터 조회 실패:', err);
             setError('데이터를 불러오는 중 오류가 발생했습니다: ' + err.message);
@@ -234,19 +320,171 @@ function AdminDashboard({ user }) {
         }
     };
 
+    // 지난 7일간의 트렌드 데이터 조회
+    const fetchTrendData = async () => {
+        const labels = [];
+        const revenueData = [];
+        const costData = [];
+        const diariesData = [];
+        const novelsData = [];
+
+        // 지난 7일간의 날짜 배열 생성
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+
+            const dateEnd = new Date(date);
+            dateEnd.setHours(23, 59, 59, 999);
+
+            const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+            labels.push(dateStr);
+
+            const startTs = Timestamp.fromDate(date);
+            const endTs = Timestamp.fromDate(dateEnd);
+
+            // 해당 날짜의 매출 조회
+            const revenue = await fetchTodayRevenue(startTs, endTs);
+            revenueData.push(revenue.amount);
+
+            // 해당 날짜의 비용 조회
+            const cost = await fetchTodayCost(startTs, endTs);
+            costData.push(cost.amount);
+
+            // 해당 날짜의 일기 작성 수 조회
+            const diaries = await fetchDiaryCount(date, dateEnd);
+            diariesData.push(diaries);
+
+            // 해당 날짜의 소설 생성 수 조회
+            const novels = await fetchNovelCount(startTs, endTs);
+            novelsData.push(novels);
+        }
+
+        return {
+            labels,
+            revenue: revenueData,
+            cost: costData,
+            diaries: diariesData,
+            novels: novelsData
+        };
+    };
+
+    // 일기 작성 수 조회
+    const fetchDiaryCount = async (startDate, endDate) => {
+        try {
+            const formatDateToString = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            const startStr = formatDateToString(startDate);
+            const endStr = formatDateToString(endDate);
+
+            const diariesRef = collection(db, 'diaries');
+            const q = query(
+                diariesRef,
+                where('date', '>=', startStr),
+                where('date', '<=', endStr)
+            );
+
+            const snapshot = await getDocs(q);
+            return snapshot.size;
+        } catch (err) {
+            console.error('일기 수 조회 실패:', err);
+            return 0;
+        }
+    };
+
+    // 소설 생성 수 조회
+    const fetchNovelCount = async (startTs, endTs) => {
+        try {
+            const novelsRef = collection(db, 'novels');
+            const startDate = startTs.toDate();
+            const endDate = endTs.toDate();
+
+            let snapshot;
+            try {
+                const q = query(
+                    novelsRef,
+                    where('createdAt', '>=', startTs),
+                    where('createdAt', '<=', endTs)
+                );
+                snapshot = await getDocs(q);
+            } catch (queryErr) {
+                snapshot = await getDocs(novelsRef);
+            }
+
+            let count = 0;
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                let createdAt = null;
+                if (data.createdAt) {
+                    if (data.createdAt.toDate) {
+                        createdAt = data.createdAt.toDate();
+                    } else if (data.createdAt instanceof Date) {
+                        createdAt = data.createdAt;
+                    } else {
+                        createdAt = new Date(data.createdAt);
+                    }
+                }
+
+                if (createdAt && createdAt >= startDate && createdAt <= endDate) {
+                    count++;
+                }
+            });
+
+            return count;
+        } catch (err) {
+            console.error('소설 수 조회 실패:', err);
+            return 0;
+        }
+    };
+
     // 오늘의 매출 조회 (인앱 결제)
     const fetchTodayRevenue = async (startTs, endTs) => {
         try {
             let totalAmount = 0;
-            let count = 0;
-
-            // 모든 사용자의 pointHistory에서 type: 'charge'인 항목 조회
-            const usersRef = collection(db, 'users');
-            const usersSnapshot = await getDocs(usersRef);
+            let subscriptionCount = 0;
+            let pointCount = 0;
 
             const startDate = startTs.toDate();
             const endDate = endTs.toDate();
 
+            // 1. 구독 결제 조회 (users 컬렉션에서 오늘 구독이 활성화된 사용자)
+            const usersRef = collection(db, 'users');
+            const usersSnapshot = await getDocs(usersRef);
+
+            usersSnapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                // 구독 활성화 시간 확인
+                if (data.isMonthlyPremium || data.isYearlyPremium) {
+                    let premiumActivatedAt = null;
+                    if (data.premiumActivatedAt) {
+                        if (data.premiumActivatedAt.toDate) {
+                            premiumActivatedAt = data.premiumActivatedAt.toDate();
+                        } else if (data.premiumActivatedAt instanceof Date) {
+                            premiumActivatedAt = data.premiumActivatedAt;
+                        } else {
+                            premiumActivatedAt = new Date(data.premiumActivatedAt);
+                        }
+                    }
+
+                    // 오늘 구독이 활성화된 경우
+                    if (premiumActivatedAt && premiumActivatedAt >= startDate && premiumActivatedAt <= endDate) {
+                        subscriptionCount++;
+                        // 구독 가격 추정 (월간 9900원, 연간 99000원)
+                        if (data.isYearlyPremium) {
+                            totalAmount += 99000;
+                        } else {
+                            totalAmount += 9900;
+                        }
+                    }
+                }
+            });
+
+            // 2. 포인트 충전 조회
             const promises = [];
             usersSnapshot.forEach((userDoc) => {
                 const pointHistoryRef = collection(db, 'users', userDoc.id, 'pointHistory');
@@ -278,16 +516,16 @@ function AdminDashboard({ user }) {
                         // amount가 양수인 경우만 매출로 계산
                         if (data.amount && data.amount > 0) {
                             totalAmount += data.amount;
-                            count++;
+                            pointCount++;
                         }
                     }
                 });
             });
 
-            return { amount: totalAmount, count };
+            return { amount: totalAmount, subscriptionCount, pointCount };
         } catch (err) {
             console.error('매출 조회 실패:', err);
-            return { amount: 0, count: 0 };
+            return { amount: 0, subscriptionCount: 0, pointCount: 0 };
         }
     };
 
@@ -312,7 +550,9 @@ function AdminDashboard({ user }) {
                 snapshot = await getDocs(novelsRef);
             }
 
-            let count = 0;
+            let novelCount = 0;
+            let coverCount = 0;
+
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 let createdAt = null;
@@ -327,19 +567,32 @@ function AdminDashboard({ user }) {
                 }
 
                 if (createdAt && createdAt >= startDate && createdAt <= endDate) {
-                    count++;
+                    novelCount++;
+                    // imageUrl이 있으면 표지 이미지 생성된 것으로 간주
+                    if (data.imageUrl) {
+                        coverCount++;
+                    }
                 }
             });
 
-            // 평균 단가: 소설 생성 1건당 약 $0.10 (추정)
-            // 실제 비용은 OpenAI API 사용량에 따라 다를 수 있음
-            const averageCostPerNovel = 0.10; // USD
-            const estimatedCost = count * averageCostPerNovel;
+            // 실제 API 비용 계산 (2024년 기준)
+            // GPT-4o: 입력 $2.50/1M tokens, 출력 $10/1M tokens
+            // 소설 생성 시 평균: 입력 5,000 tokens, 출력 8,000 tokens
+            // 입력 비용: 5,000 * $2.50/1M = $0.0125
+            // 출력 비용: 8,000 * $10/1M = $0.08
+            // 총: 약 $0.09-0.10 = 약 ₩120-130 (환율 1,300원 기준)
+            // DALL-E 3: $0.04 per image (1024x1024) = 약 ₩50-55
+            const GPT4oCostPerNovel = 130; // 원화 (보수적 추정)
+            const DALLE3CostPerImage = 55; // 원화
 
-            return { amount: estimatedCost, count };
+            const gpt4oCost = novelCount * GPT4oCostPerNovel;
+            const dalle3Cost = coverCount * DALLE3CostPerImage;
+            const totalCost = gpt4oCost + dalle3Cost;
+
+            return { amount: totalCost, novelCount, coverCount };
         } catch (err) {
             console.error('비용 조회 실패:', err);
-            return { amount: 0, count: 0 };
+            return { amount: 0, novelCount: 0, coverCount: 0 };
         }
     };
 
@@ -454,7 +707,17 @@ function AdminDashboard({ user }) {
     }
 
     const revenueGrowth = calculateGrowthRate(todayRevenue.amount, yesterdayRevenue.amount);
+    const dauGrowth = calculateGrowthRate(todayDAU, yesterdayDAU);
     const newUsersGrowth = calculateGrowthRate(todayNewUsers, yesterdayNewUsers);
+
+    const formatCurrencyWithWon = (amount) => {
+        return '₩' + new Intl.NumberFormat('ko-KR').format(amount);
+    };
+
+    // 매출 대비 비용 비율 계산
+    const costPercentage = todayRevenue.amount > 0
+        ? ((todayCost.amount / todayRevenue.amount) * 100).toFixed(0)
+        : 0;
 
     return (
         <AdminLayout user={user} title="📊 대시보드">
@@ -468,50 +731,48 @@ function AdminDashboard({ user }) {
                     <DashboardGrid>
                         {/* 오늘의 매출 */}
                         <StatCard theme={theme}>
-                            <StatCardHeader>
-                                <StatIcon>💰</StatIcon>
-                                <StatTitle theme={theme}>오늘의 매출</StatTitle>
-                            </StatCardHeader>
-                            <StatValue theme={theme}>{formatCurrency(todayRevenue.amount)}</StatValue>
-                            <StatSubValue theme={theme}>결제 건수: {todayRevenue.count}건</StatSubValue>
-                            {yesterdayRevenue.amount > 0 && (
-                                <StatChange positive={revenueGrowth >= 0}>
-                                    어제 대비 {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth}%
-                                </StatChange>
-                            )}
+                            <StatTitle theme={theme}>💰 오늘의 매출</StatTitle>
+                            <StatValue theme={theme}>{formatCurrencyWithWon(todayRevenue.amount)}</StatValue>
+                            <StatSubValue theme={theme}>
+                                (구독 {todayRevenue.subscriptionCount}건, 포인트 {todayRevenue.pointCount}건)
+                            </StatSubValue>
                         </StatCard>
 
-                        {/* 오늘의 비용 */}
+                        {/* 예상 API 비용 */}
                         <StatCard theme={theme}>
-                            <StatCardHeader>
-                                <StatIcon>💸</StatIcon>
-                                <StatTitle theme={theme}>오늘의 비용 (예상)</StatTitle>
-                            </StatCardHeader>
-                            <StatValue theme={theme}>{formatUSD(todayCost.amount)}</StatValue>
-                            <StatSubValue theme={theme}>소설 생성: {todayCost.count}건</StatSubValue>
-                            <StatSubValue theme={theme} style={{ fontSize: '12px', color: '#e74c3c', marginTop: '8px' }}>
-                                ⚠️ 실제 비용은 OpenAI 청구서 기준
+                            <StatTitle theme={theme}>💎 예상 API 비용</StatTitle>
+                            <StatSubValue theme={theme} style={{ marginBottom: '8px' }}>
+                                (GPT-4o + DALL-E)
+                            </StatSubValue>
+                            <StatValue theme={theme}>
+                                {formatCurrencyWithWon(-todayCost.amount)}
+                                {costPercentage > 0 && (
+                                    <span style={{ fontSize: '18px', fontWeight: 'normal', marginLeft: '8px' }}>
+                                        ({costPercentage}%)
+                                    </span>
+                                )}
+                            </StatValue>
+                            <StatSubValue theme={theme} style={{ marginTop: '8px' }}>
+                                (소설 {todayCost.novelCount}건, 표지 {todayCost.coverCount}장)
                             </StatSubValue>
                         </StatCard>
 
                         {/* DAU */}
                         <StatCard theme={theme}>
-                            <StatCardHeader>
-                                <StatIcon>👥</StatIcon>
-                                <StatTitle theme={theme}>DAU (일간 활성 유저)</StatTitle>
-                            </StatCardHeader>
+                            <StatTitle theme={theme}>👥 오늘의 방문자(DAU)</StatTitle>
                             <StatValue theme={theme}>{todayDAU.toLocaleString()}명</StatValue>
-                            <StatSubValue theme={theme}>오늘 접속한 유저 수</StatSubValue>
+                            <StatChange positive={dauGrowth >= 0}>
+                                (어제 대비 {dauGrowth >= 0 ? '+' : ''}{dauGrowth}%)
+                            </StatChange>
                         </StatCard>
 
                         {/* 신규 가입자 */}
                         <StatCard theme={theme}>
-                            <StatCardHeader>
-                                <StatIcon>✨</StatIcon>
-                                <StatTitle theme={theme}>신규 가입자</StatTitle>
-                            </StatCardHeader>
+                            <StatTitle theme={theme}>✨ 신규 가입자</StatTitle>
                             <StatValue theme={theme}>{todayNewUsers.toLocaleString()}명</StatValue>
-                            <StatSubValue theme={theme}>오늘 가입한 유저 수</StatSubValue>
+                            <StatChange positive={newUsersGrowth >= 0}>
+                                (어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%)
+                            </StatChange>
                             {yesterdayNewUsers > 0 && (
                                 <StatChange positive={newUsersGrowth >= 0}>
                                     어제 대비 {newUsersGrowth >= 0 ? '+' : ''}{newUsersGrowth}%
@@ -519,6 +780,144 @@ function AdminDashboard({ user }) {
                             )}
                         </StatCard>
                     </DashboardGrid>
+                </SectionContent>
+            </Section>
+
+            {/* 활동 그래프 */}
+            <Section theme={theme}>
+                <SectionTitle theme={theme}>📈 활동 그래프 (Trend)</SectionTitle>
+                <SectionContent theme={theme} isOpen={true}>
+                    <ChartContainer>
+                        {/* 매출 vs 비용 그래프 */}
+                        <ChartCard theme={theme}>
+                            <ChartTitle theme={theme}>매출(💙) vs 비용(🩷) 추이</ChartTitle>
+                            <Line
+                                data={{
+                                    labels: trendData.labels,
+                                    datasets: [
+                                        {
+                                            label: '💙 매출',
+                                            data: trendData.revenue.map(val => val / 100), // 백원 단위로 변환
+                                            borderColor: '#3498f3',
+                                            backgroundColor: 'rgba(52, 152, 243, 0.1)',
+                                            tension: 0.4,
+                                            fill: false,
+                                            pointStyle: false
+                                        },
+                                        {
+                                            label: '🩷 비용',
+                                            data: trendData.cost.map(val => val / 100), // 백원 단위로 변환
+                                            borderColor: '#ff69b4',
+                                            backgroundColor: 'rgba(255, 105, 180, 0.1)',
+                                            tension: 0.4,
+                                            fill: false,
+                                            pointStyle: false
+                                        }
+                                    ]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        title: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (context) {
+                                                    const value = context.parsed.y;
+                                                    return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(value * 100));
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 2
+                                            }
+                                        },
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: '날짜'
+                                            }
+                                        }
+                                    },
+                                    elements: {
+                                        point: {
+                                            radius: 0
+                                        }
+                                    }
+                                }}
+                            />
+                        </ChartCard>
+
+                        {/* 일기 작성 vs 소설 생성 그래프 */}
+                        <ChartCard theme={theme}>
+                            <ChartTitle theme={theme}>일기작성(💚) vs 소설생성(💜)</ChartTitle>
+                            <Line
+                                data={{
+                                    labels: trendData.labels,
+                                    datasets: [
+                                        {
+                                            label: '💜 일기 작성',
+                                            data: trendData.diaries,
+                                            borderColor: '#27ae60',
+                                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                                            tension: 0.4,
+                                            fill: false,
+                                            pointStyle: false
+                                        },
+                                        {
+                                            label: '💚 소설 생성',
+                                            data: trendData.novels,
+                                            borderColor: '#9b59b6',
+                                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                            tension: 0.4,
+                                            fill: false,
+                                            pointStyle: false
+                                        }
+                                    ]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        title: {
+                                            display: false
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        },
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: '날짜'
+                                            }
+                                        }
+                                    },
+                                    elements: {
+                                        point: {
+                                            radius: 0
+                                        }
+                                    }
+                                }}
+                            />
+                        </ChartCard>
+                    </ChartContainer>
                 </SectionContent>
             </Section>
         </AdminLayout>
