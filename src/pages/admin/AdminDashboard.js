@@ -61,9 +61,10 @@ const StatCard = styled.div`
   border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#34495e' : '#e0e0e0'};
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   word-wrap: break-word;
+  overflow-wrap: break-word;
   min-width: 0;
   
   @media (max-width: 768px) {
@@ -90,6 +91,9 @@ const StatValue = styled.div`
   font-size: 32px;
   font-weight: bold;
   margin-bottom: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
     font-size: 28px;
@@ -114,6 +118,9 @@ const StatChange = styled.div`
   font-size: 14px;
   font-weight: 500;
   margin-top: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -156,6 +163,9 @@ const ChartCard = styled.div`
   overflow: hidden;
   box-sizing: border-box;
   min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   
   @media (max-width: 768px) {
     height: 250px;
@@ -163,11 +173,20 @@ const ChartCard = styled.div`
   }
 `;
 
+const ChartWrapper = styled.div`
+  flex: 1;
+  position: relative;
+  min-height: 0;
+`;
+
 const ChartTitle = styled.h3`
   color: ${({ theme }) => theme.text};
   font-size: 16px;
   font-weight: bold;
   margin: 0 0 15px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
   
   @media (max-width: 768px) {
     font-size: 14px;
@@ -442,6 +461,17 @@ function AdminDashboard({ user }) {
         }
     };
 
+    // 포인트 패키지 가격 매핑
+    const getPointPackagePrice = (points) => {
+        // desc에서 포인트 수를 파싱하여 실제 결제 금액 계산
+        // 포인트 100개: 1,000원, 500개: 5,000원, 1000개: 9,900원, 2000개: 19,800원
+        if (points >= 2000) return 19800;
+        if (points >= 1000) return 9900;
+        if (points >= 500) return 5000;
+        if (points >= 100) return 1000;
+        return 0;
+    };
+
     // 오늘의 매출 조회 (인앱 결제)
     const fetchTodayRevenue = async (startTs, endTs) => {
         try {
@@ -452,37 +482,69 @@ function AdminDashboard({ user }) {
             const startDate = startTs.toDate();
             const endDate = endTs.toDate();
 
-            // 1. 구독 결제 조회 (users 컬렉션에서 오늘 구독이 활성화된 사용자)
+            console.log('매출 조회 시작:', { startDate, endDate });
+
+            // 1. 구독 결제 조회 (purchases 컬렉션에서 실제 구매 내역 확인)
             const usersRef = collection(db, 'users');
             const usersSnapshot = await getDocs(usersRef);
 
-            usersSnapshot.forEach((userDoc) => {
-                const data = userDoc.data();
-                // 구독 활성화 시간 확인
-                if (data.isMonthlyPremium || data.isYearlyPremium) {
-                    let premiumActivatedAt = null;
-                    if (data.premiumActivatedAt) {
-                        if (data.premiumActivatedAt.toDate) {
-                            premiumActivatedAt = data.premiumActivatedAt.toDate();
-                        } else if (data.premiumActivatedAt instanceof Date) {
-                            premiumActivatedAt = data.premiumActivatedAt;
-                        } else {
-                            premiumActivatedAt = new Date(data.premiumActivatedAt);
-                        }
-                    }
+            console.log('전체 사용자 수:', usersSnapshot.size);
 
-                    // 오늘 구독이 활성화된 경우
-                    if (premiumActivatedAt && premiumActivatedAt >= startDate && premiumActivatedAt <= endDate) {
-                        subscriptionCount++;
-                        // 구독 가격 추정 (월간 9900원, 연간 99000원)
-                        if (data.isYearlyPremium) {
-                            totalAmount += 99000;
-                        } else {
-                            totalAmount += 9900;
+            // 구독 구매 내역 조회
+            const subscriptionPromises = [];
+            usersSnapshot.forEach((userDoc) => {
+                const purchasesRef = collection(db, 'users', userDoc.id, 'purchases');
+                subscriptionPromises.push(getDocs(purchasesRef));
+            });
+
+            const subscriptionResults = await Promise.all(subscriptionPromises);
+            subscriptionResults.forEach((snapshot, userIndex) => {
+                snapshot.forEach((purchaseDoc) => {
+                    const purchaseData = purchaseDoc.data();
+                    const products = purchaseData.products || [];
+
+                    // 구독 상품 확인
+                    const isSubscription = products.some(productId =>
+                        productId === 'premium_monthly' || productId === 'premium_yearly'
+                    );
+
+                    if (isSubscription) {
+                        let purchaseTime = null;
+                        if (purchaseData.purchaseTime) {
+                            if (purchaseData.purchaseTime.toDate) {
+                                purchaseTime = purchaseData.purchaseTime.toDate();
+                            } else if (purchaseData.purchaseTime instanceof Date) {
+                                purchaseTime = purchaseData.purchaseTime;
+                            } else {
+                                purchaseTime = new Date(purchaseData.purchaseTime);
+                            }
+                        } else if (purchaseData.createdAt) {
+                            if (purchaseData.createdAt.toDate) {
+                                purchaseTime = purchaseData.createdAt.toDate();
+                            } else if (purchaseData.createdAt instanceof Date) {
+                                purchaseTime = purchaseData.createdAt;
+                            } else {
+                                purchaseTime = new Date(purchaseData.createdAt);
+                            }
+                        }
+
+                        if (purchaseTime && purchaseTime >= startDate && purchaseTime <= endDate) {
+                            subscriptionCount++;
+                            // 구독 가격 (월간 5,900원, 연간 49,560원)
+                            const isYearly = products.includes('premium_yearly');
+                            totalAmount += isYearly ? 49560 : 5900;
+                            console.log('구독 구매 발견:', {
+                                uid: usersSnapshot.docs[userIndex].id,
+                                purchaseTime,
+                                isYearly,
+                                products
+                            });
                         }
                     }
-                }
+                });
             });
+
+            console.log('구독 집계 결과:', { subscriptionCount, subscriptionAmount: totalAmount });
 
             // 2. 포인트 충전 조회
             const promises = [];
@@ -515,12 +577,23 @@ function AdminDashboard({ user }) {
                     if (createdAt && createdAt >= startDate && createdAt <= endDate) {
                         // amount가 양수인 경우만 매출로 계산
                         if (data.amount && data.amount > 0) {
-                            totalAmount += data.amount;
+                            // 실제 결제 금액 계산 (포인트 수로 패키지 가격 매핑)
+                            const actualPrice = getPointPackagePrice(data.amount);
+                            console.log('포인트 충전 발견:', {
+                                amount: data.amount,
+                                actualPrice,
+                                createdAt,
+                                desc: data.desc
+                            });
+                            totalAmount += actualPrice;
                             pointCount++;
                         }
                     }
                 });
             });
+
+            console.log('포인트 충전 집계 결과:', { pointCount, pointAmount: totalAmount - (subscriptionCount > 0 ? (subscriptionCount * 9900) : 0) });
+            console.log('최종 매출 집계:', { totalAmount, subscriptionCount, pointCount });
 
             return { amount: totalAmount, subscriptionCount, pointCount };
         } catch (err) {
@@ -791,131 +864,169 @@ function AdminDashboard({ user }) {
                         {/* 매출 vs 비용 그래프 */}
                         <ChartCard theme={theme}>
                             <ChartTitle theme={theme}>매출(💙) vs 비용(🩷) 추이</ChartTitle>
-                            <Line
-                                data={{
-                                    labels: trendData.labels,
-                                    datasets: [
-                                        {
-                                            label: '💙 매출',
-                                            data: trendData.revenue.map(val => val / 100), // 백원 단위로 변환
-                                            borderColor: '#3498f3',
-                                            backgroundColor: 'rgba(52, 152, 243, 0.1)',
-                                            tension: 0.4,
-                                            fill: false,
-                                            pointStyle: false
+                            <ChartWrapper>
+                                <Line
+                                    data={{
+                                        labels: trendData.labels,
+                                        datasets: [
+                                            {
+                                                label: '💙 매출',
+                                                data: trendData.revenue.map(val => val / 100), // 백원 단위로 변환
+                                                borderColor: '#3498f3',
+                                                backgroundColor: 'rgba(52, 152, 243, 0.1)',
+                                                tension: 0.4,
+                                                fill: false,
+                                                pointStyle: false
+                                            },
+                                            {
+                                                label: '🩷 비용',
+                                                data: trendData.cost.map(val => val / 100), // 백원 단위로 변환
+                                                borderColor: '#ff69b4',
+                                                backgroundColor: 'rgba(255, 105, 180, 0.1)',
+                                                tension: 0.4,
+                                                fill: false,
+                                                pointStyle: false
+                                            }
+                                        ]
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        layout: {
+                                            padding: {
+                                                top: 5,
+                                                bottom: 5,
+                                                left: 0,
+                                                right: 5
+                                            }
                                         },
-                                        {
-                                            label: '🩷 비용',
-                                            data: trendData.cost.map(val => val / 100), // 백원 단위로 변환
-                                            borderColor: '#ff69b4',
-                                            backgroundColor: 'rgba(255, 105, 180, 0.1)',
-                                            tension: 0.4,
-                                            fill: false,
-                                            pointStyle: false
-                                        }
-                                    ]
-                                }}
-                                options={{
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        title: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            callbacks: {
-                                                label: function (context) {
-                                                    const value = context.parsed.y;
-                                                    return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(value * 100));
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: false
+                                            },
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function (context) {
+                                                        const value = context.parsed.y;
+                                                        return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(value * 100));
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            ticks: {
-                                                stepSize: 2
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: {
+                                                    stepSize: 2,
+                                                    padding: 0
+                                                },
+                                                grid: {
+                                                    drawBorder: false
+                                                }
+                                            },
+                                            x: {
+                                                title: {
+                                                    display: false
+                                                },
+                                                ticks: {
+                                                    padding: 0
+                                                },
+                                                grid: {
+                                                    drawBorder: false
+                                                }
                                             }
                                         },
-                                        x: {
-                                            title: {
-                                                display: true,
-                                                text: '날짜'
+                                        elements: {
+                                            point: {
+                                                radius: 0
                                             }
                                         }
-                                    },
-                                    elements: {
-                                        point: {
-                                            radius: 0
-                                        }
-                                    }
-                                }}
-                            />
+                                    }}
+                                />
+                            </ChartWrapper>
                         </ChartCard>
 
                         {/* 일기 작성 vs 소설 생성 그래프 */}
                         <ChartCard theme={theme}>
                             <ChartTitle theme={theme}>일기작성(💚) vs 소설생성(💜)</ChartTitle>
-                            <Line
-                                data={{
-                                    labels: trendData.labels,
-                                    datasets: [
-                                        {
-                                            label: '💜 일기 작성',
-                                            data: trendData.diaries,
-                                            borderColor: '#27ae60',
-                                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                                            tension: 0.4,
-                                            fill: false,
-                                            pointStyle: false
-                                        },
-                                        {
-                                            label: '💚 소설 생성',
-                                            data: trendData.novels,
-                                            borderColor: '#9b59b6',
-                                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                                            tension: 0.4,
-                                            fill: false,
-                                            pointStyle: false
-                                        }
-                                    ]
-                                }}
-                                options={{
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        title: {
-                                            display: false
-                                        }
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            ticks: {
-                                                stepSize: 1
+                            <ChartWrapper>
+                                <Line
+                                    data={{
+                                        labels: trendData.labels,
+                                        datasets: [
+                                            {
+                                                label: '💜 일기 작성',
+                                                data: trendData.diaries,
+                                                borderColor: '#27ae60',
+                                                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                                                tension: 0.4,
+                                                fill: false,
+                                                pointStyle: false
+                                            },
+                                            {
+                                                label: '💚 소설 생성',
+                                                data: trendData.novels,
+                                                borderColor: '#9b59b6',
+                                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                                tension: 0.4,
+                                                fill: false,
+                                                pointStyle: false
+                                            }
+                                        ]
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        layout: {
+                                            padding: {
+                                                top: 5,
+                                                bottom: 5,
+                                                left: 0,
+                                                right: 5
                                             }
                                         },
-                                        x: {
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
                                             title: {
-                                                display: true,
-                                                text: '날짜'
+                                                display: false
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: {
+                                                    stepSize: 1,
+                                                    padding: 0
+                                                },
+                                                grid: {
+                                                    drawBorder: false
+                                                }
+                                            },
+                                            x: {
+                                                title: {
+                                                    display: false
+                                                },
+                                                ticks: {
+                                                    padding: 0
+                                                },
+                                                grid: {
+                                                    drawBorder: false
+                                                }
+                                            }
+                                        },
+                                        elements: {
+                                            point: {
+                                                radius: 0
                                             }
                                         }
-                                    },
-                                    elements: {
-                                        point: {
-                                            radius: 0
-                                        }
-                                    }
-                                }}
-                            />
+                                    }}
+                                />
+                            </ChartWrapper>
                         </ChartCard>
                     </ChartContainer>
                 </SectionContent>
