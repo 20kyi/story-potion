@@ -2254,93 +2254,117 @@ function WriteDiary({ user }) {
 
                     // 당일에 작성한 일기인 경우에만 포인트 지급
                     if (selectedDateStr === todayStr) {
-                        let earnPoint = await getPointPolicy('diary_write_earn', 10);
-                        // 프리미엄 회원은 일기 작성 포인트 2배
-                        if (isPremium) {
-                            earnPoint = earnPoint * 2;
-                        }
-                        await updateDoc(doc(db, "users", user.uid), {
-                            point: increment(earnPoint)
+                        // 중복 포인트 지급 방지: 오늘 이미 포인트를 받았는지 확인
+                        const pointHistoryRef = collection(db, "users", user.uid, "pointHistory");
+                        const pointHistoryQuery = query(
+                            pointHistoryRef,
+                            where('desc', '==', t('today_diary'))
+                        );
+                        const pointHistorySnapshot = await getDocs(pointHistoryQuery);
+
+                        let hasReceivedToday = false;
+                        pointHistorySnapshot.forEach(doc => {
+                            const history = doc.data();
+                            const historyDate = history.createdAt?.toDate?.() || new Date(history.createdAt);
+                            const historyDateStr = formatDateToString(historyDate);
+                            if (historyDateStr === todayStr) {
+                                hasReceivedToday = true;
+                            }
                         });
-                        await addDoc(collection(db, "users", user.uid, "pointHistory"), {
-                            type: 'earn',
-                            amount: earnPoint,
-                            desc: t('today_diary'),
-                            createdAt: new Date()
-                        });
-                        // 포인트 적립 알림 생성
-                        await createPointEarnNotification(user.uid, earnPoint, t('today_diary'));
 
-                        // 포인트 지급 정보 저장
-                        earnedPointValue = earnPoint;
-                        shouldShowAnimation = true;
+                        // 오늘 이미 포인트를 받지 않은 경우에만 지급
+                        if (!hasReceivedToday) {
+                            let earnPoint = await getPointPolicy('diary_write_earn', 10);
+                            // 프리미엄 회원은 일기 작성 포인트 2배
+                            if (isPremium) {
+                                earnPoint = earnPoint * 2;
+                            }
+                            await updateDoc(doc(db, "users", user.uid), {
+                                point: increment(earnPoint)
+                            });
+                            await addDoc(collection(db, "users", user.uid, "pointHistory"), {
+                                type: 'earn',
+                                amount: earnPoint,
+                                desc: t('today_diary'),
+                                createdAt: new Date()
+                            });
+                            // 포인트 적립 알림 생성
+                            await createPointEarnNotification(user.uid, earnPoint, t('today_diary'));
 
-                        // 포인트 지급 애니메이션 표시 (즉시 표시)
-                        setEarnedPoints(earnPoint);
-                        setShowPointAnimation(true);
-                        setShouldDelayNavigation(true);
+                            // 포인트 지급 정보 저장
+                            earnedPointValue = earnPoint;
+                            shouldShowAnimation = true;
 
-                        console.log('포인트 애니메이션 표시:', earnPoint);
+                            // 포인트 지급 애니메이션 표시 (즉시 표시)
+                            setEarnedPoints(earnPoint);
+                            setShowPointAnimation(true);
+                            setShouldDelayNavigation(true);
 
-                        // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
-                        const bonusResult = await checkWeeklyBonus(user.uid, today);
-                        
-                        // 보너스가 지급되었으면 보너스 포인트 애니메이션을 순차적으로 표시
-                        if (bonusResult && bonusResult.granted) {
-                            bonusGranted = true;
-                            // 일기 작성 포인트 애니메이션이 끝난 후 보너스 애니메이션 표시
-                            setTimeout(() => {
-                                setShowPointAnimation(false);
-                                setBonusPoints(bonusResult.amount);
-                                setShowBonusAnimation(true);
-                                
-                                // 보너스 애니메이션이 끝난 후 이미지 업로드 및 페이지 이동
-                                setTimeout(async () => {
-                                    setShowBonusAnimation(false);
-                                    
-                                    // 이미지 업로드 진행
-                                    const existingUrlCount = (diary.imageUrls || []).length;
-                                    const existingUrls = diary.imageUrls || [];
+                            console.log('포인트 애니메이션 표시:', earnPoint);
 
-                                    // 새 파일 업로드
-                                    let uploadedUrls = [];
-                                    if (imageFiles.length > 0) {
-                                        const uploadPromises = imageFiles.map((file, fileIndex) => {
-                                            const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
-                                            return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-                                        });
-                                        uploadedUrls = await Promise.all(uploadPromises);
-                                    }
+                            // 일주일 연속 일기 작성 보너스 체크 (당일 작성인 경우에만)
+                            const bonusResult = await checkWeeklyBonus(user.uid, today);
 
-                                    // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
-                                    const finalImageUrlsResult = [];
-                                    for (let i = 0; i < imagePreview.length; i++) {
-                                        const preview = imagePreview[i];
-                                        if (preview.startsWith('blob:')) {
-                                            const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
-                                            const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
-                                            if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
-                                                finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
-                                            }
-                                        } else {
-                                            finalImageUrlsResult.push(preview);
+                            // 보너스가 지급되었으면 보너스 포인트 애니메이션을 순차적으로 표시
+                            if (bonusResult && bonusResult.granted) {
+                                bonusGranted = true;
+                                // 일기 작성 포인트 애니메이션이 끝난 후 보너스 애니메이션 표시
+                                setTimeout(() => {
+                                    setShowPointAnimation(false);
+                                    setBonusPoints(bonusResult.amount);
+                                    setShowBonusAnimation(true);
+
+                                    // 보너스 애니메이션이 끝난 후 이미지 업로드 및 페이지 이동
+                                    setTimeout(async () => {
+                                        setShowBonusAnimation(false);
+
+                                        // 이미지 업로드 진행
+                                        const existingUrlCount = (diary.imageUrls || []).length;
+                                        const existingUrls = diary.imageUrls || [];
+
+                                        // 새 파일 업로드
+                                        let uploadedUrls = [];
+                                        if (imageFiles.length > 0) {
+                                            const uploadPromises = imageFiles.map((file, fileIndex) => {
+                                                const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
+                                                return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                                            });
+                                            uploadedUrls = await Promise.all(uploadPromises);
                                         }
-                                    }
 
-                                    // 이미지 URL 업데이트
-                                    const imageUpdateData = {
-                                        imageUrls: finalImageUrlsResult,
-                                        updatedAt: new Date(),
-                                    };
-                                    if (finalImageUrlsResult.length >= 4) {
-                                        imageUpdateData.imageLimitExtended = true;
-                                    }
-                                    await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
+                                        // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+                                        const finalImageUrlsResult = [];
+                                        for (let i = 0; i < imagePreview.length; i++) {
+                                            const preview = imagePreview[i];
+                                            if (preview.startsWith('blob:')) {
+                                                const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                                                const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+                                                if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                                                    finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                                                }
+                                            } else {
+                                                finalImageUrlsResult.push(preview);
+                                            }
+                                        }
 
-                                    setShouldDelayNavigation(false);
-                                    navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                                        // 이미지 URL 업데이트
+                                        const imageUpdateData = {
+                                            imageUrls: finalImageUrlsResult,
+                                            updatedAt: new Date(),
+                                        };
+                                        if (finalImageUrlsResult.length >= 4) {
+                                            imageUpdateData.imageLimitExtended = true;
+                                        }
+                                        await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
+
+                                        setShouldDelayNavigation(false);
+                                        navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                                    }, 2000);
                                 }, 2000);
-                            }, 2000);
+                            }
+                        } else {
+                            // 이미 오늘 포인트를 받은 경우 알림 표시
+                            toast.showToast('오늘의 일기 포인트를 이미 받았습니다.', 'info');
                         }
                     } else {
                         // 과거 날짜에 작성한 경우 안내 메시지
