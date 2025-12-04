@@ -1481,8 +1481,9 @@ function App() {
 
 const GlobalStyle = createGlobalStyle`
     /* 시스템 폰트 크기 설정의 영향을 받지 않도록 설정 */
+    /* html의 font-size를 사용자가 선택한 값으로 동적 설정하여 전체 앱의 폰트 크기를 비율적으로 조절 */
     html {
-        font-size: 16px !important;
+        font-size: ${props => props.fontSize || '16'}px !important;
         -webkit-text-size-adjust: 100% !important;
         -moz-text-size-adjust: 100% !important;
         -ms-text-size-adjust: 100% !important;
@@ -1490,7 +1491,7 @@ const GlobalStyle = createGlobalStyle`
     }
     
     body {
-        font-size: 16px !important;
+        font-size: ${props => props.fontSize || '16'}px !important;
         -webkit-text-size-adjust: 100% !important;
         -moz-text-size-adjust: 100% !important;
         -ms-text-size-adjust: 100% !important;
@@ -1510,8 +1511,9 @@ const GlobalStyle = createGlobalStyle`
         text-size-adjust: 100% !important;
     }
     
-    /* Header와 Navigation은 제외 - 각 요소에 이미 !important로 명시적 폰트 크기가 설정되어 있어 자동으로 override됨 */
-    /* LogoText: 28px, TitleText: 20px, Nickname: 18px, NavText: 12px 등이 이미 !important로 설정되어 있음 */
+    /* Header와 Navigation의 폰트 크기도 html font-size에 비례하여 조절됨 */
+    /* LogoText: 28px (기준 16px일 때) -> 12px 선택 시 21px, 20px 선택 시 35px */
+    /* TitleText: 20px (기준 16px일 때) -> 12px 선택 시 15px, 20px 선택 시 25px */
 `;
 
 function ThemeConsumerWrapper({ children }) {

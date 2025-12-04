@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import Header from '../../components/Header';
 import Navigation from '../../components/Navigation';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,107 @@ import pushNotificationManager from '../../utils/pushNotification';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 
+const FontSizeSlider = styled.input`
+    flex: 1;
+    margin: 0 12px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: ${({ $actualTheme }) => {
+        if ($actualTheme === 'dark') return 'rgba(255, 255, 255, 0.2)';
+        if ($actualTheme === 'glass') return 'rgba(255, 255, 255, 0.3)';
+        if ($actualTheme === 'diary') return 'rgba(139, 111, 71, 0.2)';
+        return 'rgba(0, 0, 0, 0.1)';
+    }};
+    outline: none;
+    
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: ${({ $actualTheme }) => {
+        if ($actualTheme === 'dark') return '#cb6565';
+        if ($actualTheme === 'glass') return 'rgba(255, 255, 255, 0.2)';
+        if ($actualTheme === 'diary') return '#8B6F47';
+        return '#cb6565';
+    }};
+        backdrop-filter: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return 'blur(10px)';
+        return 'none';
+    }};
+        -webkit-backdrop-filter: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return 'blur(10px)';
+        return 'none';
+    }};
+        border: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return '2px solid rgba(255, 255, 255, 0.8)';
+        return 'none';
+    }};
+        box-shadow: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+        return 'none';
+    }};
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            transform: scale(1.1);
+        }
+    }
+    
+    &::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: ${({ $actualTheme }) => {
+        if ($actualTheme === 'dark') return '#cb6565';
+        if ($actualTheme === 'glass') return 'rgba(255, 255, 255, 0.2)';
+        if ($actualTheme === 'diary') return '#8B6F47';
+        return '#cb6565';
+    }};
+        backdrop-filter: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return 'blur(10px)';
+        return 'none';
+    }};
+        -webkit-backdrop-filter: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return 'blur(10px)';
+        return 'none';
+    }};
+        border: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return '2px solid rgba(255, 255, 255, 0.8)';
+        return 'none';
+    }};
+        box-shadow: ${({ $actualTheme }) => {
+        if ($actualTheme === 'glass') return '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+        return 'none';
+    }};
+        cursor: pointer;
+    }
+`;
+
+const FontSizeValue = styled.span`
+    min-width: 40px;
+    text-align: right;
+    font-size: 14px;
+    color: ${({ $actualTheme }) => {
+        if ($actualTheme === 'dark') return '#e8e8e8';
+        if ($actualTheme === 'glass') return '#000000';
+        if ($actualTheme === 'diary') return '#8B6F47';
+        return '#333';
+    }};
+    font-weight: 500;
+`;
+
+const FontSizeContainer = styled.div`
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 200px;
+    margin-left: auto;
+`;
 
 function Settings() {
     const navigate = useNavigate();
@@ -35,14 +137,19 @@ function Settings() {
         { label: t('font_sagak'), value: 'Sagak-sagak, sans-serif' },
     ];
 
-    // 언어에 따라 폰트 크기 옵션 생성
-    const FONT_SIZE_OPTIONS = [
-        { label: t('font_size_small'), value: '12' },
-        { label: t('font_size_smaller'), value: '14' },
-        { label: t('font_size_default'), value: '16' },
-        { label: t('font_size_larger'), value: '18' },
-        { label: t('font_size_large'), value: '20' },
-    ];
+    // 폰트 크기 슬라이더 설정 (5단계)
+    const FONT_SIZE_MIN = 12;
+    const FONT_SIZE_MAX = 20;
+    const FONT_SIZE_STEP = 2; // 12, 14, 16, 18, 20 (5단계)
+
+    // 현재 폰트 크기를 숫자로 변환
+    const currentFontSize = parseInt(fontSize) || 16;
+
+    // 폰트 크기 변경 핸들러
+    const handleFontSizeChange = (e) => {
+        const newSize = e.target.value;
+        setFontSize(newSize.toString());
+    };
 
 
 
@@ -156,15 +263,20 @@ function Settings() {
                     {/* 폰트 크기 선택 */}
                     <li className="settings-item" style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 18 }}>
                         <span>{t('font_size')}</span>
-                        <CustomDropdown
-                            value={fontSize}
-                            onChange={setFontSize}
-                            options={FONT_SIZE_OPTIONS}
-                            width="160px"
-                            padding="6px 12px"
-                            fontSize="14px"
-                            borderRadius="8px"
-                        />
+                        <FontSizeContainer>
+                            <FontSizeSlider
+                                type="range"
+                                min={FONT_SIZE_MIN}
+                                max={FONT_SIZE_MAX}
+                                step={FONT_SIZE_STEP}
+                                value={currentFontSize}
+                                onChange={handleFontSizeChange}
+                                $actualTheme={actualTheme}
+                            />
+                            <FontSizeValue $actualTheme={actualTheme}>
+                                {currentFontSize}px
+                            </FontSizeValue>
+                        </FontSizeContainer>
                     </li>
 
 

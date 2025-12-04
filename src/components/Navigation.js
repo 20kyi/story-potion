@@ -43,7 +43,7 @@ const NavButton = styled.button`
 `;
 
 const NavText = styled.span`
-  font-size: 12px !important;
+  font-size: 0.75rem !important; /* 12px 기준 16px일 때, html font-size에 비례하여 조절 */
   color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
     if ($isGlassTheme) {
       return active ? 'rgb(80, 80, 80)' : 'rgba(255, 255, 255, 0.8)';

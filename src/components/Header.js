@@ -136,7 +136,7 @@ const NotificationBadge = styled.div`
 `;
 
 const LogoText = styled.span`
-  font-size: 28px !important;
+  font-size: 1.75rem !important; /* 28px 기준 16px일 때, html font-size에 비례하여 조절 */
   font-weight: 700;
   letter-spacing: 0.02em;
   color: ${({ theme, $isDiaryTheme, $isGlassTheme }) => {
@@ -160,7 +160,7 @@ const CenterSection = styled.div`
 `;
 
 const TitleText = styled.span`
-  font-size: 20px !important;
+  font-size: 1.25rem !important; /* 20px 기준 16px일 때, html font-size에 비례하여 조절 */
   font-weight: 700;
   line-height: 1;
   display: flex;
