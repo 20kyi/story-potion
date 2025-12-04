@@ -45,7 +45,7 @@ import {
 } from '../../utils/cleanupDeletedUsers';
 import { requireAdmin, isMainAdmin, isAdmin } from '../../utils/adminAuth';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit as fsLimit, limit, doc, deleteDoc, addDoc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // FCM 실패 원인 코드를 읽기 쉬운 텍스트로 변환
@@ -596,6 +596,7 @@ function UserManagement({ user }) {
   const [searchField, setSearchField] = useState('displayName');
   const [searchOperator, setSearchOperator] = useState('==');
   const [searchValue, setSearchValue] = useState('');
+  const [simpleSearchTerm, setSimpleSearchTerm] = useState('');
   const [usersCollectionStats, setUsersCollectionStats] = useState(null);
   const [manualUserData, setManualUserData] = useState({
     uid: '',
@@ -845,6 +846,79 @@ function UserManagement({ user }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 간단한 사용자 검색 (이메일 또는 이름)
+  const handleSimpleSearch = async () => {
+    if (!simpleSearchTerm || simpleSearchTerm.trim().length < 2) {
+      toast.showToast('검색어를 2자 이상 입력해주세요.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    toast.showToast('사용자 검색 중...', 'info');
+
+    try {
+      const searchLower = simpleSearchTerm.toLowerCase().trim();
+      const usersRef = collection(db, 'users');
+
+      // 이름으로 검색
+      const nameQuery = query(
+        usersRef,
+        where('displayName', '>=', searchLower),
+        where('displayName', '<=', searchLower + '\uf8ff'),
+        limit(100)
+      );
+
+      // 이메일로 검색
+      const emailQuery = query(
+        usersRef,
+        where('email', '>=', searchLower),
+        where('email', '<=', searchLower + '\uf8ff'),
+        limit(100)
+      );
+
+      const [nameSnapshot, emailSnapshot] = await Promise.all([
+        getDocs(nameQuery),
+        getDocs(emailQuery)
+      ]);
+
+      const usersMap = new Map(); // 중복 제거를 위해 Map 사용
+
+      // 이름 검색 결과 처리
+      nameSnapshot.forEach(doc => {
+        const userData = { uid: doc.id, ...doc.data() };
+        usersMap.set(userData.uid, userData);
+      });
+
+      // 이메일 검색 결과 처리
+      emailSnapshot.forEach(doc => {
+        const userData = { uid: doc.id, ...doc.data() };
+        usersMap.set(userData.uid, userData);
+      });
+
+      const searchResults = Array.from(usersMap.values());
+      setUsers(searchResults);
+
+      // 페이지네이션 상태 초기화
+      setLastDoc(null);
+      setPageStack([]);
+
+      toast.showToast(`검색 완료: ${searchResults.length}명의 사용자를 찾았습니다.`, 'success');
+    } catch (error) {
+      console.error('사용자 검색 실패:', error);
+      toast.showToast('사용자 검색 실패: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 검색 초기화 (전체 목록 다시 로드)
+  const handleResetSearch = async () => {
+    setSimpleSearchTerm('');
+    setLastDoc(null);
+    setPageStack([]);
+    await loadUsersPage();
   };
 
   // 조건부 사용자 검색
@@ -1480,7 +1554,107 @@ function UserManagement({ user }) {
           <AccordionIcon theme={theme} isOpen={openSections.userList}>▼</AccordionIcon>
         </SectionTitle>
         <SectionContent isOpen={openSections.userList}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          {/* 검색 영역 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexWrap: 'wrap',
+            marginBottom: '15px',
+            padding: '10px',
+            background: theme.theme === 'dark' ? '#2c3e50' : '#f5f5f5',
+            borderRadius: '8px'
+          }}>
+            <div style={{ position: 'relative', flex: '1 1 auto', minWidth: '200px' }}>
+              <Input
+                theme={theme}
+                type="text"
+                placeholder="이름 또는 이메일로 검색..."
+                value={simpleSearchTerm}
+                onChange={(e) => setSimpleSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSimpleSearch();
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  paddingRight: simpleSearchTerm ? '80px' : '45px'
+                }}
+              />
+              {simpleSearchTerm && (
+                <button
+                  onClick={handleResetSearch}
+                  disabled={loading}
+                  style={{
+                    position: 'absolute',
+                    right: '45px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: loading
+                      ? (theme.theme === 'dark' ? '#555' : '#ccc')
+                      : (theme.theme === 'dark' ? '#bdc3c7' : '#666'),
+                    fontSize: '16px',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.target.style.backgroundColor = theme.theme === 'dark' ? '#34495e' : '#e0e0e0';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                  }}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+              <button
+                onClick={handleSimpleSearch}
+                disabled={loading || !simpleSearchTerm.trim()}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: loading || !simpleSearchTerm.trim() ? 'not-allowed' : 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: loading || !simpleSearchTerm.trim()
+                    ? (theme.theme === 'dark' ? '#555' : '#ccc')
+                    : (theme.theme === 'dark' ? '#bdc3c7' : '#666'),
+                  fontSize: '18px'
+                }}
+                title="검색"
+              >
+                🔍
+              </button>
+            </div>
+          </div>
+
+          {/* 목록개수, 정렬기준, 내림/오름차순 - 한 줄로 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexWrap: 'wrap',
+            marginBottom: '10px'
+          }}>
             <Select
               theme={theme}
               value={pageLimit}
@@ -1501,34 +1675,32 @@ function UserManagement({ user }) {
               <option value={50}>50개</option>
               <option value={100}>100개</option>
             </Select>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flex: '1 1 auto' }}>
-              <Select
-                theme={theme}
-                value={orderByField}
-                onChange={(e) => {
-                  handleSortFieldChange(e.target.value);
-                }}
-                style={{ flex: '1 1 auto', minWidth: '120px' }}
-              >
-                <option value="createdAt">가입일</option>
-                <option value="lastLoginAt">최근 접속일</option>
-                <option value="point">포인트</option>
-                <option value="displayName">이름</option>
-                <option value="premium">프리미엄</option>
-                <option value="status">상태</option>
-              </Select>
-              <Select
-                theme={theme}
-                value={orderDir}
-                onChange={(e) => {
-                  handleSortDirChange(e.target.value);
-                }}
-                style={{ flex: '1 1 auto', minWidth: '100px' }}
-              >
-                <option value="desc">내림차순</option>
-                <option value="asc">오름차순</option>
-              </Select>
-            </div>
+            <Select
+              theme={theme}
+              value={orderByField}
+              onChange={(e) => {
+                handleSortFieldChange(e.target.value);
+              }}
+              style={{ flex: '1 1 auto', minWidth: '120px' }}
+            >
+              <option value="createdAt">가입일</option>
+              <option value="lastLoginAt">최근 접속일</option>
+              <option value="point">포인트</option>
+              <option value="displayName">이름</option>
+              <option value="premium">프리미엄</option>
+              <option value="status">상태</option>
+            </Select>
+            <Select
+              theme={theme}
+              value={orderDir}
+              onChange={(e) => {
+                handleSortDirChange(e.target.value);
+              }}
+              style={{ flex: '1 1 auto', minWidth: '100px' }}
+            >
+              <option value="desc">내림차순</option>
+              <option value="asc">오름차순</option>
+            </Select>
           </div>
 
           {/* 데스크톱 테이블 */}
