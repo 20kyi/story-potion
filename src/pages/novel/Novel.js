@@ -48,6 +48,7 @@ const Novel = ({ user }) => {
     const [showCurrentWeekDiaryModal, setShowCurrentWeekDiaryModal] = useState(false);
     const [currentWeekDiaries, setCurrentWeekDiaries] = useState([]);
     const [currentWeekDiariesForProgress, setCurrentWeekDiariesForProgress] = useState([]);
+    const [genreStats, setGenreStats] = useState({});
     const progressSectionRef = useRef(null);
     const [weeklyViewMode, setWeeklyViewMode] = useState(() => {
         const saved = localStorage.getItem('novel_weekly_view_mode');
@@ -206,6 +207,35 @@ const Novel = ({ user }) => {
                 setNovelsMap(newNovelsMap);
                 // 최근 5개만 표시
                 setMyNovels(allMyNovels.slice(0, 5));
+                
+                // 장르별 통계 계산
+                const genreCounts = {
+                    '로맨스': 0,
+                    '추리': 0,
+                    '역사': 0,
+                    '동화': 0,
+                    '판타지': 0,
+                    '공포': 0
+                };
+                
+                allMyNovels.forEach(novel => {
+                    const genre = novel.genre;
+                    if (genre && genreCounts.hasOwnProperty(genre)) {
+                        genreCounts[genre]++;
+                    }
+                });
+                
+                const total = allMyNovels.length;
+                const genrePercentages = {};
+                Object.keys(genreCounts).forEach(genre => {
+                    genrePercentages[genre] = total > 0 ? (genreCounts[genre] / total) * 100 : 0;
+                });
+                
+                setGenreStats({
+                    counts: genreCounts,
+                    percentages: genrePercentages,
+                    total: total
+                });
             } catch (error) {
                 // 오류가 나도 UI는 계속 진행되도록 함
             }
@@ -409,6 +439,35 @@ const Novel = ({ user }) => {
                     setNovelsMap(newNovelsMap);
                     // 최근 5개만 표시
                     setMyNovels(allMyNovels.slice(0, 5));
+                    
+                    // 장르별 통계 계산
+                    const genreCounts = {
+                        '로맨스': 0,
+                        '추리': 0,
+                        '역사': 0,
+                        '동화': 0,
+                        '판타지': 0,
+                        '공포': 0
+                    };
+                    
+                    allMyNovels.forEach(novel => {
+                        const genre = novel.genre;
+                        if (genre && genreCounts.hasOwnProperty(genre)) {
+                            genreCounts[genre]++;
+                        }
+                    });
+                    
+                    const total = allMyNovels.length;
+                    const genrePercentages = {};
+                    Object.keys(genreCounts).forEach(genre => {
+                        genrePercentages[genre] = total > 0 ? (genreCounts[genre] / total) * 100 : 0;
+                    });
+                    
+                    setGenreStats({
+                        counts: genreCounts,
+                        percentages: genrePercentages,
+                        total: total
+                    });
                 } catch (error) {
                     // 오류가 나도 UI는 계속 진행되도록 함
                 }
@@ -1035,8 +1094,7 @@ const Novel = ({ user }) => {
             <NovelCTACard
                 isDiaryTheme={isDiaryTheme}
                 isGlassTheme={isGlassTheme}
-                currentWeekDiariesForProgress={currentWeekDiariesForProgress}
-                onClick={openCurrentWeekDiaryModal}
+                genreStats={genreStats}
             />
 
             {/* 내 소설 섹션 */}

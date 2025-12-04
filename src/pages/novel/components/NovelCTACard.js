@@ -3,41 +3,26 @@ import { useTheme } from '../../../ThemeContext';
 import { useTranslation } from '../../../LanguageContext';
 import './NovelCTACard.css';
 
-const NovelCTACard = ({ isDiaryTheme, isGlassTheme, currentWeekDiariesForProgress, onClick }) => {
+const NovelCTACard = ({ isDiaryTheme, isGlassTheme, genreStats }) => {
     const theme = useTheme();
     const { t } = useTranslation();
 
-    const getCurrentWeekProgress = () => {
-        // createdAt이 해당 날짜인 일기만 카운트
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const formatDateToString = (date) => {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        };
-
-        const todayStr = formatDateToString(today);
-        const validDiaries = currentWeekDiariesForProgress.filter(diary => {
-            const createdAt = diary.createdAt?.toDate?.() || new Date(diary.createdAt);
-            const createdAtStr = formatDateToString(createdAt);
-            return createdAtStr === diary.date;
-        });
-
-        const count = validDiaries.length;
-        const total = 7;
-        const progress = Math.min(100, (count / total) * 100);
-        return { progress, count, total };
+    // 장르별 색상 정의
+    const genreColors = {
+        '로맨스': { bg: 'rgba(255, 182, 193, 0.3)', border: 'rgba(255, 182, 193, 0.6)', text: '#FF69B4' },
+        '추리': { bg: 'rgba(128, 128, 128, 0.3)', border: 'rgba(128, 128, 128, 0.6)', text: '#808080' },
+        '역사': { bg: 'rgba(184, 134, 11, 0.3)', border: 'rgba(184, 134, 11, 0.6)', text: '#B8860B' },
+        '동화': { bg: 'rgba(255, 218, 185, 0.3)', border: 'rgba(255, 218, 185, 0.6)', text: '#FFB347' },
+        '판타지': { bg: 'rgba(138, 43, 226, 0.3)', border: 'rgba(138, 43, 226, 0.6)', text: '#8A2BE2' },
+        '공포': { bg: 'rgba(139, 0, 0, 0.3)', border: 'rgba(139, 0, 0, 0.6)', text: '#8B0000' }
     };
 
-    const { progress, count, total } = getCurrentWeekProgress();
+    const genres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
+    const stats = genreStats || { counts: {}, percentages: {}, total: 0 };
 
     return (
         <div
             className={`novel-cta-card ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
-            onClick={onClick}
             style={{
                 ...(isDiaryTheme ? {
                     background: '#fffef9',
@@ -60,21 +45,40 @@ const NovelCTACard = ({ isDiaryTheme, isGlassTheme, currentWeekDiariesForProgres
             >
                 <div className="novel-cta-progress">
                     <div className={`novel-cta-progress-text ${isGlassTheme ? 'glass-theme' : ''}`}>
-                        <span>{t('novel_this_week_progress') || '이번주 일기 진행도'}</span>
-                        <span>{count}/{total}</span>
+                        <span>장르별 소설</span>
+                        {stats.total > 0 && <span>총 {stats.total}개</span>}
                     </div>
-                    <div className={`novel-cta-progress-bar ${isGlassTheme ? 'glass-theme' : ''}`}>
-                        <div
-                            className={`novel-cta-progress-fill ${isGlassTheme ? 'glass-theme' : ''} ${count === total && isGlassTheme ? 'completed' : ''}`}
-                            style={{
-                                width: `${progress}%`,
-                                ...(count === total && isGlassTheme ? {
-                                    background: '#d1c4e9',
-                                    border: '1px solid rgba(209, 196, 233, 0.6)'
-                                } : {})
-                            }}
-                        />
-                    </div>
+                    {stats.total > 0 ? (
+                        <div className="novel-cta-genre-chart">
+                            {genres.map(genre => {
+                                const percentage = stats.percentages[genre] || 0;
+                                const count = stats.counts[genre] || 0;
+                                const color = genreColors[genre];
+                                return (
+                                    <div key={genre} className="novel-cta-genre-item">
+                                        <div className="novel-cta-genre-label">
+                                            <span>{genre}</span>
+                                            <span>{count}개 ({percentage.toFixed(0)}%)</span>
+                                        </div>
+                                        <div className={`novel-cta-progress-bar ${isGlassTheme ? 'glass-theme' : ''}`}>
+                                            <div
+                                                className={`novel-cta-progress-fill ${isGlassTheme ? 'glass-theme' : ''}`}
+                                                style={{
+                                                    width: `${percentage}%`,
+                                                    background: color.bg,
+                                                    border: `1px solid ${color.border}`
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="novel-cta-empty-message">
+                            아직 생성한 소설이 없습니다
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

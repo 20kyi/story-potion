@@ -165,7 +165,51 @@ body.dark .novel-cta-card:not(.diary-theme):hover {
 .novel-cta-progress {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+}
+
+.novel-cta-genre-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.novel-cta-genre-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.novel-cta-genre-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #666;
+}
+
+body.dark .novel-cta-genre-label:not(.glass-theme) {
+    color: #999;
+}
+
+.novel-cta-genre-label.glass-theme {
+    color: #000000;
+}
+
+.novel-cta-empty-message {
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+    padding: 20px 0;
+}
+
+body.dark .novel-cta-empty-message:not(.glass-theme) {
+    color: #666;
+}
+
+.novel-cta-empty-message.glass-theme {
+    color: #000000;
+    opacity: 0.6;
 }
 
 .novel-cta-progress-text {
