@@ -16,7 +16,6 @@ import LibrarySection from './components/LibrarySection';
 import WeeklyCard from './components/WeeklyCard';
 import DatePickerModal from './components/modals/DatePickerModal';
 import NovelListModal from './components/modals/NovelListModal';
-import CreateOptionModal from './components/modals/CreateOptionModal';
 import CurrentWeekDiaryModal from './components/modals/CurrentWeekDiaryModal';
 import './Novel.css';
 
@@ -42,7 +41,6 @@ const Novel = ({ user }) => {
     const [selectedWeekNovels, setSelectedWeekNovels] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
     const [ownedPotions, setOwnedPotions] = useState({});
-    const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const [selectedWeekForCreate, setSelectedWeekForCreate] = useState(null);
     const [myNovels, setMyNovels] = useState([]);
     const [purchasedNovels, setPurchasedNovels] = useState([]);
@@ -304,7 +302,7 @@ const Novel = ({ user }) => {
                 }
             } catch (error) {
                 // 오류가 나도 UI는 계속 진행되도록 함
-                console.error('프리미엄 무료권 상태 조회 실패:', error);
+                console.error('프리미엄 상태 조회 실패:', error);
             }
 
             // 5. Calculate progress
@@ -460,7 +458,7 @@ const Novel = ({ user }) => {
                     }
                 } catch (error) {
                     // 오류가 나도 UI는 계속 진행되도록 함
-                    console.error('프리미엄 무료권 상태 조회 실패:', error);
+                    console.error('프리미엄 상태 조회 실패:', error);
                 }
 
                 // 4. Fetch purchased novels
@@ -733,7 +731,7 @@ const Novel = ({ user }) => {
 
         if (hasPotions) {
             // 포션이 있으면 바로 소설 생성 페이지로 이동
-            handleCreateNovel(week, false);
+            handleCreateNovel(week);
         } else {
             // 포션이 없으면 포션 상점으로 안내
             toast.showToast('포션이 필요합니다. 포션 상점에서 구매해주세요.', 'error');
@@ -1197,19 +1195,6 @@ const Novel = ({ user }) => {
                 )}
             </div>
 
-            {/* 소설 생성 옵션 모달 */}
-            <CreateOptionModal
-                isOpen={showCreateOptionModal && !!selectedWeekForCreate}
-                onClose={() => setShowCreateOptionModal(false)}
-                onSelectFree={() => {
-                    handleCreateNovel(selectedWeekForCreate, true);
-                    setShowCreateOptionModal(false);
-                }}
-                onSelectPotion={() => {
-                    handleCreateNovel(selectedWeekForCreate, false);
-                    setShowCreateOptionModal(false);
-                }}
-            />
 
             {/* 소설 목록 모달 */}
             <NovelListModal

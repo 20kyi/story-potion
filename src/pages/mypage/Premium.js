@@ -363,23 +363,6 @@ function Premium({ user }) {
                 if (userDoc.exists()) {
                   const data = userDoc.data();
                   if (data.isMonthlyPremium && data.premiumType === 'monthly') {
-                    // 가입 직후 무료권이 6개가 아니면 강제로 6개로 설정
-                    if (data.premiumFreeNovelCount !== 6) {
-                      console.log('[구독] 가입 직후 무료권 개수 확인 및 수정', {
-                        currentCount: data.premiumFreeNovelCount,
-                        expectedCount: 6
-                      });
-                      const now = new Date();
-                      const nextFreeNovelChargeDate = new Date(now);
-                      nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
-                      nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-
-                      await updateDoc(doc(db, 'users', user.uid), {
-                        premiumFreeNovelCount: 6,
-                        premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
-                        updatedAt: Timestamp.now()
-                      });
-                    }
                     syncSuccess = true;
                     console.log('[구독] 월간 프리미엄 가입 완료 - Google Play Store 상태 확인됨');
                   }
@@ -477,23 +460,6 @@ function Premium({ user }) {
                 if (userDoc.exists()) {
                   const data = userDoc.data();
                   if (data.isYearlyPremium && data.premiumType === 'yearly') {
-                    // 가입 직후 무료권이 6개가 아니면 강제로 6개로 설정
-                    if (data.premiumFreeNovelCount !== 6) {
-                      console.log('[구독] 가입 직후 무료권 개수 확인 및 수정', {
-                        currentCount: data.premiumFreeNovelCount,
-                        expectedCount: 6
-                      });
-                      const now = new Date();
-                      const nextFreeNovelChargeDate = new Date(now);
-                      nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
-                      nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-
-                      await updateDoc(doc(db, 'users', user.uid), {
-                        premiumFreeNovelCount: 6,
-                        premiumFreeNovelNextChargeDate: Timestamp.fromDate(nextFreeNovelChargeDate),
-                        updatedAt: Timestamp.now()
-                      });
-                    }
                     syncSuccess = true;
                     console.log('[구독] 연간 프리미엄 가입 완료 - Google Play Store 상태 확인됨');
                   }
@@ -834,7 +800,7 @@ function Premium({ user }) {
       <ConfirmModal
         open={modal.open && modal.type === 'cancel'}
         title="구독 해지 안내"
-        description="구독을 해지하시면 프리미엄 무료 소설 생성권이 모두 사라집니다. 정말 해지하시겠습니까?"
+        description="구독을 해지하시면 프리미엄 혜택이 모두 사라집니다. 정말 해지하시겠습니까?"
         onCancel={() => setModal({ open: false, type: null })}
         onConfirm={doCancelPremium}
         confirmText="해지하기"

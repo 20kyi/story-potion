@@ -550,18 +550,10 @@ class InAppPurchaseService {
           // Firebase 상태와 다르면 업데이트
           if (!userData.isMonthlyPremium || userData.premiumType !== 'monthly') {
           const now = new Date();
-          // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
-          const nextFreeNovelChargeDate = new Date(now);
-          nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
-          nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-
           updates.isMonthlyPremium = true;
           updates.isYearlyPremium = false;
           updates.premiumType = 'monthly';
           updates.premiumStartDate = Timestamp.fromDate(now);
-          // 프리미엄 회원이 되는 순간 6장 지급 (항상 지급)
-          updates.premiumFreeNovelCount = 6;
-          updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
           }
         }
       } else if (userData.isMonthlyPremium) {
@@ -581,7 +573,6 @@ class InAppPurchaseService {
           updates.premiumType = null;
           updates.premiumStartDate = null;
           updates.premiumRenewalDate = null;
-          updates.premiumFreeNovelCount = 0;
           updates.premiumCancelled = false;
         }
       }
@@ -609,18 +600,10 @@ class InAppPurchaseService {
           // Firebase 상태와 다르면 업데이트
           if (!userData.isYearlyPremium || userData.premiumType !== 'yearly') {
             const now = new Date();
-            // 다음 충전 시점 계산 (프리미엄 시작일로부터 한 달 후)
-            const nextFreeNovelChargeDate = new Date(now);
-            nextFreeNovelChargeDate.setMonth(nextFreeNovelChargeDate.getMonth() + 1);
-            nextFreeNovelChargeDate.setHours(0, 0, 0, 0);
-
             updates.isMonthlyPremium = false;
             updates.isYearlyPremium = true;
             updates.premiumType = 'yearly';
             updates.premiumStartDate = Timestamp.fromDate(now);
-            // 프리미엄 회원이 되는 순간 6장 지급 (항상 지급)
-            updates.premiumFreeNovelCount = 6;
-            updates.premiumFreeNovelNextChargeDate = Timestamp.fromDate(nextFreeNovelChargeDate);
           }
         }
       } else if (userData.isYearlyPremium) {
@@ -640,7 +623,6 @@ class InAppPurchaseService {
           updates.premiumType = null;
           updates.premiumStartDate = null;
           updates.premiumRenewalDate = null;
-          updates.premiumFreeNovelCount = 0;
           updates.premiumCancelled = false;
         }
       }

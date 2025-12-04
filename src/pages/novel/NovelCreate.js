@@ -228,93 +228,6 @@ const StyledPotionImg = styled(motion.img)`
 
 const PotionLabel = styled.div``;
 
-const CreateOptionModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-`;
-
-const CreateOptionContent = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' ? '#2A2A2A' : '#FFFFFF'};
-  border-radius: 20px;
-  padding: 24px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  opacity: 1;
-  position: relative;
-`;
-
-const CreateOptionTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
-  margin: 0 0 16px 0;
-  text-align: center;
-`;
-
-const CreateOptionButton = styled.button`
-  width: 100%;
-  padding: 16px;
-  margin-bottom: 4px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: ${({ isFree, theme }) =>
-        isFree
-            ? 'linear-gradient(135deg, rgba(228, 163, 13, 0.2) 0%, rgba(255, 226, 148, 0.2) 100%)'
-            : 'linear-gradient(135deg, rgba(228, 98, 98, 0.15) 0%, rgba(203, 101, 101, 0.15) 100%)'};
-  color: ${({ isFree }) => isFree ? '#e4a30d' : '#e46262'};
-  border: ${({ isFree }) => isFree ? '2px solid #e4a30d' : '2px solid #e46262'};
-  box-shadow: none;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ isFree }) =>
-        isFree
-            ? '0 4px 12px rgba(0,0,0,0.15)'
-            : '0 4px 12px rgba(228, 98, 98, 0.2)'};
-  }
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const CreateOptionDesc = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.subText || '#666'};
-  margin-bottom: 8px;
-  text-align: center;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: ${({ theme }) => theme.text};
-  cursor: pointer;
-  padding: 4px 8px;
-`;
 
 
 function NovelCreate({ user }) {
@@ -325,12 +238,12 @@ function NovelCreate({ user }) {
     const { language } = useLanguage();
     const themeContext = useThemeContext();
     const theme = themeContext.actualTheme === 'dark' ? darkTheme : lightTheme;
-    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted, useFree } = location.state || {};
+    const { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres = [], returnPath, novelDeleted } = location.state || {};
     // 이전 페이지 경로 저장 (없으면 기본값으로 '/novel')
     const previousPath = returnPath || '/novel';
 
     console.log('=== NovelCreate 컴포넌트 마운트 ===', new Date().toISOString());
-    console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, useFree });
+    console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle });
     const [content, setContent] = useState('');
     const [weekDiaries, setWeekDiaries] = useState([]); // 내부 fetch용으로 복구
     const [isLoading, setIsLoading] = useState(false);
@@ -344,7 +257,6 @@ function NovelCreate({ user }) {
     const [currentPoints, setCurrentPoints] = useState(0);
     const [ownedPotions, setOwnedPotions] = useState({});
     const [isPremium, setIsPremium] = useState(false);
-    const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
     const selectedGenre = selectedPotion !== null ? potionImages[selectedPotion].genre : null;
 
     // 포션 선택 시 앱 전체 배경색 변경 (body 배경색)
@@ -899,39 +811,34 @@ function NovelCreate({ user }) {
     return (
         <Container>
             <Header user={user} />
-            {/* 무료 생성 모드일 때는 프리미엄 카드 표시, 아닐 때는 포션 정보 표시 */}
+            {/* 포션 정보 표시 */}
             {!isNovelGenerated && (
-                <>
-                    {/* 포션 정보 표시 */}
-                    {useFree !== true && (
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '16px',
-                            padding: '12px 20px',
-                            background: 'linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(193, 154, 107, 0.25) 100%)',
-                            borderRadius: '25px',
-                            margin: '0 auto 20px auto',
-                            width: 'fit-content',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            color: '#5C3E2A',
-                            border: '1px solid rgba(193, 154, 107, 0.4)',
-                            boxShadow: '0 2px 8px rgba(193, 154, 107, 0.15)'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <PointIcon width={16} height={16} color="#8B6F47" />
-                                {currentPoints.toLocaleString()}p
-                            </div>
-                            <div style={{ width: '1px', height: '20px', background: '#8B6F47', opacity: 0.3 }}></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ fontSize: '12px' }}>보유 포션 </span>
-                                {Object.values(ownedPotions).reduce((sum, count) => sum + (count || 0), 0)}개
-                            </div>
-                        </div>
-                    )}
-                </>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(193, 154, 107, 0.25) 100%)',
+                    borderRadius: '25px',
+                    margin: '0 auto 20px auto',
+                    width: 'fit-content',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#5C3E2A',
+                    border: '1px solid rgba(193, 154, 107, 0.4)',
+                    boxShadow: '0 2px 8px rgba(193, 154, 107, 0.15)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <PointIcon width={16} height={16} color="#8B6F47" />
+                        {currentPoints.toLocaleString()}p
+                    </div>
+                    <div style={{ width: '1px', height: '20px', background: '#8B6F47', opacity: 0.3 }}></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '12px' }}>보유 포션 </span>
+                        {Object.values(ownedPotions).reduce((sum, count) => sum + (count || 0), 0)}개
+                    </div>
+                </div>
             )}
             {isLoading ? (
                 <div
@@ -1097,10 +1004,7 @@ function NovelCreate({ user }) {
                                                             potion.genre === '동화' ? 'fairytale' :
                                                                 potion.genre === '판타지' ? 'fantasy' : null;
 
-                                            // 무료 생성 모드는 useFree가 true일 때만 (프리미엄 무료권 기능 제거)
-                                            // useFree가 false로 명시된 경우는 무료 모드를 사용하지 않음
-                                            const isFreeMode = useFree === true;
-                                            if (!isFreeMode && (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0)) {
+                                            if (!potionId || !ownedPotions[potionId] || ownedPotions[potionId] <= 0) {
                                                 return null;
                                             }
 
@@ -1228,7 +1132,7 @@ function NovelCreate({ user }) {
                                     </div>
                                 </div>
 
-                                {/* 포션이 없을 때 안내 (useFree가 false이거나 무료권이 없고 포션이 없을 때) */}
+                                {/* 포션이 없을 때 안내 */}
                                 {Object.values(ownedPotions).every(count => !count || count <= 0) && (
                                     <div style={{
                                         textAlign: 'center',
@@ -1283,26 +1187,6 @@ function NovelCreate({ user }) {
                                             opacity: selectedPotion === null || isLoading ? 0.5 : 1,
                                         }}
                                         onClick={selectedPotion !== null && !isLoading ? () => {
-                                            // useFree가 false로 명시된 경우 포션만 사용
-                                            if (useFree === false) {
-                                                const hasPotions = selectedPotion !== null && (() => {
-                                                    const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
-                                                        potionImages[selectedPotion].genre === '역사' ? 'historical' :
-                                                            potionImages[selectedPotion].genre === '추리' ? 'mystery' :
-                                                                potionImages[selectedPotion].genre === '공포' ? 'horror' :
-                                                                    potionImages[selectedPotion].genre === '동화' ? 'fairytale' :
-                                                                        potionImages[selectedPotion].genre === '판타지' ? 'fantasy' : null;
-                                                    return potionId && ownedPotions[potionId] && ownedPotions[potionId] > 0;
-                                                })();
-                                                if (hasPotions) {
-                                                    handleGenerateNovel(false);
-                                                } else {
-                                                    toast.showToast(t('novel_generate_need_potion'), 'error');
-                                                }
-                                                return;
-                                            }
-
-                                            // 포션 사용만 가능 (프리미엄 무료권 기능 제거)
                                             const hasPotions = selectedPotion !== null && (() => {
                                                 const potionId = potionImages[selectedPotion].genre === '로맨스' ? 'romance' :
                                                     potionImages[selectedPotion].genre === '역사' ? 'historical' :
@@ -1314,10 +1198,8 @@ function NovelCreate({ user }) {
                                             })();
 
                                             if (hasPotions) {
-                                                // 포션이 있으면 포션 사용
-                                                handleGenerateNovel(false);
+                                                handleGenerateNovel();
                                             } else {
-                                                // 포션이 없으면 에러 메시지
                                                 toast.showToast(t('novel_generate_need_potion'), 'error');
                                             }
                                         } : undefined}
@@ -1431,41 +1313,6 @@ function NovelCreate({ user }) {
                 </div>
             )}
 
-            {/* 소설 생성 방법 선택 모달 */}
-            {showCreateOptionModal && (
-                <CreateOptionModal onClick={() => setShowCreateOptionModal(false)}>
-                    <CreateOptionContent onClick={(e) => e.stopPropagation()} theme={theme}>
-                        <CloseButton onClick={() => setShowCreateOptionModal(false)} theme={theme}>×</CloseButton>
-                        <CreateOptionTitle theme={theme}>소설 생성 방법 선택</CreateOptionTitle>
-                        <CreateOptionButton
-                            isFree={true}
-                            onClick={() => {
-                                handleGenerateNovel(true);
-                                setShowCreateOptionModal(false);
-                            }}
-                            theme={theme}
-                        >
-                            🪄 프리미엄 무료권 사용
-                        </CreateOptionButton>
-                        <CreateOptionDesc theme={theme} style={{ marginBottom: '12px' }}>
-                            무료로 소설을 생성합니다 (매월 자동 충전)
-                        </CreateOptionDesc>
-                        <CreateOptionButton
-                            isFree={false}
-                            onClick={() => {
-                                handleGenerateNovel(false);
-                                setShowCreateOptionModal(false);
-                            }}
-                            theme={theme}
-                        >
-                            🧪 포션 사용
-                        </CreateOptionButton>
-                        <CreateOptionDesc theme={theme}>
-                            보유한 포션 1개를 사용합니다
-                        </CreateOptionDesc>
-                    </CreateOptionContent>
-                </CreateOptionModal>
-            )}
 
             <Navigation />
         </Container>
