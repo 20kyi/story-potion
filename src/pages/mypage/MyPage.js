@@ -1291,20 +1291,9 @@ function MyPage({ user }) {
                     color: theme.premiumUpgradeCardDesc || 'rgba(139, 105, 20, 0.85)',
                     lineHeight: '1.4',
                     marginBottom: '12px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    gap: '4px'
+                    textAlign: 'center'
                   }}>
-                    <span>일기 사진 4개 업로드</span>
-                    <span>·</span>
-                    <span>일기 전용 스티커</span>
-                    <span>·</span>
-                    <span>6가지 장르 모두 보관 가능</span>
-                    <span>·</span>
-                    <span>AI 일기 생성</span>
-                    <span>·</span>
-                    <span>다이어리 테마 & 포션 테마</span>
+                    6가지 모든 장르 보관 · AI 일기 생성 · 전용 테마 · 스티커 · 포인트 2배 · 사진 업로드 UP 등 다양한 혜택을 만나보세요!
                   </div>
                   <div style={{
                     background: theme.premiumUpgradeCardButtonBg || 'white',
@@ -1315,7 +1304,7 @@ function MyPage({ user }) {
                     fontSize: '15px',
                     display: 'inline-block',
                   }}>
-                    가입하기
+                    구독하기
                   </div>
                 </PremiumUpgradeContent>
               </PremiumUpgradeCard>
