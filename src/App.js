@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 // import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
 import { auth, db, onFcmMessage } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -1469,7 +1469,7 @@ function App() {
     return (
         <Router>
             <ThemeProvider>
-                <ThemeConsumerWrapper>
+                <ThemeConsumerWrapper user={user}>
                     <ToastProvider>
                         <AppLayout user={user} isLoading={isLoading} />
                     </ToastProvider>
@@ -1516,8 +1516,8 @@ const GlobalStyle = createGlobalStyle`
     /* TitleText: 20px (기준 16px일 때) -> 12px 선택 시 15px, 20px 선택 시 25px */
 `;
 
-function ThemeConsumerWrapper({ children }) {
-    const { actualTheme, fontFamily, fontSize } = useTheme();
+function ThemeConsumerWrapper({ children, user }) {
+    const { actualTheme, fontFamily, fontSize, theme, setThemeMode } = useTheme();
     // 다이어리 테마일 때 body 배경색 직접 설정
     useEffect(() => {
         if (actualTheme === 'diary') {
@@ -1552,6 +1552,46 @@ function ThemeConsumerWrapper({ children }) {
             document.body.style.animation = '';
         }
     }, [actualTheme]);
+
+    // 프리미엄 해지 시 테마 자동 변경
+    useEffect(() => {
+        if (user?.uid) {
+            const userRef = doc(db, 'users', user.uid);
+            let prevIsPremium = null;
+            
+            const unsubscribe = onSnapshot(userRef, (userDoc) => {
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    const currentIsPremium = data.isMonthlyPremium || data.isYearlyPremium || false;
+                    
+                    // 프리미엄이 해지되었고, 이전에는 프리미엄이었던 경우
+                    if (prevIsPremium === true && !currentIsPremium) {
+                        // 현재 테마가 프리미엄 전용 테마인 경우 라이트 테마로 변경
+                        if (theme === 'diary' || theme === 'glass') {
+                            setThemeMode('light');
+                            console.log('프리미엄 구독이 해지되어 테마를 라이트 모드로 변경했습니다.');
+                        }
+                    }
+                    
+                    prevIsPremium = currentIsPremium;
+                } else {
+                    // 문서가 없는 경우
+                    if (prevIsPremium === true) {
+                        // 이전에 프리미엄이었는데 문서가 없어진 경우
+                        if (theme === 'diary' || theme === 'glass') {
+                            setThemeMode('light');
+                            console.log('프리미엄 구독이 해지되어 테마를 라이트 모드로 변경했습니다.');
+                        }
+                    }
+                    prevIsPremium = false;
+                }
+            }, (error) => {
+                console.error('프리미엄 상태 조회 실패:', error);
+            });
+
+            return () => unsubscribe();
+        }
+    }, [user, theme, setThemeMode]);
 
     // 테마 선택 로직
     const getTheme = () => {
