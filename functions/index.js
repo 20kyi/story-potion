@@ -735,6 +735,230 @@ ${enhancedContent}`;
     }
 });
 
+// 소설 생성 알림 스케줄러 함수
+exports.sendNovelCreationNotifications = functions.pubsub.schedule('every 1 minutes').onRun(async (context) => {
+    const utcNow = DateTime.now().setZone('UTC');
+    const kstNow = DateTime.now().setZone('Asia/Seoul');
+    console.log('소설 생성 알림 함수 실행 시작');
+    console.log('UTC 시간:', utcNow.toFormat('yyyy-MM-dd HH:mm:ss'));
+    console.log('한국 시간:', kstNow.toFormat('yyyy-MM-dd HH:mm:ss'));
+
+    try {
+        // 소설 생성 알림이 활성화된 사용자들 조회
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('novelCreationEnabled', '==', true)
+            .get();
+
+        if (usersSnapshot.empty) {
+            console.log('소설 생성 알림 활성화된 사용자 없음');
+            return null;
+        }
+
+        console.log(`소설 생성 알림 활성화된 사용자: ${usersSnapshot.size}명`);
+
+        const messages = [];
+
+        // 각 사용자에 대해 비동기로 처리
+        const userPromises = usersSnapshot.docs.map(async (userDoc) => {
+            const user = userDoc.data();
+            const userId = userDoc.id;
+            const token = user.fcmToken;
+            const notificationTime = '21:00'; // 소설 생성 알림은 21시 고정
+
+            if (!token) {
+                console.log(`사용자 ${userId}: FCM 토큰 없음`);
+                return null;
+            }
+
+            const timezone = user.reminderTimezone || 'Asia/Seoul';
+            const now = DateTime.now().setZone(timezone);
+            const notificationHourMinute = DateTime.fromFormat(notificationTime, 'HH:mm', { zone: timezone });
+
+            // 현재 시간과 알림 시간 비교 (21시 고정)
+            const currentTimeInMinutes = now.hour * 60 + now.minute;
+            const notificationTimeInMinutes = notificationHourMinute.hour * 60 + notificationHourMinute.minute;
+
+            // 정확히 같은 분인지 확인
+            if (currentTimeInMinutes !== notificationTimeInMinutes) {
+                return null;
+            }
+
+            // 소설 생성 가능 여부 확인
+            try {
+                const nowDate = new Date();
+                const year = nowDate.getFullYear();
+                const month = nowDate.getMonth() + 1;
+
+                // 이번 달과 지난 달 확인
+                const monthsToCheck = [
+                    { year, month },
+                    { year: month === 1 ? year - 1 : year, month: month === 1 ? 12 : month - 1 }
+                ];
+
+                for (const { year: checkYear, month: checkMonth } of monthsToCheck) {
+                    // 일기 조회
+                    const startDate = `${checkYear}-${String(checkMonth).padStart(2, '0')}-01`;
+                    const endDate = `${checkYear}-${String(checkMonth).padStart(2, '0')}-31`;
+                    const diariesSnapshot = await admin.firestore()
+                        .collection('diaries')
+                        .where('userId', '==', userId)
+                        .where('date', '>=', startDate)
+                        .where('date', '<=', endDate)
+                        .get();
+
+                    const diaries = diariesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // 소설 조회
+                    const novelsSnapshot = await admin.firestore()
+                        .collection('novels')
+                        .where('userId', '==', userId)
+                        .where('year', '==', checkYear)
+                        .where('month', '==', checkMonth)
+                        .where('deleted', '!=', true)
+                        .get();
+
+                    const novels = novelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // 주차 계산 (월요일 기준)
+                    const firstDay = new Date(checkYear, checkMonth - 1, 1);
+                    const lastDay = new Date(checkYear, checkMonth, 0);
+                    const weeks = [];
+                    let currentWeekStart = new Date(firstDay);
+                    const dayOfWeek = firstDay.getDay();
+                    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    currentWeekStart.setDate(firstDay.getDate() - daysToMonday);
+
+                    let weekNum = 1;
+                    while (currentWeekStart <= lastDay) {
+                        const weekEnd = new Date(currentWeekStart);
+                        weekEnd.setDate(currentWeekStart.getDate() + 6);
+                        if (currentWeekStart <= lastDay) {
+                            weeks.push({
+                                weekNum,
+                                start: new Date(currentWeekStart),
+                                end: weekEnd > lastDay ? new Date(lastDay) : new Date(weekEnd)
+                            });
+                            weekNum++;
+                        }
+                        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+                    }
+
+                    // 주차별 진행률 계산
+                    const formatDate = (date) => {
+                        const d = new Date(date);
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${y}-${m}-${day}`;
+                    };
+
+                    // 소설 생성 가능한 주 찾기
+                    for (const week of weeks) {
+                        const weekStartStr = formatDate(week.start);
+                        const weekEndStr = formatDate(week.end);
+                        const weekDiaries = diaries.filter(diary => {
+                            return diary.date >= weekStartStr && diary.date <= weekEndStr;
+                        });
+
+                        const weekDateCount = 7;
+                        const weekProgress = Math.min(100, (weekDiaries.length / weekDateCount) * 100);
+
+                        // 진행률이 100%이고, 아직 소설이 생성되지 않은 주 찾기
+                        if (weekProgress >= 100) {
+                            const weekKey = `${checkYear}년 ${checkMonth}월 ${week.weekNum}주차`;
+                            const novelsForWeek = novels.filter(novel => {
+                                const novelWeek = novel.week || '';
+                                return novelWeek.includes(`${checkMonth}월 ${week.weekNum}주차`);
+                            });
+
+                            // 모든 장르의 소설이 생성되지 않은 경우
+                            const allGenres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
+                            const existingGenres = novelsForWeek.map(n => n.genre).filter(Boolean);
+                            const hasAvailableGenre = !allGenres.every(genre => existingGenres.includes(genre));
+
+                            if (hasAvailableGenre) {
+                                console.log(`✅ 사용자 ${userId}: 소설 생성 알림 추가 (${weekKey})`);
+                                return {
+                                    token,
+                                    notification: {
+                                        title: '소설을 생성할 수 있어요! 📖',
+                                        body: `${weekKey}에 소설을 만들어보세요!`,
+                                    },
+                                    data: {
+                                        type: 'novel_creation',
+                                        userId: userId,
+                                        week: weekKey,
+                                        weekNum: week.weekNum.toString(),
+                                        year: checkYear.toString(),
+                                        month: checkMonth.toString()
+                                    }
+                                };
+                            }
+                        }
+                    }
+                }
+
+                return null;
+            } catch (error) {
+                console.error(`사용자 ${userId} 소설 생성 가능 여부 확인 실패:`, error);
+                return null;
+            }
+        });
+
+        // 모든 사용자 확인 완료 대기
+        const results = await Promise.all(userPromises);
+
+        // null이 아닌 결과만 messages에 추가
+        results.forEach(result => {
+            if (result) {
+                messages.push(result);
+            }
+        });
+
+        if (messages.length === 0) {
+            console.log('소설 생성 알림 대상자 없음');
+            return null;
+        }
+
+        console.log(`${messages.length}명에게 소설 생성 알림 발송 시도`);
+
+        // FCM으로 알림 전송
+        let successCount = 0;
+        let failureCount = 0;
+
+        if (messages.length === 1) {
+            try {
+                const message = messages[0];
+                const result = await admin.messaging().send(message);
+                successCount = 1;
+                console.log('1명에게 소설 생성 알림 발송 완료, 메시지 ID:', result);
+            } catch (error) {
+                failureCount = 1;
+                console.error('소설 생성 알림 발송 실패:', error);
+            }
+        } else {
+            try {
+                const response = await admin.messaging().sendAll(messages);
+                successCount = response.successCount;
+                failureCount = response.failureCount;
+                console.log(`${response.successCount}명에게 소설 생성 알림 발송 완료`);
+
+                if (response.failureCount > 0) {
+                    console.warn(`${response.failureCount}명에게 소설 생성 알림 발송 실패`);
+                }
+            } catch (error) {
+                failureCount = messages.length;
+                console.error('소설 생성 알림 발송 실패:', error);
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('소설 생성 알림 함수 실행 오류:', error);
+        return null;
+    }
+});
+
 // 일기 작성 리마인더 예약 푸시 함수
 exports.sendDiaryReminders = functions.pubsub.schedule('every 1 minutes').onRun(async (context) => {
     const utcNow = DateTime.now().setZone('UTC');
