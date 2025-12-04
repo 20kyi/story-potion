@@ -18,7 +18,7 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -160,21 +160,21 @@ const PackageCard = styled.div`
 
   &:hover {
     transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'translateY(-2px)';
-      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
-      return 'translateY(-2px)';
-    }};
+    if ($isGlassTheme) return 'translateY(-2px)';
+    if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+    return 'translateY(-2px)';
+  }};
     box-shadow: ${({ theme, $isDiaryTheme, $isGlassTheme, selected }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) {
-        return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
-      }
-      return selected
-        ? '0 6px 16px rgba(52, 152, 243, 0.4)'
-        : theme.mode === 'dark'
-          ? '0 4px 12px rgba(0,0,0,0.25)'
-          : '0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) {
+      return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    }
+    return selected
+      ? '0 6px 16px rgba(52, 152, 243, 0.4)'
+      : theme.mode === 'dark'
+        ? '0 4px 12px rgba(0,0,0,0.25)'
+        : '0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
+  }};
   }
   
   ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
@@ -258,20 +258,20 @@ const PurchaseButton = styled.button`
 
   &:hover:not(:disabled) {
     background: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
-      return '#d45555';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+    return '#d45555';
+  }};
     transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'translateY(-2px)';
-      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
-      return 'translateY(-2px)';
-    }};
+    if ($isGlassTheme) return 'translateY(-2px)';
+    if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+    return 'translateY(-2px)';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(228, 98, 98, 0.4)';
-      return '0 6px 16px rgba(228, 98, 98, 0.4)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(228, 98, 98, 0.4)';
+    return '0 6px 16px rgba(228, 98, 98, 0.4)';
+  }};
   }
 
   &:disabled {
@@ -420,22 +420,22 @@ const TabButton = styled.button`
 
   &:hover {
     background: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
-      if (active) {
-        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
-        if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
-        return '#d45555';
-      }
-      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.1)';
-      return 'rgba(228, 98, 98, 0.1)';
-    }};
+    if (active) {
+      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.4)';
+      if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.9)';
+      return '#d45555';
+    }
+    if ($isDiaryTheme) return 'rgba(228, 98, 98, 0.1)';
+    return 'rgba(228, 98, 98, 0.1)';
+  }};
     color: ${({ active, theme, $isDiaryTheme, $isGlassTheme }) => {
-      if (active) {
-        if ($isGlassTheme) return '#000000';
-        return 'white';
-      }
-      if ($isDiaryTheme) return '#8B6F47';
-      return theme.text;
-    }};
+    if (active) {
+      if ($isGlassTheme) return '#000000';
+      return 'white';
+    }
+    if ($isDiaryTheme) return '#8B6F47';
+    return theme.text;
+  }};
   }
 `;
 

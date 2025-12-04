@@ -29,7 +29,7 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -111,15 +111,15 @@ const EditInput = styled.input`
   box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   &:focus {
     border-color: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(228, 98, 98, 0.8)';
-      if ($isDiaryTheme) return '#8B6F47';
-      return '#e46262';
-    }};
+    if ($isGlassTheme) return 'rgba(228, 98, 98, 0.8)';
+    if ($isDiaryTheme) return '#8B6F47';
+    return '#e46262';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 0 0 2px rgba(139, 111, 71, 0.1)';
-      return '0 0 0 2px rgba(228,98,98,0.08)';
-    }};
+    if ($isGlassTheme) return '0 0 0 3px rgba(228, 98, 98, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 0 0 2px rgba(139, 111, 71, 0.1)';
+    return '0 0 0 2px rgba(228,98,98,0.08)';
+  }};
   }
 `;
 
@@ -179,10 +179,10 @@ const EditCancelTextButton = styled.button`
   box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   &:hover {
     background: ${({ $isGlassTheme, $isDiaryTheme, theme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
-      return theme.mode === 'dark' ? '#333' : '#fdfdfd';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+    return theme.mode === 'dark' ? '#333' : '#fdfdfd';
+  }};
     box-shadow: ${({ $isGlassTheme }) => $isGlassTheme ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'};
   }
 `;
@@ -222,15 +222,15 @@ const EditSaveButton = styled.button`
   }
   &:hover:not(:disabled) {
     background: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
-      return 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
+    return 'linear-gradient(135deg, #ff8a8a 0%, #e46262 100%)';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
-      return '0 4px 15px rgba(228, 98, 98, 0.4)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
+    return '0 4px 15px rgba(228, 98, 98, 0.4)';
+  }};
   }
 `;
 
@@ -720,7 +720,7 @@ function ProfileEdit({ user }) {
         )}
 
         <EditButtonRow>
-          <EditCancelTextButton 
+          <EditCancelTextButton
             $isGlassTheme={isGlassTheme}
             $isDiaryTheme={isDiaryTheme}
             theme={theme}

@@ -25,7 +25,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -294,20 +294,20 @@ function AppInfo({ user }) {
   const handleVersionClick = () => {
     const now = Date.now();
     const CLICK_RESET_TIME = 2000; // 2초 내에 클릭하지 않으면 카운트 리셋
-    
+
     // 2초 이내에 클릭한 경우
     if (now - lastClickTime < CLICK_RESET_TIME) {
       const newCount = versionClickCount + 1;
       setVersionClickCount(newCount);
       setLastClickTime(now);
-      
+
       // 10번 클릭했을 때 디버그 모드 토글
       if (newCount === 10) {
         const currentDebugMode = localStorage.getItem('debugModeEnabled') === 'true';
         const newDebugMode = !currentDebugMode;
         localStorage.setItem('debugModeEnabled', String(newDebugMode));
         setVersionClickCount(0);
-        
+
         // 커스텀 이벤트 발생시켜 DebugPanel에 알림 (페이지 새로고침 없이 즉시 업데이트)
         window.dispatchEvent(new CustomEvent('debugModeChanged', { detail: { enabled: newDebugMode } }));
       }
@@ -586,14 +586,14 @@ function AppInfo({ user }) {
             console.log('Firebase Auth 계정 삭제 완료 (클라이언트)');
           } catch (clientError) {
             console.warn('클라이언트에서 Auth 계정 삭제 실패, Firebase Functions로 시도:', clientError);
-            
+
             // 클라이언트 삭제 실패 시 Firebase Functions를 통해 삭제 시도
             // (소셜 로그인 계정의 경우 서버 측에서만 삭제 가능할 수 있음)
             try {
               const functions = getFunctions();
               const deleteAuthAccounts = httpsCallable(functions, 'deleteAuthAccounts');
               const result = await deleteAuthAccounts({ userIds: [currentUser.uid] });
-              
+
               if (result.data.success > 0) {
                 console.log('Firebase Auth 계정 삭제 완료 (Functions)');
               } else {
@@ -699,7 +699,7 @@ function AppInfo({ user }) {
 
           <InfoItem theme={theme}>
             <InfoLabel theme={theme}>{t('app_version')}</InfoLabel>
-            <InfoValue 
+            <InfoValue
               theme={theme}
               onClick={handleVersionClick}
               style={{ cursor: 'pointer', userSelect: 'none' }}

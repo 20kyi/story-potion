@@ -12,7 +12,7 @@ const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -25,7 +25,7 @@ const MainContainer = styled.div`
 
 const SettingsContainer = styled.div`
   max-width: 600px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;

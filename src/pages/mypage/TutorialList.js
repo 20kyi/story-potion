@@ -13,7 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 const SettingsContainer = styled.div`
   max-width: 600px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -105,7 +105,7 @@ function TutorialList({ user }) {
     const theme = actualTheme === 'dark' ? darkTheme : lightTheme;
     const { t } = useTranslation();
     const [userCreatedAt, setUserCreatedAt] = useState(null);
-    
+
     // 사용자 가입일 가져오기
     useEffect(() => {
         if (user?.uid) {
@@ -123,10 +123,10 @@ function TutorialList({ user }) {
             fetchUserCreatedAt();
         }
     }, [user]);
-    
+
     const handleTutorialClick = (tutorialType) => {
         if (!userCreatedAt) return;
-        
+
         let tutorialNovel;
         if (tutorialType === 'app') {
             tutorialNovel = getAppTutorialNovel(userCreatedAt);
@@ -135,7 +135,7 @@ function TutorialList({ user }) {
         } else {
             return;
         }
-        
+
         navigate(`/novel/${createNovelUrl(tutorialNovel.year, tutorialNovel.month, tutorialNovel.weekNum, tutorialNovel.genre, tutorialNovel.id)}?userId=${tutorialNovel.userId}`, {
             state: { tutorialNovel, returnPath: '/my/tutorial' }
         });
@@ -150,8 +150,8 @@ function TutorialList({ user }) {
             <SettingsContainer theme={theme}>
                 <SettingsList>
                     {appTutorial && (
-                        <SettingsItem 
-                            theme={theme} 
+                        <SettingsItem
+                            theme={theme}
                             onClick={() => handleTutorialClick('app')}
                         >
                             <ItemContent>
@@ -169,10 +169,10 @@ function TutorialList({ user }) {
                             <ArrowIcon theme={theme}>›</ArrowIcon>
                         </SettingsItem>
                     )}
-                    
+
                     {novelTutorial && (
-                        <SettingsItem 
-                            theme={theme} 
+                        <SettingsItem
+                            theme={theme}
                             onClick={() => handleTutorialClick('novel')}
                         >
                             <ItemContent>

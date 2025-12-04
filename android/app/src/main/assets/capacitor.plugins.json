@@ -26,5 +26,13 @@
 	{
 		"pkg": "@capacitor/text-zoom",
 		"classpath": "com.capacitorjs.plugins.textzoom.TextZoomPlugin"
+	},
+	{
+		"pkg": "Billing",
+		"classpath": "com.storypotion.app.BillingPlugin"
+	},
+	{
+		"pkg": "Permissions",
+		"classpath": "com.storypotion.app.PermissionsPlugin"
 	}
 ]

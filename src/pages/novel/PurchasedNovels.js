@@ -19,7 +19,7 @@ const Container = styled.div`
   background-color: transparent;
   color: ${({ theme }) => theme.text};
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;

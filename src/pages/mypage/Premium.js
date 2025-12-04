@@ -17,7 +17,7 @@ const Container = styled.div`
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -112,15 +112,15 @@ const PremiumButton = styled.button`
   &:hover {
     transform: translateY(-2px);
     background: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
-      if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
-      return 'linear-gradient(135deg, #e46262, #cb6565)';
-    }};
+    if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+    if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.9)';
+    return 'linear-gradient(135deg, #e46262, #cb6565)';
+  }};
     box-shadow: ${({ $isGlassTheme, $isDiaryTheme }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
-      return '0 6px 16px rgba(228, 98, 98, 0.4)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(139, 111, 71, 0.4)';
+    return '0 6px 16px rgba(228, 98, 98, 0.4)';
+  }};
   }
 
   &:disabled {
@@ -159,7 +159,7 @@ const PremiumCard = styled.div`
 `;
 
 const YearlyPremiumCard = styled(PremiumCard)`
-  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme 
+  box-shadow: ${({ $isGlassTheme }) => $isGlassTheme
     ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(255,195,0,0.2)'
     : '0 4px 16px rgba(255,195,0,0.13)'};
   border: ${({ $isGlassTheme }) => $isGlassTheme ? '2px solid rgba(255, 195, 0, 0.8)' : '2.5px solid #FFC300'};
@@ -724,13 +724,13 @@ function Premium({ user }) {
             <PremiumButton
               $isGlassTheme={isGlassTheme}
               $isDiaryTheme={isDiaryTheme}
-              style={{ 
-                width: '100%', 
-                fontSize: 13, 
-                background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : (isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)'), 
-                color: isGlassTheme ? '#000000' : '#fff', 
-                fontWeight: 700, 
-                padding: '10px 0', 
+              style={{
+                width: '100%',
+                fontSize: 13,
+                background: isGlassTheme ? 'rgba(255, 255, 255, 0.2)' : (isDiaryTheme ? 'rgba(139, 111, 71, 0.8)' : 'linear-gradient(90deg, #FFC300 60%, #FF9800 100%)'),
+                color: isGlassTheme ? '#000000' : '#fff',
+                fontWeight: 700,
+                padding: '10px 0',
                 boxShadow: isGlassTheme ? '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(255,195,0,0.2)' : '0 4px 12px rgba(255,195,0,0.18)',
                 border: isGlassTheme ? '2px solid rgba(255, 195, 0, 0.8)' : 'none'
               }}

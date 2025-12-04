@@ -11,7 +11,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 const SettingsContainer = styled.div`
   max-width: 600px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;

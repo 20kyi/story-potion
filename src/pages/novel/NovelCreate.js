@@ -25,7 +25,7 @@ const Container = styled.div`
   padding: 20px;
   padding-top: 40px;
   padding-bottom: 100px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -1010,10 +1010,10 @@ function NovelCreate({ user }) {
 
                                             // 이미 저장된 장르는 비활성화 (일반/프리미엄 모두)
                                             const isDisabledForExisting = existingGenres && existingGenres.length > 0 && existingGenres.includes(potion.genre);
-                                            
+
                                             // 일반 회원이고 이미 다른 장르의 소설이 있는 경우 비활성화
                                             const isDisabledForNonPremium = !isPremium && existingGenres.length > 0 && !existingGenres.includes(potion.genre);
-                                            
+
                                             const isDisabled = isDisabledForExisting || isDisabledForNonPremium;
 
                                             // 맨 왼쪽 포션과 맨 오른쪽 포션 위치 조정

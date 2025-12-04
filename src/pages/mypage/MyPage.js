@@ -69,7 +69,7 @@ const MainContainer = styled.div`
   // min-height: 100vh;
   padding: 0 20px;
   // padding-top: 0;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -1391,7 +1391,7 @@ function MyPage({ user }) {
 
         {/* 관리자 버튼 - 관리자만 표시 */}
         {isAdmin(user) && (
-          <AdminButton onClick={() => navigate('/admin/users')}>
+          <AdminButton onClick={() => navigate('/admin')}>
             <AdminIcon color="#3498db" width={14} height={14} />
             {t('admin')}
           </AdminButton>

@@ -35,7 +35,7 @@ const Container = styled.div`
   min-height: 100vh;
   padding: 20px;
 //   padding-top: 56px; /* 헤더 높이만큼 여백 */
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;

@@ -20,7 +20,7 @@ const Container = styled.div`
   background-color: ${({ $isDiaryTheme }) => $isDiaryTheme ? '#faf8f3' : 'transparent'};
   color: ${({ theme, $isDiaryTheme }) => $isDiaryTheme ? '#5C4B37' : theme.text};
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 70px;
   margin-bottom: 80px;
   margin-left: auto;
   margin-right: auto;
@@ -135,15 +135,15 @@ const NovelItem = styled.div`
   transform: ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) ? 'rotate(-0.1deg)' : 'none'};
   &:hover {
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
-      if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
-      return '0 4px 16px rgba(0,0,0,0.10)';
-    }};
+    if ($isGlassTheme) return '0 6px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+    if ($isDiaryTheme) return '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+    return '0 4px 16px rgba(0,0,0,0.10)';
+  }};
     transform: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return 'translateY(-2px)';
-      if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
-      return 'translateY(-2px)';
-    }};
+    if ($isGlassTheme) return 'translateY(-2px)';
+    if ($isDiaryTheme) return 'rotate(-0.1deg) translateY(-2px)';
+    return 'translateY(-2px)';
+  }};
   }
   
   ${({ $isDiaryTheme, $isGlassTheme }) => ($isDiaryTheme && !$isGlassTheme) && `
@@ -336,367 +336,367 @@ const GenreSelect = styled.select`
   &:focus {
     border-color: #cb6565;
     box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
-      if ($isGlassTheme) return '0 0 0 3px rgba(203, 101, 101, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
-      if ($isDiaryTheme) return '0 0 0 2px rgba(203, 101, 101, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
-      return '0 0 0 2px rgba(203, 101, 101, 0.1)';
-    }};
+    if ($isGlassTheme) return '0 0 0 3px rgba(203, 101, 101, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)';
+    if ($isDiaryTheme) return '0 0 0 2px rgba(203, 101, 101, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05)';
+    return '0 0 0 2px rgba(203, 101, 101, 0.1)';
+  }};
   }
 `;
 
 function FriendNovelList({ user }) {
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const { actualTheme } = theme;
-    const isDiaryTheme = actualTheme === 'diary';
-    const isGlassTheme = actualTheme === 'glass';
-    const { language } = useLanguage();
-    const { t } = useTranslation();
-    const [searchParams] = useSearchParams();
-    const userId = searchParams.get('userId');
-    const [novels, setNovels] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [purchased, setPurchased] = useState({}); // { novelId: true }
-    const [loadingNovelId, setLoadingNovelId] = useState(null);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [pendingNovel, setPendingNovel] = useState(null);
-    const [friendInfo, setFriendInfo] = useState(null); // 친구 정보 상태 추가
-    const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
-    const [selectedGenre, setSelectedGenre] = useState('all'); // 장르 필터 상태
-    const [filteredNovels, setFilteredNovels] = useState([]); // 필터링된 소설 목록
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const { actualTheme } = theme;
+  const isDiaryTheme = actualTheme === 'diary';
+  const isGlassTheme = actualTheme === 'glass';
+  const { language } = useLanguage();
+  const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
+  const [novels, setNovels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [purchased, setPurchased] = useState({}); // { novelId: true }
+  const [loadingNovelId, setLoadingNovelId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingNovel, setPendingNovel] = useState(null);
+  const [friendInfo, setFriendInfo] = useState(null); // 친구 정보 상태 추가
+  const [alertModal, setAlertModal] = useState({ open: false, title: '', message: '' });
+  const [selectedGenre, setSelectedGenre] = useState('all'); // 장르 필터 상태
+  const [filteredNovels, setFilteredNovels] = useState([]); // 필터링된 소설 목록
 
-    useEffect(() => {
-        if (!userId) {
-            setNovels([]);
-            setFriendInfo(null);
-            setIsLoading(false);
-            return;
+  useEffect(() => {
+    if (!userId) {
+      setNovels([]);
+      setFriendInfo(null);
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    const fetchData = async () => {
+      try {
+        // 친구 정보 가져오기
+        const friendRef = doc(db, 'users', userId);
+        const friendSnap = await getDoc(friendRef);
+        if (friendSnap.exists()) {
+          setFriendInfo({ uid: friendSnap.id, ...friendSnap.data() });
         }
-        setIsLoading(true);
-        const fetchData = async () => {
-            try {
-                // 친구 정보 가져오기
-                const friendRef = doc(db, 'users', userId);
-                const friendSnap = await getDoc(friendRef);
-                if (friendSnap.exists()) {
-                    setFriendInfo({ uid: friendSnap.id, ...friendSnap.data() });
-                }
 
-                // 소설 목록 가져오기 (공개 소설만)
-                const novelsRef = collection(db, 'novels');
-                const q = query(
-                    novelsRef,
-                    where('userId', '==', userId),
-                    orderBy('createdAt', 'desc')
-                );
-                const querySnapshot = await getDocs(q);
-                // 클라이언트 측에서 비공개/삭제된 소설 필터링
-                const fetchedNovels = querySnapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(novel => novel.isPublic !== false && novel.deleted !== true); // 공개되고 삭제되지 않은 소설만
-                setNovels(fetchedNovels);
+        // 소설 목록 가져오기 (공개 소설만)
+        const novelsRef = collection(db, 'novels');
+        const q = query(
+          novelsRef,
+          where('userId', '==', userId),
+          orderBy('createdAt', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
+        // 클라이언트 측에서 비공개/삭제된 소설 필터링
+        const fetchedNovels = querySnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(novel => novel.isPublic !== false && novel.deleted !== true); // 공개되고 삭제되지 않은 소설만
+        setNovels(fetchedNovels);
 
-                // 구매 여부 확인
-                if (user) {
-                    const purchasedObj = {};
-                    for (const novel of fetchedNovels) {
-                        const viewedRef = doc(db, 'users', user.uid, 'viewedNovels', novel.id);
-                        const viewedSnap = await getDoc(viewedRef);
-                        if (viewedSnap.exists()) {
-                            purchasedObj[novel.id] = true;
-                        }
-                    }
-                    setPurchased(purchasedObj);
-                }
-            } catch (error) {
-                console.error('데이터 가져오기 실패:', error);
-                setNovels([]);
-                setFriendInfo(null);
-            } finally {
-                setIsLoading(false);
+        // 구매 여부 확인
+        if (user) {
+          const purchasedObj = {};
+          for (const novel of fetchedNovels) {
+            const viewedRef = doc(db, 'users', user.uid, 'viewedNovels', novel.id);
+            const viewedSnap = await getDoc(viewedRef);
+            if (viewedSnap.exists()) {
+              purchasedObj[novel.id] = true;
             }
-        };
-        fetchData();
-    }, [userId, user]);
-
-    // 장르별 필터링 로직
-    useEffect(() => {
-        if (!novels || novels.length === 0) {
-            setFilteredNovels([]);
-            return;
+          }
+          setPurchased(purchasedObj);
         }
-
-        if (selectedGenre === 'all') {
-            setFilteredNovels(novels);
-        } else {
-            const filtered = novels.filter(novel => novel.genre === selectedGenre);
-            setFilteredNovels(filtered);
-        }
-    }, [novels, selectedGenre]);
-
-    // 사용 가능한 장르 목록 가져오기 (지정된 순서대로)
-    const availableGenres = React.useMemo(() => {
-        const genreOrder = ['로맨스', '역사', '추리', '동화', '판타지', '공포'];
-        const genresInNovels = new Set(novels.map(novel => novel.genre).filter(Boolean));
-
-        // 지정된 순서대로 장르 정렬
-        const sortedGenres = genreOrder.filter(genre => genresInNovels.has(genre));
-
-        return ['all', ...sortedGenres];
-    }, [novels]);
-
-    const formatDate = (dateOrTimestamp) => {
-        if (!dateOrTimestamp) return '';
-        let dateObj;
-        if (typeof dateOrTimestamp === 'object' && dateOrTimestamp.toDate) {
-            dateObj = dateOrTimestamp.toDate();
-        } else {
-            dateObj = new Date(dateOrTimestamp);
-        }
-
-        if (language === 'en') {
-            return dateObj.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            });
-        }
-
-        return `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+      } catch (error) {
+        console.error('데이터 가져오기 실패:', error);
+        setNovels([]);
+        setFriendInfo(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchData();
+  }, [userId, user]);
 
-    const getDisplayGenre = (genre) => {
-        if (!genre) return '';
-        // genre가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
-        const genreKey = getGenreKey(genre) || genre;
-        const translationKey = `novel_genre_${genreKey}`;
-        const translated = t(translationKey);
-        // 번역 키가 그대로 반환되면 장르 값 그대로 사용
-        return translated !== translationKey ? translated : genre;
-    };
+  // 장르별 필터링 로직
+  useEffect(() => {
+    if (!novels || novels.length === 0) {
+      setFilteredNovels([]);
+      return;
+    }
 
-    // 구매 버튼 클릭 시 모달 오픈
-    const handlePurchaseClick = (novel) => {
-        setPendingNovel(novel);
-        setConfirmOpen(true);
-    };
-    // 실제 결제 로직
-    const handlePurchase = async (novel) => {
-        setConfirmOpen(false);
-        if (!user) {
-            setAlertModal({
-                open: true,
-                title: '',
-                message: t('friend_novel_login_required')
-            });
-            return;
+    if (selectedGenre === 'all') {
+      setFilteredNovels(novels);
+    } else {
+      const filtered = novels.filter(novel => novel.genre === selectedGenre);
+      setFilteredNovels(filtered);
+    }
+  }, [novels, selectedGenre]);
+
+  // 사용 가능한 장르 목록 가져오기 (지정된 순서대로)
+  const availableGenres = React.useMemo(() => {
+    const genreOrder = ['로맨스', '역사', '추리', '동화', '판타지', '공포'];
+    const genresInNovels = new Set(novels.map(novel => novel.genre).filter(Boolean));
+
+    // 지정된 순서대로 장르 정렬
+    const sortedGenres = genreOrder.filter(genre => genresInNovels.has(genre));
+
+    return ['all', ...sortedGenres];
+  }, [novels]);
+
+  const formatDate = (dateOrTimestamp) => {
+    if (!dateOrTimestamp) return '';
+    let dateObj;
+    if (typeof dateOrTimestamp === 'object' && dateOrTimestamp.toDate) {
+      dateObj = dateOrTimestamp.toDate();
+    } else {
+      dateObj = new Date(dateOrTimestamp);
+    }
+
+    if (language === 'en') {
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    }
+
+    return `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+  };
+
+  const getDisplayGenre = (genre) => {
+    if (!genre) return '';
+    // genre가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
+    const genreKey = getGenreKey(genre) || genre;
+    const translationKey = `novel_genre_${genreKey}`;
+    const translated = t(translationKey);
+    // 번역 키가 그대로 반환되면 장르 값 그대로 사용
+    return translated !== translationKey ? translated : genre;
+  };
+
+  // 구매 버튼 클릭 시 모달 오픈
+  const handlePurchaseClick = (novel) => {
+    setPendingNovel(novel);
+    setConfirmOpen(true);
+  };
+  // 실제 결제 로직
+  const handlePurchase = async (novel) => {
+    setConfirmOpen(false);
+    if (!user) {
+      setAlertModal({
+        open: true,
+        title: '',
+        message: t('friend_novel_login_required')
+      });
+      return;
+    }
+    setLoadingNovelId(novel.id);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, 'users', user.uid);
+        const ownerRef = doc(db, 'users', novel.userId);
+        const viewedRef = doc(db, 'users', user.uid, 'viewedNovels', novel.id);
+        const userSnap = await transaction.get(userRef);
+        const ownerSnap = await transaction.get(ownerRef);
+        const viewedSnapTx = await transaction.get(viewedRef);
+        if (!userSnap.exists()) throw new Error(t('user_info_not_found') || 'User info not found.');
+        if (viewedSnapTx.exists()) return; // 이미 결제됨
+        const myPoint = userSnap.data().point || 0;
+        if (myPoint < 30) throw new Error(t('friend_novel_point_not_enough'));
+        // 차감/지급
+        transaction.update(userRef, { point: myPoint - 30 });
+        if (ownerSnap.exists()) {
+          const ownerPoint = ownerSnap.data().point || 0;
+          transaction.update(ownerRef, { point: ownerPoint + 15 });
         }
-        setLoadingNovelId(novel.id);
-        try {
-            await runTransaction(db, async (transaction) => {
-                const userRef = doc(db, 'users', user.uid);
-                const ownerRef = doc(db, 'users', novel.userId);
-                const viewedRef = doc(db, 'users', user.uid, 'viewedNovels', novel.id);
-                const userSnap = await transaction.get(userRef);
-                const ownerSnap = await transaction.get(ownerRef);
-                const viewedSnapTx = await transaction.get(viewedRef);
-                if (!userSnap.exists()) throw new Error(t('user_info_not_found') || 'User info not found.');
-                if (viewedSnapTx.exists()) return; // 이미 결제됨
-                const myPoint = userSnap.data().point || 0;
-                if (myPoint < 30) throw new Error(t('friend_novel_point_not_enough'));
-                // 차감/지급
-                transaction.update(userRef, { point: myPoint - 30 });
-                if (ownerSnap.exists()) {
-                    const ownerPoint = ownerSnap.data().point || 0;
-                    transaction.update(ownerRef, { point: ownerPoint + 15 });
-                }
-                // 결제 기록 저장
-                transaction.set(viewedRef, { viewedAt: new Date() });
-            });
-            // 구매한 소설 데이터를 사용자별 purchasedNovels 컬렉션에 백업 저장
-            const purchasedNovelRef = doc(db, 'users', user.uid, 'purchasedNovels', novel.id);
-            await setDoc(purchasedNovelRef, {
-                ...novel,
-                purchasedAt: Timestamp.now(),
-                originalNovelId: novel.id
-            });
-            // 포인트 사용 내역 기록
-            await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
-                type: 'use',
-                amount: -30,
-                desc: '친구 소설 구매',
-                novelId: novel.id,
-                createdAt: Timestamp.now(),
-            });
-            // 소설 주인(저자) 포인트 적립 내역 기록
-            await addDoc(collection(db, 'users', novel.userId, 'pointHistory'), {
-                type: 'earn',
-                amount: 15,
-                desc: '소설 판매 적립',
-                novelId: novel.id,
-                createdAt: Timestamp.now(),
-            });
-            // 포인트 적립 알림 생성 (저자에게)
-            await createPointEarnNotification(novel.userId, 15, '소설 판매 적립');
-            // 소설 구매 알림 생성 (저자에게)
-            await createNovelPurchaseNotification(
-                novel.userId,
-                user.uid,
-                novel.id,
-                novel.title
-            );
-            setPurchased((prev) => ({ ...prev, [novel.id]: true }));
-            setAlertModal({
-                open: true,
-                title: '',
-                message: t('friend_novel_buy_success')
-            });
-        } catch (e) {
-            setAlertModal({
-                open: true,
-                title: '',
-                message: e.message || t('friend_novel_buy_failed')
-            });
-        } finally {
-            setLoadingNovelId(null);
-        }
-    };
+        // 결제 기록 저장
+        transaction.set(viewedRef, { viewedAt: new Date() });
+      });
+      // 구매한 소설 데이터를 사용자별 purchasedNovels 컬렉션에 백업 저장
+      const purchasedNovelRef = doc(db, 'users', user.uid, 'purchasedNovels', novel.id);
+      await setDoc(purchasedNovelRef, {
+        ...novel,
+        purchasedAt: Timestamp.now(),
+        originalNovelId: novel.id
+      });
+      // 포인트 사용 내역 기록
+      await addDoc(collection(db, 'users', user.uid, 'pointHistory'), {
+        type: 'use',
+        amount: -30,
+        desc: '친구 소설 구매',
+        novelId: novel.id,
+        createdAt: Timestamp.now(),
+      });
+      // 소설 주인(저자) 포인트 적립 내역 기록
+      await addDoc(collection(db, 'users', novel.userId, 'pointHistory'), {
+        type: 'earn',
+        amount: 15,
+        desc: '소설 판매 적립',
+        novelId: novel.id,
+        createdAt: Timestamp.now(),
+      });
+      // 포인트 적립 알림 생성 (저자에게)
+      await createPointEarnNotification(novel.userId, 15, '소설 판매 적립');
+      // 소설 구매 알림 생성 (저자에게)
+      await createNovelPurchaseNotification(
+        novel.userId,
+        user.uid,
+        novel.id,
+        novel.title
+      );
+      setPurchased((prev) => ({ ...prev, [novel.id]: true }));
+      setAlertModal({
+        open: true,
+        title: '',
+        message: t('friend_novel_buy_success')
+      });
+    } catch (e) {
+      setAlertModal({
+        open: true,
+        title: '',
+        message: e.message || t('friend_novel_buy_failed')
+      });
+    } finally {
+      setLoadingNovelId(null);
+    }
+  };
 
-    return (
-        <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
-            <Header title={t('friend_novel_list_title')} />
-            <ConfirmModal
-                open={confirmOpen}
-                title={t('friend_novel_buy_confirm_title')}
-                description={`${t('friend_novel_buy_confirm_desc')}\n\n${t('novel_purchase_notice')}`}
-                onCancel={() => setConfirmOpen(false)}
-                onConfirm={() => handlePurchase(pendingNovel)}
-                confirmText={t('confirm')}
-            />
-            <AlertModal
-                open={alertModal.open}
-                title={alertModal.title}
-                message={alertModal.message}
-                onClose={() => setAlertModal({ open: false, title: '', message: '' })}
-            />
-            {(!userId) ? (
-                <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
-            ) : isLoading ? (
-                <div style={{ textAlign: 'center', color: isDiaryTheme ? '#5C4B37' : theme.text, marginTop: 40 }}>{t('friend_novel_loading')}</div>
+  return (
+    <Container theme={theme} $isDiaryTheme={isDiaryTheme}>
+      <Header title={t('friend_novel_list_title')} />
+      <ConfirmModal
+        open={confirmOpen}
+        title={t('friend_novel_buy_confirm_title')}
+        description={`${t('friend_novel_buy_confirm_desc')}\n\n${t('novel_purchase_notice')}`}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => handlePurchase(pendingNovel)}
+        confirmText={t('confirm')}
+      />
+      <AlertModal
+        open={alertModal.open}
+        title={alertModal.title}
+        message={alertModal.message}
+        onClose={() => setAlertModal({ open: false, title: '', message: '' })}
+      />
+      {(!userId) ? (
+        <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>{t('friend_novel_userid_missing')}</div>
+      ) : isLoading ? (
+        <div style={{ textAlign: 'center', color: isDiaryTheme ? '#5C4B37' : theme.text, marginTop: 40 }}>{t('friend_novel_loading')}</div>
+      ) : (
+        <>
+          {/* 친구 프로필 섹션 */}
+          {friendInfo && (
+            <FriendProfileSection theme={theme}>
+              <ProfileContainer>
+                <ProfileImage
+                  src={getSafeProfileImageUrl(friendInfo.photoURL)}
+                  alt="Friend Profile"
+                  onError={(e) => handleImageError(e)}
+                />
+              </ProfileContainer>
+              <FriendNickname theme={theme} $isDiaryTheme={isDiaryTheme}>
+                {t('friend_novel_owner_title', { name: friendInfo.displayName || 'User' })}
+              </FriendNickname>
+              <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>{friendInfo.email}</FriendEmail>
+            </FriendProfileSection>
+          )}
+
+          {novels.length > 0 && availableGenres.length > 1 && (
+            <FilterContainer>
+              <GenreSelect
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                theme={theme}
+                $isDiaryTheme={isDiaryTheme}
+                $isGlassTheme={isGlassTheme}
+              >
+                <option value="all">
+                  {(() => {
+                    const translated = t('genre_all');
+                    return translated !== 'genre_all' ? translated : '전체 장르';
+                  })()}
+                </option>
+                {availableGenres.filter(g => g !== 'all').map(genre => {
+                  // 장르가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
+                  const genreKey = getGenreKey(genre) || genre;
+                  const translated = t(`novel_genre_${genreKey}`);
+                  // 번역 키가 그대로 반환되면 한글 장르 값 그대로 사용
+                  const displayGenre = translated !== `novel_genre_${genreKey}` ? translated : genre;
+                  return (
+                    <option key={genre} value={genre}>
+                      {displayGenre}
+                    </option>
+                  );
+                })}
+              </GenreSelect>
+            </FilterContainer>
+          )}
+          <NovelListWrapper>
+            {filteredNovels.length === 0 ? (
+              <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>
+                {novels.length === 0 ? t('friend_novel_empty') : (t('genre_no_novel') || '해당 장르의 소설이 없습니다.')}
+              </div>
             ) : (
-                <>
-                    {/* 친구 프로필 섹션 */}
-                    {friendInfo && (
-                        <FriendProfileSection theme={theme}>
-                            <ProfileContainer>
-                                <ProfileImage
-                                    src={getSafeProfileImageUrl(friendInfo.photoURL)}
-                                    alt="Friend Profile"
-                                    onError={(e) => handleImageError(e)}
-                                />
-                            </ProfileContainer>
-                            <FriendNickname theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                {t('friend_novel_owner_title', { name: friendInfo.displayName || 'User' })}
-                            </FriendNickname>
-                            <FriendEmail theme={theme} $isDiaryTheme={isDiaryTheme}>{friendInfo.email}</FriendEmail>
-                        </FriendProfileSection>
-                    )}
-
-                    {novels.length > 0 && availableGenres.length > 1 && (
-                        <FilterContainer>
-                            <GenreSelect
-                                value={selectedGenre}
-                                onChange={(e) => setSelectedGenre(e.target.value)}
-                                theme={theme}
-                                $isDiaryTheme={isDiaryTheme}
-                                $isGlassTheme={isGlassTheme}
-                            >
-                                <option value="all">
-                                    {(() => {
-                                        const translated = t('genre_all');
-                                        return translated !== 'genre_all' ? translated : '전체 장르';
-                                    })()}
-                                </option>
-                                {availableGenres.filter(g => g !== 'all').map(genre => {
-                                    // 장르가 한글이면 영어 키로 변환, 이미 영어 키면 그대로 사용
-                                    const genreKey = getGenreKey(genre) || genre;
-                                    const translated = t(`novel_genre_${genreKey}`);
-                                    // 번역 키가 그대로 반환되면 한글 장르 값 그대로 사용
-                                    const displayGenre = translated !== `novel_genre_${genreKey}` ? translated : genre;
-                                    return (
-                                        <option key={genre} value={genre}>
-                                            {displayGenre}
-                                        </option>
-                                    );
-                                })}
-                            </GenreSelect>
-                        </FilterContainer>
-                    )}
-                    <NovelListWrapper>
-                        {filteredNovels.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: isDiaryTheme ? '#8B6F47' : '#aaa', marginTop: 40 }}>
-                                {novels.length === 0 ? t('friend_novel_empty') : (t('genre_no_novel') || '해당 장르의 소설이 없습니다.')}
-                            </div>
-                        ) : (
-                            filteredNovels.map((novel) => (
-                                <NovelItem
-                                    key={novel.id}
-                                    theme={theme}
-                                    $isDiaryTheme={isDiaryTheme}
-                                    $isGlassTheme={isGlassTheme}
-                                    onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`) : undefined}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'flex-start',
-                                        position: 'relative',
-                                        flexDirection: 'column',
-                                        padding: 0,
-                                        cursor: purchased[novel.id] ? 'pointer' : 'default'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', width: '100%', padding: 16 }}>
-                                        <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
-                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
-                                            <NovelTitle theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{novel.title}</NovelTitle>
-                                            <NovelDate theme={theme} $isDiaryTheme={isDiaryTheme}>
-                                                {language === 'en'
-                                                    ? (() => {
-                                                        const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
-                                                        const monthName = d.toLocaleDateString('en-US', { month: 'long' });
-                                                        return `${monthName} ${t('week_num', { num: novel.weekNum })}`;
-                                                    })()
-                                                    : `${novel.month}월 ${novel.weekNum}주차 소설`}
-                                            </NovelDate>
-                                            {novel.genre && (
-                                                <NovelGenre theme={theme} $isDiaryTheme={isDiaryTheme}>{getDisplayGenre(novel.genre)}</NovelGenre>
-                                            )}
-                                            <NovelContentWrapper
-                                                $clickable={!purchased[novel.id]}
-                                                onClick={!purchased[novel.id] ? (e) => {
-                                                    e.stopPropagation();
-                                                    handlePurchaseClick(novel);
-                                                } : undefined}
-                                            >
-                                                <NovelContent $blurred={!purchased[novel.id]} theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                                                    {novel.content}
-                                                </NovelContent>
-                                                {!purchased[novel.id] && (
-                                                    <LockOverlay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
-                                                        <LockIcon>🔒</LockIcon>
-                                                        <span>30P로 구매</span>
-                                                    </LockOverlay>
-                                                )}
-                                            </NovelContentWrapper>
-                                        </div>
-                                    </div>
-                                </NovelItem>
-                            ))
+              filteredNovels.map((novel) => (
+                <NovelItem
+                  key={novel.id}
+                  theme={theme}
+                  $isDiaryTheme={isDiaryTheme}
+                  $isGlassTheme={isGlassTheme}
+                  onClick={purchased[novel.id] ? () => navigate(`/novel/${createNovelUrl(novel.year, novel.month, novel.weekNum, novel.genre, novel.id)}?userId=${novel.userId}`) : undefined}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    position: 'relative',
+                    flexDirection: 'column',
+                    padding: 0,
+                    cursor: purchased[novel.id] ? 'pointer' : 'default'
+                  }}
+                >
+                  <div style={{ display: 'flex', width: '100%', padding: 16 }}>
+                    <NovelCover src={novel.imageUrl || '/novel_banner/default.png'} alt={novel.title} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', marginLeft: 12 }}>
+                      <NovelTitle theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{novel.title}</NovelTitle>
+                      <NovelDate theme={theme} $isDiaryTheme={isDiaryTheme}>
+                        {language === 'en'
+                          ? (() => {
+                            const d = new Date(novel.year || 2000, (novel.month || 1) - 1, 1);
+                            const monthName = d.toLocaleDateString('en-US', { month: 'long' });
+                            return `${monthName} ${t('week_num', { num: novel.weekNum })}`;
+                          })()
+                          : `${novel.month}월 ${novel.weekNum}주차 소설`}
+                      </NovelDate>
+                      {novel.genre && (
+                        <NovelGenre theme={theme} $isDiaryTheme={isDiaryTheme}>{getDisplayGenre(novel.genre)}</NovelGenre>
+                      )}
+                      <NovelContentWrapper
+                        $clickable={!purchased[novel.id]}
+                        onClick={!purchased[novel.id] ? (e) => {
+                          e.stopPropagation();
+                          handlePurchaseClick(novel);
+                        } : undefined}
+                      >
+                        <NovelContent $blurred={!purchased[novel.id]} theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+                          {novel.content}
+                        </NovelContent>
+                        {!purchased[novel.id] && (
+                          <LockOverlay theme={theme} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>
+                            <LockIcon>🔒</LockIcon>
+                            <span>30P로 구매</span>
+                          </LockOverlay>
                         )}
-                    </NovelListWrapper>
-                </>
+                      </NovelContentWrapper>
+                    </div>
+                  </div>
+                </NovelItem>
+              ))
             )}
-            <Navigation />
-        </Container>
-    );
+          </NovelListWrapper>
+        </>
+      )}
+      <Navigation />
+    </Container>
+  );
 }
 
 export default FriendNovelList; 

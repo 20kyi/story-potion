@@ -54,7 +54,11 @@ import NotificationToast from './components/NotificationToast';
 import PointHistory from './pages/mypage/PointHistory';
 import PotionShop from './pages/mypage/PotionShop';
 import PointCharge from './pages/mypage/PointCharge';
-import UserManagement from './pages/admin/UserManagement';
+import AdminMain from './pages/admin/AdminMain';
+import UserList from './pages/admin/UserList';
+import CSManagement from './pages/admin/CSManagement';
+import NotificationManagement from './pages/admin/NotificationManagement';
+import AdminTools from './pages/admin/AdminTools';
 import ProfileFix from './pages/mypage/ProfileFix';
 import ProfileEdit from './pages/mypage/ProfileEdit';
 import './utils/runPointUpdate'; // 포인트 일괄 지급 스크립트 로드
@@ -136,7 +140,11 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/my/profile-edit" element={user ? <ProfileEdit user={user} /> : <Navigate to="/login" />} />
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
-                <Route path="/admin/users" element={user ? <UserManagement user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin" element={user ? <AdminMain user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin/users" element={user ? <UserList user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin/cs" element={user ? <CSManagement user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin/notifications" element={user ? <NotificationManagement user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin/tools" element={user ? <AdminTools user={user} /> : <Navigate to="/login" />} />
                 <Route path="/loading-test" element={user ? <LoadingTest user={user} /> : <Navigate to="/login" />} />
                 <Route path="/test/point-animation" element={user ? <PointAnimationTest user={user} /> : <Navigate to="/login" />} />
             </Routes>
