@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 알림 아이콘 색상 -->
+    <color name="notification_color">#000000</color>
+</resources>
+

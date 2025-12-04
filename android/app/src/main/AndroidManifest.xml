@@ -54,6 +54,14 @@
                 android:resource="@xml/file_paths"/>
         </provider>
 
+        <!-- Firebase Cloud Messaging 알림 아이콘 설정 -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+
     </application>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

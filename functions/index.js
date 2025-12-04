@@ -2653,7 +2653,9 @@ exports.sendPushNotificationToUser = functions.https.onCall(async (data, context
                 priority: 'high',
                 notification: {
                     sound: 'default',
-                    channelId: 'default'
+                    channelId: 'default',
+                    color: '#000000',
+                    imageUrl: 'https://story-potion.web.app/app_logo/logo.png'
                 }
             },
             apns: {

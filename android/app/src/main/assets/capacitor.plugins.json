@@ -22,5 +22,13 @@
 	{
 		"pkg": "@capacitor/status-bar",
 		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
+	},
+	{
+		"pkg": "Billing",
+		"classpath": "com.storypotion.app.BillingPlugin"
+	},
+	{
+		"pkg": "Permissions",
+		"classpath": "com.storypotion.app.PermissionsPlugin"
 	}
 ]
