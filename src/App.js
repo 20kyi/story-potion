@@ -11,6 +11,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { TextZoom } from '@capacitor/text-zoom';
 import { checkPhotoPermission, requestPhotoPermission } from './utils/permissions';
 import pushNotificationManager from './utils/pushNotification';
 
@@ -542,6 +543,20 @@ function App() {
     const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
+        // 시스템 글자 크기 설정을 무시하고 1배율(100%)로 고정
+        // 모바일 환경에서만 적용 (웹에서는 불필요)
+        if (Capacitor.getPlatform() !== 'web') {
+            const lockTextZoom = async () => {
+                try {
+                    await TextZoom.set({ value: 1 });
+                    console.log('✅ 텍스트 줌이 1배율(100%)로 고정되었습니다.');
+                } catch (error) {
+                    console.error('텍스트 줌 설정 실패:', error);
+                }
+            };
+            lockTextZoom();
+        }
+
         // 주의: 커스텀 OAuth 플로우를 사용하므로 getRedirectResult는 호출하지 않음
         // 실제 구글 로그인은 appUrlOpen 이벤트 핸들러에서 처리됨
         // getRedirectResult를 호출하면 "missing initial state" 에러가 발생할 수 있으며,

@@ -24,11 +24,7 @@
 		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
 	},
 	{
-		"pkg": "Billing",
-		"classpath": "com.storypotion.app.BillingPlugin"
-	},
-	{
-		"pkg": "Permissions",
-		"classpath": "com.storypotion.app.PermissionsPlugin"
+		"pkg": "@capacitor/text-zoom",
+		"classpath": "com.capacitorjs.plugins.textzoom.TextZoomPlugin"
 	}
 ]
