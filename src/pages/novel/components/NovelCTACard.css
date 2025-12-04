@@ -228,3 +228,174 @@ body.dark .novel-cta-progress-fill:not(.glass-theme) {
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(209, 196, 233, 0.6) !important;
 }
+
+/* 보너스 섹션 */
+.novel-cta-bonus-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.dark .novel-cta-bonus-section {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.novel-cta-bonus-section.diary-theme {
+    border-top-color: rgba(139, 111, 71, 0.2);
+}
+
+.novel-cta-bonus-section.glass-theme {
+    border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+.novel-cta-bonus-message {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.novel-cta-bonus-message:last-child {
+    margin-bottom: 0;
+}
+
+.novel-cta-bonus-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    flex: 1;
+    word-break: keep-all;
+}
+
+body.dark .novel-cta-bonus-text {
+    color: #aaa;
+}
+
+.novel-cta-bonus-text.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-cta-bonus-text.glass-theme {
+    color: #000000;
+}
+
+body.dark .novel-cta-bonus-text.glass-theme {
+    color: #000000;
+}
+
+.novel-cta-bonus-text.completed {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+body.dark .novel-cta-bonus-text.completed {
+    color: #66BB6A;
+}
+
+/* 포인트 버튼 */
+.novel-cta-point-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: none;
+    font-weight: 600;
+    font-size: 14px;
+    color: inherit;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.novel-cta-point-button:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.novel-cta-point-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.novel-cta-point-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.novel-cta-point-button.diary-theme {
+    background: transparent;
+    box-shadow: none;
+}
+
+.novel-cta-point-button.diary-theme:hover:not(:disabled) {
+    box-shadow: none;
+}
+
+.novel-cta-point-button.glass-theme {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+}
+
+.novel-cta-point-button.glass-theme:hover:not(:disabled) {
+    background: transparent;
+    box-shadow: none;
+}
+
+.novel-cta-point-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: inherit;
+    text-shadow: none;
+}
+
+/* 포인트 아이콘 애니메이션 */
+.novel-cta-point-button:not(:disabled) svg {
+    animation: pointPulse 2s ease-in-out infinite;
+}
+
+@keyframes pointPulse {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+    }
+}
+
+.novel-cta-point-button:active:not(:disabled) svg {
+    animation: pointClick 0.3s ease-out;
+}
+
+@keyframes pointClick {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        transform: scale(0.9) rotate(-10deg);
+    }
+    100% {
+        transform: scale(1.1) rotate(10deg);
+    }
+}
+
+@media (max-width: 480px) {
+    .novel-cta-bonus-text {
+        font-size: 13px;
+    }
+    
+    .novel-cta-point-button {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .novel-cta-point-amount {
+        font-size: 13px;
+    }
+}
