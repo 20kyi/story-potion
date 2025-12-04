@@ -370,24 +370,44 @@ const EnhanceModal = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 20px;
+  padding: 80px 20px 120px 20px;
 `;
 
 const EnhanceModalContent = styled.div`
-  background-color: ${props => props.isDark ? '#2a2a2a' : '#fff'};
-  border-radius: 16px;
+  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return '#fffef9';
+        return isDark ? '#2a2a2a' : '#fff';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(15px)' : 'none'};
+  border-radius: ${({ $isDiaryTheme }) => $isDiaryTheme ? '18px 22px 20px 19px' : '16px'};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return '2px solid rgba(139, 111, 71, 0.25)';
+        return 'none';
+    }};
   width: 100%;
   max-width: 600px;
-  max-height: 80vh;
+  max-height: calc(100vh - 200px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+        return '0 8px 32px rgba(0, 0, 0, 0.3)';
+    }};
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.3deg)' : 'none'};
 `;
 
 const EnhanceModalHeader = styled.div`
   padding: 20px;
-  border-bottom: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  border-bottom: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
+        return isDark ? '#444' : '#eee';
+    }};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -397,14 +417,22 @@ const EnhanceModalTitle = styled.h2`
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: ${props => props.isDark ? '#fff' : '#222'};
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#2d2418';
+        if ($isDiaryTheme) return '#5a4a3a';
+        return isDark ? '#fff' : '#222';
+    }};
 `;
 
 const EnhanceModalClose = styled.button`
   background: none;
   border: none;
   font-size: 28px;
-  color: ${props => props.isDark ? '#fff' : '#666'};
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#3d2f1f';
+        if ($isDiaryTheme) return '#8b6f47';
+        return isDark ? '#fff' : '#666';
+    }};
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -415,7 +443,11 @@ const EnhanceModalClose = styled.button`
   border-radius: 50%;
   
   &:hover {
-    background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
+    background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+        return isDark ? '#444' : '#f0f0f0';
+    }};
   }
 `;
 
@@ -437,39 +469,94 @@ const EnhanceSection = styled.div`
 const EnhanceLabel = styled.label`
   font-size: 14px;
   font-weight: 600;
-  color: ${props => props.isDark ? '#aaa' : '#666'};
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#3d2f1f';
+        if ($isDiaryTheme) return '#8b6f47';
+        return isDark ? '#aaa' : '#666';
+    }};
 `;
 
 const EnhanceText = styled.div`
   padding: 12px;
-  background-color: ${props => props.isDark ? '#1a1a1a' : '#f8f8f8'};
+  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '#faf8f3';
+        return isDark ? '#1a1a1a' : '#f8f8f8';
+    }};
   border-radius: 8px;
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
   min-height: 150px;
   max-height: 300px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
   line-height: 1.6;
-  color: ${props => props.isDark ? '#fff' : '#222'};
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#2d2418';
+        if ($isDiaryTheme) return '#5a4a3a';
+        return isDark ? '#fff' : '#222';
+    }};
+  font-size: 15px;
+`;
+
+const EnhanceTitleText = styled.div`
+  padding: 12px;
+  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '#faf8f3';
+        return isDark ? '#1a1a1a' : '#f8f8f8';
+    }};
+  border-radius: 8px;
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '1px solid rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
+  width: fit-content;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#2d2418';
+        if ($isDiaryTheme) return '#5a4a3a';
+        return isDark ? '#fff' : '#222';
+    }};
   font-size: 15px;
 `;
 
 const EnhanceModalFooter = styled.div`
   padding: 20px;
-  border-top: 1px solid ${props => props.isDark ? '#444' : '#eee'};
+  border-top: 1px solid ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.15)';
+        return isDark ? '#444' : '#eee';
+    }};
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
 `;
 
 const EnhanceButton = styled.button`
   padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '12px';
+        if ($isDiaryTheme) return '10px 12px 11px 9px';
+        return '8px';
+    }};
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  flex: 1;
+  max-width: 200px;
   
   &:disabled {
     opacity: 0.5;
@@ -478,20 +565,78 @@ const EnhanceButton = styled.button`
 `;
 
 const EnhanceApplyButton = styled(EnhanceButton)`
-  background-color: #cb6565;
+  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(203, 101, 101, 0.8)';
+        if ($isDiaryTheme) return '#8b6f47';
+        return isDark ? '#cb6565' : '#cb6565';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
   color: white;
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(203, 101, 101, 0.9)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.3)';
+        return 'none';
+    }};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.2)';
+        return '0 4px 12px rgba(203, 101, 101, 0.3)';
+    }};
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.2deg)' : 'none'};
   
   &:hover:not(:disabled) {
-    background-color: #b85555;
+    background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(203, 101, 101, 0.9)';
+        if ($isDiaryTheme) return '#7a5d3a';
+        return '#b85555';
+    }};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
+        if ($isDiaryTheme) return '0 4px 10px rgba(139, 111, 71, 0.3)';
+        return '0 6px 16px rgba(203, 101, 101, 0.4)';
+    }};
+    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.1deg) translateY(-1px)' : 'translateY(-1px)'};
   }
 `;
 
 const EnhanceCancelButton = styled(EnhanceButton)`
-  background-color: ${props => props.isDark ? '#444' : '#f0f0f0'};
-  color: ${props => props.isDark ? '#fff' : '#222'};
+  background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.2)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.1)';
+        return isDark ? '#444' : '#f0f0f0';
+    }};
+  backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  -webkit-backdrop-filter: ${({ $isGlassTheme }) => $isGlassTheme ? 'blur(10px)' : 'none'};
+  color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '#3d2f1f';
+        if ($isDiaryTheme) return '#8b6f47';
+        return isDark ? '#fff' : '#222';
+    }};
+  border: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '2px solid rgba(255, 255, 255, 0.5)';
+        if ($isDiaryTheme) return '1px solid rgba(139, 111, 71, 0.4)';
+        return 'none';
+    }};
+  box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 2px 6px rgba(139, 111, 71, 0.15)';
+        return 'none';
+    }};
+  transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(0.2deg)' : 'none'};
   
   &:hover:not(:disabled) {
-    background-color: ${props => props.isDark ? '#555' : '#e0e0e0'};
+    background-color: ${({ isDark, $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return 'rgba(255, 255, 255, 0.3)';
+        if ($isDiaryTheme) return 'rgba(139, 111, 71, 0.2)';
+        return isDark ? '#555' : '#e0e0e0';
+    }};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.12)';
+        if ($isDiaryTheme) return '0 4px 10px rgba(139, 111, 71, 0.25)';
+        return '0 2px 8px rgba(0, 0, 0, 0.1)';
+    }};
+    transform: ${({ $isDiaryTheme }) => $isDiaryTheme ? 'rotate(-0.1deg) translateY(-1px)' : 'translateY(-1px)'};
   }
 `;
 
@@ -1319,10 +1464,13 @@ function WriteDiary({ user }) {
         }
     }, [location, user]);
 
-    // selectedDate가 변경될 때마다 isInitialLoad 리셋
+    // selectedDate가 변경될 때마다 isInitialLoad 리셋 및 임시저장 상태 초기화
     useEffect(() => {
         if (selectedDate) {
             isInitialLoad.current = true;
+            // 날짜가 변경되면 임시저장 상태 초기화
+            setHasTempSave(false);
+            setIsTempSaveModalOpen(false);
         }
     }, [selectedDate]);
 
@@ -1340,14 +1488,23 @@ function WriteDiary({ user }) {
             const q = query(diariesRef, where('userId', '==', user.uid), where('date', '==', dateStr));
             const querySnapshot = await getDocs(q);
 
-            // 기존 일기가 없고, 임시저장이 있으면 모달 표시
+            // 기존 일기가 없고, 현재 선택된 날짜에 임시저장이 있으면 모달 표시
             if (querySnapshot.empty) {
                 const tempData = loadTempDiary(selectedDate);
                 // loadTempDiary에서 이미 내용 검증을 했으므로, null이 아니면 유효한 데이터
+                // 현재 선택된 날짜의 임시저장만 확인
                 if (tempData) {
                     setHasTempSave(true);
                     setIsTempSaveModalOpen(true);
+                } else {
+                    // 현재 날짜에 임시저장이 없으면 상태 초기화
+                    setHasTempSave(false);
+                    setIsTempSaveModalOpen(false);
                 }
+            } else {
+                // 기존 일기가 있으면 임시저장 모달 표시하지 않음
+                setHasTempSave(false);
+                setIsTempSaveModalOpen(false);
             }
             isInitialLoad.current = false;
         };
@@ -3266,34 +3423,97 @@ function WriteDiary({ user }) {
                 {/* AI 보강 모달 */}
                 {isEnhanceModalOpen && (
                     <EnhanceModal onClick={() => setIsEnhanceModalOpen(false)}>
-                        <EnhanceModalContent isDark={isDark} onClick={(e) => e.stopPropagation()}>
-                            <EnhanceModalHeader isDark={isDark}>
-                                <EnhanceModalTitle isDark={isDark}>✨ AI로 생성한 일기</EnhanceModalTitle>
-                                <EnhanceModalClose isDark={isDark} onClick={() => {
-                                    setIsEnhanceModalOpen(false);
-                                }}>
+                        <EnhanceModalContent
+                            isDark={isDark}
+                            $isDiaryTheme={isDiaryTheme}
+                            $isGlassTheme={isGlassTheme}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <EnhanceModalHeader
+                                isDark={isDark}
+                                $isDiaryTheme={isDiaryTheme}
+                                $isGlassTheme={isGlassTheme}
+                            >
+                                <EnhanceModalTitle
+                                    isDark={isDark}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
+                                >
+                                    ✨ AI로 생성한 일기
+                                </EnhanceModalTitle>
+                                <EnhanceModalClose
+                                    isDark={isDark}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
+                                    onClick={() => {
+                                        setIsEnhanceModalOpen(false);
+                                    }}
+                                >
                                     ×
                                 </EnhanceModalClose>
                             </EnhanceModalHeader>
                             <EnhanceModalBody>
                                 {enhancedTitle && (
                                     <EnhanceSection>
-                                        <EnhanceLabel isDark={isDark}>AI로 생성한 제목</EnhanceLabel>
-                                        <EnhanceText isDark={isDark} style={{ fontWeight: 'bold', fontSize: '18px' }}>{enhancedTitle}</EnhanceText>
+                                        <EnhanceLabel
+                                            isDark={isDark}
+                                            $isDiaryTheme={isDiaryTheme}
+                                            $isGlassTheme={isGlassTheme}
+                                        >
+                                            AI로 생성한 제목
+                                        </EnhanceLabel>
+                                        <EnhanceTitleText
+                                            isDark={isDark}
+                                            $isDiaryTheme={isDiaryTheme}
+                                            $isGlassTheme={isGlassTheme}
+                                            style={{ fontWeight: 'bold', fontSize: '18px' }}
+                                        >
+                                            {enhancedTitle}
+                                        </EnhanceTitleText>
                                     </EnhanceSection>
                                 )}
                                 <EnhanceSection>
-                                    <EnhanceLabel isDark={isDark}>원본 일기</EnhanceLabel>
-                                    <EnhanceText isDark={isDark}>{diary.content}</EnhanceText>
+                                    <EnhanceLabel
+                                        isDark={isDark}
+                                        $isDiaryTheme={isDiaryTheme}
+                                        $isGlassTheme={isGlassTheme}
+                                    >
+                                        원본 일기
+                                    </EnhanceLabel>
+                                    <EnhanceText
+                                        isDark={isDark}
+                                        $isDiaryTheme={isDiaryTheme}
+                                        $isGlassTheme={isGlassTheme}
+                                    >
+                                        {diary.content}
+                                    </EnhanceText>
                                 </EnhanceSection>
                                 <EnhanceSection>
-                                    <EnhanceLabel isDark={isDark}>AI로 생성한 일기</EnhanceLabel>
-                                    <EnhanceText isDark={isDark}>{enhancedContent}</EnhanceText>
+                                    <EnhanceLabel
+                                        isDark={isDark}
+                                        $isDiaryTheme={isDiaryTheme}
+                                        $isGlassTheme={isGlassTheme}
+                                    >
+                                        AI로 생성한 일기
+                                    </EnhanceLabel>
+                                    <EnhanceText
+                                        isDark={isDark}
+                                        $isDiaryTheme={isDiaryTheme}
+                                        $isGlassTheme={isGlassTheme}
+                                    >
+                                        {enhancedContent}
+                                    </EnhanceText>
                                 </EnhanceSection>
                             </EnhanceModalBody>
-                            <EnhanceModalFooter isDark={isDark}>
+                            <EnhanceModalFooter
+                                isDark={isDark}
+                                $isDiaryTheme={isDiaryTheme}
+                                $isGlassTheme={isGlassTheme}
+                            >
                                 <EnhanceCancelButton
                                     isDark={isDark}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
                                     onClick={() => {
                                         setIsEnhanceModalOpen(false);
                                     }}
@@ -3301,6 +3521,9 @@ function WriteDiary({ user }) {
                                     원본 유지
                                 </EnhanceCancelButton>
                                 <EnhanceApplyButton
+                                    isDark={isDark}
+                                    $isDiaryTheme={isDiaryTheme}
+                                    $isGlassTheme={isGlassTheme}
                                     onClick={() => {
                                         setDiary(prev => ({
                                             ...prev,
