@@ -1383,6 +1383,8 @@ exports.sendMarketingNotification = functions.https.onCall(async (data, context)
             .where('marketingEnabled', '==', true)
             .get();
 
+        console.log(`마케팅 알림 수신 동의한 사용자 수: ${usersSnapshot.size}명`);
+
         if (usersSnapshot.empty) {
             console.log('마케팅 알림 수신 동의한 사용자 없음');
             return { success: true, sentCount: 0, message: '마케팅 알림 수신 동의한 사용자가 없습니다.' };
@@ -1390,14 +1392,19 @@ exports.sendMarketingNotification = functions.https.onCall(async (data, context)
 
         const messages = [];
         const notificationPromises = [];
+        let tokenMissingCount = 0;
+        let tokenEmptyCount = 0;
 
         usersSnapshot.forEach((userDoc) => {
             const user = userDoc.data();
             const userId = userDoc.id;
             const token = user.fcmToken;
 
-            if (!token) {
-                console.log(`사용자 ${userId}: FCM 토큰 없음`);
+            if (!token || token.trim() === '') {
+                tokenMissingCount++;
+                if (tokenMissingCount <= 10) { // 처음 10개만 로그
+                    console.log(`사용자 ${userId} (${user.email || '이메일 없음'}): FCM 토큰 없음`);
+                }
                 return;
             }
 
@@ -1457,47 +1464,87 @@ exports.sendMarketingNotification = functions.https.onCall(async (data, context)
         });
 
         if (messages.length === 0) {
-            return { success: true, sentCount: 0, message: 'FCM 토큰이 있는 사용자가 없습니다.' };
+            console.log(`FCM 토큰이 있는 사용자가 없습니다. (토큰 없음: ${tokenMissingCount}명)`);
+            return {
+                success: true,
+                sentCount: 0,
+                message: `FCM 토큰이 있는 사용자가 없습니다. (토큰 없음: ${tokenMissingCount}명)`,
+                tokenMissingCount: tokenMissingCount
+            };
         }
 
-        console.log(`${messages.length}명에게 마케팅 알림 발송 시도`);
+        console.log(`${messages.length}명에게 마케팅 알림 발송 시도 (토큰 없음: ${tokenMissingCount}명)`);
 
-        // FCM으로 알림 전송 (500개씩 배치로 전송)
-        const batchSize = 500;
+        // FCM으로 알림 전송 (개별 전송 방식 - sendAll의 404 에러 회피)
         let successCount = 0;
         let failureCount = 0;
+        const failureDetails = [];
+        const failureReasons = {};
 
-        for (let i = 0; i < messages.length; i += batchSize) {
-            const batch = messages.slice(i, i + batchSize);
+        // 개별 메시지를 순차적으로 전송 (배치 전송의 404 에러 문제 해결)
+        for (let i = 0; i < messages.length; i++) {
+            const message = messages[i];
             try {
-                const response = await admin.messaging().sendAll(batch);
-                successCount += response.successCount;
-                failureCount += response.failureCount;
+                await admin.messaging().send(message);
+                successCount++;
 
-                if (response.failureCount > 0) {
-                    response.responses.forEach((resp, idx) => {
-                        if (!resp.success) {
-                            console.error(`사용자 ${i + idx} 알림 실패:`, resp.error);
-                        }
-                    });
+                // 진행 상황 로그 (100개마다)
+                if ((i + 1) % 100 === 0) {
+                    console.log(`[마케팅] 진행 상황: ${i + 1}/${messages.length} 전송 완료`);
                 }
             } catch (error) {
-                console.error(`배치 ${i} 전송 실패:`, error);
-                failureCount += batch.length;
+                failureCount++;
+                const errorCode = error.code || 'unknown';
+                const errorMessage = error.message || '알 수 없는 오류';
+
+                failureReasons[errorCode] = (failureReasons[errorCode] || 0) + 1;
+
+                // 처음 10개만 상세 정보 저장
+                if (failureDetails.length < 10) {
+                    failureDetails.push({
+                        index: i,
+                        code: errorCode,
+                        message: errorMessage
+                    });
+                }
+
+                // 처음 10개만 상세 로그
+                if (failureCount <= 10) {
+                    console.error(`[마케팅] 인덱스 ${i} 알림 실패:`, {
+                        error: errorMessage,
+                        code: errorCode
+                    });
+                }
             }
+        }
+
+        if (failureCount > 0) {
+            console.log(`[마케팅] 실패 원인 통계:`, failureReasons);
         }
 
         // Firestore 알림 저장 완료 대기
         await Promise.all(notificationPromises);
 
-        console.log(`마케팅 알림 발송 완료: 성공 ${successCount}건, 실패 ${failureCount}건`);
+        console.log(`마케팅 알림 발송 완료: 성공 ${successCount}건, 실패 ${failureCount}건, 토큰 없음 ${tokenMissingCount}명`);
+
+        // 실패 원인 요약 메시지 생성
+        let failureSummary = '';
+        if (failureCount > 0) {
+            const reasonList = Object.entries(failureReasons)
+                .map(([code, count]) => `${code}: ${count}건`)
+                .join(', ');
+            failureSummary = ` 실패 원인: ${reasonList}`;
+        }
 
         return {
             success: true,
             sentCount: successCount,
             failureCount: failureCount,
             totalUsers: usersSnapshot.size,
-            message: `${successCount}명에게 마케팅 알림이 발송되었습니다.`
+            tokenMissingCount: tokenMissingCount,
+            failureReasons: failureReasons,
+            failureDetails: failureDetails.slice(0, 5), // 처음 5개만 반환
+            message: `${successCount}명에게 마케팅 알림이 발송되었습니다.${tokenMissingCount > 0 ? ` (FCM 토큰 없음: ${tokenMissingCount}명)` : ''}${failureCount > 0 ? ` (전송 실패: ${failureCount}건${failureSummary})` : ''}`
         };
     } catch (error) {
         console.error('마케팅 알림 발송 오류:', error);
@@ -2573,7 +2620,7 @@ exports.sendPushNotificationToUser = functions.https.onCall(async (data, context
 
         // 사용자 정보 조회
         const userDoc = await admin.firestore().collection('users').doc(userId).get();
-        
+
         if (!userDoc.exists) {
             throw new functions.https.HttpsError(
                 'not-found',

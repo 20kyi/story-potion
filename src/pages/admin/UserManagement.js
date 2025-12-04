@@ -54,6 +54,28 @@ import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy, limit as fsLimit, doc, deleteDoc, addDoc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
+// FCM 실패 원인 코드를 읽기 쉬운 텍스트로 변환
+const getFailureReasonText = (code) => {
+  const reasonMap = {
+    'messaging/invalid-registration-token': '유효하지 않은 FCM 토큰',
+    'messaging/registration-token-not-registered': '등록되지 않은 FCM 토큰',
+    'messaging/invalid-argument': '잘못된 인수',
+    'messaging/message-rate-exceeded': '메시지 전송 속도 초과',
+    'messaging/authentication-error': '인증 오류',
+    'messaging/server-unavailable': '서버 사용 불가',
+    'messaging/internal-error': '내부 오류',
+    'messaging/invalid-apns-credentials': '잘못된 APNS 인증 정보',
+    'messaging/invalid-package-name': '잘못된 패키지 이름',
+    'messaging/unknown-error': '알 수 없는 오류',
+    'batch-error': '배치 전송 오류',
+    'fcm-api-not-found': 'FCM API 엔드포인트를 찾을 수 없음 (404)',
+    'fcm-api-forbidden': 'FCM API 접근 권한 없음 (403)',
+    'fcm-api-unauthorized': 'FCM API 인증 실패 (401)',
+    'unknown': '알 수 없는 오류'
+  };
+  return reasonMap[code] || code;
+};
+
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -1265,7 +1287,7 @@ function UserManagement({ user }) {
         getDocs(query(collection(db, 'novels'), where('uid', '==', u.uid))),
         getDocs(query(collection(db, 'comments'), where('uid', '==', u.uid))),
       ];
-      
+
       // 무료 생성권 사용 기록 (프리미엄 회원인 경우만)
       if (u.isMonthlyPremium || u.isYearlyPremium) {
         try {
@@ -1280,18 +1302,18 @@ function UserManagement({ user }) {
       }
 
       const [diariesSnap, novelsSnap, commentsSnap, freeNovelHistorySnap] = await Promise.all(promises);
-      
+
       // 클라이언트에서 정렬 및 최대 10개 제한
       const sortByCreatedAt = (a, b) => {
         const aTime = a.createdAt?.seconds || a.createdAt || 0;
         const bTime = b.createdAt?.seconds || b.createdAt || 0;
         return bTime - aTime; // 내림차순
       };
-      
+
       const diaries = diariesSnap.docs.map(d => d.data()).sort(sortByCreatedAt).slice(0, 10);
       const novels = novelsSnap.docs.map(n => n.data()).sort(sortByCreatedAt).slice(0, 10);
       const comments = commentsSnap.docs.map(c => c.data()).sort(sortByCreatedAt).slice(0, 10);
-      
+
       setUserActivity({
         diaries,
         novels,
@@ -1543,7 +1565,7 @@ function UserManagement({ user }) {
       const functions = getFunctions(undefined, 'us-central1');
       const migratePremiumFreeNovel = httpsCallable(functions, 'migratePremiumFreeNovelCount');
       const result = await migratePremiumFreeNovel({ userId: selectedUser.uid });
-      
+
       if (result.data.success) {
         setStatusActionStatus({
           type: 'success',
@@ -1587,7 +1609,7 @@ function UserManagement({ user }) {
       const functions = getFunctions(undefined, 'us-central1');
       const migrateAllPremiumFreeNovel = httpsCallable(functions, 'migrateAllPremiumFreeNovelCount');
       const result = await migrateAllPremiumFreeNovel();
-      
+
       if (result.data.success) {
         setStatusActionStatus({
           type: 'success',
@@ -1932,7 +1954,7 @@ function UserManagement({ user }) {
             <ButtonGroup theme={theme}>
               <ButtonGroupTitle theme={theme}>무료 생성권 마이그레이션</ButtonGroupTitle>
               <InfoText>
-                기존 프리미엄 사용자들의 무료 생성권을 계산하여 마이그레이션합니다.<br/>
+                기존 프리미엄 사용자들의 무료 생성권을 계산하여 마이그레이션합니다.<br />
                 구독 시작일 기준으로 7일마다 1개씩 충전되며, 사용 기록을 차감하여 현재 보유 개수를 계산합니다.
               </InfoText>
               <Button
@@ -1943,10 +1965,10 @@ function UserManagement({ user }) {
                 {statusActionLoading ? '마이그레이션 중...' : '모든 프리미엄 사용자 일괄 마이그레이션'}
               </Button>
               {statusActionStatus && (
-                <div style={{ 
-                  marginTop: 8, 
-                  color: statusActionStatus.type === 'success' ? 'green' : 'red', 
-                  fontSize: '12px' 
+                <div style={{
+                  marginTop: 8,
+                  color: statusActionStatus.type === 'success' ? 'green' : 'red',
+                  fontSize: '12px'
                 }}>
                   {statusActionStatus.message}
                 </div>
@@ -2288,9 +2310,60 @@ function UserManagement({ user }) {
                     });
 
                     const data = result.data;
+                    console.log('알림 발송 결과 (전체):', JSON.stringify(data, null, 2));
                     if (data.success) {
-                      const successMessage = `✅ 알림 발송 완료!\n\n📊 발송 결과:\n- 성공: ${data.sentCount || 0}명\n- 실패: ${data.failureCount || 0}명\n\n${data.message || ''}`;
+                      let successMessage = `✅ 알림 발송 완료!\n\n📊 발송 결과:\n- 전체 대상: ${data.totalUsers || 0}명\n- 성공: ${data.sentCount || 0}명\n- 실패: ${data.failureCount || 0}명\n- 토큰 없음: ${data.tokenMissingCount || 0}명\n\n${data.message || ''}`;
+
+                      // 실패 원인 상세 정보 추가
+                      if (data.failureCount > 0) {
+                        console.log('실패 원인 데이터 확인:', {
+                          hasFailureReasons: !!data.failureReasons,
+                          hasFailureDetails: !!data.failureDetails,
+                          failureReasons: data.failureReasons,
+                          failureDetails: data.failureDetails
+                        });
+
+                        if (data.failureReasons && Object.keys(data.failureReasons).length > 0) {
+                          successMessage += `\n\n❌ 실패 원인 상세:\n`;
+                          Object.entries(data.failureReasons).forEach(([code, count]) => {
+                            const reasonText = getFailureReasonText(code);
+                            successMessage += `- ${reasonText}: ${count}건\n`;
+                          });
+                        } else {
+                          successMessage += `\n\n⚠️ 실패 원인 정보가 없습니다. Firebase Functions 로그를 확인하세요.`;
+                          console.warn('실패 원인 정보가 응답에 포함되지 않았습니다. Functions가 최신 버전으로 배포되었는지 확인하세요.');
+                        }
+
+                        // 실패 상세 정보를 콘솔에 출력
+                        if (data.failureDetails && data.failureDetails.length > 0) {
+                          console.error('실패 상세 정보:', data.failureDetails);
+                          console.error('처음 5개 실패 사례:');
+                          data.failureDetails.forEach((detail, idx) => {
+                            console.error(`${idx + 1}. 코드: ${detail.code}, 메시지: ${detail.message}`);
+                          });
+                        } else {
+                          console.warn('실패 상세 정보가 없습니다. Firebase Functions 로그에서 확인하세요.');
+                        }
+                      }
+
                       toast.showToast(successMessage, 'success');
+
+                      // 상세 정보를 콘솔에도 출력
+                      if (data.sentCount === 0) {
+                        console.warn('⚠️ 알림이 발송되지 않았습니다. 확인 사항:');
+                        console.warn('1. marketingEnabled가 true인 사용자가 있는지 확인');
+                        console.warn('2. FCM 토큰이 있는 사용자가 있는지 확인');
+                        console.warn('3. Firebase Functions 로그 확인:');
+                        console.warn('   - Firebase Console > Functions > sendMarketingNotification > Logs');
+                        console.warn('   - "[마케팅] 배치 X 실패 원인 통계:" 로그 확인');
+                        if (data.failureCount > 0) {
+                          console.error('4. FCM 전송 실패 - Firebase Functions 로그에서 실패 원인 확인 필요');
+                          console.error('   일반적인 실패 원인:');
+                          console.error('   - invalid-registration-token: FCM 토큰이 만료되었거나 유효하지 않음');
+                          console.error('   - registration-token-not-registered: 앱이 재설치되어 토큰이 등록 해제됨');
+                          console.error('   - 해결: 사용자가 다시 로그인하거나 앱을 재설치해야 함');
+                        }
+                      }
                       // 폼 초기화
                       setNotificationTitle('');
                       setNotificationMessage('');
@@ -2301,8 +2374,13 @@ function UserManagement({ user }) {
                     }
                   } catch (error) {
                     console.error('알림 발송 오류:', error);
+                    console.error('오류 상세:', {
+                      code: error.code,
+                      message: error.message,
+                      details: error.details
+                    });
                     toast.showToast(
-                      error.message || '알림 발송 중 오류가 발생했습니다.',
+                      `❌ 알림 발송 실패\n\n${error.message || '알림 발송 중 오류가 발생했습니다.'}\n\n브라우저 콘솔을 확인하세요.`,
                       'error'
                     );
                   } finally {
@@ -2606,10 +2684,10 @@ function UserManagement({ user }) {
                           )}
                         </div>
                         {startDate && (
-                          <div style={{ 
-                            marginTop: '8px', 
-                            padding: '8px', 
-                            background: '#f0f0f0', 
+                          <div style={{
+                            marginTop: '8px',
+                            padding: '8px',
+                            background: '#f0f0f0',
                             borderRadius: '6px',
                             fontSize: '13px'
                           }}>
