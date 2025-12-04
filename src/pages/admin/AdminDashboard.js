@@ -202,7 +202,7 @@ function AdminDashboard({ user }) {
 
     // 오늘의 통계
     const [todayRevenue, setTodayRevenue] = useState({ amount: 0, subscriptionCount: 0, pointCount: 0 });
-    const [todayCost, setTodayCost] = useState({ amount: 0, novelCount: 0, coverCount: 0 });
+    const [todayCost, setTodayCost] = useState({ amount: 0, diaryCount: 0, novelCount: 0, coverCount: 0 });
     const [todayDAU, setTodayDAU] = useState(0);
     const [todayNewUsers, setTodayNewUsers] = useState(0);
 
@@ -284,7 +284,7 @@ function AdminDashboard({ user }) {
                 console.log('오늘의 비용:', todayCostData);
             } catch (err) {
                 console.error('비용 조회 실패:', err);
-                setTodayCost({ amount: 0, novelCount: 0, coverCount: 0 });
+                setTodayCost({ amount: 0, diaryCount: 0, novelCount: 0, coverCount: 0 });
             }
 
             try {
@@ -602,14 +602,57 @@ function AdminDashboard({ user }) {
         }
     };
 
-    // 오늘의 비용 조회 (AI 소설 생성)
+    // 오늘의 비용 조회 (AI 일기/소설/표지 생성)
     const fetchTodayCost = async (startTs, endTs) => {
         try {
-            const novelsRef = collection(db, 'novels');
             const startDate = startTs.toDate();
             const endDate = endTs.toDate();
 
-            // createdAt 필드로 쿼리 시도
+            // 1. 일기 생성 조회 (diaries 컬렉션에서 enhancedContent가 있는 일기)
+            let diaryCount = 0;
+            try {
+                const diariesRef = collection(db, 'diaries');
+                let diariesSnapshot;
+                try {
+                    const q = query(
+                        diariesRef,
+                        where('createdAt', '>=', startTs),
+                        where('createdAt', '<=', endTs)
+                    );
+                    diariesSnapshot = await getDocs(q);
+                } catch (queryErr) {
+                    diariesSnapshot = await getDocs(diariesRef);
+                }
+
+                diariesSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let createdAt = null;
+                    if (data.createdAt) {
+                        if (data.createdAt.toDate) {
+                            createdAt = data.createdAt.toDate();
+                        } else if (data.createdAt instanceof Date) {
+                            createdAt = data.createdAt;
+                        } else {
+                            createdAt = new Date(data.createdAt);
+                        }
+                    }
+
+                    if (createdAt && createdAt >= startDate && createdAt <= endDate) {
+                        // enhancedContent가 있으면 AI 일기 생성된 것으로 간주
+                        if (data.enhancedContent) {
+                            diaryCount++;
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('일기 생성 조회 실패:', err);
+            }
+
+            // 2. 소설 생성 조회
+            const novelsRef = collection(db, 'novels');
+            let novelCount = 0;
+            let coverCount = 0;
+
             let snapshot;
             try {
                 const q = query(
@@ -619,12 +662,8 @@ function AdminDashboard({ user }) {
                 );
                 snapshot = await getDocs(q);
             } catch (queryErr) {
-                // 인덱스가 없는 경우 전체 조회 후 필터링
                 snapshot = await getDocs(novelsRef);
             }
-
-            let novelCount = 0;
-            let coverCount = 0;
 
             snapshot.forEach((doc) => {
                 const data = doc.data();
@@ -648,24 +687,31 @@ function AdminDashboard({ user }) {
                 }
             });
 
-            // 실제 API 비용 계산 (2024년 기준)
-            // GPT-4o: 입력 $2.50/1M tokens, 출력 $10/1M tokens
-            // 소설 생성 시 평균: 입력 5,000 tokens, 출력 8,000 tokens
-            // 입력 비용: 5,000 * $2.50/1M = $0.0125
-            // 출력 비용: 8,000 * $10/1M = $0.08
-            // 총: 약 $0.09-0.10 = 약 ₩120-130 (환율 1,300원 기준)
-            // DALL-E 3: $0.04 per image (1024x1024) = 약 ₩50-55
-            const GPT4oCostPerNovel = 130; // 원화 (보수적 추정)
-            const DALLE3CostPerImage = 55; // 원화
+            // 실제 API 비용 계산
+            // GPT-4o 일기 생성:
+            //   - 일기 내용: max_tokens 2000, 제목: max_tokens 60
+            //   - 입력: 약 500 토큰 = $0.00125 (약 1.75원)
+            //   - 출력: 약 1,500 토큰 = $0.015 (약 21원)
+            //   - 합계: 약 23원
+            // GPT-4o 소설 생성:
+            //   - 입력: 약 1,000 토큰 = $0.0025 (약 3.5원)
+            //   - 출력: 약 2,000 토큰 = $0.02 (약 28원)
+            //   - 텍스트 합계: 약 32원
+            // DALL-E 3 표지 이미지:
+            //   - 1024x1024 Standard = $0.040 / 1장 = 약 56원
+            const GPT4oCostPerDiary = 23; // 원화
+            const GPT4oCostPerNovel = 32; // 원화
+            const DALLE3CostPerImage = 56; // 원화
 
-            const gpt4oCost = novelCount * GPT4oCostPerNovel;
-            const dalle3Cost = coverCount * DALLE3CostPerImage;
-            const totalCost = gpt4oCost + dalle3Cost;
+            const diaryCost = diaryCount * GPT4oCostPerDiary;
+            const novelCost = novelCount * GPT4oCostPerNovel;
+            const coverCost = coverCount * DALLE3CostPerImage;
+            const totalCost = diaryCost + novelCost + coverCost;
 
-            return { amount: totalCost, novelCount, coverCount };
+            return { amount: totalCost, diaryCount, novelCount, coverCount };
         } catch (err) {
             console.error('비용 조회 실패:', err);
-            return { amount: 0, novelCount: 0, coverCount: 0 };
+            return { amount: 0, diaryCount: 0, novelCount: 0, coverCount: 0 };
         }
     };
 
@@ -826,7 +872,7 @@ function AdminDashboard({ user }) {
                                 )}
                             </StatValue>
                             <StatSubValue theme={theme} style={{ marginTop: '8px' }}>
-                                (소설 {todayCost.novelCount}건, 표지 {todayCost.coverCount}장)
+                                (일기 {todayCost.diaryCount}건, 소설 {todayCost.novelCount}건, 표지 {todayCost.coverCount}장)
                             </StatSubValue>
                         </StatCard>
 
