@@ -182,13 +182,20 @@ function Login() {
         // 임시 비밀번호로 로그인한 경우 처리
         if (userData.temporaryPassword && userData.passwordResetBy === 'admin') {
           // 임시 비밀번호 정보 삭제 (보안상)
-          await updateDoc(userRef, {
+          const updateData = {
             temporaryPassword: null,
             passwordResetBy: null,
             passwordResetAt: null,
             lastLoginAt: new Date(),
             updatedAt: new Date()
-          });
+          };
+          
+          // 이전 접속일 저장
+          if (userData.lastLoginAt) {
+            updateData.previousLoginAt = userData.lastLoginAt;
+          }
+          
+          await updateDoc(userRef, updateData);
 
           // 사용자에게 비밀번호 변경 안내
           setError('임시 비밀번호로 로그인되었습니다. 보안을 위해 비밀번호를 변경해주세요.');
@@ -197,10 +204,17 @@ function Login() {
         }
 
         // 마지막 로그인 시간 업데이트
-        await updateDoc(userRef, {
+        const updateData = {
           lastLoginAt: new Date(),
           updatedAt: new Date()
-        });
+        };
+        
+        // 이전 접속일 저장
+        if (userData.lastLoginAt) {
+          updateData.previousLoginAt = userData.lastLoginAt;
+        }
+        
+        await updateDoc(userRef, updateData);
       }
 
       // 이메일 인증 상태 확인 (이메일/비밀번호 로그인인 경우만)
@@ -271,22 +285,36 @@ function Login() {
       // 프로필 이미지 업데이트 (비어있거나 기본 이미지인 경우)
       if (!userData.photoURL || userData.photoURL === process.env.PUBLIC_URL + '/default-profile.svg') {
         const googlePhotoURL = user.photoURL || `https://lh3.googleusercontent.com/a/${user.uid}=s96-c`;
-        await updateDoc(userRef, {
+        const updateData = {
           photoURL: googlePhotoURL,
           authProvider: 'google.com',
           lastLoginAt: new Date(),
           updatedAt: new Date()
-        });
+        };
+        
+        // 이전 접속일 저장
+        if (userData.lastLoginAt) {
+          updateData.previousLoginAt = userData.lastLoginAt;
+        }
+        
+        await updateDoc(userRef, updateData);
 
         await updateProfile(user, {
           photoURL: googlePhotoURL
         });
       } else {
         // 마지막 로그인 시간만 업데이트
-        await updateDoc(userRef, {
+        const updateData = {
           lastLoginAt: new Date(),
           updatedAt: new Date()
-        });
+        };
+        
+        // 이전 접속일 저장
+        if (userData.lastLoginAt) {
+          updateData.previousLoginAt = userData.lastLoginAt;
+        }
+        
+        await updateDoc(userRef, updateData);
       }
     }
   };

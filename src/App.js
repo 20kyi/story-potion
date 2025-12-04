@@ -568,6 +568,46 @@ function App() {
 
                 // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
                 if (user?.uid) {
+                    // 앱 시작 시 최근 접속일 업데이트 (Firestore에 직접 기록)
+                    try {
+                        const userRef = doc(db, 'users', user.uid);
+                        const userDoc = await getDoc(userRef);
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            const lastLoginAt = userData.lastLoginAt;
+                            
+                            // 1분 이상 지났을 때만 업데이트 (너무 빈번한 업데이트 방지)
+                            let shouldUpdate = false;
+                            if (!lastLoginAt) {
+                                shouldUpdate = true;
+                            } else {
+                                const lastLoginTime = lastLoginAt.toDate ? lastLoginAt.toDate() : new Date(lastLoginAt);
+                                const now = new Date();
+                                const minutesSinceLastLogin = (now - lastLoginTime) / (1000 * 60);
+                                if (minutesSinceLastLogin >= 1) {
+                                    shouldUpdate = true;
+                                }
+                            }
+                            
+                            if (shouldUpdate) {
+                                const updateData = {
+                                    lastLoginAt: new Date(),
+                                    updatedAt: new Date()
+                                };
+                                
+                                // 이전 접속일 저장 (lastLoginAt이 있으면 previousLoginAt에 저장)
+                                if (lastLoginAt) {
+                                    updateData.previousLoginAt = lastLoginAt;
+                                }
+                                
+                                await updateDoc(userRef, updateData);
+                                console.log('✅ 앱 시작 시 최근 접속일 업데이트 완료');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('최근 접속일 업데이트 실패:', error);
+                    }
+
                     try {
                         await checkAndRenewMonthlyPremium(user.uid);
                     } catch (error) {
@@ -705,6 +745,47 @@ function App() {
                 const currentUser = auth.currentUser;
                 if (currentUser) {
                     console.log('✅ 사용자가 이미 로그인되어 있습니다:', currentUser.email);
+                    
+                    // 앱이 포그라운드로 돌아올 때 최근 접속일 업데이트 (Firestore에 직접 기록)
+                    try {
+                        const userRef = doc(db, 'users', currentUser.uid);
+                        const userDoc = await getDoc(userRef);
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            const lastLoginAt = userData.lastLoginAt;
+                            
+                            // 1분 이상 지났을 때만 업데이트 (너무 빈번한 업데이트 방지)
+                            let shouldUpdate = false;
+                            if (!lastLoginAt) {
+                                shouldUpdate = true;
+                            } else {
+                                const lastLoginTime = lastLoginAt.toDate ? lastLoginAt.toDate() : new Date(lastLoginAt);
+                                const now = new Date();
+                                const minutesSinceLastLogin = (now - lastLoginTime) / (1000 * 60);
+                                if (minutesSinceLastLogin >= 1) {
+                                    shouldUpdate = true;
+                                }
+                            }
+                            
+                            if (shouldUpdate) {
+                                const updateData = {
+                                    lastLoginAt: new Date(),
+                                    updatedAt: new Date()
+                                };
+                                
+                                // 이전 접속일 저장 (lastLoginAt이 있으면 previousLoginAt에 저장)
+                                if (lastLoginAt) {
+                                    updateData.previousLoginAt = lastLoginAt;
+                                }
+                                
+                                await updateDoc(userRef, updateData);
+                                console.log('✅ 앱 활성화 시 최근 접속일 업데이트 완료');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('앱 활성화 시 최근 접속일 업데이트 실패:', error);
+                    }
+                    
                     // 구독 상태 동기화
                     try {
                         await inAppPurchaseService.syncSubscriptionStatus(currentUser.uid);

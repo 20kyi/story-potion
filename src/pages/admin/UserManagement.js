@@ -429,16 +429,16 @@ const MobileUserCard = styled.div`
     display: block;
     background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
     border: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'};
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 12px;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.2' : '0.1'});
+    box-shadow: 0 1px 2px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.15' : '0.08'});
     
     &:active {
       transform: scale(0.98);
-      box-shadow: 0 1px 2px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.2' : '0.1'});
+      box-shadow: 0 1px 1px rgba(0,0,0,${({ theme }) => theme.theme === 'dark' ? '0.15' : '0.08'});
     }
   }
 `;
@@ -477,11 +477,11 @@ const EmptyMobileCard = styled.div`
     display: block;
     background: ${({ theme }) => theme.theme === 'dark' ? '#34495e' : 'white'};
     border: 1px dashed ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'};
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 12px;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     opacity: 0.5;
-    min-height: 120px;
+    min-height: 60px;
   }
 `;
 
@@ -489,38 +489,40 @@ const MobileCardHeader = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 `;
 
 const MobileCardTitle = styled.div`
   font-weight: bold;
-  font-size: 16px;
+  font-size: 13px;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  line-height: 1.2;
 `;
 
 const MobileCardEmail = styled.div`
-  font-size: 12px;
+  font-size: 11px;
   color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
   word-break: break-all;
+  line-height: 1.2;
 `;
 
 const MobileCardRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid ${({ theme }) => theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'};
 `;
 
 const MobileCardLabel = styled.span`
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.theme === 'dark' ? '#bdc3c7' : '#666'};
 `;
 
 const MobileCardValue = styled.span`
-  font-size: 14px;
+  font-size: 11px;
   font-weight: bold;
   color: ${({ theme }) => theme.text};
 `;
@@ -606,9 +608,6 @@ function UserManagement({ user }) {
   const [userDetail, setUserDetail] = useState(null);
   const [userActivity, setUserActivity] = useState({ diaries: [], novels: [], comments: [] });
   const [detailLoading, setDetailLoading] = useState(false);
-  const [pointInput, setPointInput] = useState(0);
-  const [pointActionLoading, setPointActionLoading] = useState(false);
-  const [pointActionStatus, setPointActionStatus] = useState(null);
   const [statusActionLoading, setStatusActionLoading] = useState(false);
   const [statusActionStatus, setStatusActionStatus] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -661,23 +660,19 @@ function UserManagement({ user }) {
   const [pageStack, setPageStack] = useState([]); // 이전 페이지 스택
   const [totalUsers, setTotalUsers] = useState(null); // 전체 사용자 수
 
-  // 상태 표시용 컬러 뱃지
+  // 상태 표시용 컬러 텍스트 (작고 간단하게)
   const renderStatusBadge = (status) => {
     let color = '#2ecc40', text = '정상';
     if (status === '정지') { color = '#e74c3c'; text = '정지'; }
     if (status === '탈퇴') { color = '#95a5a6'; text = '탈퇴'; }
-    return <span style={{ background: color, color: 'white', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{text}</span>;
+    return <span style={{ color: color, fontSize: '11px', fontWeight: '500' }}>{text}</span>;
   };
 
-  // 프리미엄 뱃지 렌더링
+  // 프리미엄 간단 표시 (일반, 월간, 연간)
   const renderPremiumBadge = (user) => {
-    if (user.isYearlyPremium) {
-      return <PremiumBadge type="yearly" theme={theme}>연간 프리미엄</PremiumBadge>;
-    } else if (user.isMonthlyPremium) {
-      return <PremiumBadge type="monthly" theme={theme}>월간 프리미엄</PremiumBadge>;
-    } else {
-      return <PremiumBadge theme={theme}>일반</PremiumBadge>;
-    }
+    const premiumText = getPremiumText(user);
+    const premiumColor = getPremiumColor(user);
+    return <span style={{ color: premiumColor, fontSize: '11px', fontWeight: '500' }}>{premiumText}</span>;
   };
 
   // 프리미엄 간단 표시 (모바일용)
@@ -1181,8 +1176,22 @@ function UserManagement({ user }) {
   const openUserDetail = async (u) => {
     setSelectedUser(u);
     setDetailLoading(true);
-    // 기본 정보
-    setUserDetail(u);
+
+    // Firestore에서 최신 사용자 정보 가져오기 (previousLoginAt 포함)
+    try {
+      const userDoc = await getDoc(doc(db, 'users', u.uid));
+      if (userDoc.exists()) {
+        const latestUserData = { uid: u.uid, ...userDoc.data() };
+        setUserDetail(latestUserData);
+      } else {
+        // 문서가 없으면 기본 정보 사용
+        setUserDetail(u);
+      }
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error);
+      setUserDetail(u);
+    }
+
     // 활동 내역 fetch (예시: diaries, novels, comments 컬렉션)
     try {
       const promises = [
@@ -1219,34 +1228,35 @@ function UserManagement({ user }) {
   };
   const closeUserDetail = () => { setSelectedUser(null); setUserDetail(null); setUserActivity({ diaries: [], novels: [], comments: [] }); };
 
-  // 가입일/접속일 포맷 함수
+  // 가입일/접속일 포맷 함수 (년월일 시간 초까지 표시)
   const formatDate = (val) => {
-    if (!val) return '';
-    if (val.seconds) return new Date(val.seconds * 1000).toLocaleString();
-    if (typeof val === 'string' || typeof val === 'number') return new Date(val).toLocaleString();
-    return '';
+    if (!val) return '없음';
+    const dateOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+
+    let date;
+    if (val.seconds) {
+      date = new Date(val.seconds * 1000);
+    } else if (val.toDate && typeof val.toDate === 'function') {
+      date = val.toDate();
+    } else if (typeof val === 'string' || typeof val === 'number') {
+      date = new Date(val);
+    } else {
+      return '없음';
+    }
+
+    if (isNaN(date.getTime())) return '없음';
+
+    return date.toLocaleString('ko-KR', dateOptions);
   };
 
-  // 포인트 지급/차감 핸들러
-  const handlePointChange = async (delta) => {
-    if (!selectedUser) return;
-    setPointActionLoading(true);
-    setPointActionStatus(null);
-    try {
-      const newPoint = (selectedUser.point || 0) + delta;
-      const ok = await updateUserData(selectedUser.uid, { point: newPoint });
-      if (ok) {
-        setUserDetail({ ...selectedUser, point: newPoint });
-        setPointActionStatus({ type: 'success', message: `포인트 ${delta > 0 ? '지급' : '차감'} 완료` });
-      } else {
-        setPointActionStatus({ type: 'error', message: '포인트 변경 실패' });
-      }
-    } catch (e) {
-      setPointActionStatus({ type: 'error', message: '포인트 변경 오류: ' + e.message });
-    } finally {
-      setPointActionLoading(false);
-    }
-  };
 
   // 계정 정지/해제 핸들러
   const handleToggleStatus = async () => {
@@ -1395,56 +1405,6 @@ function UserManagement({ user }) {
   };
 
   // 프리미엄 상태 변경 핸들러
-  const handleTogglePremium = async (premiumType) => {
-    if (!selectedUser) return;
-    setStatusActionLoading(true);
-    setStatusActionStatus(null);
-    try {
-      let updateData = {};
-      if (premiumType === 'monthly') {
-        updateData = {
-          isMonthlyPremium: !selectedUser.isMonthlyPremium,
-          isYearlyPremium: false,
-          premiumType: !selectedUser.isMonthlyPremium ? 'monthly' : null,
-          premiumStartDate: !selectedUser.isMonthlyPremium ? new Date() : null,
-          premiumRenewalDate: !selectedUser.isMonthlyPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null
-        };
-      } else if (premiumType === 'yearly') {
-        updateData = {
-          isYearlyPremium: !selectedUser.isYearlyPremium,
-          isMonthlyPremium: false,
-          premiumType: !selectedUser.isYearlyPremium ? 'yearly' : null,
-          premiumStartDate: !selectedUser.isYearlyPremium ? new Date() : null,
-          premiumRenewalDate: !selectedUser.isYearlyPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : null
-        };
-      } else {
-        // 프리미엄 해제
-        updateData = {
-          isMonthlyPremium: false,
-          isYearlyPremium: false,
-          premiumType: null,
-          premiumCancelled: true
-        };
-      }
-
-      const ok = await updateUserData(selectedUser.uid, updateData);
-      if (ok) {
-        setUserDetail({ ...selectedUser, ...updateData });
-        setStatusActionStatus({
-          type: 'success',
-          message: `프리미엄 상태가 ${premiumType === 'monthly' ? '월간' : premiumType === 'yearly' ? '연간' : '해제'}로 변경되었습니다.`
-        });
-        // 목록 새로고침
-        setTimeout(() => loadUsersPage(), 500);
-      } else {
-        setStatusActionStatus({ type: 'error', message: '프리미엄 상태 변경 실패' });
-      }
-    } catch (e) {
-      setStatusActionStatus({ type: 'error', message: '프리미엄 상태 변경 오류: ' + e.message });
-    } finally {
-      setStatusActionLoading(false);
-    }
-  };
 
 
 
@@ -1551,6 +1511,7 @@ function UserManagement({ user }) {
                 style={{ flex: '1 1 auto', minWidth: '120px' }}
               >
                 <option value="createdAt">가입일</option>
+                <option value="lastLoginAt">최근 접속일</option>
                 <option value="point">포인트</option>
                 <option value="displayName">이름</option>
                 <option value="premium">프리미엄</option>
@@ -1580,6 +1541,7 @@ function UserManagement({ user }) {
                   <TableHeaderCell theme={theme}>포인트</TableHeaderCell>
                   <TableHeaderCell theme={theme}>상태</TableHeaderCell>
                   <TableHeaderCell theme={theme}>가입일</TableHeaderCell>
+                  <TableHeaderCell theme={theme}>최근 접속일</TableHeaderCell>
                 </tr>
               </TableHeader>
               <tbody>
@@ -1613,7 +1575,7 @@ function UserManagement({ user }) {
                       {renderPremiumBadge(user)}
                     </TableCell>
                     <TableCell theme={theme}>
-                      <span style={{ color: '#3498f3', fontWeight: 'bold' }}>{user.point || 0}p</span>
+                      <span style={{ color: '#3498f3', fontWeight: 'bold', fontSize: '11px' }}>{user.point || 0}p</span>
                     </TableCell>
                     <TableCell theme={theme}>
                       {renderStatusBadge(user.status)}
@@ -1621,100 +1583,92 @@ function UserManagement({ user }) {
                     <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
                       {formatDate(user.createdAt)}
                     </TableCell>
+                    <TableCell theme={theme} style={{ fontSize: '12px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>
+                      {formatDate(user.lastLoginAt)}
+                    </TableCell>
                   </TableRow>
-                ))}
-                {/* 빈 행 추가 (10명 미만일 때) */}
-                {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
-                  <EmptyTableRow key={`empty-${index}`} theme={theme}>
-                    <EmptyTableCell theme={theme} colSpan={5} style={{ textAlign: 'center' }}>
-                      -
-                    </EmptyTableCell>
-                  </EmptyTableRow>
                 ))}
               </tbody>
             </UserTable>
           </div>
 
-          {/* 모바일 카드 */}
+          {/* 모바일 카드 - 컴팩트 버전 */}
           <MobileCardContainer>
             {users.map((user) => (
               <MobileUserCard key={user.uid} theme={theme} onClick={() => openUserDetail(user)}>
                 <MobileCardHeader>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                     <img
-                      src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=40`}
+                      src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=28`}
                       alt={user.displayName || 'User'}
                       style={{
-                        width: '40px',
-                        height: '40px',
+                        width: '28px',
+                        height: '28px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         flexShrink: 0
                       }}
                       onError={(e) => {
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=40`;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=3498db&color=fff&size=28`;
                       }}
                     />
-                    <div>
-                      <MobileCardTitle theme={theme}>{user.displayName || '이름 없음'}</MobileCardTitle>
-                      <MobileCardEmail theme={theme}>{user.email}</MobileCardEmail>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <MobileCardTitle theme={theme} style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '13px'
+                      }}>{user.displayName || '이름 없음'}</MobileCardTitle>
+                      <MobileCardEmail theme={theme} style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '10px'
+                      }}>{user.email}</MobileCardEmail>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                      {renderStatusBadge(user.status)}
+                      <span style={{
+                        fontSize: '10px',
+                        color: getPremiumColor(user),
+                        fontWeight: '600',
+                        padding: '1px 4px',
+                        borderRadius: '3px',
+                        backgroundColor: getPremiumColor(user) === '#FFC300' ? 'rgba(255, 195, 0, 0.15)' :
+                          getPremiumColor(user) === '#3498db' ? 'rgba(52, 152, 219, 0.15)' :
+                            'rgba(149, 165, 166, 0.15)',
+                        fontSize: '10px'
+                      }}>{getPremiumText(user)}</span>
+                      <span style={{
+                        fontSize: '11px',
+                        color: '#3498f3',
+                        fontWeight: 'bold'
+                      }}>{user.point || 0}p</span>
                     </div>
                   </div>
                 </MobileCardHeader>
-                <MobileCardRow theme={theme} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  flexWrap: 'wrap',
-                  marginBottom: '8px'
-                }}>
-                  <span>{renderStatusBadge(user.status)}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    color: theme.text,
-                    fontWeight: '500'
-                  }}>•</span>
-                  <span style={{
-                    fontSize: '13px',
-                    color: getPremiumColor(user),
-                    fontWeight: '600',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: getPremiumColor(user) === '#FFC300' ? 'rgba(255, 195, 0, 0.15)' :
-                      getPremiumColor(user) === '#3498db' ? 'rgba(52, 152, 219, 0.15)' :
-                        'rgba(149, 165, 166, 0.15)'
-                  }}>{getPremiumText(user)}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    color: theme.text,
-                    fontWeight: '500'
-                  }}>•</span>
-                  <span style={{
-                    fontSize: '14px',
-                    color: '#3498f3',
-                    fontWeight: 'bold'
-                  }}>{user.point || 0}p</span>
-                </MobileCardRow>
-                <MobileCardRow theme={theme}>
-                  <MobileCardLabel theme={theme}>가입일</MobileCardLabel>
-                  <MobileCardValue theme={theme} style={{ fontSize: '12px' }}>{formatDate(user.createdAt)}</MobileCardValue>
-                </MobileCardRow>
-              </MobileUserCard>
-            ))}
-            {/* 빈 카드 추가 (10명 미만일 때) */}
-            {Array.from({ length: Math.max(0, pageLimit - users.length) }).map((_, index) => (
-              <EmptyMobileCard key={`empty-mobile-${index}`} theme={theme}>
                 <div style={{
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  color: theme.theme === 'dark' ? '#555' : '#ccc',
-                  fontSize: '14px'
+                  fontSize: '9px',
+                  color: theme.theme === 'dark' ? '#bdc3c7' : '#666',
+                  marginTop: '4px',
+                  paddingTop: '4px',
+                  borderTop: `1px solid ${theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'}`,
+                  flexWrap: 'wrap',
+                  gap: '4px',
+                  lineHeight: '1.3'
                 }}>
-                  -
+                  <span style={{ flexShrink: 0 }}>
+                    <span style={{ fontWeight: '500' }}>가입:</span> {formatDate(user.createdAt)}
+                  </span>
+                  <span style={{ margin: '0 4px', flexShrink: 0 }}>•</span>
+                  <span style={{ flexShrink: 0 }}>
+                    <span style={{ fontWeight: '500' }}>접속:</span> {formatDate(user.lastLoginAt)}
+                  </span>
                 </div>
-              </EmptyMobileCard>
+              </MobileUserCard>
             ))}
           </MobileCardContainer>
 
@@ -2376,147 +2330,205 @@ function UserManagement({ user }) {
           left: 0,
           width: '100vw',
           height: '100vh',
-          background: 'rgba(0,0,0,0.3)',
+          background: 'rgba(0,0,0,0.5)',
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: isMobile ? '10px' : '20px',
-          boxSizing: 'border-box'
+          padding: isMobile ? '16px' : '20px',
+          boxSizing: 'border-box',
+          overflowY: 'auto'
         }} onClick={closeUserDetail}>
           <div style={{
             background: theme.theme === 'dark' ? '#2c3e50' : 'white',
             color: theme.text,
-            borderRadius: isMobile ? 12 : 8,
-            padding: isMobile ? 16 : 24,
-            minWidth: 280,
-            maxWidth: '100%',
-            width: '100%',
-            maxHeight: isMobile ? '90vh' : '80vh',
+            borderRadius: '12px',
+            padding: isMobile ? '16px' : '24px',
+            minWidth: isMobile ? 'auto' : 400,
+            maxWidth: isMobile ? '100%' : '90%',
+            width: isMobile ? '100%' : 'auto',
+            maxHeight: isMobile ? '90vh' : '85vh',
             overflowY: 'auto',
             wordBreak: 'break-all',
             overflowWrap: 'anywhere',
             boxSizing: 'border-box',
-            border: theme.theme === 'dark' ? '1px solid #34495e' : 'none'
+            border: theme.theme === 'dark' ? '1px solid #34495e' : 'none',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            position: 'relative'
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{
-              fontSize: isMobile ? '18px' : '20px',
-              marginBottom: isMobile ? '12px' : '16px'
-            }}>유저 상세 정보</h2>
-            {detailLoading ? <div>로딩 중...</div> : userDetail && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '10px' : '16px' }}>
+              <h2 style={{
+                fontSize: isMobile ? '16px' : '20px',
+                margin: 0,
+                fontWeight: 'bold'
+              }}>유저 상세 정보</h2>
+              <button onClick={closeUserDetail} style={{
+                background: 'none',
+                border: 'none',
+                fontSize: isMobile ? '24px' : '20px',
+                color: theme.text,
+                cursor: 'pointer',
+                padding: '0',
+                width: isMobile ? '32px' : '28px',
+                height: isMobile ? '32px' : '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                lineHeight: 1
+              }}>×</button>
+            </div>
+            {detailLoading ? <div style={{ padding: isMobile ? '20px 0' : '40px 0', textAlign: 'center' }}>로딩 중...</div> : userDetail && (
               <div>
-                <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#f8f9fa', borderRadius: '8px', fontSize: isMobile ? '14px' : '13px' }}>
-                  <div style={{ marginBottom: '6px' }}><b>이메일:</b> {userDetail.email}</div>
-                  <div style={{ marginBottom: '6px' }}><b>닉네임:</b> {userDetail.displayName}</div>
-                  <div style={{ marginBottom: '6px' }}><b>가입일:</b> {formatDate(userDetail.createdAt)}</div>
-                  <div><b>최근 접속일:</b> {formatDate(userDetail.lastLoginAt) || '없음'}</div>
-                </div>
-
-                <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#e8f4fd', borderRadius: '8px' }}>
-                  <div style={{ marginBottom: '8px' }}>
-                    <b>포인트:</b> <span style={{ color: '#3498f3', fontWeight: 'bold', fontSize: isMobile ? '20px' : '18px' }}>{userDetail.point || 0}p</span>
+                {/* 기본 정보 - 컴팩트하게 */}
+                <div style={{
+                  marginBottom: isMobile ? '10px' : '12px',
+                  padding: isMobile ? '10px' : '12px',
+                  background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa',
+                  borderRadius: isMobile ? '6px' : '8px',
+                  fontSize: isMobile ? '13px' : '14px'
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                    gap: isMobile ? '6px' : '8px',
+                    marginBottom: isMobile ? '6px' : '8px'
+                  }}>
+                    <div><b style={{ fontSize: isMobile ? '12px' : '13px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>이메일:</b><br />{userDetail.email}</div>
+                    <div><b style={{ fontSize: isMobile ? '12px' : '13px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>닉네임:</b><br />{userDetail.displayName}</div>
                   </div>
-                  {isMainAdmin(user) && (
-                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <input
-                        type="number"
-                        value={pointInput}
-                        onChange={e => setPointInput(Number(e.target.value))}
-                        placeholder="포인트 입력"
-                        style={{
-                          flex: isMobile ? '1 1 100%' : '0 0 100px',
-                          padding: isMobile ? '12px' : '6px',
-                          borderRadius: '4px',
-                          border: '1px solid #ddd',
-                          fontSize: isMobile ? '16px' : '14px',
-                          minHeight: isMobile ? '44px' : 'auto'
-                        }}
-                      />
-                      <Button onClick={() => handlePointChange(pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>지급</Button>
-                      <Button onClick={() => handlePointChange(-pointInput)} disabled={pointActionLoading || !pointInput} style={{ fontSize: isMobile ? '14px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', background: '#e74c3c', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>차감</Button>
-                      {pointActionStatus && <span style={{ width: '100%', marginTop: 8, color: pointActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{pointActionStatus.message}</span>}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                    gap: isMobile ? '6px' : '8px',
+                    fontSize: isMobile ? '12px' : '13px'
+                  }}>
+                    <div><b style={{ fontSize: isMobile ? '12px' : '13px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>가입일:</b> {formatDate(userDetail.createdAt)}</div>
+                    <div><b style={{ fontSize: isMobile ? '12px' : '13px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>최근 접속:</b> {formatDate(userDetail.lastLoginAt) || '없음'}</div>
+                    <div style={{ gridColumn: isMobile ? '1' : 'span 2' }}>
+                      <b style={{ fontSize: isMobile ? '12px' : '13px', color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>이전 접속:</b> {formatDate(userDetail.previousLoginAt) || '없음'}
                     </div>
-                  )}
-                </div>
-
-                <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#fff3cd', borderRadius: '8px' }}>
-                  <div style={{ marginBottom: '8px' }}>
-                    <b>프리미엄 상태:</b> {renderPremiumBadge(userDetail)}
                   </div>
-                  {isMainAdmin(user) && (
-                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <Button
-                        onClick={() => handleTogglePremium('monthly')}
-                        disabled={statusActionLoading}
-                        style={{
-                          background: userDetail.isMonthlyPremium ? '#e74c3c' : '#3498db',
-                          fontSize: isMobile ? '13px' : '12px',
-                          padding: isMobile ? '10px 12px' : '6px 12px',
-                          flex: isMobile ? '1 1 100%' : 'auto'
-                        }}
-                      >
-                        {userDetail.isMonthlyPremium ? '월간 프리미엄 해제' : '월간 프리미엄 설정'}
-                      </Button>
-                      <Button
-                        onClick={() => handleTogglePremium('yearly')}
-                        disabled={statusActionLoading}
-                        style={{
-                          background: userDetail.isYearlyPremium ? '#e74c3c' : '#FFC300',
-                          fontSize: isMobile ? '13px' : '12px',
-                          padding: isMobile ? '10px 12px' : '6px 12px',
-                          color: userDetail.isYearlyPremium ? 'white' : 'black',
-                          flex: isMobile ? '1 1 100%' : 'auto'
-                        }}
-                      >
-                        {userDetail.isYearlyPremium ? '연간 프리미엄 해제' : '연간 프리미엄 설정'}
-                      </Button>
-                      {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (
-                        <Button
-                          onClick={() => handleTogglePremium('remove')}
-                          disabled={statusActionLoading}
-                          style={{
-                            background: '#95a5a6',
-                            fontSize: isMobile ? '13px' : '12px',
-                            padding: isMobile ? '10px 12px' : '6px 12px',
-                            flex: isMobile ? '1 1 100%' : 'auto'
-                          }}
-                        >
-                          프리미엄 해제
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                  {statusActionStatus && <div style={{ marginTop: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{statusActionStatus.message}</div>}
                 </div>
 
-                <div style={{ marginBottom: '15px', padding: isMobile ? '12px' : '10px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ marginBottom: '8px' }}>
-                    <b>상태:</b> {renderStatusBadge(userDetail.status)}
+                {/* 포인트/프리미엄/상태 - 인라인으로 컴팩트하게 */}
+                <div style={{
+                  marginBottom: isMobile ? '10px' : '12px',
+                  padding: isMobile ? '8px' : '10px',
+                  background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa',
+                  borderRadius: isMobile ? '6px' : '8px',
+                  fontSize: isMobile ? '12px' : '13px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: isMobile ? '8px' : '12px',
+                  alignItems: 'center'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>포인트:</span>
+                    <span style={{ color: '#3498f3', fontWeight: 'bold', fontSize: '11px' }}>{userDetail.point || 0}p</span>
                   </div>
-                  {isMainAdmin(user) && (
-                    <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <Button onClick={handleToggleStatus} disabled={statusActionLoading} style={{ background: '#f39c12', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>
-                        {userDetail.status === '정지' ? '정지 해제' : '계정 정지'}
-                      </Button>
-                      <Button onClick={handleDeleteUser} disabled={statusActionLoading} style={{ background: '#e74c3c', fontSize: isMobile ? '13px' : '12px', padding: isMobile ? '10px 16px' : '6px 12px', flex: isMobile ? '1 1 calc(50% - 4px)' : 'auto' }}>계정 삭제</Button>
-                    </div>
-                  )}
-                  {statusActionStatus && <div style={{ marginTop: 8, color: statusActionStatus.type === 'success' ? 'green' : 'red', fontSize: '12px' }}>{statusActionStatus.message}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>프리미엄:</span>
+                    {renderPremiumBadge(userDetail)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: theme.theme === 'dark' ? '#bdc3c7' : '#666' }}>상태:</span>
+                    {renderStatusBadge(userDetail.status)}
+                  </div>
                 </div>
 
-                <hr />
-                <div><b>최근 일기</b>
-                  <ul>{userActivity.diaries.map((d, i) => <li key={i}>{d.title || '(제목 없음)'} <span style={{ color: '#888' }}>{formatDate(d.createdAt)}</span></li>)}</ul>
-                </div>
-                <div><b>최근 소설</b>
-                  <ul>{userActivity.novels.map((n, i) => <li key={i}>{n.title || '(제목 없음)'} <span style={{ color: '#888' }}>{formatDate(n.createdAt)}</span></li>)}</ul>
-                </div>
-                <div><b>최근 댓글</b>
-                  <ul>{userActivity.comments.map((c, i) => <li key={i}>{c.content || '(내용 없음)'} <span style={{ color: '#888' }}>{formatDate(c.createdAt)}</span></li>)}</ul>
-                </div>
+                {/* 관리 버튼 */}
+                {isMainAdmin(user) && (
+                  <div style={{
+                    marginBottom: isMobile ? '10px' : '12px',
+                    display: 'flex',
+                    gap: isMobile ? '6px' : '8px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <Button
+                      onClick={handleToggleStatus}
+                      disabled={statusActionLoading}
+                      style={{
+                        background: '#f39c12',
+                        fontSize: isMobile ? '12px' : '13px',
+                        padding: isMobile ? '10px 12px' : '8px 16px',
+                        flex: isMobile ? '1 1 calc(50% - 3px)' : '1',
+                        minHeight: isMobile ? '44px' : 'auto'
+                      }}
+                    >
+                      {userDetail.status === '정지' ? '정지 해제' : '계정 정지'}
+                    </Button>
+                    <Button
+                      onClick={handleDeleteUser}
+                      disabled={statusActionLoading}
+                      style={{
+                        background: '#e74c3c',
+                        fontSize: isMobile ? '12px' : '13px',
+                        padding: isMobile ? '10px 12px' : '8px 16px',
+                        flex: isMobile ? '1 1 calc(50% - 3px)' : '1',
+                        minHeight: isMobile ? '44px' : 'auto'
+                      }}
+                    >
+                      계정 삭제
+                    </Button>
+                  </div>
+                )}
+                {statusActionStatus && (
+                  <div style={{
+                    marginBottom: isMobile ? '8px' : '10px',
+                    padding: isMobile ? '6px 8px' : '8px 10px',
+                    background: statusActionStatus.type === 'success' ? '#d4edda' : '#f8d7da',
+                    color: statusActionStatus.type === 'success' ? '#155724' : '#721c24',
+                    borderRadius: isMobile ? '4px' : '6px',
+                    fontSize: isMobile ? '11px' : '12px'
+                  }}>
+                    {statusActionStatus.message}
+                  </div>
+                )}
+
+                {/* 활동 내역 - 컴팩트하게 */}
+                {(userActivity.diaries.length > 0 || userActivity.novels.length > 0 || userActivity.comments.length > 0) && (
+                  <div style={{ marginTop: isMobile ? '10px' : '12px', paddingTop: isMobile ? '10px' : '12px', borderTop: `1px solid ${theme.theme === 'dark' ? '#34495e' : '#e0e0e0'}` }}>
+                    {userActivity.diaries.length > 0 && (
+                      <div style={{ marginBottom: isMobile ? '10px' : '12px' }}>
+                        <b style={{ fontSize: isMobile ? '13px' : '14px', display: 'block', marginBottom: isMobile ? '6px' : '8px' }}>최근 일기 ({userActivity.diaries.length})</b>
+                        <ul style={{ margin: 0, paddingLeft: isMobile ? '18px' : '20px', fontSize: isMobile ? '12px' : '13px' }}>
+                          {userActivity.diaries.slice(0, 3).map((d, i) => (
+                            <li key={i} style={{ marginBottom: isMobile ? '4px' : '6px', lineHeight: 1.4 }}>
+                              {d.title || '(제목 없음)'} <span style={{ color: '#888', fontSize: isMobile ? '11px' : '12px' }}>{formatDate(d.createdAt)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {userActivity.novels.length > 0 && (
+                      <div style={{ marginBottom: isMobile ? '10px' : '12px' }}>
+                        <b style={{ fontSize: isMobile ? '13px' : '14px', display: 'block', marginBottom: isMobile ? '6px' : '8px' }}>최근 소설 ({userActivity.novels.length})</b>
+                        <ul style={{ margin: 0, paddingLeft: isMobile ? '18px' : '20px', fontSize: isMobile ? '12px' : '13px' }}>
+                          {userActivity.novels.slice(0, 3).map((n, i) => (
+                            <li key={i} style={{ marginBottom: isMobile ? '4px' : '6px', lineHeight: 1.4 }}>
+                              {n.title || '(제목 없음)'} <span style={{ color: '#888', fontSize: isMobile ? '11px' : '12px' }}>{formatDate(n.createdAt)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {userActivity.comments.length > 0 && (
+                      <div>
+                        <b style={{ fontSize: isMobile ? '13px' : '14px', display: 'block', marginBottom: isMobile ? '6px' : '8px' }}>최근 댓글 ({userActivity.comments.length})</b>
+                        <ul style={{ margin: 0, paddingLeft: isMobile ? '18px' : '20px', fontSize: isMobile ? '12px' : '13px' }}>
+                          {userActivity.comments.slice(0, 3).map((c, i) => (
+                            <li key={i} style={{ marginBottom: isMobile ? '4px' : '6px', lineHeight: 1.4 }}>
+                              {c.content || '(내용 없음)'} <span style={{ color: '#888', fontSize: isMobile ? '11px' : '12px' }}>{formatDate(c.createdAt)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-            <div style={{ marginTop: 16, textAlign: 'right' }}><Button onClick={closeUserDetail}>닫기</Button></div>
           </div>
         </div>
       )}
