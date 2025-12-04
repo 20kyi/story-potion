@@ -243,7 +243,7 @@ function NovelCreate({ user }) {
     const previousPath = returnPath || '/novel';
 
     console.log('=== NovelCreate 컴포넌트 마운트 ===', new Date().toISOString());
-    console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle });
+    console.log('전달받은 데이터:', { year, month, weekNum, week, dateRange, imageUrl, title: initialTitle, existingGenres });
     const [content, setContent] = useState('');
     const [weekDiaries, setWeekDiaries] = useState([]); // 내부 fetch용으로 복구
     const [isLoading, setIsLoading] = useState(false);
@@ -1008,13 +1008,13 @@ function NovelCreate({ user }) {
                                                 return null;
                                             }
 
+                                            // 이미 저장된 장르는 비활성화 (일반/프리미엄 모두)
+                                            const isDisabledForExisting = existingGenres && existingGenres.length > 0 && existingGenres.includes(potion.genre);
+                                            
                                             // 일반 회원이고 이미 다른 장르의 소설이 있는 경우 비활성화
-                                            const isDisabled = !isPremium && existingGenres.length > 0 && !existingGenres.includes(potion.genre);
-
-                                            // 프리미엄 회원이 아니고 이미 생성된 장르는 표시하지 않음 (같은 장르는 표시)
-                                            if (!isPremium && existingGenres.includes(potion.genre)) {
-                                                return null;
-                                            }
+                                            const isDisabledForNonPremium = !isPremium && existingGenres.length > 0 && !existingGenres.includes(potion.genre);
+                                            
+                                            const isDisabled = isDisabledForExisting || isDisabledForNonPremium;
 
                                             // 맨 왼쪽 포션과 맨 오른쪽 포션 위치 조정
                                             const isLeftColumn = idx % 3 === 0;
@@ -1030,7 +1030,7 @@ function NovelCreate({ user }) {
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         position: 'relative',
-                                                        pointerEvents: 'auto',
+                                                        pointerEvents: isDisabled ? 'none' : 'auto',
                                                         cursor: isDisabled ? 'not-allowed' : 'pointer',
                                                         width: '100%',
                                                         height: '100%',
@@ -1041,7 +1041,7 @@ function NovelCreate({ user }) {
                                                     onClick={isDisabled ? undefined : () => setSelectedPotion(idx)}
                                                     whileHover={isDisabled ? {} : { scale: 1.1, y: -5 }}
                                                     whileTap={isDisabled ? {} : { scale: 0.95 }}
-                                                    animate={selectedPotion === idx ? { scale: 1.15, y: -8 } : { scale: 1, y: 0 }}
+                                                    animate={isDisabled ? { scale: 1, y: 0, opacity: 0 } : (selectedPotion === idx ? { scale: 1.15, y: -8, opacity: 1 } : { scale: 1, y: 0, opacity: 1 })}
                                                     transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                                                 >
                                                     <div style={{
@@ -1063,11 +1063,11 @@ function NovelCreate({ user }) {
                                                             alt={t(potion.key)}
                                                             selected={selectedPotion === idx}
                                                             initial={{ scale: 0.8, opacity: 0 }}
-                                                            animate={{ scale: 1, opacity: 1 }}
+                                                            animate={isDisabled ? { scale: 1, opacity: 0 } : { scale: 1, opacity: 1 }}
                                                             whileHover={isDisabled ? {} : { scale: 1.2 }}
                                                             transition={{ type: 'spring', stiffness: 300, damping: 18 }}
                                                             style={{
-                                                                opacity: isDisabled ? 0.5 : 1,
+                                                                visibility: isDisabled ? 'hidden' : 'visible',
                                                                 width: '100%',
                                                                 height: '100%',
                                                                 objectFit: 'contain',
@@ -1077,55 +1077,30 @@ function NovelCreate({ user }) {
                                                                 animation: isDisabled ? 'none' : 'potionGlow 3s ease-in-out infinite'
                                                             }}
                                                         />
-                                                        {/* 일반 회원이고 비활성화된 경우 PREMIUM 표시 */}
-                                                        {isDisabled && (
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                top: '50%',
-                                                                left: '50%',
-                                                                transform: 'translate(-50%, -50%)',
-                                                                background: 'linear-gradient(135deg, rgba(228, 163, 13, 0.95) 0%, rgba(255, 226, 148, 0.95) 100%)',
-                                                                color: '#fff',
-                                                                borderRadius: '8px',
-                                                                padding: '4px 8px',
-                                                                fontSize: '10px',
-                                                                fontWeight: '700',
-                                                                border: '2px solid #e4a30d',
-                                                                boxShadow: '0 2px 8px rgba(228, 163, 13, 0.5)',
-                                                                zIndex: 20,
-                                                                whiteSpace: 'nowrap',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '4px'
-                                                            }}>
-                                                                <span>👑</span>
-                                                                <span>PREMIUM</span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                     {/* 포션 아래 장르와 개수 표시 (한 줄) */}
-                                                    {!isDisabled && (
-                                                        <div style={{
-                                                            fontSize: 'clamp(9px, 1.5vw, 11px)',
-                                                            fontWeight: '600',
-                                                            color: '#fff',
-                                                            textAlign: 'center',
-                                                            lineHeight: '1.3',
-                                                            whiteSpace: 'nowrap',
-                                                            marginTop: isBottomRow ? '4%' : '8%'
-                                                        }}>
-                                                            {t(potion.key)}
-                                                            {potionId && ownedPotions[potionId] > 0 && (
-                                                                <span style={{
-                                                                    marginLeft: '4px',
-                                                                    color: '#e46262',
-                                                                    fontWeight: '700'
-                                                                }}>
-                                                                    {ownedPotions[potionId]}개
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    <div style={{
+                                                        fontSize: 'clamp(9px, 1.5vw, 11px)',
+                                                        fontWeight: '600',
+                                                        color: '#fff',
+                                                        textAlign: 'center',
+                                                        lineHeight: '1.3',
+                                                        whiteSpace: 'nowrap',
+                                                        marginTop: isBottomRow ? '4%' : '8%',
+                                                        opacity: isDisabled ? 0 : 1,
+                                                        visibility: isDisabled ? 'hidden' : 'visible'
+                                                    }}>
+                                                        {t(potion.key)}
+                                                        {potionId && ownedPotions[potionId] > 0 && (
+                                                            <span style={{
+                                                                marginLeft: '4px',
+                                                                color: '#e46262',
+                                                                fontWeight: '700'
+                                                            }}>
+                                                                {ownedPotions[potionId]}개
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </motion.div>
                                             );
                                         })}

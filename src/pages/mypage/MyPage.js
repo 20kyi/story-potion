@@ -1300,7 +1300,7 @@ function MyPage({ user }) {
                     <span>·</span>
                     <span>일기 전용 스티커</span>
                     <span>·</span>
-                    <span>한 주에 여러 장르 소설 생성</span>
+                    <span>6가지 장르 모두 보관 가능</span>
                     <span>·</span>
                     <span>AI 일기 생성</span>
                     <span>·</span>
