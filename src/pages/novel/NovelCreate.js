@@ -1115,7 +1115,7 @@ function NovelCreate({ user }) {
                                                             marginTop: isBottomRow ? '4%' : '8%'
                                                         }}>
                                                             {t(potion.key)}
-                                                            {!isFreeMode && potionId && ownedPotions[potionId] > 0 && (
+                                                            {potionId && ownedPotions[potionId] > 0 && (
                                                                 <span style={{
                                                                     marginLeft: '4px',
                                                                     color: '#e46262',

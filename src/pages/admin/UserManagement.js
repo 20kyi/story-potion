@@ -2515,32 +2515,6 @@ function UserManagement({ user }) {
                   <div style={{ marginBottom: '8px' }}>
                     <b>프리미엄 상태:</b> {renderPremiumBadge(userDetail)}
                   </div>
-                  {(userDetail.isMonthlyPremium || userDetail.isYearlyPremium) && (
-                          <div style={{
-                            marginTop: '8px',
-                            padding: '8px',
-                            background: '#f0f0f0',
-                            borderRadius: '6px',
-                            fontSize: '13px'
-                          }}>
-                            <div style={{ marginBottom: '4px' }}>
-                              <b>상세 정보:</b>
-                            </div>
-                            <div style={{ marginLeft: '8px', color: '#555' }}>
-                              <div>📥 받은 개수: <b style={{ color: '#27ae60' }}>{totalCharged}개</b></div>
-                              <div>📤 사용한 개수: <b style={{ color: '#e74c3c' }}>{usedCount}개</b></div>
-                              <div>💎 남은 개수: <b style={{ color: '#3498db' }}>{currentCount}개</b></div>
-                              {startDate && (
-                                <div style={{ marginTop: '4px', fontSize: '11px', color: '#888' }}>
-                                  구독 시작일: {formatDate(userDetail.premiumStartDate)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
                   {isMainAdmin(user) && (
                     <div style={{ margin: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <Button
