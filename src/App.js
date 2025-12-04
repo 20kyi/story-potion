@@ -55,6 +55,7 @@ import PointHistory from './pages/mypage/PointHistory';
 import PotionShop from './pages/mypage/PotionShop';
 import PointCharge from './pages/mypage/PointCharge';
 import AdminMain from './pages/admin/AdminMain';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import UserList from './pages/admin/UserList';
 import CSManagement from './pages/admin/CSManagement';
 import NotificationManagement from './pages/admin/NotificationManagement';
@@ -141,6 +142,7 @@ const AppLayout = ({ user, isLoading }) => {
                 <Route path="/friend-novels" element={user ? <FriendNovelList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/purchased-novels" element={user ? <PurchasedNovels user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin" element={user ? <AdminMain user={user} /> : <Navigate to="/login" />} />
+                <Route path="/admin/dashboard" element={user ? <AdminDashboard user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/users" element={user ? <UserList user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/cs" element={user ? <CSManagement user={user} /> : <Navigate to="/login" />} />
                 <Route path="/admin/notifications" element={user ? <NotificationManagement user={user} /> : <Navigate to="/login" />} />

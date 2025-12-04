@@ -96,6 +96,12 @@ function AdminMain({ user }) {
 
     const adminPages = [
         {
+            path: '/admin/dashboard',
+            icon: '📊',
+            title: '대시보드',
+            description: '매출, 비용, DAU, 신규 가입자 수 확인'
+        },
+        {
             path: '/admin/users',
             icon: '👥',
             title: '사용자 목록',
