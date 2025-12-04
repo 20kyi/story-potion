@@ -145,6 +145,18 @@ function Settings() {
     // 현재 폰트 크기를 숫자로 변환
     const currentFontSize = parseInt(fontSize) || 16;
 
+    // 폰트 크기를 레이블로 변환 (XS, S, M, L, XL)
+    const getFontSizeLabel = (size) => {
+        const sizeMap = {
+            12: 'XS',
+            14: 'S',
+            16: 'M',
+            18: 'L',
+            20: 'XL'
+        };
+        return sizeMap[size] || 'M';
+    };
+
     // 폰트 크기 변경 핸들러
     const handleFontSizeChange = (e) => {
         const newSize = e.target.value;
@@ -274,7 +286,7 @@ function Settings() {
                                 $actualTheme={actualTheme}
                             />
                             <FontSizeValue $actualTheme={actualTheme}>
-                                {currentFontSize}px
+                                {getFontSizeLabel(currentFontSize)}
                             </FontSizeValue>
                         </FontSizeContainer>
                     </li>
