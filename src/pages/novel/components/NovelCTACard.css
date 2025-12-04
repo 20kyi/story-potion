@@ -172,12 +172,65 @@ body.dark .novel-cta-card:not(.diary-theme):hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow: hidden;
+    transition: gap 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.novel-cta-genre-chart.collapsed {
+    gap: 0;
 }
 
 .novel-cta-genre-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.novel-cta-genre-item.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 100px;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 100px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
 }
 
 .novel-cta-genre-label {
@@ -429,6 +482,37 @@ body.dark .novel-cta-bonus-text.completed {
     }
 }
 
+.novel-cta-expand-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 14px;
+    transition: opacity 0.2s, transform 0.2s;
+    border-radius: 4px;
+}
+
+.novel-cta-expand-button:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.novel-cta-expand-button:active {
+    transform: translateY(0);
+}
+
+.novel-cta-expand-button.diary-theme {
+    color: #8B6F47;
+}
+
+.novel-cta-expand-button.glass-theme {
+    color: #000000;
+}
+
+body.dark .novel-cta-expand-button:not(.diary-theme):not(.glass-theme) {
+    color: #ccc;
+}
+
 @media (max-width: 480px) {
     .novel-cta-bonus-text {
         font-size: 13px;
@@ -441,5 +525,10 @@ body.dark .novel-cta-bonus-text.completed {
     
     .novel-cta-point-amount {
         font-size: 13px;
+    }
+    
+    .novel-cta-expand-button {
+        font-size: 13px;
+        padding: 3px 6px;
     }
 }

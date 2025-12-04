@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../../ThemeContext';
 import { useTranslation } from '../../../LanguageContext';
 import './NovelCTACard.css';
@@ -6,6 +6,7 @@ import './NovelCTACard.css';
 const NovelCTACard = ({ isDiaryTheme, isGlassTheme, genreStats }) => {
     const theme = useTheme();
     const { t } = useTranslation();
+    const [isExpanded, setIsExpanded] = useState(false);
 
     // 장르별 색상 정의
     const genreColors = {
@@ -19,10 +20,24 @@ const NovelCTACard = ({ isDiaryTheme, isGlassTheme, genreStats }) => {
 
     const genres = ['로맨스', '추리', '역사', '동화', '판타지', '공포'];
     const stats = genreStats || { counts: {}, percentages: {}, total: 0 };
+    
+    // 장르를 개수 순으로 정렬 (많은 것부터 적은 순)
+    const sortedGenres = React.useMemo(() => {
+        return [...genres].sort((a, b) => {
+            const countA = (stats.counts && stats.counts[a]) || 0;
+            const countB = (stats.counts && stats.counts[b]) || 0;
+            return countB - countA; // 내림차순 정렬
+        });
+    }, [stats.counts]);
 
     return (
         <div
             className={`novel-cta-card ${isDiaryTheme ? 'diary-theme' : ''} ${isGlassTheme ? 'glass-theme' : ''}`}
+            onClick={() => {
+                if (stats && stats.total > 0) {
+                    setIsExpanded(!isExpanded);
+                }
+            }}
             style={{
                 ...(isDiaryTheme ? {
                     background: '#fffef9',
@@ -48,14 +63,20 @@ const NovelCTACard = ({ isDiaryTheme, isGlassTheme, genreStats }) => {
                         <span>장르별 소설</span>
                         {stats.total > 0 && <span>총 {stats.total}개</span>}
                     </div>
-                    {stats.total > 0 ? (
-                        <div className="novel-cta-genre-chart">
-                            {genres.map(genre => {
-                                const percentage = stats.percentages[genre] || 0;
-                                const count = stats.counts[genre] || 0;
+                    {stats && stats.total > 0 ? (
+                        <div className={`novel-cta-genre-chart ${!isExpanded ? 'collapsed' : ''}`}>
+                            {sortedGenres.map((genre, index) => {
+                                const percentage = (stats.percentages && stats.percentages[genre]) || 0;
+                                const count = (stats.counts && stats.counts[genre]) || 0;
                                 const color = genreColors[genre];
+                                // 접었을 때는 첫 번째 장르(가장 많은 것)만 보이기
+                                const isVisible = isExpanded || index === 0;
+                                
                                 return (
-                                    <div key={genre} className="novel-cta-genre-item">
+                                    <div 
+                                        key={genre} 
+                                        className={`novel-cta-genre-item ${!isVisible ? 'hidden' : ''}`}
+                                    >
                                         <div className="novel-cta-genre-label">
                                             <span>{genre}</span>
                                             <span>{count}개 ({percentage.toFixed(0)}%)</span>
