@@ -22,12 +22,6 @@ import {
   getUsersWithQuery
 } from '../../utils/userMigration';
 import {
-  givePointsToAllUsers,
-  givePointsToUsersByCondition,
-  getPointsStatistics,
-  pointUpdateExamples
-} from '../../utils/bulkPointUpdate';
-import {
   syncCurrentUser,
   createTestUsers,
   getUsersCollectionStatus,
@@ -600,9 +594,6 @@ function UserManagement({ user }) {
   const [searchField, setSearchField] = useState('displayName');
   const [searchOperator, setSearchOperator] = useState('==');
   const [searchValue, setSearchValue] = useState('');
-  const [pointAmount, setPointAmount] = useState(500);
-  const [pointReason, setPointReason] = useState('기본 포인트 지급');
-  const [pointsStats, setPointsStats] = useState(null);
   const [usersCollectionStats, setUsersCollectionStats] = useState(null);
   const [manualUserData, setManualUserData] = useState({
     uid: '',
@@ -627,7 +618,6 @@ function UserManagement({ user }) {
     premiumMigration: false,
     userList: false, // 사용자 목록은 기본적으로 닫힘
     profileUpdate: false,
-    pointManagement: false,
     debugging: false,
     notifications: false,
     cleanupUsers: false
@@ -660,6 +650,7 @@ function UserManagement({ user }) {
   const [notificationImageUrl, setNotificationImageUrl] = useState('');
   const [notificationLinkUrl, setNotificationLinkUrl] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
+  const [marketingUsersList, setMarketingUsersList] = useState([]); // 마케팅 알림 수신 사용자 목록
 
 
   // 페이지네이션/정렬 상태
@@ -909,93 +900,6 @@ function UserManagement({ user }) {
     }
   };
 
-  // 포인트 통계 조회
-  const handleLoadPointsStats = async () => {
-    setLoading(true);
-    setStatus({ type: 'info', message: '포인트 통계 조회 중...' });
-
-    try {
-      const stats = await getPointsStatistics();
-      setPointsStats(stats);
-      setStatus({ type: 'success', message: '포인트 통계 조회 완료' });
-    } catch (error) {
-      setStatus({ type: 'error', message: '포인트 통계 조회 실패: ' + error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 포인트가 없는 사용자들에게 포인트 지급
-  const handleGivePointsToZeroUsers = async () => {
-    if (!window.confirm(`포인트가 0인 사용자들에게 ${pointAmount}포인트씩 지급하시겠습니까?`)) {
-      return;
-    }
-
-    setLoading(true);
-    setStatus({ type: 'info', message: '포인트 지급 중...' });
-
-    try {
-      const result = await givePointsToAllUsers(pointAmount, pointReason);
-      setStatus({
-        type: 'success',
-        message: `포인트 지급 완료: 성공 ${result.success}명, 실패 ${result.failed}명 (총 ${result.total}명 중 ${result.usersWithoutPoints}명에게 지급)`
-      });
-
-      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
-      await handleLoadPointsStats();
-    } catch (error) {
-      setStatus({ type: 'error', message: '포인트 지급 실패: ' + error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 조건부 포인트 지급
-  const handleGivePointsByCondition = async () => {
-    if (!searchValue) {
-      setStatus({ type: 'error', message: '검색 조건을 입력해주세요.' });
-      return;
-    }
-
-    if (!window.confirm(`조건에 맞는 사용자들에게 ${pointAmount}포인트씩 지급하시겠습니까?`)) {
-      return;
-    }
-
-    setLoading(true);
-    setStatus({ type: 'info', message: '조건부 포인트 지급 중...' });
-
-    try {
-      let value = searchValue;
-
-      // 숫자 필드인 경우 숫자로 변환
-      if (['point', 'createdAt', 'lastLoginAt'].includes(searchField)) {
-        value = isNaN(searchValue) ? searchValue : parseInt(searchValue);
-      }
-
-      // 불린 필드인 경우 불린으로 변환
-      if (['reminderEnabled', 'eventEnabled', 'marketingEnabled', 'isActive'].includes(searchField)) {
-        value = searchValue === 'true';
-      }
-
-      const result = await givePointsToUsersByCondition(
-        { field: searchField, operator: searchOperator, value: value },
-        pointAmount,
-        pointReason
-      );
-
-      setStatus({
-        type: 'success',
-        message: `조건부 포인트 지급 완료: 성공 ${result.success}명, 실패 ${result.failed}명`
-      });
-
-      await loadUsersPage(); // loadUsersPage를 사용하여 페이지네이션 상태 유지
-      await handleLoadPointsStats();
-    } catch (error) {
-      setStatus({ type: 'error', message: '조건부 포인트 지급 실패: ' + error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // 현재 사용자 동기화
   const handleSyncCurrentUser = async () => {
@@ -1003,7 +907,7 @@ function UserManagement({ user }) {
     setStatus({ type: 'info', message: '현재 사용자 동기화 중...' });
 
     try {
-      const result = await syncCurrentUser(pointAmount);
+      const result = await syncCurrentUser(500);
       if (result.success) {
         if (result.skipped) {
           setStatus({ type: 'success', message: '현재 사용자는 이미 Firestore에 존재합니다.' });
@@ -1544,6 +1448,45 @@ function UserManagement({ user }) {
 
 
 
+  // 마케팅 알림 수신 사용자 조회
+  const handleCheckMarketingUsers = async () => {
+    setLoading(true);
+    setStatus({ type: 'info', message: '마케팅 알림 수신 사용자 조회 중...' });
+
+    try {
+      console.log('🔍 마케팅 알림 수신 사용자 조회 시작...');
+      const marketingUsers = await getUsersByCondition('marketingEnabled', '==', true);
+      console.log('✅ 마케팅 알림 수신 사용자 조회 완료:', marketingUsers.length, '명');
+
+      // 이메일과 이름만 추출
+      const simpleList = marketingUsers.map(user => ({
+        email: user.email || '이메일 없음',
+        displayName: user.displayName || '이름 없음'
+      }));
+
+      console.log('📋 마케팅 알림 수신 사용자 목록 (이메일, 이름):');
+      simpleList.forEach((user, index) => {
+        console.log(`${index + 1}. ${user.displayName} (${user.email})`);
+      });
+
+      // 간단한 목록 상태에 저장
+      setMarketingUsersList(simpleList);
+
+      setStatus({
+        type: 'success',
+        message: `마케팅 알림 수신 동의한 사용자: ${marketingUsers.length}명`
+      });
+      toast.showToast(`마케팅 알림 수신 사용자 ${marketingUsers.length}명을 찾았습니다.`, 'success');
+    } catch (error) {
+      console.error('❌ 마케팅 알림 수신 사용자 조회 실패:', error);
+      setStatus({ type: 'error', message: '마케팅 알림 수신 사용자 조회 실패: ' + error.message });
+      toast.showToast('마케팅 알림 수신 사용자 조회 실패: ' + error.message, 'error');
+      setMarketingUsersList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateTestMarketingNotification = async () => {
     setNotificationType('marketing');
     setNotificationTitle('스토리포션 테스트 마케팅 알림');
@@ -1862,90 +1805,6 @@ function UserManagement({ user }) {
       )}
 
 
-      {/* 포인트 지급 - 메인 관리자만 */}
-      {isMainAdmin(user) && (
-        <Section theme={theme}>
-          <SectionTitle theme={theme} onClick={() => toggleSection('pointManagement')}>
-            <span>💰 포인트 일괄 지급</span>
-            <AccordionIcon theme={theme} isOpen={openSections.pointManagement}>▼</AccordionIcon>
-          </SectionTitle>
-          <SectionContent isOpen={openSections.pointManagement}>
-            <ButtonGroup theme={theme}>
-              <ButtonGroupTitle theme={theme}>포인트 지급 설정</ButtonGroupTitle>
-              <Input
-                theme={theme}
-                type="number"
-                value={pointAmount}
-                onChange={(e) => setPointAmount(parseInt(e.target.value) || 0)}
-                placeholder="지급할 포인트"
-                min="1"
-                style={{ width: '120px' }}
-              />
-              <Input
-                theme={theme}
-                type="text"
-                value={pointReason}
-                onChange={(e) => setPointReason(e.target.value)}
-                placeholder="지급 사유"
-                style={{ width: '200px' }}
-              />
-              <Button
-                onClick={handleGivePointsToZeroUsers}
-                disabled={loading}
-                style={{ backgroundColor: '#27ae60' }}
-              >
-                {loading ? '지급 중...' : '포인트 0인 사용자에게 지급'}
-              </Button>
-              <Button
-                onClick={handleGivePointsByCondition}
-                disabled={loading}
-                style={{ backgroundColor: '#f39c12' }}
-              >
-                조건부 포인트 지급
-              </Button>
-            </ButtonGroup>
-
-            {/* 포인트 통계 */}
-            <div style={{ marginBottom: '15px' }}>
-              <Button
-                onClick={handleLoadPointsStats}
-                disabled={loading}
-                style={{ backgroundColor: '#9b59b6' }}
-              >
-                포인트 통계 조회
-              </Button>
-
-              {pointsStats && (
-                <div style={{
-                  background: theme.theme === 'dark' ? '#34495e' : '#f8f9fa',
-                  padding: '10px',
-                  borderRadius: '5px',
-                  marginTop: '10px',
-                  fontSize: '14px',
-                  color: theme.text,
-                  border: theme.theme === 'dark' ? '1px solid #2c3e50' : 'none'
-                }}>
-                  <strong>📊 포인트 통계:</strong><br />
-                  총 사용자: {pointsStats.totalUsers}명<br />
-                  포인트 보유: {pointsStats.usersWithPoints}명<br />
-                  포인트 미보유: {pointsStats.usersWithoutPoints}명<br />
-                  총 포인트: {pointsStats.totalPoints.toLocaleString()}p<br />
-                  평균 포인트: {pointsStats.averagePoints}p<br />
-                  최대 포인트: {pointsStats.maxPoints}p<br />
-                  최소 포인트: {pointsStats.minPoints}p<br />
-                  <strong>포인트 분포:</strong><br />
-                  • 0p: {pointsStats.pointDistribution['0']}명<br />
-                  • 1-100p: {pointsStats.pointDistribution['1-100']}명<br />
-                  • 101-500p: {pointsStats.pointDistribution['101-500']}명<br />
-                  • 501-1000p: {pointsStats.pointDistribution['501-1000']}명<br />
-                  • 1000p+: {pointsStats.pointDistribution['1000+']}명
-                </div>
-              )}
-            </div>
-          </SectionContent>
-        </Section>
-      )}
-
       {/* 디버깅 - 메인 관리자만 */}
       {isMainAdmin(user) && (
         <Section theme={theme}>
@@ -2050,6 +1909,75 @@ function UserManagement({ user }) {
                 ? '마케팅 알림 수신 동의한 사용자에게 알림을 발송합니다.'
                 : '이벤트 알림 수신 동의한 사용자에게 알림을 발송합니다.'}
             </div>
+
+            {/* 마케팅 알림 수신 사용자 조회 버튼 */}
+            <div style={{ marginBottom: '15px' }}>
+              <Button
+                onClick={handleCheckMarketingUsers}
+                disabled={loading || notificationSending}
+                style={{
+                  backgroundColor: '#3498db',
+                  width: '100%',
+                  fontSize: isMobile ? '14px' : '13px',
+                  padding: isMobile ? '12px' : '8px',
+                  minHeight: isMobile ? '44px' : 'auto',
+                  marginBottom: '10px'
+                }}
+              >
+                {loading ? '조회 중...' : '🔍 마케팅 알림 수신 사용자 조회'}
+              </Button>
+            </div>
+
+            {/* 마케팅 알림 수신 사용자 목록 표시 */}
+            {marketingUsersList.length > 0 && (
+              <div style={{
+                marginBottom: '15px',
+                padding: '15px',
+                backgroundColor: theme.theme === 'dark' ? '#2c3e50' : '#f8f9fa',
+                borderRadius: '8px',
+                border: `1px solid ${theme.theme === 'dark' ? '#34495e' : '#e0e0e0'}`,
+                maxHeight: '400px',
+                overflowY: 'auto'
+              }}>
+                <div style={{
+                  marginBottom: '10px',
+                  fontWeight: 'bold',
+                  color: theme.text,
+                  fontSize: '16px'
+                }}>
+                  마케팅 알림 수신 사용자 ({marketingUsersList.length}명)
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  {marketingUsersList.map((user, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '10px',
+                        backgroundColor: theme.theme === 'dark' ? '#34495e' : 'white',
+                        borderRadius: '6px',
+                        border: `1px solid ${theme.theme === 'dark' ? '#2c3e50' : '#e0e0e0'}`,
+                        fontSize: '14px',
+                        color: theme.text
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        {user.displayName}
+                      </div>
+                      <div style={{
+                        fontSize: '12px',
+                        color: theme.theme === 'dark' ? '#bdc3c7' : '#666'
+                      }}>
+                        {user.email}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 테스트 마케팅 알림 생성 버튼 */}
             <div style={{ marginBottom: '15px' }}>
