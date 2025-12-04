@@ -59,6 +59,12 @@ const WeeklyCard = ({
     const handleAddNovel = () => {
         if (allGenresCreated) return;
 
+        // 일반 회원이고 이미 소설이 있는 경우 프리미엄 페이지로 이동
+        if (!isPremium && novelsForWeek.length > 0) {
+            navigate('/my/premium');
+            return;
+        }
+
         if (progress < 100) {
             alert(t('novel_all_diaries_needed'));
             return;
