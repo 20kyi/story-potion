@@ -698,8 +698,13 @@ function UserManagement({ user }) {
       const needsClientSort = orderByField === 'premium' || orderByField === 'status';
       const firestoreOrderBy = needsClientSort ? 'createdAt' : orderByField; // 기본값 사용
 
+      // limit 결정: opts.limit이 있으면 사용, 없으면 pageLimit 사용 (null이면 전체)
+      const queryLimit = opts.limit !== undefined
+        ? opts.limit
+        : (needsClientSort ? 1000 : (pageLimit || 10000));
+
       const { users: loadedUsers, lastDoc: newLastDoc } = await getUsersWithQuery({
-        limit: needsClientSort ? 1000 : pageLimit, // 클라이언트 정렬을 위해 더 많이 가져옴
+        limit: queryLimit,
         orderBy: firestoreOrderBy,
         orderDir: needsClientSort ? 'desc' : orderDir,
         startAfter: opts.startAfter || null,
@@ -738,8 +743,10 @@ function UserManagement({ user }) {
           return orderDir === 'desc' ? -comparison : comparison;
         });
 
-        // 페이지네이션 적용
-        finalUsers = finalUsers.slice(0, pageLimit);
+        // 페이지네이션 적용 (전체가 아닐 때만)
+        if (pageLimit) {
+          finalUsers = finalUsers.slice(0, pageLimit);
+        }
       }
 
       setUsers(finalUsers);
@@ -1651,29 +1658,38 @@ function UserManagement({ user }) {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            flexWrap: 'wrap',
+            gap: '8px',
+            flexWrap: 'nowrap',
             marginBottom: '10px'
           }}>
             <Select
               theme={theme}
-              value={pageLimit}
-              onChange={(e) => {
-                const newLimit = parseInt(e.target.value);
-                setPageLimit(newLimit);
-                // 목록 다시 로드
-                setTimeout(() => {
-                  loadUsersPage();
-                }, 100);
+              value={pageLimit || 'all'}
+              onChange={async (e) => {
+                const value = e.target.value;
+                if (value === 'all') {
+                  setPageLimit(null);
+                  // 페이지네이션 상태 초기화
+                  setLastDoc(null);
+                  setPageStack([]);
+                  // 전체 로드
+                  await loadUsersPage({ limit: 10000 });
+                } else {
+                  const newLimit = parseInt(value);
+                  setPageLimit(newLimit);
+                  // 페이지네이션 상태 초기화
+                  setLastDoc(null);
+                  setPageStack([]);
+                  // 목록 즉시 다시 로드
+                  await loadUsersPage();
+                }
               }}
-              style={{ width: '100px', flex: '0 0 auto' }}
+              style={{ width: '65px', flex: '0 0 auto' }}
             >
-              <option value={5}>5개</option>
               <option value={10}>10개</option>
               <option value={20}>20개</option>
-              <option value={30}>30개</option>
               <option value={50}>50개</option>
-              <option value={100}>100개</option>
+              <option value="all">전체</option>
             </Select>
             <Select
               theme={theme}
@@ -1681,7 +1697,7 @@ function UserManagement({ user }) {
               onChange={(e) => {
                 handleSortFieldChange(e.target.value);
               }}
-              style={{ flex: '1 1 auto', minWidth: '120px' }}
+              style={{ flex: '1 1 auto', minWidth: '100px', maxWidth: '150px' }}
             >
               <option value="createdAt">가입일</option>
               <option value="lastLoginAt">최근 접속일</option>
@@ -1696,7 +1712,7 @@ function UserManagement({ user }) {
               onChange={(e) => {
                 handleSortDirChange(e.target.value);
               }}
-              style={{ flex: '1 1 auto', minWidth: '100px' }}
+              style={{ flex: '0 0 auto', width: '90px' }}
             >
               <option value="desc">내림차순</option>
               <option value="asc">오름차순</option>
