@@ -128,27 +128,27 @@ const DayIndicator = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: ${({ status }) => status === 'P' ? '14px' : '16px'};
+    font-size: ${({ status }) => status === 'P' ? '11px' : '16px'};
     font-weight: 700;
     position: relative;
     background: ${({ status, $isDiaryTheme, $isGlassTheme }) => {
-        if (status === 'O') {
-            if ($isGlassTheme) return 'rgba(76, 175, 80, 0.3)';
-            if ($isDiaryTheme) return 'rgba(76, 175, 80, 0.2)';
-            return 'rgba(76, 175, 80, 0.2)';
-        } else if (status === 'X') {
-            if ($isGlassTheme) return 'rgba(244, 67, 54, 0.3)';
-            if ($isDiaryTheme) return 'rgba(244, 67, 54, 0.2)';
-            return 'rgba(244, 67, 54, 0.2)';
-        } else if (status === 'P') {
-            if ($isGlassTheme) return 'rgba(33, 150, 243, 0.3)';
-            if ($isDiaryTheme) return 'rgba(33, 150, 243, 0.2)';
-            return 'rgba(33, 150, 243, 0.2)';
-        } else {
-            if ($isGlassTheme) return 'rgba(158, 158, 158, 0.3)';
-            if ($isDiaryTheme) return 'rgba(158, 158, 158, 0.2)';
-            return 'rgba(158, 158, 158, 0.2)';
+        if ($isGlassTheme) {
+            if (status === 'O') return 'rgba(76, 175, 80, 0.25)';
+            if (status === 'X') return 'rgba(244, 67, 54, 0.25)';
+            if (status === 'P') return 'rgba(33, 150, 243, 0.25)';
+            return 'rgba(158, 158, 158, 0.25)';
         }
+        if ($isDiaryTheme) {
+            if (status === 'O') return 'rgba(76, 175, 80, 0.15)';
+            if (status === 'X') return 'rgba(244, 67, 54, 0.15)';
+            if (status === 'P') return 'rgba(33, 150, 243, 0.15)';
+            return 'rgba(158, 158, 158, 0.15)';
+        }
+        // 기본 테마
+        if (status === 'O') return 'rgba(76, 175, 80, 0.15)';
+        if (status === 'X') return 'rgba(244, 67, 54, 0.15)';
+        if (status === 'P') return 'rgba(33, 150, 243, 0.15)';
+        return 'rgba(158, 158, 158, 0.15)';
     }};
     color: ${({ status }) => {
         if (status === 'O') return '#4CAF50';
@@ -157,25 +157,44 @@ const DayIndicator = styled.div`
         return '#9E9E9E';
     }};
     border: ${({ status, $isDiaryTheme, $isGlassTheme }) => {
-        if (status === 'O') {
-            if ($isGlassTheme) return '2px solid rgba(76, 175, 80, 0.5)';
-            if ($isDiaryTheme) return '1px solid rgba(76, 175, 80, 0.4)';
-            return '1px solid rgba(76, 175, 80, 0.4)';
-        } else if (status === 'X') {
-            if ($isGlassTheme) return '2px solid rgba(244, 67, 54, 0.5)';
-            if ($isDiaryTheme) return '1px solid rgba(244, 67, 54, 0.4)';
-            return '1px solid rgba(244, 67, 54, 0.4)';
-        } else if (status === 'P') {
-            if ($isGlassTheme) return '2px solid rgba(33, 150, 243, 0.5)';
-            if ($isDiaryTheme) return '1px solid rgba(33, 150, 243, 0.4)';
-            return '1px solid rgba(33, 150, 243, 0.4)';
-        } else {
-            if ($isGlassTheme) return '2px solid rgba(158, 158, 158, 0.5)';
-            if ($isDiaryTheme) return '1px solid rgba(158, 158, 158, 0.4)';
-            return '1px solid rgba(158, 158, 158, 0.4)';
+        if ($isGlassTheme) {
+            if (status === 'O') return '2px solid rgba(76, 175, 80, 0.4)';
+            if (status === 'X') return '2px solid rgba(244, 67, 54, 0.4)';
+            if (status === 'P') return '2px solid rgba(33, 150, 243, 0.4)';
+            return '2px solid rgba(158, 158, 158, 0.4)';
         }
+        if ($isDiaryTheme) {
+            if (status === 'O') return '1px solid rgba(76, 175, 80, 0.3)';
+            if (status === 'X') return '1px solid rgba(244, 67, 54, 0.3)';
+            if (status === 'P') return '1px solid rgba(33, 150, 243, 0.3)';
+            return '1px solid rgba(158, 158, 158, 0.3)';
+        }
+        // 기본 테마
+        if (status === 'O') return '1px solid rgba(76, 175, 80, 0.3)';
+        if (status === 'X') return '1px solid rgba(244, 67, 54, 0.3)';
+        if (status === 'P') return '1px solid rgba(33, 150, 243, 0.3)';
+        return '1px solid rgba(158, 158, 158, 0.3)';
+    }};
+    box-shadow: ${({ $isDiaryTheme, $isGlassTheme }) => {
+        if ($isGlassTheme) return '0 2px 8px rgba(0, 0, 0, 0.1)';
+        if ($isDiaryTheme) return '0 1px 3px rgba(0, 0, 0, 0.05)';
+        return '0 1px 3px rgba(0, 0, 0, 0.08)';
     }};
     
+    ${({ $isDiaryTheme }) => $isDiaryTheme && `
+        &::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(139, 111, 71, 0.05) 0%, transparent 50%);
+            z-index: -1;
+            opacity: 0.3;
+        }
+    `}
 `;
 
 const WeeklyBonusCard = ({ user }) => {
@@ -347,7 +366,7 @@ const WeeklyBonusCard = ({ user }) => {
                                     $isDiaryTheme={isDiaryTheme}
                                     $isGlassTheme={isGlassTheme}
                                 >
-                                    {status === 'P' ? '✏️' : status}
+                                    {status === 'P' ? 'GO' : status}
                                 </DayIndicator>
                             </DayStatus>
                         ))}
