@@ -2034,7 +2034,7 @@ function WriteDiary({ user }) {
                     const diaryRef = doc(db, 'diaries', existingDiaryId);
                     await deleteDoc(diaryRef);
                     alert(t('diary_deleted'));
-                    navigate('/diaries');
+                    navigate('/diaries', { replace: true });
                 } catch (error) {
                     alert(t('diary_delete_failed'));
                 }
@@ -2574,7 +2574,7 @@ function WriteDiary({ user }) {
                                         await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
 
                                         setShouldDelayNavigation(false);
-                                        navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                                        navigate(`/diary/date/${formatDateToString(selectedDate)}`, { replace: true });
                                     }, 2000);
                                 }, 2000);
                             }
@@ -2640,7 +2640,7 @@ function WriteDiary({ user }) {
                     // 애니메이션 종료 및 페이지 이동
                     setShowPointAnimation(false);
                     setShouldDelayNavigation(false);
-                    navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                    navigate(`/diary/date/${formatDateToString(selectedDate)}`, { replace: true });
                 }, 1500);
             } else {
                 // 애니메이션이 없으면 기존대로 이미지 업로드 후 페이지 이동
@@ -2682,7 +2682,7 @@ function WriteDiary({ user }) {
                 }
                 await updateDoc(isEditMode && existingDiaryId ? diaryRef : doc(db, 'diaries', diaryRef.id), imageUpdateData);
 
-                navigate(`/diary/date/${formatDateToString(selectedDate)}`);
+                navigate(`/diary/date/${formatDateToString(selectedDate)}`, { replace: true });
             }
             // 제출 성공 시 임시저장 삭제
             clearTempDiary(selectedDate);
