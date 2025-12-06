@@ -2459,9 +2459,51 @@ function WriteDiary({ user }) {
                 }
                 await setDoc(diaryRef, updateData, { merge: true });
                 toast.showToast(t('diary_updated'), 'success');
+
+                // 수정 모드일 때는 이미지 업로드 처리
+                const existingUrlCount = (diary.imageUrls || []).length;
+                const existingUrls = diary.imageUrls || [];
+
+                // 새 파일 업로드
+                let uploadedUrls = [];
+                if (imageFiles.length > 0) {
+                    const uploadPromises = imageFiles.map((file, fileIndex) => {
+                        const imageRef = ref(storage, `diaries/${user.uid}/${formatDateToString(selectedDate)}/${Date.now()}_${fileIndex}_${file.name}`);
+                        return uploadBytes(imageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+                    });
+                    uploadedUrls = await Promise.all(uploadPromises);
+                }
+
+                // imagePreview 순서를 기준으로 최종 이미지 URL 배열 구성
+                const finalImageUrlsResult = [];
+                for (let i = 0; i < imagePreview.length; i++) {
+                    const preview = imagePreview[i];
+                    if (preview.startsWith('blob:')) {
+                        const blobUrlsInPreview = imagePreview.filter(p => p.startsWith('blob:'));
+                        const currentBlobIndex = blobUrlsInPreview.indexOf(preview);
+                        if (currentBlobIndex >= 0 && currentBlobIndex < uploadedUrls.length) {
+                            finalImageUrlsResult.push(uploadedUrls[currentBlobIndex]);
+                        }
+                    } else {
+                        finalImageUrlsResult.push(preview);
+                    }
+                }
+
+                // 이미지 URL 업데이트
+                const imageUpdateData = {
+                    imageUrls: finalImageUrlsResult,
+                    updatedAt: new Date(),
+                };
+                if (finalImageUrlsResult.length >= 4) {
+                    imageUpdateData.imageLimitExtended = true;
+                }
+                await updateDoc(diaryRef, imageUpdateData);
+
+                navigate(`/diary/date/${formatDateToString(selectedDate)}`, { replace: true });
             } else {
                 diaryRef = await addDoc(collection(db, 'diaries'), diaryData);
                 toast.showToast(t('diary_saved'), 'success');
+
                 // 포인트 적립: 일기 최초 저장 시 정책값 적용 (당일에만 지급)
                 try {
                     const today = new Date();
