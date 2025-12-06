@@ -1223,6 +1223,8 @@ function MyPage({ user }) {
                 src={getSafeProfileImageUrl(firestorePhotoURL || user?.photoURL)}
                 alt="Profile"
                 onError={(e) => handleImageError(e)}
+                fetchPriority="high"
+                loading="eager"
               />
               <EditIconWrapper onClick={() => navigate('/my/profile-edit')}>
                 <EditIcon width="20" height="20" color="#555555" />

@@ -591,13 +591,13 @@ function DiaryView({ user }) {
                                     <span>
                                         {t('today_weather')}
                                         {diary.weather && weatherImageMap[diary.weather] && (
-                                            <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, alignSelf: 'center' }} />
+                                            <img src={weatherImageMap[diary.weather]} alt={t('diary_weather_alt') || 'weather'} style={{ width: 28, height: 28, alignSelf: 'center' }} fetchPriority="high" loading="eager" />
                                         )}
                                     </span>
                                     <span>
                                         {t('today_mood')}
                                         {diary.emotion && emotionImageMap[diary.emotion] && (
-                                            <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 28, height: 28, alignSelf: 'center' }} />
+                                            <img src={emotionImageMap[diary.emotion]} alt={t('diary_emotion_alt') || 'emotion'} style={{ width: 28, height: 28, alignSelf: 'center' }} fetchPriority="high" loading="eager" />
                                         )}
                                     </span>
                                 </DiaryMeta>
@@ -612,6 +612,8 @@ function DiaryView({ user }) {
                                             alt={`${t('diary_image_alt') || 'diary image'} ${idx + 1}`}
                                             style={{ ...styles.image, cursor: 'pointer' }}
                                             onClick={() => setSelectedImageIndex(idx)}
+                                            fetchPriority={idx === 0 ? "high" : "auto"}
+                                            loading={idx === 0 ? "eager" : "lazy"}
                                         />
                                     ))}
                                 </div>

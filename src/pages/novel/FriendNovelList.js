@@ -592,6 +592,8 @@ function FriendNovelList({ user }) {
                   src={getSafeProfileImageUrl(friendInfo.photoURL)}
                   alt="Friend Profile"
                   onError={(e) => handleImageError(e)}
+                  fetchPriority="high"
+                  loading="eager"
                 />
               </ProfileContainer>
               <FriendNickname theme={theme} $isDiaryTheme={isDiaryTheme}>

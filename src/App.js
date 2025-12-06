@@ -553,6 +553,32 @@ function App() {
     const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
+        // 이모지 이미지 preload (성능 최적화)
+        const emotionImages = [
+            '/emotions/love.png',
+            '/emotions/good.png',
+            '/emotions/normal.png',
+            '/emotions/surprised.png',
+            '/emotions/angry.png',
+            '/emotions/cry.png',
+        ];
+        const weatherImages = [
+            '/weather/sunny.png',
+            '/weather/cloudy.png',
+            '/weather/rainy.png',
+            '/weather/snowy.png',
+            '/weather/windy.png',
+            '/weather/thunder.png',
+        ];
+
+        [...emotionImages, ...weatherImages].forEach(imagePath => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = imagePath;
+            document.head.appendChild(link);
+        });
+
         // 시스템 글자 크기 설정을 무시하고 1배율(100%)로 고정
         // 모바일 환경에서만 적용 (웹에서는 불필요)
         if (Capacitor.getPlatform() !== 'web') {

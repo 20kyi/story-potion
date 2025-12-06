@@ -2810,6 +2810,8 @@ function WriteDiary({ user }) {
                                             setIsWeatherSheetOpen(true);
                                             setIsEmotionSheetOpen(false);
                                         }}
+                                        fetchPriority="high"
+                                        loading="eager"
                                     />
                                 </span>
                             )}
@@ -2846,6 +2848,8 @@ function WriteDiary({ user }) {
                                             setIsEmotionSheetOpen(true);
                                             setIsWeatherSheetOpen(false);
                                         }}
+                                        fetchPriority="high"
+                                        loading="eager"
                                     />
                                 </span>
                             )}
@@ -2904,7 +2908,7 @@ function WriteDiary({ user }) {
                                         filter: diary.weather === opt.value ? (isDark ? 'brightness(1.2) drop-shadow(0 0 6px #ffe29f)' : 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))') : 'none'
                                     }}
                                 >
-                                    <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
+                                    <img src={weatherImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} fetchPriority="high" loading="eager" />
                                     <span style={{ fontSize: 14, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`weather_${opt.value}`)}</span>
                                 </button>
                             ))}
@@ -2957,7 +2961,7 @@ function WriteDiary({ user }) {
                                         filter: diary.emotion === opt.value ? (isDark ? 'brightness(1.2) drop-shadow(0 0 6px #ffe29f)' : 'brightness(0.9) drop-shadow(0 0 6px rgb(255, 209, 111))') : 'none'
                                     }}
                                 >
-                                    <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} />
+                                    <img src={emotionImageMap[opt.value]} alt={opt.label} style={{ width: 56, height: 56, marginBottom: 6 }} fetchPriority="high" loading="eager" />
                                     <span style={{ fontSize: 14, color: isGlassTheme ? '#000000' : isDiaryTheme ? '#8B6F47' : isDark ? '#ffffff' : '#cb6565', fontWeight: 500, fontFamily: 'inherit' }}>{t(`emotion_${opt.value}`)}</span>
                                 </button>
                             ))}

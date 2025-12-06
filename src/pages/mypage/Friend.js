@@ -946,6 +946,8 @@ function Friend({ user }) {
                       src={getSafeProfileImageUrl(user.photoURL)}
                       alt={user.displayName}
                       onError={(e) => handleImageError(e)}
+                      fetchPriority="high"
+                      loading="eager"
                     />
                     <UserDetails>
                       <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>{user.displayName || t('default_user_name')}</UserName>
@@ -1067,6 +1069,8 @@ function Friend({ user }) {
                 src={getSafeProfileImageUrl(friend.user.photoURL)}
                 alt={friend.user.displayName}
                 onError={(e) => handleImageError(e)}
+                fetchPriority="high"
+                loading="eager"
               />
               <UserDetails>
                 <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>
@@ -1128,6 +1132,8 @@ function Friend({ user }) {
                 src={getSafeProfileImageUrl(request.fromUser?.photoURL)}
                 alt={request.fromUser?.displayName || '사용자'}
                 onError={(e) => handleImageError(e)}
+                fetchPriority="high"
+                loading="eager"
               />
               <UserDetails>
                 <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>
@@ -1184,6 +1190,8 @@ function Friend({ user }) {
                 src={getSafeProfileImageUrl(request.toUser?.photoURL)}
                 alt={request.toUser?.displayName || '사용자'}
                 onError={(e) => handleImageError(e)}
+                fetchPriority="high"
+                loading="eager"
               />
               <UserDetails>
                 <UserName theme={theme} $isDiaryTheme={isDiaryTheme}>

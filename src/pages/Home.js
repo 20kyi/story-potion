@@ -1716,7 +1716,7 @@ function Home({ user }) {
             {recentDiaries.length > 0 && recentDiaries[0] ? (
               <DiaryPreviewContainer>
                 {recentDiaries[0].imageUrls && recentDiaries[0].imageUrls.length > 0 ? (
-                  <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" />
+                  <DiaryPreviewImage src={recentDiaries[0].imageUrls[0]} alt="최근 일기 이미지" fetchPriority="high" loading="eager" />
                 ) : (
                   <DiaryPreviewImagePlaceholder>
                     <DiaryPreviewImagePlaceholderIcon>📷</DiaryPreviewImagePlaceholderIcon>

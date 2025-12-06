@@ -997,6 +997,8 @@ function PotionGift({ user }) {
                         alt={friend.user.displayName}
                         onError={(e) => handleImageError(e)}
                         theme={theme}
+                        fetchPriority="high"
+                        loading="eager"
                       />
                       <FriendInfo>
                         <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>
@@ -1034,6 +1036,8 @@ function PotionGift({ user }) {
                       alt={user.displayName}
                       onError={(e) => handleImageError(e)}
                       theme={theme}
+                      fetchPriority="high"
+                      loading="eager"
                     />
                     <SearchResultInfo>
                       <SearchResultName theme={theme} $isDiaryTheme={isDiaryTheme}>
@@ -1060,6 +1064,8 @@ function PotionGift({ user }) {
                 alt={selectedFriend.user.displayName}
                 onError={(e) => handleImageError(e)}
                 theme={theme}
+                fetchPriority="high"
+                loading="eager"
               />
               <FriendInfo>
                 <FriendName theme={theme} $isDiaryTheme={isDiaryTheme}>

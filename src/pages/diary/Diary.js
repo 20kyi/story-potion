@@ -505,7 +505,7 @@ function Diary({ user }) {
                         })()}
                         {/* 스티커 또는 감정 이미지, 없으면 빈 공간 */}
                         <div className="diary-image-container">
-                            {displayImg && <img src={displayImg} alt="대표 이미지" className={`diary-display-image ${isSticker ? 'sticker' : ''}`} />}
+                            {displayImg && <img src={displayImg} alt="대표 이미지" className={`diary-display-image ${isSticker ? 'sticker' : ''}`} fetchPriority="high" loading="eager" />}
                         </div>
                     </button>
                 </td>
@@ -624,7 +624,7 @@ function Diary({ user }) {
                         </div>
                         {displayImg && (
                             <div className={`diary-weekly-image-container ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`}>
-                                <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`} />
+                                <img src={displayImg} alt="일기 이미지" className={`diary-weekly-image ${isEmoji ? 'emoji' : ''} ${isSticker ? 'sticker' : ''}`} fetchPriority="high" loading="eager" />
                             </div>
                         )}
                         {diaryPreview && (
@@ -901,14 +901,14 @@ function Diary({ user }) {
                             {/* 감정/날씨 이모티콘 */}
                             <div className="diary-preview-header">
                                 {previewDiary.emotion && emotionImageMap[previewDiary.emotion] && (
-                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" className="diary-preview-image" />
+                                    <img src={emotionImageMap[previewDiary.emotion]} alt="감정" className="diary-preview-image" fetchPriority="high" loading="eager" />
                                 )}
                                 {previewDiary.weather && weatherImageMap[previewDiary.weather] && (
-                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" className="diary-preview-image" />
+                                    <img src={weatherImageMap[previewDiary.weather]} alt="날씨" className="diary-preview-image" fetchPriority="high" loading="eager" />
                                 )}
                             </div>
                             {previewDiary.imageUrls && previewDiary.imageUrls.length > 0 && (
-                                <img src={previewDiary.imageUrls[0]} alt="diary" className="diary-preview-diary-image" />
+                                <img src={previewDiary.imageUrls[0]} alt="diary" className="diary-preview-diary-image" fetchPriority="high" loading="eager" />
                             )}
                             <div className="diary-preview-title">{previewDiary.title}</div>
                             <div className="diary-preview-date">{previewDiary.date}</div>
