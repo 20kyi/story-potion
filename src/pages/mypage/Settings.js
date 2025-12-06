@@ -167,16 +167,28 @@ function Settings({ user }) {
 
 
 
-    // 프리미엄 회원 상태 확인
+    // 프리미엄 회원 상태 확인 및 해지 시 테마 자동 변경
     useEffect(() => {
         if (user?.uid) {
             const userRef = doc(db, 'users', user.uid);
             const unsubscribe = onSnapshot(userRef, (userDoc) => {
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    setIsPremium(data.isMonthlyPremium || data.isYearlyPremium || false);
+                    const currentIsPremium = data.isMonthlyPremium || data.isYearlyPremium || false;
+                    setIsPremium(currentIsPremium);
+
+                    // 프리미엄이 아니고 현재 테마가 프리미엄 전용 테마인 경우 자동으로 라이트 테마로 변경
+                    if (!currentIsPremium && (theme === 'diary' || theme === 'glass')) {
+                        setThemeMode('light');
+                        console.log('프리미엄 회원이 아니므로 테마를 라이트 모드로 변경했습니다.');
+                    }
                 } else {
                     setIsPremium(false);
+                    // 문서가 없고 현재 테마가 프리미엄 전용 테마인 경우 자동으로 라이트 테마로 변경
+                    if (theme === 'diary' || theme === 'glass') {
+                        setThemeMode('light');
+                        console.log('프리미엄 회원이 아니므로 테마를 라이트 모드로 변경했습니다.');
+                    }
                 }
             }, (error) => {
                 console.error('프리미엄 상태 조회 실패:', error);
@@ -184,8 +196,13 @@ function Settings({ user }) {
             });
 
             return () => unsubscribe();
+        } else {
+            // 사용자가 없는 경우에도 프리미엄 전용 테마면 라이트로 변경
+            if (theme === 'diary' || theme === 'glass') {
+                setThemeMode('light');
+            }
         }
-    }, [user]);
+    }, [user, theme, setThemeMode]);
 
     // 알림 권한 상태 확인
     useEffect(() => {

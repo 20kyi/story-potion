@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 // import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithCredential, signInWithCustomToken, updateProfile } from 'firebase/auth';
@@ -576,67 +576,67 @@ function App() {
             setUser(user);
             setAuthReady(true);
 
-                // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
-                if (user?.uid) {
-                    // 앱 시작 시 최근 접속일 업데이트 (Firestore에 직접 기록)
-                    try {
-                        const userRef = doc(db, 'users', user.uid);
-                        const userDoc = await getDoc(userRef);
-                        if (userDoc.exists()) {
-                            const userData = userDoc.data();
-                            const lastLoginAt = userData.lastLoginAt;
-                            
-                            // 1분 이상 지났을 때만 업데이트 (너무 빈번한 업데이트 방지)
-                            let shouldUpdate = false;
-                            if (!lastLoginAt) {
+            // 사용자 로그인 시 월간 프리미엄 갱신일 확인 및 자동 갱신
+            if (user?.uid) {
+                // 앱 시작 시 최근 접속일 업데이트 (Firestore에 직접 기록)
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const lastLoginAt = userData.lastLoginAt;
+
+                        // 1분 이상 지났을 때만 업데이트 (너무 빈번한 업데이트 방지)
+                        let shouldUpdate = false;
+                        if (!lastLoginAt) {
+                            shouldUpdate = true;
+                        } else {
+                            const lastLoginTime = lastLoginAt.toDate ? lastLoginAt.toDate() : new Date(lastLoginAt);
+                            const now = new Date();
+                            const minutesSinceLastLogin = (now - lastLoginTime) / (1000 * 60);
+                            if (minutesSinceLastLogin >= 1) {
                                 shouldUpdate = true;
-                            } else {
-                                const lastLoginTime = lastLoginAt.toDate ? lastLoginAt.toDate() : new Date(lastLoginAt);
-                                const now = new Date();
-                                const minutesSinceLastLogin = (now - lastLoginTime) / (1000 * 60);
-                                if (minutesSinceLastLogin >= 1) {
-                                    shouldUpdate = true;
-                                }
-                            }
-                            
-                            if (shouldUpdate) {
-                                const updateData = {
-                                    lastLoginAt: new Date(),
-                                    updatedAt: new Date()
-                                };
-                                
-                                // 이전 접속일 저장 (lastLoginAt이 있으면 previousLoginAt에 저장)
-                                if (lastLoginAt) {
-                                    updateData.previousLoginAt = lastLoginAt;
-                                }
-                                
-                                await updateDoc(userRef, updateData);
-                                console.log('✅ 앱 시작 시 최근 접속일 업데이트 완료');
                             }
                         }
-                    } catch (error) {
-                        console.error('최근 접속일 업데이트 실패:', error);
-                    }
 
-                    try {
-                        await checkAndRenewMonthlyPremium(user.uid);
-                    } catch (error) {
-                        console.error('프리미엄 갱신 확인 중 오류:', error);
-                    }
+                        if (shouldUpdate) {
+                            const updateData = {
+                                lastLoginAt: new Date(),
+                                updatedAt: new Date()
+                            };
 
-                    // 소설 생성 알림 스케줄링
-                    try {
-                        const userDoc = await getDoc(doc(db, 'users', user.uid));
-                        if (userDoc.exists()) {
-                            const userData = userDoc.data();
-                            if (userData.novelCreationEnabled) {
-                                const notificationTime = userData.reminderTime || '21:00';
-                                await scheduleNovelCreationNotification(user.uid, notificationTime);
+                            // 이전 접속일 저장 (lastLoginAt이 있으면 previousLoginAt에 저장)
+                            if (lastLoginAt) {
+                                updateData.previousLoginAt = lastLoginAt;
                             }
+
+                            await updateDoc(userRef, updateData);
+                            console.log('✅ 앱 시작 시 최근 접속일 업데이트 완료');
                         }
-                    } catch (error) {
-                        console.error('소설 생성 알림 스케줄링 실패:', error);
                     }
+                } catch (error) {
+                    console.error('최근 접속일 업데이트 실패:', error);
+                }
+
+                try {
+                    await checkAndRenewMonthlyPremium(user.uid);
+                } catch (error) {
+                    console.error('프리미엄 갱신 확인 중 오류:', error);
+                }
+
+                // 소설 생성 알림 스케줄링
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if (userData.novelCreationEnabled) {
+                            const notificationTime = userData.reminderTime || '21:00';
+                            await scheduleNovelCreationNotification(user.uid, notificationTime);
+                        }
+                    }
+                } catch (error) {
+                    console.error('소설 생성 알림 스케줄링 실패:', error);
+                }
 
                 // 구독 상태 동기화 (Google Play와 Firebase 동기화)
                 try {
@@ -755,7 +755,7 @@ function App() {
                 const currentUser = auth.currentUser;
                 if (currentUser) {
                     console.log('✅ 사용자가 이미 로그인되어 있습니다:', currentUser.email);
-                    
+
                     // 앱이 포그라운드로 돌아올 때 최근 접속일 업데이트 (Firestore에 직접 기록)
                     try {
                         const userRef = doc(db, 'users', currentUser.uid);
@@ -763,7 +763,7 @@ function App() {
                         if (userDoc.exists()) {
                             const userData = userDoc.data();
                             const lastLoginAt = userData.lastLoginAt;
-                            
+
                             // 1분 이상 지났을 때만 업데이트 (너무 빈번한 업데이트 방지)
                             let shouldUpdate = false;
                             if (!lastLoginAt) {
@@ -776,18 +776,18 @@ function App() {
                                     shouldUpdate = true;
                                 }
                             }
-                            
+
                             if (shouldUpdate) {
                                 const updateData = {
                                     lastLoginAt: new Date(),
                                     updatedAt: new Date()
                                 };
-                                
+
                                 // 이전 접속일 저장 (lastLoginAt이 있으면 previousLoginAt에 저장)
                                 if (lastLoginAt) {
                                     updateData.previousLoginAt = lastLoginAt;
                                 }
-                                
+
                                 await updateDoc(userRef, updateData);
                                 console.log('✅ 앱 활성화 시 최근 접속일 업데이트 완료');
                             }
@@ -795,7 +795,7 @@ function App() {
                     } catch (error) {
                         console.error('앱 활성화 시 최근 접속일 업데이트 실패:', error);
                     }
-                    
+
                     // 구독 상태 동기화
                     try {
                         await inAppPurchaseService.syncSubscriptionStatus(currentUser.uid);
@@ -1399,12 +1399,12 @@ function App() {
                 try {
                     fcmMessageUnsubscribe = onFcmMessage((payload) => {
                         console.log('포그라운드 FCM 메시지 수신:', payload);
-                        
+
                         const title = payload.notification?.title || payload.data?.title || 'Story Potion';
                         const body = payload.notification?.body || payload.data?.body || payload.data?.message || '새로운 알림이 있습니다!';
-                        
+
                         // 브라우저 알림 표시
-                        if (pushNotificationManager.isPushSupported() && 
+                        if (pushNotificationManager.isPushSupported() &&
                             pushNotificationManager.getPermissionStatus() === 'granted') {
                             pushNotificationManager.showLocalNotification(title, {
                                 body: body,
@@ -1645,42 +1645,62 @@ function ThemeConsumerWrapper({ children, user }) {
     }, [actualTheme]);
 
     // 프리미엄 해지 시 테마 자동 변경
+    const prevIsPremiumRef = useRef(null);
+
     useEffect(() => {
         if (user?.uid) {
             const userRef = doc(db, 'users', user.uid);
-            let prevIsPremium = null;
-            
+
             const unsubscribe = onSnapshot(userRef, (userDoc) => {
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     const currentIsPremium = data.isMonthlyPremium || data.isYearlyPremium || false;
-                    
+
                     // 프리미엄이 해지되었고, 이전에는 프리미엄이었던 경우
-                    if (prevIsPremium === true && !currentIsPremium) {
+                    if (prevIsPremiumRef.current === true && !currentIsPremium) {
                         // 현재 테마가 프리미엄 전용 테마인 경우 라이트 테마로 변경
                         if (theme === 'diary' || theme === 'glass') {
                             setThemeMode('light');
                             console.log('프리미엄 구독이 해지되어 테마를 라이트 모드로 변경했습니다.');
                         }
                     }
-                    
-                    prevIsPremium = currentIsPremium;
+
+                    // 프리미엄이 아니고 현재 테마가 프리미엄 전용 테마인 경우 자동으로 라이트 테마로 변경
+                    if (!currentIsPremium && (theme === 'diary' || theme === 'glass')) {
+                        setThemeMode('light');
+                        console.log('프리미엄 회원이 아니므로 테마를 라이트 모드로 변경했습니다.');
+                    }
+
+                    prevIsPremiumRef.current = currentIsPremium;
                 } else {
                     // 문서가 없는 경우
-                    if (prevIsPremium === true) {
+                    if (prevIsPremiumRef.current === true) {
                         // 이전에 프리미엄이었는데 문서가 없어진 경우
                         if (theme === 'diary' || theme === 'glass') {
                             setThemeMode('light');
                             console.log('프리미엄 구독이 해지되어 테마를 라이트 모드로 변경했습니다.');
                         }
                     }
-                    prevIsPremium = false;
+
+                    // 문서가 없고 현재 테마가 프리미엄 전용 테마인 경우 자동으로 라이트 테마로 변경
+                    if (theme === 'diary' || theme === 'glass') {
+                        setThemeMode('light');
+                        console.log('프리미엄 회원이 아니므로 테마를 라이트 모드로 변경했습니다.');
+                    }
+
+                    prevIsPremiumRef.current = false;
                 }
             }, (error) => {
                 console.error('프리미엄 상태 조회 실패:', error);
             });
 
             return () => unsubscribe();
+        } else {
+            // 사용자가 없는 경우에도 프리미엄 전용 테마면 라이트로 변경
+            if (theme === 'diary' || theme === 'glass') {
+                setThemeMode('light');
+            }
+            prevIsPremiumRef.current = false;
         }
     }, [user, theme, setThemeMode]);
 
