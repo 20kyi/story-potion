@@ -6,6 +6,8 @@ import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import styled from 'styled-components';
 import PointIcon from './icons/PointIcon';
+import SimplePencilIcon from './icons/SimplePencilIcon';
+import XMarkIcon from './icons/XMarkIcon';
 
 const BonusCard = styled.div`
     padding: 16px;
@@ -413,7 +415,9 @@ const WeeklyBonusCard = ({ user }) => {
                                     {status === 'POINT' ? (
                                         <PointIcon width={18} height={18} />
                                     ) : status === 'P' ? (
-                                        'GO'
+                                        <SimplePencilIcon width={18} height={18} color={isGlassTheme ? '#000000' : isDiaryTheme ? '#5C4B37' : '#2196F3'} />
+                                    ) : status === 'X' ? (
+                                        <XMarkIcon width={18} height={18} color={isGlassTheme ? '#000000' : isDiaryTheme ? '#5C4B37' : '#F44336'} />
                                     ) : (
                                         status
                                     )}
