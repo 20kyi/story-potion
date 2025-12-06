@@ -5,6 +5,7 @@ import { checkWeekBonusStatus } from '../utils/weeklyBonus';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import styled from 'styled-components';
+import PointIcon from './icons/PointIcon';
 
 const BonusCard = styled.div`
     padding: 16px;
@@ -133,24 +134,28 @@ const DayIndicator = styled.div`
     position: relative;
     background: ${({ status, $isDiaryTheme, $isGlassTheme }) => {
         if ($isGlassTheme) {
+            if (status === 'POINT') return 'rgba(255, 215, 0, 0.25)';
             if (status === 'O') return 'rgba(76, 175, 80, 0.25)';
             if (status === 'X') return 'rgba(244, 67, 54, 0.25)';
             if (status === 'P') return 'rgba(33, 150, 243, 0.25)';
             return 'rgba(158, 158, 158, 0.25)';
         }
         if ($isDiaryTheme) {
+            if (status === 'POINT') return 'rgba(255, 215, 0, 0.15)';
             if (status === 'O') return 'rgba(76, 175, 80, 0.15)';
             if (status === 'X') return 'rgba(244, 67, 54, 0.15)';
             if (status === 'P') return 'rgba(33, 150, 243, 0.15)';
             return 'rgba(158, 158, 158, 0.15)';
         }
         // 기본 테마
+        if (status === 'POINT') return 'rgba(255, 215, 0, 0.15)';
         if (status === 'O') return 'rgba(76, 175, 80, 0.15)';
         if (status === 'X') return 'rgba(244, 67, 54, 0.15)';
         if (status === 'P') return 'rgba(33, 150, 243, 0.15)';
         return 'rgba(158, 158, 158, 0.15)';
     }};
     color: ${({ status }) => {
+        if (status === 'POINT') return '#FFD700';
         if (status === 'O') return '#4CAF50';
         if (status === 'X') return '#F44336';
         if (status === 'P') return '#2196F3';
@@ -158,18 +163,21 @@ const DayIndicator = styled.div`
     }};
     border: ${({ status, $isDiaryTheme, $isGlassTheme }) => {
         if ($isGlassTheme) {
+            if (status === 'POINT') return '2px solid rgba(255, 215, 0, 0.4)';
             if (status === 'O') return '2px solid rgba(76, 175, 80, 0.4)';
             if (status === 'X') return '2px solid rgba(244, 67, 54, 0.4)';
             if (status === 'P') return '2px solid rgba(33, 150, 243, 0.4)';
             return '2px solid rgba(158, 158, 158, 0.4)';
         }
         if ($isDiaryTheme) {
+            if (status === 'POINT') return '1px solid rgba(255, 215, 0, 0.3)';
             if (status === 'O') return '1px solid rgba(76, 175, 80, 0.3)';
             if (status === 'X') return '1px solid rgba(244, 67, 54, 0.3)';
             if (status === 'P') return '1px solid rgba(33, 150, 243, 0.3)';
             return '1px solid rgba(158, 158, 158, 0.3)';
         }
         // 기본 테마
+        if (status === 'POINT') return '1px solid rgba(255, 215, 0, 0.3)';
         if (status === 'O') return '1px solid rgba(76, 175, 80, 0.3)';
         if (status === 'X') return '1px solid rgba(244, 67, 54, 0.3)';
         if (status === 'P') return '1px solid rgba(33, 150, 243, 0.3)';
@@ -207,6 +215,7 @@ const WeeklyBonusCard = ({ user }) => {
     const [currentWeekBonus, setCurrentWeekBonus] = useState(null);
     const [isChecking, setIsChecking] = useState(true);
     const [weekDayStatuses, setWeekDayStatuses] = useState([]);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // 날짜를 YYYY-MM-DD 형식으로 변환
     const formatDateToString = (date) => {
@@ -289,15 +298,38 @@ const WeeklyBonusCard = ({ user }) => {
                     }
                 });
 
+                // 포인트 히스토리 조회 - 각 날짜별로 포인트를 받았는지 확인
+                const pointHistoryRef = collection(db, 'users', user.uid, 'pointHistory');
+                const pointHistoryQuery = query(
+                    pointHistoryRef,
+                    where('desc', '==', t('today_diary'))
+                );
+                const pointHistorySnapshot = await getDocs(pointHistoryQuery);
+                const pointReceivedDates = new Set();
+
+                pointHistorySnapshot.forEach(doc => {
+                    const history = doc.data();
+                    const historyDate = history.createdAt?.toDate?.() || new Date(history.createdAt);
+                    const historyDateStr = formatDateToString(historyDate);
+                    // 해당 주의 날짜 범위에 포함되는지 확인
+                    if (historyDateStr >= monday && historyDateStr <= sunday) {
+                        pointReceivedDates.add(historyDateStr);
+                    }
+                });
+
                 // 각 날짜별 상태 설정
                 const statuses = weekDates.map(({ dateStr, dayName, dateObj }) => {
                     const isFuture = dateObj > today;
                     const isToday = dateStr === todayStr;
                     const isWritten = writtenDates.has(dateStr);
+                    const hasPoint = pointReceivedDates.has(dateStr);
 
                     let status = '?'; // 미래
                     if (!isFuture) {
-                        if (isWritten) {
+                        // 포인트를 받았으면 포인트 이미지 표시 (최우선)
+                        if (hasPoint) {
+                            status = 'POINT';
+                        } else if (isWritten) {
                             status = 'O';
                         } else if (isToday) {
                             // 오늘이고 아직 작성하지 않은 경우 연필 아이콘
@@ -324,7 +356,19 @@ const WeeklyBonusCard = ({ user }) => {
         };
 
         checkBonusStatus();
-    }, [user]);
+    }, [user, t, refreshKey]);
+
+    // 페이지 포커스 시 데이터 새로고침 (일기 삭제 후 돌아왔을 때 업데이트)
+    useEffect(() => {
+        const handleFocus = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
 
 
     if (isChecking) {
@@ -366,7 +410,13 @@ const WeeklyBonusCard = ({ user }) => {
                                     $isDiaryTheme={isDiaryTheme}
                                     $isGlassTheme={isGlassTheme}
                                 >
-                                    {status === 'P' ? 'GO' : status}
+                                    {status === 'POINT' ? (
+                                        <PointIcon width={18} height={18} />
+                                    ) : status === 'P' ? (
+                                        'GO'
+                                    ) : (
+                                        status
+                                    )}
                                 </DayIndicator>
                             </DayStatus>
                         ))}
