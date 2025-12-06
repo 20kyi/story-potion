@@ -94,7 +94,7 @@ function Navigation() {
 
   return (
     <NavBar $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} theme={styledTheme}>
-      <NavButton onClick={() => navigate('/')}>
+      <NavButton onClick={() => navigate('/home', { replace: true })}>
         <IconContainer>
           <IconImage
             src={getIconPath('home')}
@@ -110,7 +110,7 @@ function Navigation() {
         </IconContainer>
         <NavText active={isActive('/') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_home')}</NavText>
       </NavButton>
-      <NavButton onClick={() => navigate('/diaries')}>
+      <NavButton onClick={() => navigate('/diaries', { replace: true })}>
         <IconContainer>
           <IconImage
             src={getIconPath('diary')}
@@ -126,7 +126,7 @@ function Navigation() {
         </IconContainer>
         <NavText active={isActive('/diaries') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_diary')}</NavText>
       </NavButton>
-      <NavButton onClick={() => navigate('/novel')}>
+      <NavButton onClick={() => navigate('/novel', { replace: true })}>
         <IconContainer>
           <IconImage
             src={getIconPath('novel')}
@@ -142,7 +142,7 @@ function Navigation() {
         </IconContainer>
         <NavText active={isActive('/novel') ? 'true' : undefined} $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme}>{t('nav_novel')}</NavText>
       </NavButton>
-      <NavButton onClick={() => navigate('/my')}>
+      <NavButton onClick={() => navigate('/my', { replace: true })}>
         <IconContainer>
           <IconImage
             src={getIconPath('my')}
