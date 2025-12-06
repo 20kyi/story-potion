@@ -68,6 +68,28 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// capacitor.build.gradle이 Java 21을 설정하므로 다시 Java 17로 설정
+afterEvaluate {
+    android {
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_17
+            targetCompatibility JavaVersion.VERSION_17
+        }
+    }
+    
+    // Kotlin JVM 타겟도 17로 설정
+    try {
+        def kotlinCompileClass = Class.forName('org.jetbrains.kotlin.gradle.tasks.KotlinCompile')
+        tasks.withType(kotlinCompileClass).configureEach {
+            it.kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    } catch (ClassNotFoundException e) {
+        // Kotlin 플러그인이 없는 경우 무시
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {

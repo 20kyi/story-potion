@@ -30,6 +30,7 @@ task clean(type: Delete) {
 
 subprojects {
     afterEvaluate { project ->
+        // Java 컴파일 옵션 설정
         if (project.hasProperty('android')) {
             project.android {
                 compileOptions {
@@ -38,5 +39,18 @@ subprojects {
                 }
             }
         }
+        
+        // Kotlin JVM 타겟 설정
+        try {
+            def kotlinCompileClass = Class.forName('org.jetbrains.kotlin.gradle.tasks.KotlinCompile')
+            project.tasks.withType(kotlinCompileClass).configureEach {
+                it.kotlinOptions {
+                    jvmTarget = "17"
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            // Kotlin 플러그인이 없는 경우 무시
+        }
     }
 }
+
