@@ -647,6 +647,24 @@ function MyPage({ user }) {
     }
   }, [user]);
 
+  // 뒤로가기 시 홈으로 이동
+  useEffect(() => {
+    // 히스토리에 홈 추가
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = (e) => {
+      // 네비게이션에서 직접 들어온 경우에만 홈으로 리다이렉트
+      if (window.location.pathname === '/my') {
+        navigate('/', { replace: true });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
+
   // 사용자 포인트 및 포션 정보를 Firestore에서 가져오기
   useEffect(() => {
     if (user?.uid) {

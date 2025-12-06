@@ -95,6 +95,24 @@ function Diary({ user }) {
         }
     }, [location.state]);
 
+    // 뒤로가기 시 홈으로 이동
+    useEffect(() => {
+        // 히스토리에 홈 추가
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = (e) => {
+            // 네비게이션에서 직접 들어온 경우에만 홈으로 리다이렉트
+            if (location.pathname === '/diaries') {
+                navigate('/', { replace: true });
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [navigate, location.pathname]);
+
     useEffect(() => {
         if (!user) return;
 

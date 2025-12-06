@@ -61,6 +61,24 @@ const Novel = ({ user }) => {
         localStorage.setItem('novel_weekly_view_mode', weeklyViewMode);
     }, [weeklyViewMode]);
 
+    // 뒤로가기 시 홈으로 이동
+    useEffect(() => {
+        // 히스토리에 홈 추가
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = (e) => {
+            // 네비게이션에서 직접 들어온 경우에만 홈으로 리다이렉트
+            if (location.pathname === '/novel') {
+                navigate('/', { replace: true });
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [navigate, location.pathname]);
+
     // 상단 CTA 카드용 현재 주의 일기 가져오기 (항상 현재 날짜 기준)
     useEffect(() => {
         if (!user) {
@@ -207,7 +225,7 @@ const Novel = ({ user }) => {
                 setNovelsMap(newNovelsMap);
                 // 최근 5개만 표시
                 setMyNovels(allMyNovels.slice(0, 5));
-                
+
                 // 장르별 통계 계산
                 const genreCounts = {
                     '로맨스': 0,
@@ -217,20 +235,20 @@ const Novel = ({ user }) => {
                     '판타지': 0,
                     '공포': 0
                 };
-                
+
                 allMyNovels.forEach(novel => {
                     const genre = novel.genre;
                     if (genre && genreCounts.hasOwnProperty(genre)) {
                         genreCounts[genre]++;
                     }
                 });
-                
+
                 const total = allMyNovels.length;
                 const genrePercentages = {};
                 Object.keys(genreCounts).forEach(genre => {
                     genrePercentages[genre] = total > 0 ? (genreCounts[genre] / total) * 100 : 0;
                 });
-                
+
                 setGenreStats({
                     counts: genreCounts,
                     percentages: genrePercentages,
@@ -439,7 +457,7 @@ const Novel = ({ user }) => {
                     setNovelsMap(newNovelsMap);
                     // 최근 5개만 표시
                     setMyNovels(allMyNovels.slice(0, 5));
-                    
+
                     // 장르별 통계 계산
                     const genreCounts = {
                         '로맨스': 0,
@@ -449,20 +467,20 @@ const Novel = ({ user }) => {
                         '판타지': 0,
                         '공포': 0
                     };
-                    
+
                     allMyNovels.forEach(novel => {
                         const genre = novel.genre;
                         if (genre && genreCounts.hasOwnProperty(genre)) {
                             genreCounts[genre]++;
                         }
                     });
-                    
+
                     const total = allMyNovels.length;
                     const genrePercentages = {};
                     Object.keys(genreCounts).forEach(genre => {
                         genrePercentages[genre] = total > 0 ? (genreCounts[genre] / total) * 100 : 0;
                     });
-                    
+
                     setGenreStats({
                         counts: genreCounts,
                         percentages: genrePercentages,

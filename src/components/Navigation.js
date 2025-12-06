@@ -94,7 +94,7 @@ function Navigation() {
 
   return (
     <NavBar $isDiaryTheme={isDiaryTheme} $isGlassTheme={isGlassTheme} theme={styledTheme}>
-      <NavButton onClick={() => navigate('/home', { replace: true })}>
+      <NavButton onClick={() => navigate('/', { replace: true })}>
         <IconContainer>
           <IconImage
             src={getIconPath('home')}
